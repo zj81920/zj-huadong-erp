@@ -30,6 +30,8 @@ model User {
   projectPlansResponsible    ProjectPlan[]
   delegatedByMe              ApprovalDelegate[]     @relation("Delegator")
   delegatedToMe              ApprovalDelegate[]     @relation("DelegateTo")
+  projectsAsDesignManager    Project[]              @relation("DesignManager")
+  projectsAsSupervisorLeader Project[]              @relation("SupervisorLeader")
 
   @@map("users")
 }
@@ -144,23 +146,30 @@ model Quotation {
 // ==================== 项目管理 ====================
 
 model Project {
-  id              String   @id @default(cuid())
-  projectSourceId String   @unique @map("project_source_id")
-  projectCode     String   @unique @map("project_code")
-  name            String
-  customerId      String   @map("customer_id")
-  type            String?
-  address         String?
-  projectCategory String?  @map("project_category")
-  source          String   @default("中标")
-  status          String   @default("筹备")
-  members         Json     @default("{}")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id                String    @id @default(cuid())
+  projectSourceId   String    @unique @map("project_source_id")
+  projectCode       String    @unique @map("project_code")
+  name              String
+  customerId        String    @map("customer_id")
+  type              String?
+  address           String?
+  projectCategory   String?   @map("project_category")
+  source            String    @default("投标中标")
+  sourceRefId       String?   @map("source_ref_id")
+  status            String    @default("筹备")
+  designManagerId   String?   @map("design_manager_id")
+  supervisorLeaderId String?  @map("supervisor_leader_id")
+  startDate         DateTime? @map("start_date")
+  plannedEndDate    DateTime? @map("planned_end_date")
+  actualCloseDate   DateTime? @map("actual_close_date")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  customer            Customer           @relation(fields: [customerId], references: [id])
-  projectLead         ProjectLead        @relation(fields: [projectSourceId], references: [projectSourceId])
-  plans               ProjectPlan[]
+  customer             Customer           @relation(fields: [customerId], references: [id])
+  projectLead          ProjectLead        @relation(fields: [projectSourceId], references: [projectSourceId])
+  designManager        User?              @relation("DesignManager", fields: [designManagerId], references: [id])
+  supervisorLeader     User?              @relation("SupervisorLeader", fields: [supervisorLeaderId], references: [id])
+  plans                ProjectPlan[]
   progressRecords     ProjectProgress[]
   designTasks         DesignTask[]
   outsourcingTasks    OutsourcingTask[]
@@ -258,12 +267,9 @@ model OutsourcingTask {
 
 model PurchaseRequest {
   id                 String    @id @default(cuid())
+  requestNo          String    @unique @map("request_no")
   projectSourceId    String    @map("project_source_id")
   requestType        String    @default("项目需求") @map("request_type")
-  materialName       String    @map("material_name")
-  spec               String?
-  quantity           String?
-  estimatedAmount    Decimal?  @map("estimated_amount") @db.Decimal(15, 2)
   requiredDate       DateTime? @map("required_date")
   status             String    @default("草稿")
   approvalInstanceId String?   @map("approval_instance_id")
@@ -272,8 +278,29 @@ model PurchaseRequest {
 
   project Project  @relation(fields: [projectSourceId], references: [projectSourceId])
   inquiry Inquiry?
+  items   PurchaseRequestItem[]
 
   @@map("purchase_requests")
+}
+
+model PurchaseRequestItem {
+  id                String    @id @default(cuid())
+  purchaseRequestId String    @map("purchase_request_id")
+  materialName      String    @map("material_name")
+  spec              String?
+  material          String?
+  brand             String?
+  standardNo        String?   @map("standard_no")
+  unit              String?
+  quantity          Decimal?  @db.Decimal(15, 2)
+  remark            String?   @db.Text
+  sortOrder         Int       @default(0) @map("sort_order")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+
+  @@map("purchase_request_items")
 }
 
 model Inquiry {

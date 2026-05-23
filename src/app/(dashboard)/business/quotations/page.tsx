@@ -11,6 +11,8 @@ import {
   DollarSign,
   TrendingUp,
   FileText,
+  MapPin,
+  Calendar,
 } from "lucide-react";
 import Modal from "@/components/Modal";
 
@@ -88,11 +90,36 @@ export default function QuotationsPage() {
   const [formError, setFormError] = useState("");
 
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [projectLeads, setProjectLeads] = useState<{ projectSourceId: string; projectName: string }[]>([]);
+  const [projectLeads, setProjectLeads] = useState<{ projectSourceId: string; projectName: string; customerId: string; customerName?: string }[]>([]);
 
   const [detailQuotation, setDetailQuotation] = useState<Quotation | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Quotation | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [showLeadModal, setShowLeadModal] = useState(false);
+  const [leadForm, setLeadForm] = useState({
+    customerId: "",
+    projectName: "",
+    location: "",
+    estimatedInvestment: "",
+    bidReleaseTime: "",
+    infoSource: "",
+    currentStatus: "潜在",
+  });
+  const [leadSaving, setLeadSaving] = useState(false);
+  const [leadError, setLeadError] = useState("");
+  const [leadCustomers, setLeadCustomers] = useState<Customer[]>([]);
+
+  const [showLeadCustomerModal, setShowLeadCustomerModal] = useState(false);
+  const [leadCustomerForm, setLeadCustomerForm] = useState({
+    name: "",
+    contactPerson: "",
+    phone: "",
+    industryType: "",
+    customerGrade: "C",
+  });
+  const [leadCustomerSaving, setLeadCustomerSaving] = useState(false);
+  const [leadCustomerError, setLeadCustomerError] = useState("");
 
   const fetchOptions = useCallback(async () => {
     try {
@@ -103,7 +130,7 @@ export default function QuotationsPage() {
       const custJson = await custRes.json();
       const leadJson = await leadRes.json();
       if (custRes.ok) setCustomers(custJson.data);
-      if (leadRes.ok) setProjectLeads(leadJson.data.map((l: { projectSourceId: string; projectName: string }) => ({ projectSourceId: l.projectSourceId, projectName: l.projectName })));
+      if (leadRes.ok) setProjectLeads(leadJson.data.map((l: { projectSourceId: string; projectName: string; customerId: string; customer?: { name: string } }) => ({ projectSourceId: l.projectSourceId, projectName: l.projectName, customerId: l.customerId, customerName: l.customer?.name || "" })));
     } catch (err) {
       console.error("获取选项数据失败:", err);
     }
@@ -168,6 +195,10 @@ export default function QuotationsPage() {
       setFormError("请选择客户");
       return;
     }
+    if (!form.projectSourceId) {
+      setFormError("请选择关联项目线索");
+      return;
+    }
     if (!form.totalAmount || parseFloat(form.totalAmount) <= 0) {
       setFormError("报价总金额必须大于0");
       return;
@@ -184,7 +215,7 @@ export default function QuotationsPage() {
       };
 
       const payload = {
-        projectSourceId: form.projectSourceId || null,
+        projectSourceId: form.projectSourceId,
         customerId: form.customerId,
         estimatedCost,
         totalAmount: form.totalAmount,
@@ -242,6 +273,135 @@ export default function QuotationsPage() {
   const updateForm = (field: keyof QuotationFormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (formError) setFormError("");
+  };
+
+  const fetchLeadCustomers = async () => {
+    try {
+      const res = await fetch("/api/customers?pageSize=200");
+      const json = await res.json();
+      if (res.ok) setLeadCustomers(json.data);
+    } catch (err) {
+      console.error("获取客户列表失败:", err);
+    }
+  };
+
+  const fetchLeadOptions = async () => {
+    try {
+      const res = await fetch("/api/project-leads?pageSize=200");
+      const json = await res.json();
+      if (res.ok) setProjectLeads(json.data.map((l: { projectSourceId: string; projectName: string; customerId: string; customer?: { name: string } }) => ({ projectSourceId: l.projectSourceId, projectName: l.projectName, customerId: l.customerId, customerName: l.customer?.name || "" })));
+    } catch (err) {
+      console.error("获取项目线索失败:", err);
+    }
+  };
+
+  const handleOpenLeadModal = () => {
+    setLeadForm({
+      customerId: "",
+      projectName: "",
+      location: "",
+      estimatedInvestment: "",
+      bidReleaseTime: "",
+      infoSource: "",
+      currentStatus: "潜在",
+    });
+    setLeadError("");
+    fetchLeadCustomers();
+    setShowLeadModal(true);
+  };
+
+  const handleCreateLead = async () => {
+    if (!leadForm.customerId) {
+      setLeadError("请选择客户");
+      return;
+    }
+    if (!leadForm.projectName.trim()) {
+      setLeadError("请输入项目名称");
+      return;
+    }
+
+    setLeadSaving(true);
+    setLeadError("");
+
+    try {
+      const res = await fetch("/api/project-leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(leadForm),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        await fetchLeadOptions();
+        fetchOptions();
+        setForm((prev) => ({ ...prev, customerId: leadForm.customerId, projectSourceId: json.data.projectSourceId }));
+        setShowLeadModal(false);
+        setLeadForm({
+          customerId: "",
+          projectName: "",
+          location: "",
+          estimatedInvestment: "",
+          bidReleaseTime: "",
+          infoSource: "",
+          currentStatus: "潜在",
+        });
+      } else {
+        setLeadError(json.error || "创建项目线索失败");
+      }
+    } catch {
+      setLeadError("网络错误，请重试");
+    } finally {
+      setLeadSaving(false);
+    }
+  };
+
+  const handleOpenLeadCustomerModal = () => {
+    setLeadCustomerForm({
+      name: "",
+      contactPerson: "",
+      phone: "",
+      industryType: "",
+      customerGrade: "C",
+    });
+    setLeadCustomerError("");
+    setShowLeadCustomerModal(true);
+  };
+
+  const handleCreateLeadCustomer = async () => {
+    if (!leadCustomerForm.name.trim()) {
+      setLeadCustomerError("请输入客户名称");
+      return;
+    }
+
+    setLeadCustomerSaving(true);
+    setLeadCustomerError("");
+
+    try {
+      const res = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(leadCustomerForm),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        await fetchLeadCustomers();
+        fetchOptions();
+        setLeadForm((prev) => ({ ...prev, customerId: json.data.id }));
+        setShowLeadCustomerModal(false);
+        setLeadCustomerForm({
+          name: "",
+          contactPerson: "",
+          phone: "",
+          industryType: "",
+          customerGrade: "C",
+        });
+      } else {
+        setLeadCustomerError(json.error || "创建客户失败");
+      }
+    } catch {
+      setLeadCustomerError("网络错误，请重试");
+    } finally {
+      setLeadCustomerSaving(false);
+    }
   };
 
   const formatMoney = (amount: number | null) => {
@@ -430,11 +590,14 @@ export default function QuotationsPage() {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="col-span-2">
               <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
                 客户 <span className="text-[#FF3B30]">*</span>
               </label>
-              <select className="ios-select" value={form.customerId} onChange={(e) => updateForm("customerId", e.target.value)}>
+              <select className="ios-select" value={form.customerId} onChange={(e) => {
+                updateForm("customerId", e.target.value);
+                if (form.projectSourceId) updateForm("projectSourceId", "");
+              }}>
                 <option value="">请选择客户</option>
                 {customers.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -442,16 +605,32 @@ export default function QuotationsPage() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">关联项目（可选）</label>
-              <select className="ios-select" value={form.projectSourceId} onChange={(e) => updateForm("projectSourceId", e.target.value)}>
-                <option value="">不关联项目</option>
-                {projectLeads.map((l) => (
-                  <option key={l.projectSourceId} value={l.projectSourceId}>
-                    {l.projectSourceId} - {l.projectName}
-                  </option>
-                ))}
-              </select>
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                关联项目线索 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <select className="ios-select flex-1" value={form.projectSourceId} onChange={(e) => updateForm("projectSourceId", e.target.value)}>
+                  <option value="">请选择项目线索</option>
+                  {projectLeads
+                    .filter((l) => !form.customerId || l.customerId === form.customerId)
+                    .map((l) => (
+                      <option key={l.projectSourceId} value={l.projectSourceId}>
+                        {l.projectSourceId} - {l.projectName}
+                      </option>
+                    ))}
+                </select>
+                {!editingQuotation && (
+                  <button
+                    type="button"
+                    className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF] whitespace-nowrap"
+                    onClick={handleOpenLeadModal}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    新增线索
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="col-span-2 pt-2 pb-1">
@@ -585,6 +764,202 @@ export default function QuotationsPage() {
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
             <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>
               {deleting ? "删除中..." : "确认删除"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showLeadModal}
+        onClose={() => setShowLeadModal(false)}
+        title="新增项目线索"
+        maxWidth="640px"
+      >
+        <div className="space-y-4">
+          {leadError && (
+            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{leadError}</div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                客户 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <select
+                  className="ios-select flex-1"
+                  value={leadForm.customerId}
+                  onChange={(e) => { setLeadForm((prev) => ({ ...prev, customerId: e.target.value })); if (leadError) setLeadError(""); }}
+                >
+                  <option value="">请选择客户</option>
+                  {leadCustomers.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF] whitespace-nowrap"
+                  onClick={handleOpenLeadCustomerModal}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  新增客户
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                项目名称 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入项目名称"
+                value={leadForm.projectName}
+                onChange={(e) => { setLeadForm((prev) => ({ ...prev, projectName: e.target.value })); if (leadError) setLeadError(""); }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目地点</label>
+              <div className="relative">
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <input
+                  type="text"
+                  className="ios-input pl-10"
+                  placeholder="请输入项目地点"
+                  value={leadForm.location}
+                  onChange={(e) => setLeadForm((prev) => ({ ...prev, location: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">预计投资额（万元）</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <input
+                  type="number"
+                  className="ios-input pl-10"
+                  placeholder="请输入预计投资额"
+                  value={leadForm.estimatedInvestment}
+                  onChange={(e) => setLeadForm((prev) => ({ ...prev, estimatedInvestment: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">投标截止时间</label>
+              <div className="relative">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <input
+                  type="date"
+                  className="ios-input pl-10"
+                  value={leadForm.bidReleaseTime}
+                  onChange={(e) => setLeadForm((prev) => ({ ...prev, bidReleaseTime: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">信息来源</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入信息来源"
+                value={leadForm.infoSource}
+                onChange={(e) => setLeadForm((prev) => ({ ...prev, infoSource: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+            <button className="ios-btn ios-btn-secondary" onClick={() => setShowLeadModal(false)}>取消</button>
+            <button className="ios-btn ios-btn-primary" onClick={handleCreateLead} disabled={leadSaving}>
+              {leadSaving ? "保存中..." : "确认添加"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showLeadCustomerModal}
+        onClose={() => setShowLeadCustomerModal(false)}
+        title="新增客户"
+        maxWidth="480px"
+      >
+        <div className="space-y-4">
+          {leadCustomerError && (
+            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{leadCustomerError}</div>
+          )}
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              客户名称 <span className="text-[#FF3B30]">*</span>
+            </label>
+            <input
+              type="text"
+              className="ios-input"
+              placeholder="请输入客户名称"
+              value={leadCustomerForm.name}
+              onChange={(e) => { setLeadCustomerForm((prev) => ({ ...prev, name: e.target.value })); if (leadCustomerError) setLeadCustomerError(""); }}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入联系人"
+                value={leadCustomerForm.contactPerson}
+                onChange={(e) => setLeadCustomerForm((prev) => ({ ...prev, contactPerson: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入电话"
+                value={leadCustomerForm.phone}
+                onChange={(e) => setLeadCustomerForm((prev) => ({ ...prev, phone: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">行业类型</label>
+              <select
+                className="ios-select"
+                value={leadCustomerForm.industryType}
+                onChange={(e) => setLeadCustomerForm((prev) => ({ ...prev, industryType: e.target.value }))}
+              >
+                <option value="">请选择</option>
+                <option value="石化">石化</option>
+                <option value="医药">医药</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">客户等级</label>
+              <select
+                className="ios-select"
+                value={leadCustomerForm.customerGrade}
+                onChange={(e) => setLeadCustomerForm((prev) => ({ ...prev, customerGrade: e.target.value }))}
+              >
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+            <button className="ios-btn ios-btn-secondary" onClick={() => setShowLeadCustomerModal(false)}>取消</button>
+            <button className="ios-btn ios-btn-primary" onClick={handleCreateLeadCustomer} disabled={leadCustomerSaving}>
+              {leadCustomerSaving ? "保存中..." : "确认添加"}
             </button>
           </div>
         </div>

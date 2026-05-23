@@ -1,0 +1,1363 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import {
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  Briefcase,
+  MapPin,
+  ChevronRight,
+  Play,
+  Clock,
+  Users as UsersIcon,
+  Calendar,
+  UserCircle,
+} from "lucide-react";
+import Modal from "@/components/Modal";
+
+interface Customer {
+  id: string;
+  name: string;
+  industryType: string | null;
+}
+
+interface User {
+  id: string;
+  realName: string;
+  username: string;
+  role: string;
+  department: string | null;
+}
+
+interface BiddingItem {
+  id: string;
+  projectSourceId: string;
+  bidAmount: number | null;
+  bidResult: string | null;
+  projectLead: {
+    id: string;
+    projectSourceId: string;
+    projectName: string;
+    customerId: string;
+    customer: { id: string; name: string };
+  } | null;
+}
+
+interface QuotationItem {
+  id: string;
+  projectSourceId: string | null;
+  customerId: string;
+  totalAmount: number;
+  customer: { id: string; name: string };
+  projectLead: { id: string; projectSourceId: string; projectName: string; customerId: string } | null;
+}
+
+interface Project {
+  id: string;
+  projectSourceId: string;
+  projectCode: string;
+  name: string;
+  customerId: string;
+  type: string | null;
+  address: string | null;
+  projectCategory: string | null;
+  source: string;
+  sourceRefId: string | null;
+  status: string;
+  designManagerId: string | null;
+  supervisorLeaderId: string | null;
+  startDate: string | null;
+  plannedEndDate: string | null;
+  actualCloseDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  customer: Customer;
+  projectLead: { projectSourceId: string; projectName: string; currentStatus: string } | null;
+  designManager: { id: string; realName: string } | null;
+  supervisorLeader: { id: string; realName: string } | null;
+  _count: {
+    plans: number;
+    designTasks: number;
+    outsourcingTasks: number;
+    purchaseRequests: number;
+  };
+}
+
+interface ProjectFormData {
+  projectSourceId: string;
+  projectCode: string;
+  name: string;
+  customerId: string;
+  type: string;
+  address: string;
+  projectCategory: string;
+  source: string;
+  status: string;
+  designManagerId: string;
+  supervisorLeaderId: string;
+  startDate: string;
+  plannedEndDate: string;
+  actualCloseDate: string;
+  biddingId: string;
+  quotationId: string;
+}
+
+interface PaginationInfo {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+const emptyForm: ProjectFormData = {
+  projectSourceId: "",
+  projectCode: "",
+  name: "",
+  customerId: "",
+  type: "",
+  address: "",
+  projectCategory: "",
+  source: "投标中标",
+  status: "筹备",
+  designManagerId: "",
+  supervisorLeaderId: "",
+  startDate: "",
+  plannedEndDate: "",
+  actualCloseDate: "",
+  biddingId: "",
+  quotationId: "",
+};
+
+const statusConfig: Record<string, { color: string; label: string }> = {
+  "筹备": { color: "ios-badge-gray", label: "筹备" },
+  "执行": { color: "ios-badge-green", label: "执行" },
+  "暂停": { color: "ios-badge-orange", label: "暂停" },
+  "关闭": { color: "ios-badge-red", label: "关闭" },
+  "归档": { color: "ios-badge-blue", label: "归档" },
+};
+
+const statusFlow: Record<string, string[]> = {
+  "筹备": ["执行", "关闭"],
+  "执行": ["暂停", "关闭"],
+  "暂停": ["执行", "关闭"],
+  "关闭": ["归档"],
+  "归档": [],
+};
+
+const sourceOptions = [
+  { value: "投标中标", label: "投标中标" },
+  { value: "商务报价", label: "商务报价" },
+  { value: "直接授予", label: "直接授予" },
+];
+
+export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1, pageSize: 20, total: 0, totalPages: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterSource, setFilterSource] = useState("");
+
+  const [showModal, setShowModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [form, setForm] = useState<ProjectFormData>(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [biddings, setBiddings] = useState<BiddingItem[]>([]);
+  const [quotations, setQuotations] = useState<QuotationItem[]>([]);
+
+  const [detailProject, setDetailProject] = useState<Project | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Project | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [statusChanging, setStatusChanging] = useState<string | null>(null);
+
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [customerForm, setCustomerForm] = useState({
+    name: "",
+    contactPerson: "",
+    phone: "",
+    industryType: "",
+    customerGrade: "C",
+  });
+  const [customerSaving, setCustomerSaving] = useState(false);
+  const [customerError, setCustomerError] = useState("");
+
+  const fetchCustomers = useCallback(async () => {
+    try {
+      const res = await fetch("/api/customers?pageSize=200");
+      const json = await res.json();
+      if (res.ok) setCustomers(json.data);
+    } catch {}
+  }, []);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      const res = await fetch("/api/users");
+      const json = await res.json();
+      if (res.ok) setUsers(json.data || json);
+    } catch {}
+  }, []);
+
+  const fetchBiddings = useCallback(async () => {
+    try {
+      const res = await fetch("/api/biddings?bidResult=中标&pageSize=200");
+      const json = await res.json();
+      if (res.ok) {
+        setBiddings(json.data || []);
+      }
+    } catch {}
+  }, []);
+
+  const fetchQuotations = useCallback(async () => {
+    try {
+      const res = await fetch("/api/quotations?approvalStatus=已审批&pageSize=200");
+      const json = await res.json();
+      if (res.ok) setQuotations(json.data || []);
+    } catch {}
+  }, []);
+
+  const fetchProjects = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (filterStatus) params.set("status", filterStatus);
+      if (filterType) params.set("type", filterType);
+      if (filterCategory) params.set("projectCategory", filterCategory);
+      if (filterSource) params.set("source", filterSource);
+      params.set("page", pagination.page.toString());
+      params.set("pageSize", pagination.pageSize.toString());
+
+      const res = await fetch(`/api/projects?${params}`);
+      const json = await res.json();
+      if (res.ok) {
+        setProjects(json.data);
+        setPagination(json.pagination);
+      }
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  }, [search, filterStatus, filterType, filterCategory, filterSource, pagination.page, pagination.pageSize]);
+
+  useEffect(() => {
+    fetchCustomers();
+    fetchUsers();
+    fetchBiddings();
+    fetchQuotations();
+  }, [fetchCustomers, fetchUsers, fetchBiddings, fetchQuotations]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  const handleOpenCreate = () => {
+    setEditingProject(null);
+    setForm(emptyForm);
+    setFormError("");
+    setShowModal(true);
+  };
+
+  const handleOpenEdit = (project: Project) => {
+    setEditingProject(project);
+    setForm({
+      projectSourceId: project.projectSourceId,
+      projectCode: project.projectCode,
+      name: project.name,
+      customerId: project.customerId,
+      type: project.type || "",
+      address: project.address || "",
+      projectCategory: project.projectCategory || "",
+      source: project.source,
+      status: project.status,
+      designManagerId: project.designManagerId || "",
+      supervisorLeaderId: project.supervisorLeaderId || "",
+      startDate: project.startDate ? project.startDate.split("T")[0] : "",
+      plannedEndDate: project.plannedEndDate ? project.plannedEndDate.split("T")[0] : "",
+      actualCloseDate: project.actualCloseDate ? project.actualCloseDate.split("T")[0] : "",
+      biddingId: "",
+      quotationId: "",
+    });
+    setFormError("");
+    setShowModal(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!form.projectCode.trim()) {
+      setFormError("项目编号不能为空");
+      return;
+    }
+    if (!form.name.trim()) {
+      setFormError("项目名称不能为空");
+      return;
+    }
+    if (!form.customerId) {
+      setFormError("请选择客户");
+      return;
+    }
+
+    setSaving(true);
+    setFormError("");
+
+    try {
+      const url = editingProject
+        ? `/api/projects/${editingProject.id}`
+        : "/api/projects";
+      const method = editingProject ? "PUT" : "POST";
+
+      const body: Record<string, unknown> = {
+        projectCode: form.projectCode,
+        name: form.name,
+        customerId: form.customerId,
+        type: form.type || null,
+        address: form.address || null,
+        projectCategory: form.projectCategory || null,
+        source: form.source,
+        status: form.status,
+        designManagerId: form.designManagerId || null,
+        supervisorLeaderId: form.supervisorLeaderId || null,
+        startDate: form.startDate || null,
+        plannedEndDate: form.plannedEndDate || null,
+        actualCloseDate: form.actualCloseDate || null,
+      };
+
+      if (form.source === "投标中标") {
+        body.projectSourceId = form.projectSourceId;
+        body.biddingId = form.biddingId || null;
+      } else if (form.source === "商务报价") {
+        body.projectSourceId = form.projectSourceId;
+        body.quotationId = form.quotationId || null;
+      }
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        setShowModal(false);
+        fetchProjects();
+      } else {
+        setFormError(json.error || "操作失败");
+      }
+    } catch {
+      setFormError("网络错误，请重试");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCreateCustomer = async () => {
+    if (!customerForm.name.trim()) {
+      setCustomerError("客户名称不能为空");
+      return;
+    }
+
+    setCustomerSaving(true);
+    setCustomerError("");
+
+    try {
+      const res = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customerForm),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        await fetchCustomers();
+        setForm((prev) => ({ ...prev, customerId: json.data.id }));
+        setShowCustomerModal(false);
+        setCustomerForm({
+          name: "",
+          contactPerson: "",
+          phone: "",
+          industryType: "",
+          customerGrade: "C",
+        });
+      } else {
+        setCustomerError(json.error || "创建客户失败");
+      }
+    } catch {
+      setCustomerError("网络错误，请重试");
+    } finally {
+      setCustomerSaving(false);
+    }
+  };
+
+  const handleStatusChange = async (project: Project, newStatus: string) => {
+    setStatusChanging(project.id);
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (res.ok) {
+        fetchProjects();
+        if (detailProject?.id === project.id) {
+          setDetailProject({ ...detailProject, status: newStatus });
+        }
+      } else {
+        const json = await res.json();
+        alert(json.error || "状态更新失败");
+      }
+    } catch {
+      alert("网络错误，请重试");
+    } finally {
+      setStatusChanging(null);
+    }
+  };
+
+  const handleViewDetail = async (project: Project) => {
+    try {
+      const res = await fetch(`/api/projects/${project.id}`);
+      const json = await res.json();
+      if (res.ok) {
+        setDetailProject(json.data);
+      }
+    } catch {
+      setDetailProject(project);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+    if (deleteConfirm.status === "执行" || deleteConfirm.status === "关闭") {
+      alert("执行中或已关闭的项目不能删除");
+      setDeleteConfirm(null);
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/projects/${deleteConfirm.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setDeleteConfirm(null);
+        fetchProjects();
+      } else {
+        const json = await res.json();
+        alert(json.error || "删除失败");
+        setDeleteConfirm(null);
+      }
+    } catch {
+      alert("网络错误");
+      setDeleteConfirm(null);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const updateForm = (field: keyof ProjectFormData, value: string) => {
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "source") {
+        next.projectSourceId = "";
+        next.name = "";
+        next.customerId = "";
+        next.biddingId = "";
+        next.quotationId = "";
+      }
+      return next;
+    });
+    if (formError) setFormError("");
+  };
+
+  const handleSelectBidding = (biddingId: string) => {
+    const bidding = biddings.find((b) => b.id === biddingId);
+    if (!bidding || !bidding.projectLead) return;
+    const lead = bidding.projectLead;
+    setForm((prev) => ({
+      ...prev,
+      biddingId,
+      projectSourceId: bidding.projectSourceId,
+      name: lead.projectName,
+      customerId: lead.customerId,
+    }));
+    if (formError) setFormError("");
+  };
+
+  const handleSelectQuotation = (quotationId: string) => {
+    const quotation = quotations.find((q) => q.id === quotationId);
+    if (quotation) {
+      const psId = quotation.projectLead?.projectSourceId || quotation.projectSourceId || "";
+      const pName = quotation.projectLead?.projectName || "";
+      const cId = quotation.projectLead?.customerId || quotation.customerId;
+      setForm((prev) => ({
+        ...prev,
+        quotationId,
+        projectSourceId: psId,
+        name: pName,
+        customerId: cId,
+      }));
+    }
+    if (formError) setFormError("");
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  const stats = {
+    total: pagination.total,
+    executing: projects.filter((p) => p.status === "执行").length,
+    preparing: projects.filter((p) => p.status === "筹备").length,
+  };
+
+  const typeBadgeColor = (type: string | null) => {
+    if (type === "石化") return "ios-badge-orange";
+    if (type === "医药") return "ios-badge-green";
+    return "ios-badge-gray";
+  };
+
+  const categoryBadgeColor = (cat: string | null) => {
+    if (cat === "设计") return "ios-badge-blue";
+    if (cat === "EP") return "ios-badge-orange";
+    if (cat === "EPcm") return "ios-badge-green";
+    return "ios-badge-gray";
+  };
+
+  return (
+    <>
+      <div className="page-header">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1>项目立项</h1>
+            <p>管理项目全生命周期，从筹备到归档</p>
+          </div>
+          <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
+            <Plus className="w-4 h-4" />
+            新建项目
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-5 mb-6">
+        <div className="bento-card-static flex items-center gap-4">
+          <div className="w-11 h-11 rounded-2xl bg-[#007AFF]/10 flex items-center justify-center">
+            <Briefcase className="w-5 h-5 text-[#007AFF]" />
+          </div>
+          <div>
+            <p className="text-[13px] text-[#86868B]">项目总数</p>
+            <p className="text-[24px] font-bold text-[#1D1D1F] leading-tight">{stats.total}</p>
+          </div>
+        </div>
+        <div className="bento-card-static flex items-center gap-4">
+          <div className="w-11 h-11 rounded-2xl bg-[#34C759]/10 flex items-center justify-center">
+            <Play className="w-5 h-5 text-[#34C759]" />
+          </div>
+          <div>
+            <p className="text-[13px] text-[#86868B]">执行中</p>
+            <p className="text-[24px] font-bold text-[#34C759] leading-tight">{stats.executing}</p>
+          </div>
+        </div>
+        <div className="bento-card-static flex items-center gap-4">
+          <div className="w-11 h-11 rounded-2xl bg-[#FF9500]/10 flex items-center justify-center">
+            <Clock className="w-5 h-5 text-[#FF9500]" />
+          </div>
+          <div>
+            <p className="text-[13px] text-[#86868B]">筹备中</p>
+            <p className="text-[24px] font-bold text-[#FF9500] leading-tight">{stats.preparing}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bento-card-static">
+        <div className="filter-bar">
+          <div className="relative flex-1 min-w-[200px] max-w-[360px]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <input
+              type="text"
+              className="ios-input pl-10"
+              placeholder="搜索项目编号、名称、项目源ID..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPagination((prev) => ({ ...prev, page: 1 }));
+              }}
+            />
+          </div>
+
+          <select
+            className="ios-select w-[140px]"
+            value={filterStatus}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              setPagination((prev) => ({ ...prev, page: 1 }));
+            }}
+          >
+            <option value="">全部状态</option>
+            <option value="筹备">筹备</option>
+            <option value="执行">执行</option>
+            <option value="暂停">暂停</option>
+            <option value="关闭">关闭</option>
+            <option value="归档">归档</option>
+          </select>
+
+          <select
+            className="ios-select w-[120px]"
+            value={filterType}
+            onChange={(e) => {
+              setFilterType(e.target.value);
+              setPagination((prev) => ({ ...prev, page: 1 }));
+            }}
+          >
+            <option value="">全部类型</option>
+            <option value="石化">石化</option>
+            <option value="医药">医药</option>
+          </select>
+
+          <select
+            className="ios-select w-[120px]"
+            value={filterCategory}
+            onChange={(e) => {
+              setFilterCategory(e.target.value);
+              setPagination((prev) => ({ ...prev, page: 1 }));
+            }}
+          >
+            <option value="">全部类别</option>
+            <option value="设计">设计</option>
+            <option value="EP">EP</option>
+            <option value="EPcm">EPcm</option>
+          </select>
+
+          <select
+            className="ios-select w-[130px]"
+            value={filterSource}
+            onChange={(e) => {
+              setFilterSource(e.target.value);
+              setPagination((prev) => ({ ...prev, page: 1 }));
+            }}
+          >
+            <option value="">全部来源</option>
+            <option value="投标中标">投标中标</option>
+            <option value="商务报价">商务报价</option>
+            <option value="直接授予">直接授予</option>
+          </select>
+
+          <div className="ml-auto text-[13px] text-[#86868B]">
+            共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 个项目
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="empty-state">
+            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <p>加载中...</p>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="empty-state">
+            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
+              <Briefcase className="w-8 h-8 text-[#86868B]" />
+            </div>
+            <p>{search || filterStatus || filterType || filterCategory || filterSource ? "没有匹配的项目" : "暂无项目，点击右上角新建"}</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="ios-table">
+              <thead>
+                <tr>
+                  <th>项目源ID</th>
+                  <th>项目编号</th>
+                  <th>项目名称</th>
+                  <th>客户</th>
+                  <th>类型</th>
+                  <th>类别</th>
+                  <th>来源</th>
+                  <th>设计经理</th>
+                  <th>主管领导</th>
+                  <th>状态</th>
+                  <th>项目启动时间</th>
+                  <th>计划结束时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projects.map((project) => {
+                  const sc = statusConfig[project.status] || statusConfig["筹备"];
+                  const nextStatuses = statusFlow[project.status] || [];
+                  return (
+                    <tr key={project.id}>
+                      <td>
+                        <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
+                          {project.projectSourceId}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="font-mono text-[13px]">{project.projectCode}</span>
+                      </td>
+                      <td>
+                        <span className="font-semibold">{project.name}</span>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-1.5">
+                          <span>{project.customer.name}</span>
+                          {project.customer.industryType && (
+                            <span className={`ios-badge text-[10px] ${project.customer.industryType === "石化" ? "ios-badge-orange" : "ios-badge-green"}`}>
+                              {project.customer.industryType}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        {project.type ? (
+                          <span className={`ios-badge text-[10px] ${typeBadgeColor(project.type)}`}>{project.type}</span>
+                        ) : (
+                          <span className="text-[#86868B]">-</span>
+                        )}
+                      </td>
+                      <td>
+                        {project.projectCategory ? (
+                          <span className={`ios-badge text-[10px] ${categoryBadgeColor(project.projectCategory)}`}>{project.projectCategory}</span>
+                        ) : (
+                          <span className="text-[#86868B]">-</span>
+                        )}
+                      </td>
+                      <td className="text-[#86868B]">{project.source}</td>
+                      <td>
+                        {project.designManager ? (
+                          <span className="text-[13px]">{project.designManager.realName}</span>
+                        ) : (
+                          <span className="text-[#86868B]">-</span>
+                        )}
+                      </td>
+                      <td>
+                        {project.supervisorLeader ? (
+                          <span className="text-[13px]">{project.supervisorLeader.realName}</span>
+                        ) : (
+                          <span className="text-[#86868B]">-</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`ios-badge ${sc.color}`}>{sc.label}</span>
+                          {nextStatuses.length > 0 && (
+                            <select
+                              className="text-[11px] border-none bg-transparent text-[#007AFF] cursor-pointer font-semibold p-0 outline-none"
+                              value=""
+                              disabled={statusChanging === project.id}
+                              onChange={(e) => {
+                                if (e.target.value) handleStatusChange(project, e.target.value);
+                              }}
+                            >
+                              <option value="">变更→</option>
+                              {nextStatuses.map((s) => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-[#86868B]">{formatDate(project.startDate)}</td>
+                      <td className="text-[#86868B]">{formatDate(project.plannedEndDate)}</td>
+                      <td>
+                        <div className="flex items-center gap-1">
+                          <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(project)}>
+                            <Eye className="w-3.5 h-3.5" />
+                            详情
+                          </button>
+                          <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(project)}>
+                            <Pencil className="w-3.5 h-3.5" />
+                            编辑
+                          </button>
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                            onClick={() => setDeleteConfirm(project)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F0F0F0]">
+                <button
+                  className="ios-btn ios-btn-secondary ios-btn-sm"
+                  disabled={pagination.page <= 1}
+                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
+                >
+                  上一页
+                </button>
+                <span className="text-[13px] text-[#86868B] px-3">
+                  {pagination.page} / {pagination.totalPages}
+                </span>
+                <button
+                  className="ios-btn ios-btn-secondary ios-btn-sm"
+                  disabled={pagination.page >= pagination.totalPages}
+                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
+                >
+                  下一页
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingProject ? "编辑项目" : "新建项目"}
+        maxWidth="640px"
+      >
+        <div className="space-y-4">
+          {formError && (
+            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+              {formError}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                来源 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <select
+                className="ios-select"
+                value={form.source}
+                onChange={(e) => updateForm("source", e.target.value)}
+                disabled={!!editingProject}
+              >
+                {sourceOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {form.source === "投标中标" && (
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                  选择投标
+                </label>
+                <select
+                  className="ios-select"
+                  value={form.biddingId}
+                  onChange={(e) => handleSelectBidding(e.target.value)}
+                  disabled={!!editingProject}
+                >
+                  <option value="">请选择投标记录</option>
+                  {biddings.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.projectSourceId} - {b.projectLead?.projectName || ""} - {b.projectLead?.customer?.name || ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {form.source === "商务报价" && (
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                  选择报价
+                </label>
+                <select
+                  className="ios-select"
+                  value={form.quotationId}
+                  onChange={(e) => handleSelectQuotation(e.target.value)}
+                  disabled={!!editingProject}
+                >
+                  <option value="">请选择报价记录</option>
+                  {quotations.map((q) => (
+                    <option key={q.id} value={q.id}>
+                      {q.customer.name} - ¥{q.totalAmount.toLocaleString()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {editingProject && form.projectSourceId && (
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目源ID</label>
+                <input
+                  type="text"
+                  className="ios-input bg-[#F5F5F7]"
+                  value={form.projectSourceId}
+                  readOnly
+                />
+              </div>
+            )}
+
+            {(form.source === "投标中标" || form.source === "商务报价") && !editingProject && form.projectSourceId && (
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目源ID</label>
+                <input
+                  type="text"
+                  className="ios-input bg-[#F5F5F7]"
+                  value={form.projectSourceId}
+                  readOnly
+                />
+              </div>
+            )}
+
+            {!editingProject && form.source === "直接授予" && (
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目源ID</label>
+                <input
+                  type="text"
+                  className="ios-input bg-[#F5F5F7]"
+                  value="提交后系统自动生成"
+                  readOnly
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                项目编号 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入项目编号"
+                value={form.projectCode}
+                onChange={(e) => updateForm("projectCode", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                项目名称 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入项目名称"
+                value={form.name}
+                onChange={(e) => updateForm("name", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                客户 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <select
+                className="ios-select"
+                value={form.customerId}
+                onChange={(e) => updateForm("customerId", e.target.value)}
+              >
+                <option value="">请选择客户</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}{c.industryType ? ` (${c.industryType})` : ""}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF] mt-1"
+                onClick={() => {
+                  setCustomerError("");
+                  setShowCustomerModal(true);
+                }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                新增客户
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">类型</label>
+              <select
+                className="ios-select"
+                value={form.type}
+                onChange={(e) => updateForm("type", e.target.value)}
+              >
+                <option value="">请选择类型</option>
+                <option value="石化">石化</option>
+                <option value="医药">医药</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">地址</label>
+              <div className="relative">
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <input
+                  type="text"
+                  className="ios-input pl-10"
+                  placeholder="项目地址"
+                  value={form.address}
+                  onChange={(e) => updateForm("address", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">类别</label>
+              <select
+                className="ios-select"
+                value={form.projectCategory}
+                onChange={(e) => updateForm("projectCategory", e.target.value)}
+              >
+                <option value="">请选择类别</option>
+                <option value="设计">设计</option>
+                <option value="EP">EP</option>
+                <option value="EPcm">EPcm</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">状态</label>
+              <select
+                className="ios-select"
+                value={form.status}
+                onChange={(e) => updateForm("status", e.target.value)}
+              >
+                <option value="筹备">筹备</option>
+                <option value="执行">执行</option>
+                <option value="暂停">暂停</option>
+                <option value="关闭">关闭</option>
+                <option value="归档">归档</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">设计经理</label>
+              <select
+                className="ios-select"
+                value={form.designManagerId}
+                onChange={(e) => updateForm("designManagerId", e.target.value)}
+              >
+                <option value="">请选择设计经理</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>{u.realName}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">主管领导</label>
+              <select
+                className="ios-select"
+                value={form.supervisorLeaderId}
+                onChange={(e) => updateForm("supervisorLeaderId", e.target.value)}
+              >
+                <option value="">请选择主管领导</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>{u.realName}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                <Calendar className="w-3.5 h-3.5 inline mr-1" />
+                项目启动时间
+              </label>
+              <input
+                type="date"
+                className="ios-input"
+                value={form.startDate}
+                onChange={(e) => updateForm("startDate", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                <Calendar className="w-3.5 h-3.5 inline mr-1" />
+                计划结束时间
+              </label>
+              <input
+                type="date"
+                className="ios-input"
+                value={form.plannedEndDate}
+                onChange={(e) => updateForm("plannedEndDate", e.target.value)}
+              />
+            </div>
+
+            {editingProject && (
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                  <Calendar className="w-3.5 h-3.5 inline mr-1" />
+                  实际关闭时间
+                </label>
+                <input
+                  type="date"
+                  className="ios-input"
+                  value={form.actualCloseDate}
+                  onChange={(e) => updateForm("actualCloseDate", e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+            <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
+            <button className="ios-btn ios-btn-primary" onClick={handleSubmit} disabled={saving}>
+              {saving ? "保存中..." : editingProject ? "保存修改" : "创建项目"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!detailProject}
+        onClose={() => setDetailProject(null)}
+        title="项目详情"
+        maxWidth="680px"
+      >
+        {detailProject && (
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 pb-4 border-b border-[#F0F0F0]">
+              <div className="w-12 h-12 rounded-2xl bg-[#007AFF]/10 flex items-center justify-center">
+                <Briefcase className="w-6 h-6 text-[#007AFF]" />
+              </div>
+              <div>
+                <p className="text-[17px] font-bold text-[#1D1D1F]">{detailProject.name}</p>
+                <p className="text-[13px] text-[#007AFF] font-mono font-semibold">{detailProject.projectSourceId}</p>
+              </div>
+              <span className={`ios-badge ml-auto ${statusConfig[detailProject.status]?.color || "ios-badge-gray"}`}>
+                {detailProject.status}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">项目编号</p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F] font-mono">{detailProject.projectCode}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">客户</p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.customer.name}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">类型</p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.type || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">类别</p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.projectCategory || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">来源</p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.source}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">地址</p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.address || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">
+                  <UserCircle className="w-3 h-3 inline mr-1" />
+                  设计经理
+                </p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.designManager?.realName || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">
+                  <UsersIcon className="w-3 h-3 inline mr-1" />
+                  主管领导
+                </p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.supervisorLeader?.realName || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">
+                  <Calendar className="w-3 h-3 inline mr-1" />
+                  项目启动时间
+                </p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailProject.startDate)}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">
+                  <Calendar className="w-3 h-3 inline mr-1" />
+                  计划结束时间
+                </p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailProject.plannedEndDate)}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">
+                  <Calendar className="w-3 h-3 inline mr-1" />
+                  实际关闭时间
+                </p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailProject.actualCloseDate)}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">创建时间</p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailProject.createdAt)}</p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-[#F0F0F0]">
+              <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">关联统计</p>
+              <div className="grid grid-cols-4 gap-3">
+                <div className="p-3 rounded-xl bg-[#F5F5F7] text-center">
+                  <p className="text-[20px] font-bold text-[#1D1D1F]">{detailProject._count.plans}</p>
+                  <p className="text-[11px] text-[#86868B]">计划</p>
+                </div>
+                <div className="p-3 rounded-xl bg-[#F5F5F7] text-center">
+                  <p className="text-[20px] font-bold text-[#1D1D1F]">{detailProject._count.designTasks}</p>
+                  <p className="text-[11px] text-[#86868B]">设计任务</p>
+                </div>
+                <div className="p-3 rounded-xl bg-[#F5F5F7] text-center">
+                  <p className="text-[20px] font-bold text-[#1D1D1F]">{detailProject._count.outsourcingTasks}</p>
+                  <p className="text-[11px] text-[#86868B]">外包任务</p>
+                </div>
+                <div className="p-3 rounded-xl bg-[#F5F5F7] text-center">
+                  <p className="text-[20px] font-bold text-[#1D1D1F]">{detailProject._count.purchaseRequests}</p>
+                  <p className="text-[11px] text-[#86868B]">采购申请</p>
+                </div>
+              </div>
+            </div>
+
+            {(statusFlow[detailProject.status] || []).length > 0 && (
+              <div className="pt-3 border-t border-[#F0F0F0]">
+                <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">状态变更</p>
+                <div className="flex gap-2">
+                  {statusFlow[detailProject.status].map((nextStatus) => (
+                    <button
+                      key={nextStatus}
+                      className="ios-btn ios-btn-primary ios-btn-sm"
+                      disabled={statusChanging === detailProject.id}
+                      onClick={() => handleStatusChange(detailProject, nextStatus)}
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                      转为{nextStatus}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title="确认删除"
+        maxWidth="400px"
+      >
+        <div className="text-center">
+          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          </div>
+          <p className="text-[15px] text-[#1D1D1F] mb-1">
+            确定要删除项目 <span className="font-semibold">{deleteConfirm?.projectCode}</span> 吗？
+          </p>
+          {deleteConfirm && (deleteConfirm.status === "执行" || deleteConfirm.status === "关闭") ? (
+            <p className="text-[13px] text-[#FF3B30] mb-4">{deleteConfirm.status}中的项目不能删除</p>
+          ) : (
+            <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
+          )}
+          <div className="flex justify-center gap-3">
+            <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
+            {deleteConfirm && deleteConfirm.status !== "执行" && deleteConfirm.status !== "关闭" && (
+              <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>
+                {deleting ? "删除中..." : "确认删除"}
+              </button>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showCustomerModal}
+        onClose={() => setShowCustomerModal(false)}
+        title="新增客户"
+        maxWidth="480px"
+      >
+        <div className="space-y-4">
+          {customerError && (
+            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+              {customerError}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              客户名称 <span className="text-[#FF3B30]">*</span>
+            </label>
+            <input
+              type="text"
+              className="ios-input"
+              placeholder="请输入客户名称"
+              value={customerForm.name}
+              onChange={(e) => {
+                setCustomerForm((prev) => ({ ...prev, name: e.target.value }));
+                if (customerError) setCustomerError("");
+              }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
+            <input
+              type="text"
+              className="ios-input"
+              placeholder="请输入联系人"
+              value={customerForm.contactPerson}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, contactPerson: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
+            <input
+              type="text"
+              className="ios-input"
+              placeholder="请输入电话"
+              value={customerForm.phone}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, phone: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">行业类型</label>
+            <select
+              className="ios-select"
+              value={customerForm.industryType}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, industryType: e.target.value }))}
+            >
+              <option value="">请选择行业类型</option>
+              <option value="石化">石化</option>
+              <option value="医药">医药</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">客户等级</label>
+            <select
+              className="ios-select"
+              value={customerForm.customerGrade}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, customerGrade: e.target.value }))}
+            >
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+            <button className="ios-btn ios-btn-secondary" onClick={() => setShowCustomerModal(false)}>取消</button>
+            <button className="ios-btn ios-btn-primary" onClick={handleCreateCustomer} disabled={customerSaving}>
+              {customerSaving ? "保存中..." : "确认"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+}

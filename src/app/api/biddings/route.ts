@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           projectLead: {
-            select: { id: true, projectSourceId: true, projectName: true, customer: { select: { name: true } } },
+            select: { id: true, projectSourceId: true, projectName: true, customerId: true, customer: { select: { id: true, name: true } } },
           },
         },
         orderBy: { createdAt: "desc" },

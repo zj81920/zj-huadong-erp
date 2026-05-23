@@ -108,6 +108,17 @@ export default function ProjectLeadsPage() {
 
   const [statusChanging, setStatusChanging] = useState<string | null>(null);
 
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [customerForm, setCustomerForm] = useState({
+    name: "",
+    contactPerson: "",
+    phone: "",
+    industryType: "",
+    customerGrade: "C",
+  });
+  const [customerSaving, setCustomerSaving] = useState(false);
+  const [customerError, setCustomerError] = useState("");
+
   const fetchCustomers = useCallback(async () => {
     try {
       const res = await fetch("/api/customers?pageSize=200");
@@ -207,6 +218,45 @@ export default function ProjectLeadsPage() {
       setFormError("网络错误，请重试");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCreateCustomer = async () => {
+    if (!customerForm.name.trim()) {
+      setCustomerError("客户名称不能为空");
+      return;
+    }
+
+    setCustomerSaving(true);
+    setCustomerError("");
+
+    try {
+      const res = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customerForm),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        await fetchCustomers();
+        setForm((prev) => ({ ...prev, customerId: json.data.id }));
+        setShowCustomerModal(false);
+        setCustomerForm({
+          name: "",
+          contactPerson: "",
+          phone: "",
+          industryType: "",
+          customerGrade: "C",
+        });
+      } else {
+        setCustomerError(json.error || "创建客户失败");
+      }
+    } catch {
+      setCustomerError("网络错误，请重试");
+    } finally {
+      setCustomerSaving(false);
     }
   };
 
@@ -523,6 +573,17 @@ export default function ProjectLeadsPage() {
                   <option key={c.id} value={c.id}>{c.name}{c.industryType ? ` (${c.industryType})` : ""}</option>
                 ))}
               </select>
+              <button
+                type="button"
+                className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF] mt-1"
+                onClick={() => {
+                  setCustomerError("");
+                  setShowCustomerModal(true);
+                }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                新增客户
+              </button>
             </div>
 
             <div>
@@ -703,6 +764,92 @@ export default function ProjectLeadsPage() {
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
             <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>
               {deleting ? "删除中..." : "确认删除"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showCustomerModal}
+        onClose={() => setShowCustomerModal(false)}
+        title="新增客户"
+        maxWidth="480px"
+      >
+        <div className="space-y-4">
+          {customerError && (
+            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+              {customerError}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              客户名称 <span className="text-[#FF3B30]">*</span>
+            </label>
+            <input
+              type="text"
+              className="ios-input"
+              placeholder="请输入客户名称"
+              value={customerForm.name}
+              onChange={(e) => {
+                setCustomerForm((prev) => ({ ...prev, name: e.target.value }));
+                if (customerError) setCustomerError("");
+              }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
+            <input
+              type="text"
+              className="ios-input"
+              placeholder="请输入联系人"
+              value={customerForm.contactPerson}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, contactPerson: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
+            <input
+              type="text"
+              className="ios-input"
+              placeholder="请输入电话"
+              value={customerForm.phone}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, phone: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">行业类型</label>
+            <select
+              className="ios-select"
+              value={customerForm.industryType}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, industryType: e.target.value }))}
+            >
+              <option value="">请选择行业类型</option>
+              <option value="石化">石化</option>
+              <option value="医药">医药</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">客户等级</label>
+            <select
+              className="ios-select"
+              value={customerForm.customerGrade}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, customerGrade: e.target.value }))}
+            >
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+            <button className="ios-btn ios-btn-secondary" onClick={() => setShowCustomerModal(false)}>取消</button>
+            <button className="ios-btn ios-btn-primary" onClick={handleCreateCustomer} disabled={customerSaving}>
+              {customerSaving ? "保存中..." : "确认"}
             </button>
           </div>
         </div>
