@@ -119,7 +119,7 @@ export default function BiddingsPage() {
     estimatedInvestment: "",
     bidReleaseTime: "",
     infoSource: "",
-    currentStatus: "潜在",
+    currentStatus: "跟踪中",
   });
   const [leadSaving, setLeadSaving] = useState(false);
   const [leadError, setLeadError] = useState("");

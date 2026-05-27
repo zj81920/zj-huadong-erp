@@ -16,6 +16,9 @@
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f postgres"
   },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.8.0",
     "lucide-react": "^1.16.0",
@@ -34,6 +37,7 @@
     "eslint-config-next": "^15.3.0",
     "prisma": "^6.8.0",
     "tailwindcss": "^4.1.0",
+    "tsx": "^4.22.3",
     "typescript": "^5.8.0"
   }
 }

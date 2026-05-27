@@ -99,6 +99,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    if (projectSourceId) {
+      await prisma.projectLead.update({
+        where: { projectSourceId },
+        data: { currentStatus: "报价中" },
+      });
+    }
+
     return NextResponse.json({ data: quotation }, { status: 201 });
   } catch (error) {
     console.error("创建报价单失败:", error);

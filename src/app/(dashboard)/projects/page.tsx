@@ -32,27 +32,13 @@ interface User {
   department: string | null;
 }
 
-interface BiddingItem {
+interface ProjectLeadItem {
   id: string;
   projectSourceId: string;
-  bidAmount: number | null;
-  bidResult: string | null;
-  projectLead: {
-    id: string;
-    projectSourceId: string;
-    projectName: string;
-    customerId: string;
-    customer: { id: string; name: string };
-  } | null;
-}
-
-interface QuotationItem {
-  id: string;
-  projectSourceId: string | null;
+  projectName: string;
   customerId: string;
-  totalAmount: number;
+  currentStatus: string;
   customer: { id: string; name: string };
-  projectLead: { id: string; projectSourceId: string; projectName: string; customerId: string } | null;
 }
 
 interface Project {
@@ -101,8 +87,10 @@ interface ProjectFormData {
   startDate: string;
   plannedEndDate: string;
   actualCloseDate: string;
-  biddingId: string;
-  quotationId: string;
+  projectLeadId: string;
+  location: string;
+  estimatedInvestment: string;
+  infoSource: string;
 }
 
 interface PaginationInfo {
@@ -120,15 +108,17 @@ const emptyForm: ProjectFormData = {
   type: "",
   address: "",
   projectCategory: "",
-  source: "投标中标",
+  source: "项目线索",
   status: "筹备",
   designManagerId: "",
   supervisorLeaderId: "",
   startDate: "",
   plannedEndDate: "",
   actualCloseDate: "",
-  biddingId: "",
-  quotationId: "",
+  projectLeadId: "",
+  location: "",
+  estimatedInvestment: "",
+  infoSource: "",
 };
 
 const statusConfig: Record<string, { color: string; label: string }> = {
@@ -148,9 +138,8 @@ const statusFlow: Record<string, string[]> = {
 };
 
 const sourceOptions = [
-  { value: "投标中标", label: "投标中标" },
-  { value: "商务报价", label: "商务报价" },
-  { value: "直接授予", label: "直接授予" },
+  { value: "项目线索", label: "项目线索" },
+  { value: "直接委托", label: "直接委托" },
 ];
 
 export default function ProjectsPage() {
@@ -174,8 +163,7 @@ export default function ProjectsPage() {
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [biddings, setBiddings] = useState<BiddingItem[]>([]);
-  const [quotations, setQuotations] = useState<QuotationItem[]>([]);
+  const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
 
   const [detailProject, setDetailProject] = useState<Project | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Project | null>(null);
@@ -210,21 +198,14 @@ export default function ProjectsPage() {
     } catch {}
   }, []);
 
-  const fetchBiddings = useCallback(async () => {
+  const fetchProjectLeads = useCallback(async () => {
     try {
-      const res = await fetch("/api/biddings?bidResult=中标&pageSize=200");
+      const res = await fetch("/api/project-leads?pageSize=200");
       const json = await res.json();
       if (res.ok) {
-        setBiddings(json.data || []);
+        const all = json.data || [];
+        setProjectLeads(all.filter((l: ProjectLeadItem) => l.currentStatus === "已中标" || l.currentStatus === "落地"));
       }
-    } catch {}
-  }, []);
-
-  const fetchQuotations = useCallback(async () => {
-    try {
-      const res = await fetch("/api/quotations?approvalStatus=已审批&pageSize=200");
-      const json = await res.json();
-      if (res.ok) setQuotations(json.data || []);
     } catch {}
   }, []);
 
@@ -255,9 +236,8 @@ export default function ProjectsPage() {
   useEffect(() => {
     fetchCustomers();
     fetchUsers();
-    fetchBiddings();
-    fetchQuotations();
-  }, [fetchCustomers, fetchUsers, fetchBiddings, fetchQuotations]);
+    fetchProjectLeads();
+  }, [fetchCustomers, fetchUsers, fetchProjectLeads]);
 
   useEffect(() => {
     fetchProjects();
@@ -287,8 +267,10 @@ export default function ProjectsPage() {
       startDate: project.startDate ? project.startDate.split("T")[0] : "",
       plannedEndDate: project.plannedEndDate ? project.plannedEndDate.split("T")[0] : "",
       actualCloseDate: project.actualCloseDate ? project.actualCloseDate.split("T")[0] : "",
-      biddingId: "",
-      quotationId: "",
+      projectLeadId: "",
+      location: "",
+      estimatedInvestment: "",
+      infoSource: "",
     });
     setFormError("");
     setShowModal(true);
@@ -333,12 +315,12 @@ export default function ProjectsPage() {
         actualCloseDate: form.actualCloseDate || null,
       };
 
-      if (form.source === "投标中标") {
+      if (form.source === "项目线索") {
         body.projectSourceId = form.projectSourceId;
-        body.biddingId = form.biddingId || null;
-      } else if (form.source === "商务报价") {
-        body.projectSourceId = form.projectSourceId;
-        body.quotationId = form.quotationId || null;
+      } else if (form.source === "直接委托") {
+        body.location = form.location || null;
+        body.estimatedInvestment = form.estimatedInvestment || null;
+        body.infoSource = form.infoSource || null;
       }
 
       const res = await fetch(url, {
@@ -471,42 +453,26 @@ export default function ProjectsPage() {
         next.projectSourceId = "";
         next.name = "";
         next.customerId = "";
-        next.biddingId = "";
-        next.quotationId = "";
+        next.projectLeadId = "";
+        next.location = "";
+        next.estimatedInvestment = "";
+        next.infoSource = "";
       }
       return next;
     });
     if (formError) setFormError("");
   };
 
-  const handleSelectBidding = (biddingId: string) => {
-    const bidding = biddings.find((b) => b.id === biddingId);
-    if (!bidding || !bidding.projectLead) return;
-    const lead = bidding.projectLead;
+  const handleSelectProjectLead = (leadId: string) => {
+    const lead = projectLeads.find((l) => l.id === leadId);
+    if (!lead) return;
     setForm((prev) => ({
       ...prev,
-      biddingId,
-      projectSourceId: bidding.projectSourceId,
+      projectLeadId: leadId,
+      projectSourceId: lead.projectSourceId,
       name: lead.projectName,
       customerId: lead.customerId,
     }));
-    if (formError) setFormError("");
-  };
-
-  const handleSelectQuotation = (quotationId: string) => {
-    const quotation = quotations.find((q) => q.id === quotationId);
-    if (quotation) {
-      const psId = quotation.projectLead?.projectSourceId || quotation.projectSourceId || "";
-      const pName = quotation.projectLead?.projectName || "";
-      const cId = quotation.projectLead?.customerId || quotation.customerId;
-      setForm((prev) => ({
-        ...prev,
-        quotationId,
-        projectSourceId: psId,
-        name: pName,
-        customerId: cId,
-      }));
-    }
     if (formError) setFormError("");
   };
 
@@ -648,9 +614,8 @@ export default function ProjectsPage() {
             }}
           >
             <option value="">全部来源</option>
-            <option value="投标中标">投标中标</option>
-            <option value="商务报价">商务报价</option>
-            <option value="直接授予">直接授予</option>
+            <option value="项目线索">项目线索</option>
+            <option value="直接委托">直接委托</option>
           </select>
 
           <div className="ml-auto text-[13px] text-[#86868B]">
@@ -847,42 +812,21 @@ export default function ProjectsPage() {
               </select>
             </div>
 
-            {form.source === "投标中标" && (
+            {form.source === "项目线索" && (
               <div>
                 <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                  选择投标
+                  选择项目线索
                 </label>
                 <select
                   className="ios-select"
-                  value={form.biddingId}
-                  onChange={(e) => handleSelectBidding(e.target.value)}
+                  value={form.projectLeadId}
+                  onChange={(e) => handleSelectProjectLead(e.target.value)}
                   disabled={!!editingProject}
                 >
-                  <option value="">请选择投标记录</option>
-                  {biddings.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.projectSourceId} - {b.projectLead?.projectName || ""} - {b.projectLead?.customer?.name || ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {form.source === "商务报价" && (
-              <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                  选择报价
-                </label>
-                <select
-                  className="ios-select"
-                  value={form.quotationId}
-                  onChange={(e) => handleSelectQuotation(e.target.value)}
-                  disabled={!!editingProject}
-                >
-                  <option value="">请选择报价记录</option>
-                  {quotations.map((q) => (
-                    <option key={q.id} value={q.id}>
-                      {q.customer.name} - ¥{q.totalAmount.toLocaleString()}
+                  <option value="">请选择项目线索</option>
+                  {projectLeads.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.projectSourceId} - {l.projectName} - {l.customer.name} [{l.currentStatus}]
                     </option>
                   ))}
                 </select>
@@ -901,7 +845,7 @@ export default function ProjectsPage() {
               </div>
             )}
 
-            {(form.source === "投标中标" || form.source === "商务报价") && !editingProject && form.projectSourceId && (
+            {form.source === "项目线索" && !editingProject && form.projectSourceId && (
               <div>
                 <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目源ID</label>
                 <input
@@ -913,7 +857,7 @@ export default function ProjectsPage() {
               </div>
             )}
 
-            {!editingProject && form.source === "直接授予" && (
+            {!editingProject && form.source === "直接委托" && (
               <div>
                 <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目源ID</label>
                 <input
@@ -1004,6 +948,44 @@ export default function ProjectsPage() {
                 />
               </div>
             </div>
+
+            {!editingProject && form.source === "直接委托" && (
+              <>
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目地点</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                    <input
+                      type="text"
+                      className="ios-input pl-10"
+                      placeholder="项目所在地点（同步到线索）"
+                      value={form.location}
+                      onChange={(e) => updateForm("location", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">预计投资额（元）</label>
+                  <input
+                    type="number"
+                    className="ios-input"
+                    placeholder="预计投资金额（同步到线索）"
+                    value={form.estimatedInvestment}
+                    onChange={(e) => updateForm("estimatedInvestment", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">信息来源</label>
+                  <input
+                    type="text"
+                    className="ios-input"
+                    placeholder="如：客户直接委托（同步到线索）"
+                    value={form.infoSource}
+                    onChange={(e) => updateForm("infoSource", e.target.value)}
+                  />
+                </div>
+              </>
+            )}
 
             <div>
               <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">类别</label>

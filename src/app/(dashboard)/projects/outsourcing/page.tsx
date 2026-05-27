@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Search,
   Plus,
@@ -12,6 +12,7 @@ import {
   DollarSign,
   Building2,
   UserCircle,
+  Upload,
 } from "lucide-react";
 import Modal from "@/components/Modal";
 
@@ -21,11 +22,20 @@ interface Project {
   name: string;
 }
 
+interface Supplier {
+  id: string;
+  name: string;
+  supplierType: string | null;
+  contactPerson: string | null;
+  phone: string | null;
+}
+
 interface OutsourcingTask {
   id: string;
   projectSourceId: string;
   type: string;
   targetName: string;
+  supplierId: string | null;
   contractId: string | null;
   taskDescription: string;
   workload: string | null;
@@ -37,13 +47,14 @@ interface OutsourcingTask {
   createdAt: string;
   updatedAt: string;
   project: Project;
+  supplier: Supplier | null;
 }
 
 interface OutsourcingFormData {
   projectSourceId: string;
   type: string;
   targetName: string;
-  contractId: string;
+  supplierId: string;
   taskDescription: string;
   workload: string;
   deliveryDeadline: string;
@@ -63,13 +74,26 @@ const emptyForm: OutsourcingFormData = {
   projectSourceId: "",
   type: "",
   targetName: "",
-  contractId: "",
+  supplierId: "",
   taskDescription: "",
   workload: "",
   deliveryDeadline: "",
   amount: "",
   acceptanceStatus: "未验收",
   approvalStatus: "草稿",
+};
+
+const emptySupplierForm = {
+  name: "",
+  supplierType: "企业",
+  status: "当前有效",
+  contactPerson: "",
+  phone: "",
+  email: "",
+  address: "",
+  bankName: "",
+  bankAccount: "",
+  remark: "",
 };
 
 const acceptanceStatusConfig: Record<string, { color: string; label: string }> = {
@@ -110,6 +134,16 @@ export default function OutsourcingPage() {
   const [formError, setFormError] = useState("");
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [supplierForm, setSupplierForm] = useState(emptySupplierForm);
+  const [supplierSaving, setSupplierSaving] = useState(false);
+  const [supplierError, setSupplierError] = useState("");
+  const supplierFileRef = useRef<HTMLInputElement>(null);
+  const [supplierUploading, setSupplierUploading] = useState(false);
+  const [supplierUploadName, setSupplierUploadName] = useState("");
+  const [supplierAttachmentUrl, setSupplierAttachmentUrl] = useState("");
 
   const [detailTask, setDetailTask] = useState<OutsourcingTask | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<OutsourcingTask | null>(null);
@@ -122,6 +156,18 @@ export default function OutsourcingPage() {
       if (res.ok) setProjects(json.data);
     } catch (err) {
       console.error("获取项目列表失败:", err);
+    }
+  }, []);
+
+  const fetchSuppliers = useCallback(async () => {
+    try {
+      const res = await fetch("/api/suppliers?pageSize=200");
+      if (res.ok) {
+        const json = await res.json();
+        setSuppliers(json.data || []);
+      }
+    } catch (err) {
+      console.error("获取供应商列表失败:", err);
     }
   }, []);
 
@@ -152,7 +198,8 @@ export default function OutsourcingPage() {
 
   useEffect(() => {
     fetchProjects();
-  }, [fetchProjects]);
+    fetchSuppliers();
+  }, [fetchProjects, fetchSuppliers]);
 
   useEffect(() => {
     fetchTasks();
@@ -171,7 +218,7 @@ export default function OutsourcingPage() {
       projectSourceId: task.projectSourceId,
       type: task.type,
       targetName: task.targetName,
-      contractId: task.contractId || "",
+      supplierId: task.supplierId || "",
       taskDescription: task.taskDescription,
       workload: task.workload || "",
       deliveryDeadline: task.deliveryDeadline ? task.deliveryDeadline.split("T")[0] : "",
@@ -183,6 +230,65 @@ export default function OutsourcingPage() {
     setShowModal(true);
   };
 
+  const handleSupplierFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSupplierUploading(true);
+    setSupplierError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const json = await res.json();
+      if (res.ok) {
+        setSupplierAttachmentUrl(json.url);
+        setSupplierUploadName(file.name);
+      } else {
+        setSupplierError(json.error || "上传失败");
+      }
+    } catch {
+      setSupplierError("上传失败，请重试");
+    } finally {
+      setSupplierUploading(false);
+      if (supplierFileRef.current) supplierFileRef.current.value = "";
+    }
+  };
+
+  const handleCreateSupplier = async () => {
+    if (!supplierForm.name.trim()) {
+      setSupplierError("供应商名称不能为空");
+      return;
+    }
+    setSupplierSaving(true);
+    setSupplierError("");
+    try {
+      const res = await fetch("/api/suppliers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...supplierForm, attachmentUrl: supplierAttachmentUrl || null }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        const refreshed = await fetch("/api/suppliers?pageSize=200");
+        if (refreshed.ok) {
+          const refreshedJson = await refreshed.json();
+          setSuppliers(refreshedJson.data || []);
+        }
+        setForm((prev) => ({ ...prev, supplierId: json.data.id }));
+        setShowSupplierModal(false);
+        setSupplierAttachmentUrl("");
+        setSupplierUploadName("");
+        setSupplierForm(emptySupplierForm);
+      } else {
+        setSupplierError(json.error || "创建供应商失败");
+      }
+    } catch {
+      setSupplierError("网络错误，请重试");
+    } finally {
+      setSupplierSaving(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!form.projectSourceId) {
       setFormError("请选择项目");
@@ -192,8 +298,8 @@ export default function OutsourcingPage() {
       setFormError("请选择类型");
       return;
     }
-    if (!form.targetName.trim()) {
-      setFormError("外包对象不能为空");
+    if (!form.supplierId && !form.targetName.trim()) {
+      setFormError("请选择或输入外包对象");
       return;
     }
     if (!form.taskDescription.trim()) {
@@ -218,10 +324,15 @@ export default function OutsourcingPage() {
         : "/api/projects/outsourcing";
       const method = editingTask ? "PUT" : "POST";
 
+      const payload: Record<string, unknown> = { ...form };
+      if (form.supplierId) {
+        payload.targetName = suppliers.find((s) => s.id === form.supplierId)?.name || form.targetName;
+      }
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
@@ -462,6 +573,8 @@ export default function OutsourcingPage() {
                   const asc = acceptanceStatusConfig[task.acceptanceStatus] || { color: "ios-badge-gray", label: task.acceptanceStatus };
                   const apsc = approvalStatusConfig[task.approvalStatus] || { color: "ios-badge-gray", label: task.approvalStatus };
                   const pastDue = isPastDue(task.deliveryDeadline);
+                  const isCompany = task.type === "to_company";
+                  const supplier = task.supplier;
                   return (
                     <tr key={task.id}>
                       <td>
@@ -477,12 +590,15 @@ export default function OutsourcingPage() {
                       </td>
                       <td>
                         <div className="flex items-center gap-1.5">
-                          {task.type === "to_company" ? (
+                          {isCompany ? (
                             <Building2 className="w-3.5 h-3.5 text-[#86868B]" />
                           ) : (
                             <UserCircle className="w-3.5 h-3.5 text-[#86868B]" />
                           )}
                           <span className="font-semibold">{task.targetName}</span>
+                          {supplier?.supplierType && (
+                            <span className="ios-badge ios-badge-gray text-[10px]!">{supplier.supplierType}</span>
+                          )}
                         </div>
                       </td>
                       <td className="max-w-[200px]">
@@ -603,30 +719,39 @@ export default function OutsourcingPage() {
               <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
                 外包对象 <span className="text-[#FF3B30]">*</span>
               </label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入外包对象名称"
-                value={form.targetName}
-                onChange={(e) => updateForm("targetName", e.target.value)}
-              />
-            </div>
-
-            {form.type === "to_company" && (
-              <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                  关联合同ID
-                </label>
-                <input
-                  type="text"
-                  className="ios-input"
-                  placeholder="请输入关联合同ID"
-                  value={form.contractId}
-                  onChange={(e) => updateForm("contractId", e.target.value)}
-                />
-                <p className="text-[11px] text-[#86868B] mt-1">分包给公司时建议关联合同</p>
+              <div className="flex items-center gap-2">
+                <select
+                  className="ios-select flex-1"
+                  value={form.supplierId}
+                  onChange={(e) => {
+                    updateForm("supplierId", e.target.value);
+                    const s = suppliers.find((s) => s.id === e.target.value);
+                    if (s) updateForm("targetName", s.name);
+                  }}
+                >
+                  <option value="">请选择供应商</option>
+                  {suppliers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}{s.supplierType ? ` (${s.supplierType})` : ""}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF] whitespace-nowrap"
+                  onClick={() => {
+                    setSupplierError("");
+                    setSupplierForm(emptySupplierForm);
+                    setSupplierAttachmentUrl("");
+                    setSupplierUploadName("");
+                    setShowSupplierModal(true);
+                  }}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  新增供应商
+                </button>
               </div>
-            )}
+            </div>
 
             <div className={form.type === "to_company" ? "col-span-2" : ""}>
               <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
@@ -721,6 +846,151 @@ export default function OutsourcingPage() {
       </Modal>
 
       <Modal
+        isOpen={showSupplierModal}
+        onClose={() => setShowSupplierModal(false)}
+        title="新增供应商"
+        maxWidth="600px"
+      >
+        <div className="space-y-4">
+          {supplierError && (
+            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+              {supplierError}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                供应商名称 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入供应商名称"
+                value={supplierForm.name}
+                onChange={(e) => setSupplierForm((prev) => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">供应商性质</label>
+              <select
+                className="ios-select"
+                value={supplierForm.supplierType}
+                onChange={(e) => setSupplierForm((prev) => ({ ...prev, supplierType: e.target.value }))}
+              >
+                <option value="企业">企业</option>
+                <option value="政府">政府</option>
+                <option value="银行">银行</option>
+                <option value="税务">税务</option>
+                <option value="政务机构">政务机构</option>
+                <option value="个人">个人</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入联系人"
+                value={supplierForm.contactPerson}
+                onChange={(e) => setSupplierForm((prev) => ({ ...prev, contactPerson: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入电话"
+                value={supplierForm.phone}
+                onChange={(e) => setSupplierForm((prev) => ({ ...prev, phone: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">邮箱</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入邮箱"
+                value={supplierForm.email}
+                onChange={(e) => setSupplierForm((prev) => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">地址</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入地址"
+                value={supplierForm.address}
+                onChange={(e) => setSupplierForm((prev) => ({ ...prev, address: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">开户行</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入开户行"
+                value={supplierForm.bankName}
+                onChange={(e) => setSupplierForm((prev) => ({ ...prev, bankName: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">银行账号</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入银行账号"
+                value={supplierForm.bankAccount}
+                onChange={(e) => setSupplierForm((prev) => ({ ...prev, bankAccount: e.target.value }))}
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+              <textarea
+                className="ios-input min-h-[60px] resize-y"
+                placeholder="请输入备注"
+                value={supplierForm.remark}
+                onChange={(e) => setSupplierForm((prev) => ({ ...prev, remark: e.target.value }))}
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">供应商资料</label>
+              <div className="flex items-center gap-3">
+                <input
+                  ref={supplierFileRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip,.rar"
+                  onChange={handleSupplierFileUpload}
+                />
+                <button
+                  type="button"
+                  className="ios-btn ios-btn-secondary ios-btn-sm"
+                  onClick={() => supplierFileRef.current?.click()}
+                  disabled={supplierUploading}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  {supplierUploading ? "上传中..." : "选择文件"}
+                </button>
+                {supplierUploadName && (
+                  <span className="text-[12px] text-[#34C759]">{supplierUploadName}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+            <button className="ios-btn ios-btn-secondary" onClick={() => setShowSupplierModal(false)}>取消</button>
+            <button className="ios-btn ios-btn-primary" onClick={handleCreateSupplier} disabled={supplierSaving}>
+              {supplierSaving ? "创建中..." : "确认创建"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
         isOpen={!!detailTask}
         onClose={() => setDetailTask(null)}
         title="外包任务详情"
@@ -754,11 +1024,34 @@ export default function OutsourcingPage() {
               </div>
               <div className="p-3 rounded-xl bg-[#F5F5F7]">
                 <p className="text-[12px] text-[#86868B] mb-1">外包对象</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailTask.targetName}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailTask.targetName}</p>
+                  {detailTask.supplier?.supplierType && (
+                    <span className="ios-badge ios-badge-gray text-[10px]!">{detailTask.supplier.supplierType}</span>
+                  )}
+                </div>
               </div>
               <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">关联合同ID</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailTask.contractId || "-"}</p>
+                <p className="text-[12px] text-[#86868B] mb-1">
+                  {detailTask.type === "to_company" ? "关联合同" : "付款来源"}
+                </p>
+                {detailTask.type === "to_company" && detailTask.contractId ? (
+                  <p className="text-[14px] font-semibold text-[#007AFF]">
+                    已自动生成支出合同（审批通过后自动创建）
+                  </p>
+                ) : detailTask.type === "to_company" ? (
+                  <p className="text-[14px] text-[#86868B]">
+                    审批通过后将自动生成支出合同
+                  </p>
+                ) : detailTask.acceptanceStatus === "已验收" ? (
+                  <p className="text-[14px] font-semibold text-[#34C759]">
+                    已自动创建应付记录（验收通过后自动创建）
+                  </p>
+                ) : (
+                  <p className="text-[14px] text-[#86868B]">
+                    验收通过后将自动创建应付记录
+                  </p>
+                )}
               </div>
               <div className="col-span-2 p-3 rounded-xl bg-[#F5F5F7]">
                 <p className="text-[12px] text-[#86868B] mb-1">任务描述</p>

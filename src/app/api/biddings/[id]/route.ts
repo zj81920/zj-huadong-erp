@@ -68,6 +68,19 @@ export async function PUT(
       },
     });
 
+    if (body.bidResult !== undefined) {
+      const projectSourceId = existing.projectSourceId;
+      let newLeadStatus: string | null = null;
+      if (body.bidResult === "已中标") newLeadStatus = "已中标";
+      else if (body.bidResult === "未中标") newLeadStatus = "放弃";
+      if (newLeadStatus) {
+        await prisma.projectLead.update({
+          where: { projectSourceId },
+          data: { currentStatus: newLeadStatus },
+        });
+      }
+    }
+
     return NextResponse.json({ data: bidding });
   } catch (error) {
     console.error("更新投标记录失败:", error);

@@ -30,6 +30,7 @@ interface Quotation {
   totalAmount: number;
   profitMargin: number | null;
   approvalStatus: string;
+  status: string;
   version: number;
   adjustmentReason: string | null;
   createdAt: string;
@@ -46,6 +47,7 @@ interface QuotationFormData {
   totalAmount: string;
   profitMargin: string;
   adjustmentReason: string;
+  status: string;
 }
 
 interface PaginationInfo {
@@ -64,13 +66,20 @@ const emptyForm: QuotationFormData = {
   totalAmount: "",
   profitMargin: "",
   adjustmentReason: "",
+  status: "跟踪",
 };
 
 const approvalStatusConfig: Record<string, { color: string; label: string }> = {
   "草稿": { color: "ios-badge-gray", label: "草稿" },
   "审批中": { color: "ios-badge-orange", label: "审批中" },
-  "已审批": { color: "ios-badge-green", label: "已审批" },
+  "已批准": { color: "ios-badge-green", label: "已批准" },
   "已驳回": { color: "ios-badge-red", label: "已驳回" },
+};
+
+const quotationStatusConfig: Record<string, { color: string; label: string }> = {
+  "跟踪": { color: "ios-badge-gray", label: "跟踪" },
+  "落地": { color: "ios-badge-green", label: "落地" },
+  "放弃": { color: "ios-badge-red", label: "放弃" },
 };
 
 export default function QuotationsPage() {
@@ -104,7 +113,7 @@ export default function QuotationsPage() {
     estimatedInvestment: "",
     bidReleaseTime: "",
     infoSource: "",
-    currentStatus: "潜在",
+    currentStatus: "跟踪中",
   });
   const [leadSaving, setLeadSaving] = useState(false);
   const [leadError, setLeadError] = useState("");
@@ -185,6 +194,7 @@ export default function QuotationsPage() {
       totalAmount: String(quotation.totalAmount),
       profitMargin: quotation.profitMargin ? String(quotation.profitMargin) : "",
       adjustmentReason: quotation.adjustmentReason || "",
+      status: quotation.status || "跟踪",
     });
     setFormError("");
     setShowModal(true);
@@ -221,6 +231,7 @@ export default function QuotationsPage() {
         totalAmount: form.totalAmount,
         profitMargin: form.profitMargin || null,
         adjustmentReason: form.adjustmentReason || null,
+        status: form.status,
       };
 
       const url = editingQuotation
@@ -303,7 +314,7 @@ export default function QuotationsPage() {
       estimatedInvestment: "",
       bidReleaseTime: "",
       infoSource: "",
-      currentStatus: "潜在",
+      currentStatus: "跟踪中",
     });
     setLeadError("");
     fetchLeadCustomers();
@@ -342,7 +353,7 @@ export default function QuotationsPage() {
           estimatedInvestment: "",
           bidReleaseTime: "",
           infoSource: "",
-          currentStatus: "潜在",
+          currentStatus: "跟踪中",
         });
       } else {
         setLeadError(json.error || "创建项目线索失败");
@@ -456,7 +467,7 @@ export default function QuotationsPage() {
             <option value="">全部状态</option>
             <option value="草稿">草稿</option>
             <option value="审批中">审批中</option>
-            <option value="已审批">已审批</option>
+            <option value="已批准">已批准</option>
             <option value="已驳回">已驳回</option>
           </select>
 
@@ -487,6 +498,7 @@ export default function QuotationsPage() {
                   <th>报价金额</th>
                   <th>利润率</th>
                   <th>版本</th>
+                  <th>报价状态</th>
                   <th>审批状态</th>
                   <th>创建时间</th>
                   <th>操作</th>
@@ -525,6 +537,11 @@ export default function QuotationsPage() {
                         <span className="ios-badge ios-badge-gray">v{quotation.version}</span>
                       </td>
                       <td>
+                        <span className={`ios-badge ${quotationStatusConfig[quotation.status]?.color || "ios-badge-gray"}`}>
+                          {quotationStatusConfig[quotation.status]?.label || quotation.status}
+                        </span>
+                      </td>
+                      <td>
                         <span className={`ios-badge ${asc.color}`}>{asc.label}</span>
                       </td>
                       <td className="text-[#86868B]">{formatDate(quotation.createdAt)}</td>
@@ -536,14 +553,14 @@ export default function QuotationsPage() {
                           <button
                             className="ios-btn ios-btn-ghost ios-btn-sm"
                             onClick={() => handleOpenEdit(quotation)}
-                            disabled={quotation.approvalStatus === "已审批" || quotation.approvalStatus === "审批中"}
+                            disabled={quotation.approvalStatus === "已批准" || quotation.approvalStatus === "审批中"}
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
                             onClick={() => setDeleteConfirm(quotation)}
-                            disabled={quotation.approvalStatus === "已审批" || quotation.approvalStatus === "审批中"}
+                            disabled={quotation.approvalStatus === "已批准" || quotation.approvalStatus === "审批中"}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -679,6 +696,19 @@ export default function QuotationsPage() {
               </div>
             </div>
 
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">报价状态</label>
+              <select
+                className="ios-select"
+                value={form.status}
+                onChange={(e) => updateForm("status", e.target.value)}
+              >
+                <option value="跟踪">跟踪</option>
+                <option value="落地">落地</option>
+                <option value="放弃">放弃</option>
+              </select>
+            </div>
+
             <div className="col-span-2">
               <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">调整原因</label>
               <textarea className="ios-textarea" placeholder="如有调整，请说明原因" value={form.adjustmentReason} onChange={(e) => updateForm("adjustmentReason", e.target.value)} />
@@ -730,6 +760,14 @@ export default function QuotationsPage() {
                 <p className="text-[12px] text-[#86868B] mb-1">利润率</p>
                 <p className="text-[14px] font-semibold text-[#34C759]">
                   {detailQuotation.profitMargin ? `${detailQuotation.profitMargin}%` : "-"}
+                </p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">报价状态</p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F]">
+                  <span className={`ios-badge ${quotationStatusConfig[detailQuotation.status]?.color || "ios-badge-gray"}`}>
+                    {quotationStatusConfig[detailQuotation.status]?.label || detailQuotation.status}
+                  </span>
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-[#F5F5F7]">

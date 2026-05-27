@@ -48,7 +48,6 @@ interface LeadFormData {
   estimatedInvestment: string;
   bidReleaseTime: string;
   infoSource: string;
-  currentStatus: string;
 }
 
 interface PaginationInfo {
@@ -65,23 +64,26 @@ const emptyForm: LeadFormData = {
   estimatedInvestment: "",
   bidReleaseTime: "",
   infoSource: "",
-  currentStatus: "潜在",
 };
 
 const statusConfig: Record<string, { color: string; label: string }> = {
-  "潜在": { color: "ios-badge-gray", label: "潜在" },
-  "意向": { color: "ios-badge-blue", label: "意向" },
+  "跟踪中": { color: "ios-badge-gray", label: "跟踪中" },
   "投标中": { color: "ios-badge-orange", label: "投标中" },
-  "中标": { color: "ios-badge-green", label: "中标" },
-  "未中标": { color: "ios-badge-red", label: "未中标" },
+  "已中标": { color: "ios-badge-green", label: "已中标" },
+  "报价中": { color: "ios-badge-blue", label: "报价中" },
+  "落地": { color: "ios-badge-green", label: "落地" },
+  "放弃": { color: "ios-badge-red", label: "放弃" },
+  "已立项": { color: "ios-badge-purple", label: "已立项" },
 };
 
 const statusFlow: Record<string, string[]> = {
-  "潜在": ["意向", "投标中"],
-  "意向": ["投标中", "潜在"],
-  "投标中": ["中标", "未中标"],
-  "中标": [],
-  "未中标": ["投标中"],
+  "跟踪中": ["投标中", "报价中", "放弃"],
+  "投标中": ["已中标", "放弃"],
+  "已中标": [],
+  "报价中": ["落地", "放弃"],
+  "落地": [],
+  "放弃": ["跟踪中"],
+  "已立项": [],
 };
 
 export default function ProjectLeadsPage() {
@@ -175,7 +177,6 @@ export default function ProjectLeadsPage() {
       estimatedInvestment: lead.estimatedInvestment ? String(lead.estimatedInvestment) : "",
       bidReleaseTime: lead.bidReleaseTime ? lead.bidReleaseTime.split("T")[0] : "",
       infoSource: lead.infoSource || "",
-      currentStatus: lead.currentStatus,
     });
     setFormError("");
     setShowModal(true);
@@ -337,7 +338,7 @@ export default function ProjectLeadsPage() {
   const stats = {
     total: pagination.total,
     bidding: leads.filter((l) => l.currentStatus === "投标中").length,
-    won: leads.filter((l) => l.currentStatus === "中标").length,
+    won: leads.filter((l) => l.currentStatus === "已中标").length,
   };
 
   return (
@@ -410,11 +411,13 @@ export default function ProjectLeadsPage() {
             }}
           >
             <option value="">全部状态</option>
-            <option value="潜在">潜在</option>
-            <option value="意向">意向</option>
+            <option value="跟踪中">跟踪中</option>
             <option value="投标中">投标中</option>
-            <option value="中标">中标</option>
-            <option value="未中标">未中标</option>
+            <option value="已中标">已中标</option>
+            <option value="报价中">报价中</option>
+            <option value="落地">落地</option>
+            <option value="放弃">放弃</option>
+            <option value="已立项">已立项</option>
           </select>
 
           <div className="ml-auto text-[13px] text-[#86868B]">
@@ -451,7 +454,7 @@ export default function ProjectLeadsPage() {
               </thead>
               <tbody>
                 {leads.map((lead) => {
-                  const sc = statusConfig[lead.currentStatus] || statusConfig["潜在"];
+                  const sc = statusConfig[lead.currentStatus] || statusConfig["跟踪中"];
                   const nextStatuses = statusFlow[lead.currentStatus] || [];
                   return (
                     <tr key={lead.id}>
@@ -649,21 +652,6 @@ export default function ProjectLeadsPage() {
                 value={form.infoSource}
                 onChange={(e) => updateForm("infoSource", e.target.value)}
               />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">当前状态</label>
-              <select
-                className="ios-select"
-                value={form.currentStatus}
-                onChange={(e) => updateForm("currentStatus", e.target.value)}
-              >
-                <option value="潜在">潜在</option>
-                <option value="意向">意向</option>
-                <option value="投标中">投标中</option>
-                <option value="中标">中标</option>
-                <option value="未中标">未中标</option>
-              </select>
             </div>
           </div>
 

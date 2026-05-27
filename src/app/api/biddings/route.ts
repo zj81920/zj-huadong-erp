@@ -100,6 +100,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    await prisma.projectLead.update({
+      where: { projectSourceId },
+      data: { currentStatus: "投标中" },
+    });
+
     return NextResponse.json({ data: bidding }, { status: 201 });
   } catch (error) {
     console.error("创建投标记录失败:", error);

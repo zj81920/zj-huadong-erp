@@ -43,22 +43,17 @@ export async function PUT(
       return NextResponse.json({ error: "采购需求不存在" }, { status: 404 });
     }
 
-    if (body.status === "已转询价") {
+    if (body.convertToInquiry) {
       if (existing.status !== "已批准") {
         return NextResponse.json({ error: "只有已批准状态的需求才能转询价" }, { status: 400 });
       }
 
-      const record = await prisma.purchaseRequest.update({
-        where: { id },
-        data: { status: "已转询价" },
-        include: {
-          project: { select: { projectSourceId: true, name: true, status: true } },
-          items: { orderBy: { sortOrder: "asc" } },
-          inquiry: true,
+      return NextResponse.json({
+        data: {
+          ...existing,
+          message: "可转询价",
         },
       });
-
-      return NextResponse.json({ data: record });
     }
 
     if (body.status && body.status !== existing.status) {

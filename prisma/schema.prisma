@@ -10,17 +10,18 @@ datasource db {
 // ==================== 基础/系统表 ====================
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  realName  String   @map("real_name")
-  phone     String?
-  email     String?
-  role      String   @default("staff")
-  department String?
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(cuid())
+  username     String   @unique
+  password     String
+  realName     String   @map("real_name")
+  phone        String?
+  email        String?
+  role         String   @default("staff")
+  department   String?
+  signatureUrl String?  @map("signature_url")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   expenseReportsAsApplicant  ExpenseReport[]       @relation("ExpenseReportApplicant")
   loanRequestsAsApplicant    LoanRequest[]         @relation("LoanRequestApplicant")
@@ -32,26 +33,58 @@ model User {
   delegatedToMe              ApprovalDelegate[]     @relation("DelegateTo")
   projectsAsDesignManager    Project[]              @relation("DesignManager")
   projectsAsSupervisorLeader Project[]              @relation("SupervisorLeader")
+  salaryPayments             SalaryPayment[]
+  userRoles                  UserRole[]
 
   @@map("users")
 }
 
-model Supplier {
+model Role {
   id            String   @id @default(cuid())
+  code          String   @unique
   name          String
-  contactPerson String?  @map("contact_person")
-  phone         String?
-  email         String?
-  address       String?
-  qualification String?
-  category      String?
-  rating        String?  @default("B")
+  description   String?
+  isProjectRole Boolean  @default(false) @map("is_project_role")
+  sort          Int      @default(0)
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
+  users         UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+  roleId String @map("role_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model Supplier {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  supplierType     String   @default("企业") @map("supplier_type")
+  status           String   @default("当前有效") @map("status")
+  contactPerson    String?  @map("contact_person")
+  phone            String?
+  email            String?
+  address          String?
+  bankName         String?  @map("bank_name")
+  bankAccount      String?  @map("bank_account")
+  remark           String?
+  attachmentUrl    String?  @map("attachment_url")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   purchaseContracts PurchaseContract[]
   expenseContracts  ExpenseContract[]
+  outsourcingTasks  OutsourcingTask[]
 
   @@map("suppliers")
 }
@@ -133,6 +166,7 @@ model Quotation {
   approvalStatus    String   @default("草稿") @map("approval_status")
   version           Int      @default(1)
   adjustmentReason  String?  @map("adjustment_reason")
+  status            String   @default("跟踪") @map("status")
   approvalInstanceId String? @map("approval_instance_id")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
@@ -247,6 +281,7 @@ model OutsourcingTask {
   projectSourceId    String   @map("project_source_id")
   type               String   @default("to_person")
   targetName         String   @map("target_name")
+  supplierId         String?  @map("supplier_id")
   contractId         String?  @map("contract_id")
   taskDescription    String   @map("task_description") @db.Text
   workload           String?
@@ -258,7 +293,8 @@ model OutsourcingTask {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
-  project Project @relation(fields: [projectSourceId], references: [projectSourceId])
+  project  Project  @relation(fields: [projectSourceId], references: [projectSourceId])
+  supplier Supplier? @relation(fields: [supplierId], references: [id])
 
   @@map("outsourcing_tasks")
 }
@@ -319,6 +355,7 @@ model Inquiry {
 
   purchaseRequest  PurchaseRequest   @relation(fields: [purchaseRequestId], references: [id])
   purchaseContract PurchaseContract?
+  expenseContract  ExpenseContract?
 
   @@map("inquiries")
 }
@@ -388,6 +425,7 @@ model ExpenseContract {
   contractNo         String    @unique @map("contract_no")
   projectSourceId    String?   @map("project_source_id")
   supplierId         String?   @map("supplier_id")
+  inquiryId          String?   @unique @map("inquiry_id")
   signedDate         DateTime? @map("signed_date")
   totalAmount        Decimal   @map("total_amount") @db.Decimal(15, 2)
   paymentTerms       String?   @map("payment_terms") @db.Text
@@ -398,8 +436,9 @@ model ExpenseContract {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  supplier Supplier? @relation(fields: [supplierId], references: [id])
-  project  Project?  @relation(fields: [projectSourceId], references: [projectSourceId])
+  supplier  Supplier?  @relation(fields: [supplierId], references: [id])
+  project   Project?   @relation(fields: [projectSourceId], references: [projectSourceId])
+  inquiry   Inquiry?   @relation(fields: [inquiryId], references: [id])
 
   @@map("expense_contracts")
 }
@@ -472,8 +511,24 @@ model ExpenseReport {
 
   project   Project? @relation(fields: [projectSourceId], references: [projectSourceId])
   applicant User     @relation("ExpenseReportApplicant", fields: [applicantId], references: [id])
+  items     ExpenseReportItem[]
 
   @@map("expense_reports")
+}
+
+model ExpenseReportItem {
+  id              String   @id @default(cuid())
+  reportId        String   @map("report_id")
+  expenseType     String   @map("expense_type")
+  amount          Decimal  @db.Decimal(15, 2)
+  description     String?  @db.Text
+  projectSourceId String?  @map("project_source_id")
+  sortOrder       Int      @default(0) @map("sort_order")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  report ExpenseReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("expense_report_items")
 }
 
 model LoanRequest {
@@ -508,6 +563,7 @@ model Receivable {
   dueDate         DateTime @map("due_date")
   amount          Decimal  @db.Decimal(15, 2)
   paidAmount      Decimal  @default(0) @map("paid_amount") @db.Decimal(15, 2)
+  invoicedAmount  Decimal  @default(0) @map("invoiced_amount") @db.Decimal(15, 2)
   status          String   @default("未收")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -526,6 +582,7 @@ model Payable {
   dueDate         DateTime @map("due_date")
   amount          Decimal  @db.Decimal(15, 2)
   paidAmount      Decimal  @default(0) @map("paid_amount") @db.Decimal(15, 2)
+  invoicedAmount  Decimal  @default(0) @map("invoiced_amount") @db.Decimal(15, 2)
   status          String   @default("未付")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -541,6 +598,10 @@ model PaymentApplication {
   payableId          String   @map("payable_id")
   applicantId        String   @map("applicant_id")
   amount             Decimal  @db.Decimal(15, 2)
+  paymentReason      String?  @map("payment_reason")
+  paymentMethod      String?  @map("payment_method")
+  bankAccount        String?  @map("bank_account")
+  remark             String?
   approvalStatus     String   @default("草稿") @map("approval_status")
   approvalInstanceId String?  @map("approval_instance_id")
   createdAt          DateTime @default(now()) @map("created_at")
@@ -554,12 +615,19 @@ model PaymentApplication {
 }
 
 model ReceiptVoucher {
-  id           String   @id @default(cuid())
-  receivableId String   @map("receivable_id")
-  amount       Decimal  @db.Decimal(15, 2)
-  receiptDate  DateTime @default(now()) @map("receipt_date")
-  bankAccount  String?  @map("bank_account")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id              String    @id @default(cuid())
+  receivableId    String    @map("receivable_id")
+  receiptNo       String?   @map("receipt_no")
+  registrant      String?   @map("registrant")
+  registerDate    DateTime? @map("register_date")
+  amount          Decimal   @db.Decimal(15, 2)
+  receiptDate     DateTime  @default(now()) @map("receipt_date")
+  receiptReason   String?   @map("receipt_reason")
+  receiptMethod   String?   @map("receipt_method")
+  bankAccount     String?   @map("bank_account")
+  attachments     String?   @map("attachments")
+  remark          String?
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   receivable Receivable @relation(fields: [receivableId], references: [id])
 
@@ -567,12 +635,19 @@ model ReceiptVoucher {
 }
 
 model PaymentVoucher {
-  id                   String   @id @default(cuid())
-  paymentApplicationId String   @map("payment_application_id")
-  amount               Decimal  @db.Decimal(15, 2)
-  paymentDate          DateTime @default(now()) @map("payment_date")
-  bankAccount          String?  @map("bank_account")
-  createdAt            DateTime @default(now()) @map("created_at")
+  id                   String    @id @default(cuid())
+  paymentApplicationId String    @map("payment_application_id")
+  paymentNo            String?   @map("payment_no")
+  registrant           String?   @map("registrant")
+  registerDate         DateTime? @map("register_date")
+  amount               Decimal   @db.Decimal(15, 2)
+  paymentDate          DateTime  @default(now()) @map("payment_date")
+  paymentReason        String?   @map("payment_reason")
+  paymentMethod        String?   @map("payment_method")
+  bankAccount          String?   @map("bank_account")
+  attachments          String?   @map("attachments")
+  remark               String?
+  createdAt            DateTime  @default(now()) @map("created_at")
 
   paymentApplication PaymentApplication @relation(fields: [paymentApplicationId], references: [id])
 
@@ -597,17 +672,33 @@ model Shareholder {
 }
 
 model CapitalContribution {
+  id              String   @id @default(cuid())
+  shareholderId   String   @map("shareholder_id")
+  amount          Decimal  @db.Decimal(15, 2)
+  returnedAmount  Decimal  @default(0) @map("returned_amount") @db.Decimal(15, 2)
+  remainingAmount Decimal  @db.Decimal(15, 2) @map("remaining_amount")
+  contributeDate  DateTime @map("contribute_date")
+  method          String?
+  remark          String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  shareholder Shareholder    @relation(fields: [shareholderId], references: [id])
+  returns     CapitalReturn[]
+
+  @@map("capital_contributions")
+}
+
+model CapitalReturn {
   id             String   @id @default(cuid())
-  shareholderId  String   @map("shareholder_id")
+  contributionId String   @map("contribution_id")
   amount         Decimal  @db.Decimal(15, 2)
-  contributeDate DateTime @map("contribute_date")
-  method         String?
+  returnDate     DateTime @map("return_date")
   remark         String?
   createdAt      DateTime @default(now()) @map("created_at")
 
-  shareholder Shareholder @relation(fields: [shareholderId], references: [id])
+  contribution CapitalContribution @relation(fields: [contributionId], references: [id])
 
-  @@map("capital_contributions")
+  @@map("capital_returns")
 }
 
 model EquityChange {
@@ -623,6 +714,100 @@ model EquityChange {
   shareholder Shareholder @relation(fields: [shareholderId], references: [id])
 
   @@map("equity_changes")
+}
+
+// ==================== 其他借入款 ====================
+
+model OtherBorrowing {
+  id                 String   @id @default(cuid())
+  lenderName         String   @map("lender_name")
+  amount             Decimal  @db.Decimal(15, 2)
+  returnedAmount     Decimal  @default(0) @map("returned_amount") @db.Decimal(15, 2)
+  remainingAmount    Decimal  @db.Decimal(15, 2) @map("remaining_amount")
+  borrowingDate      DateTime @map("borrowing_date")
+  expectedReturnDate DateTime? @map("expected_return_date")
+  description        String?  @db.Text
+  status             String   @default("未还清") @map("status")
+  approvalInstanceId String?  @map("approval_instance_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  returns BorrowingReturn[]
+
+  @@map("other_borrowings")
+}
+
+model BorrowingReturn {
+  id          String   @id @default(cuid())
+  borrowingId String   @map("borrowing_id")
+  amount      Decimal  @db.Decimal(15, 2)
+  returnDate  DateTime @map("return_date")
+  remark      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  borrowing OtherBorrowing @relation(fields: [borrowingId], references: [id])
+
+  @@map("borrowing_returns")
+}
+
+// ==================== 借出款 ====================
+
+model LendingOut {
+  id                 String   @id @default(cuid())
+  lendingType        String   @map("lending_type")
+  projectSourceId    String?  @map("project_source_id")
+  biddingId          String?  @map("bidding_id")
+  borrowerName       String   @map("borrower_name")
+  amount             Decimal  @db.Decimal(15, 2)
+  returnedAmount     Decimal  @default(0) @map("returned_amount") @db.Decimal(15, 2)
+  remainingAmount    Decimal  @db.Decimal(15, 2) @map("remaining_amount")
+  lendingDate        DateTime @map("lending_date")
+  expectedReturnDate DateTime? @map("expected_return_date")
+  description        String?  @db.Text
+  status             String   @default("草稿") @map("status")
+  approvalInstanceId String?  @map("approval_instance_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  returns LendingReturn[]
+
+  @@map("lending_outs")
+}
+
+model LendingReturn {
+  id         String   @id @default(cuid())
+  lendingId  String   @map("lending_id")
+  amount     Decimal  @db.Decimal(15, 2)
+  returnDate DateTime @map("return_date")
+  remark     String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  lending LendingOut @relation(fields: [lendingId], references: [id])
+
+  @@map("lending_returns")
+}
+
+// ==================== 工资发放 ====================
+
+model SalaryPayment {
+  id                 String    @id @default(cuid())
+  employeeId         String    @map("employee_id")
+  period             String    @map("period")
+  baseSalary         Decimal   @map("base_salary") @db.Decimal(15, 2)
+  bonus              Decimal   @default(0) @db.Decimal(15, 2)
+  allowance          Decimal   @default(0) @db.Decimal(15, 2)
+  deduction          Decimal   @default(0) @db.Decimal(15, 2)
+  netSalary         Decimal   @map("net_salary") @db.Decimal(15, 2)
+  paymentDate        DateTime? @map("payment_date")
+  status             String    @default("草稿") @map("status")
+  approvalInstanceId String?   @map("approval_instance_id")
+  remark             String?
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  employee User @relation(fields: [employeeId], references: [id])
+
+  @@map("salary_payments")
 }
 
 // ==================== 审批流引擎 ====================
@@ -686,4 +871,69 @@ model ApprovalDelegate {
   delegateTo User @relation("DelegateTo", fields: [delegateToId], references: [id])
 
   @@map("approval_delegates")
+}
+
+// ==================== 行政管理 ====================
+
+model OfficeSupply {
+  id          String   @id @default(cuid())
+  name        String
+  category    String?
+  spec        String?
+  unit        String?
+  quantity    Int      @default(0)
+  unitPrice   Decimal? @map("unit_price") @db.Decimal(10, 2)
+  totalPrice  Decimal? @map("total_price") @db.Decimal(10, 2)
+  storeLocation String? @map("store_location")
+  remark      String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("office_supplies")
+}
+
+model Certificate {
+  id            String    @id @default(cuid())
+  name          String
+  certNo        String?   @map("cert_no")
+  certType      String?   @map("cert_type")
+  issuer        String?
+  issueDate     DateTime? @map("issue_date")
+  expireDate    DateTime? @map("expire_date")
+  holder        String?
+  status        String    @default("有效")
+  location      String?
+  remark        String?   @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("certificates")
+}
+
+model Seal {
+  id          String   @id @default(cuid())
+  name        String
+  sealType    String   @map("seal_type")
+  custodian   String?
+  location    String?
+  status      String   @default("在库")
+  remark      String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("seals")
+}
+
+model BankAccount {
+  id          String   @id @default(cuid())
+  accountName String   @map("account_name")
+  bankName    String   @map("bank_name")
+  accountNo   String   @unique @map("account_no")
+  accountType String   @map("account_type")
+  isActive    Boolean  @default(true) @map("is_active")
+  remark      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("bank_accounts")
 }

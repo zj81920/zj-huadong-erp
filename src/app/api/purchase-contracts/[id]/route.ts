@@ -70,8 +70,8 @@ export async function PUT(
     }
 
     if (
-      body.status === "生效" &&
-      existing.status !== "生效" &&
+      body.status === "已批准" &&
+      existing.status !== "已批准" &&
       existing.inquiryId
     ) {
       const inquiry = await prisma.inquiry.findUnique({
@@ -81,7 +81,7 @@ export async function PUT(
       if (inquiry) {
         await prisma.purchaseRequest.update({
           where: { id: inquiry.purchaseRequestId },
-          data: { status: "已采购" },
+          data: { status: "已批准" },
         });
       }
     }

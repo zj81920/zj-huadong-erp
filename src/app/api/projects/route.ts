@@ -130,12 +130,12 @@ export async function POST(request: NextRequest) {
 
     let projectSourceId: string;
     let sourceRefId: string | null = null;
-    const projectSource = source || "投标中标";
+    const projectSource = source || "项目线索";
 
-    if (projectSource === "投标中标") {
-      const { projectSourceId: leadSourceId, biddingId } = body;
+    if (projectSource === "项目线索") {
+      const { projectSourceId: leadSourceId } = body;
       if (!leadSourceId) {
-        return NextResponse.json({ error: "中标项目必须关联项目线索" }, { status: 400 });
+        return NextResponse.json({ error: "必须选择项目线索" }, { status: 400 });
       }
 
       const lead = await prisma.projectLead.findUnique({
@@ -144,8 +144,8 @@ export async function POST(request: NextRequest) {
       if (!lead) {
         return NextResponse.json({ error: "项目线索不存在" }, { status: 400 });
       }
-      if (lead.currentStatus !== "中标") {
-        return NextResponse.json({ error: "该项目线索尚未中标" }, { status: 400 });
+      if (lead.currentStatus !== "已中标" && lead.currentStatus !== "落地") {
+        return NextResponse.json({ error: "只能选择已中标或落地状态的项目线索" }, { status: 400 });
       }
 
       const existingProject = await prisma.project.findUnique({
@@ -156,38 +156,48 @@ export async function POST(request: NextRequest) {
       }
 
       projectSourceId = leadSourceId;
-      sourceRefId = biddingId || null;
-    } else if (projectSource === "商务报价") {
-      const { quotationId } = body;
-      if (!quotationId) {
-        return NextResponse.json({ error: "商务报价项目必须关联报价单" }, { status: 400 });
-      }
 
-      const quotation = await prisma.quotation.findUnique({
-        where: { id: quotationId },
-        include: { projectLead: { select: { projectSourceId: true } } },
-      });
-      if (!quotation) {
-        return NextResponse.json({ error: "报价单不存在" }, { status: 400 });
-      }
-
-      if (!quotation.projectSourceId || !quotation.projectLead) {
-        return NextResponse.json({ error: "该报价单未关联项目线索" }, { status: 400 });
-      }
-
-      const leadSourceId = quotation.projectLead.projectSourceId;
-
-      const existingProject = await prisma.project.findUnique({
+      await prisma.projectLead.update({
         where: { projectSourceId: leadSourceId },
+        data: { currentStatus: "已立项" },
       });
-      if (existingProject) {
-        return NextResponse.json({ error: "该项目线索已创建项目" }, { status: 400 });
+    } else if (projectSource === "直接委托") {
+      const lastLead = await prisma.projectLead.findFirst({
+        where: { projectSourceId: { startsWith: `PJ-${new Date().getFullYear()}-` } },
+        orderBy: { projectSourceId: "desc" },
+        select: { projectSourceId: true },
+      });
+
+      const lastProject = await prisma.project.findFirst({
+        where: { projectSourceId: { startsWith: `PJ-${new Date().getFullYear()}-` } },
+        orderBy: { projectSourceId: "desc" },
+        select: { projectSourceId: true },
+      });
+
+      let nextNum = 1;
+      const candidates = [lastLead?.projectSourceId, lastProject?.projectSourceId].filter(Boolean) as string[];
+      for (const candidate of candidates) {
+        const parts = candidate.split("-");
+        const lastNum = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(lastNum) && lastNum >= nextNum) {
+          nextNum = lastNum + 1;
+        }
       }
 
-      projectSourceId = leadSourceId;
-      sourceRefId = quotationId;
-    } else if (projectSource === "直接授予") {
-      projectSourceId = await generateProjectSourceId();
+      projectSourceId = `PJ-${new Date().getFullYear()}-${String(nextNum).padStart(4, "0")}`;
+
+      await prisma.projectLead.create({
+        data: {
+          projectSourceId,
+          customerId,
+          projectName: name.trim(),
+          location: body.location?.trim() || null,
+          estimatedInvestment: body.estimatedInvestment ? parseFloat(body.estimatedInvestment) : null,
+          bidReleaseTime: null,
+          infoSource: body.infoSource?.trim() || null,
+          currentStatus: "已立项",
+        },
+      });
     } else {
       return NextResponse.json({ error: "无效的项目来源" }, { status: 400 });
     }

@@ -46,6 +46,7 @@ export async function PUT(
     if (body.profitMargin !== undefined) updateData.profitMargin = body.profitMargin ? parseFloat(body.profitMargin) : null;
     if (body.approvalStatus !== undefined) updateData.approvalStatus = body.approvalStatus;
     if (body.adjustmentReason !== undefined) updateData.adjustmentReason = body.adjustmentReason?.trim() || null;
+    if (body.status !== undefined) updateData.status = body.status;
     if (body.projectSourceId !== undefined) updateData.projectSourceId = body.projectSourceId || null;
     if (body.customerId !== undefined) updateData.customerId = body.customerId;
 
@@ -57,6 +58,18 @@ export async function PUT(
         projectLead: { select: { id: true, projectSourceId: true, projectName: true } },
       },
     });
+
+    if (body.status !== undefined && existing.projectSourceId) {
+      let newLeadStatus: string | null = null;
+      if (body.status === "落地") newLeadStatus = "落地";
+      else if (body.status === "放弃") newLeadStatus = "放弃";
+      if (newLeadStatus) {
+        await prisma.projectLead.update({
+          where: { projectSourceId: existing.projectSourceId },
+          data: { currentStatus: newLeadStatus },
+        });
+      }
+    }
 
     return NextResponse.json({ data: quotation });
   } catch (error) {
@@ -77,8 +90,8 @@ export async function DELETE(
       return NextResponse.json({ error: "报价单不存在" }, { status: 404 });
     }
 
-    if (existing.approvalStatus === "已审批") {
-      return NextResponse.json({ error: "已审批的报价单不能删除" }, { status: 400 });
+    if (existing.approvalStatus === "已批准") {
+      return NextResponse.json({ error: "已批准的报价单不能删除" }, { status: 400 });
     }
 
     await prisma.quotation.delete({ where: { id } });

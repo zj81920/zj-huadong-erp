@@ -106,6 +106,7 @@ export default function ProjectPlansPage() {
   const [formError, setFormError] = useState("");
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<{id: string; username: string; realName: string}[]>([]);
 
   const [detailPlan, setDetailPlan] = useState<ProjectPlan | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<ProjectPlan | null>(null);
@@ -147,6 +148,7 @@ export default function ProjectPlansPage() {
 
   useEffect(() => {
     fetchProjects();
+    fetch("/api/settings/users").then(res => res.json()).then(json => setUsers(json.data || []));
   }, [fetchProjects]);
 
   useEffect(() => {
@@ -605,13 +607,14 @@ export default function ProjectPlansPage() {
 
             <div>
               <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">负责人</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入负责人ID"
+              <select
+                className="ios-select"
                 value={form.responsibleId}
                 onChange={(e) => updateForm("responsibleId", e.target.value)}
-              />
+              >
+                <option value="">请选择负责人</option>
+                {users.map(u => <option key={u.id} value={u.id}>{u.realName}</option>)}
+              </select>
             </div>
 
             {editingPlan && (

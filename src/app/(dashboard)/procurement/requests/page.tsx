@@ -102,7 +102,6 @@ const statusColorMap: Record<string, string> = {
   "审批中": "ios-badge-blue",
   "已批准": "ios-badge-green",
   "已驳回": "ios-badge-red",
-  "已转询价": "ios-badge-orange",
 };
 
 const requestTypeOptions = ["项目需求", "日常采购", "应急采购"];
@@ -309,7 +308,7 @@ export default function PurchaseRequestsPage() {
       const res = await fetch(`/api/purchase-requests/${record.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "已转询价" }),
+        body: JSON.stringify({ convertToInquiry: true }),
       });
 
       const json = await res.json();
@@ -466,7 +465,6 @@ export default function PurchaseRequestsPage() {
             <option value="审批中">审批中</option>
             <option value="已批准">已批准</option>
             <option value="已驳回">已驳回</option>
-            <option value="已转询价">已转询价</option>
           </select>
 
           <select
@@ -543,9 +541,28 @@ export default function PurchaseRequestsPage() {
                       </span>
                     </td>
                     <td>
-                      <span className={`ios-badge ${statusColorMap[record.status] || "ios-badge-gray"}`}>
-                        {record.status}
-                      </span>
+                      <select
+                        className="ios-select ios-select-sm text-[12px] py-1 px-2"
+                        value={record.status}
+                        onChange={async (e) => {
+                          const newStatus = e.target.value;
+                          try {
+                            const res = await fetch(`/api/purchase-requests/${record.id}`, {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ status: newStatus }),
+                            });
+                            if (res.ok) {
+                              fetchRecords();
+                            }
+                          } catch {}
+                        }}
+                      >
+                        <option value="草稿">草稿</option>
+                        <option value="审批中">审批中</option>
+                        <option value="已批准">已批准</option>
+                        <option value="已驳回">已驳回</option>
+                      </select>
                     </td>
                     <td>
                       <div className="flex items-center gap-1">

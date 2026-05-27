@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           project: { select: { name: true, projectSourceId: true } },
+          supplier: { select: { id: true, name: true, supplierType: true } },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
       projectSourceId,
       type,
       targetName,
+      supplierId,
       contractId,
       taskDescription,
       workload,
@@ -71,7 +73,16 @@ export async function POST(request: NextRequest) {
     if (!projectSourceId) {
       return NextResponse.json({ error: "请选择所属项目" }, { status: 400 });
     }
-    if (!targetName || !targetName.trim()) {
+
+    let resolvedTargetName = targetName?.trim() || "";
+    if (supplierId) {
+      const supplier = await prisma.supplier.findUnique({ where: { id: supplierId } });
+      if (supplier) {
+        resolvedTargetName = supplier.name;
+      }
+    }
+
+    if (!resolvedTargetName) {
       return NextResponse.json({ error: "外包对象名称不能为空" }, { status: 400 });
     }
     if (!taskDescription || !taskDescription.trim()) {
@@ -92,15 +103,13 @@ export async function POST(request: NextRequest) {
     }
 
     const taskType = type || "to_person";
-    if (taskType === "to_company" && !contractId) {
-      return NextResponse.json({ error: "分包给公司时必须关联合同" }, { status: 400 });
-    }
 
     const task = await prisma.outsourcingTask.create({
       data: {
         projectSourceId,
         type: taskType,
-        targetName: targetName.trim(),
+        targetName: resolvedTargetName,
+        supplierId: supplierId || null,
         contractId: contractId || null,
         taskDescription: taskDescription.trim(),
         workload: workload?.trim() || null,
@@ -112,6 +121,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         project: { select: { name: true, projectSourceId: true } },
+        supplier: { select: { id: true, name: true, supplierType: true } },
       },
     });
 

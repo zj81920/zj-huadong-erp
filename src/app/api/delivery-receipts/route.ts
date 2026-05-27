@@ -113,9 +113,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (contract.status !== "生效") {
+    if (contract.status !== "已批准") {
       return NextResponse.json(
-        { error: "只有生效状态的采购合同才能创建验收记录" },
+        { error: "只有已批准状态的采购合同才能创建验收记录" },
         { status: 400 }
       );
     }

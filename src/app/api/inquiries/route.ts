@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.purchaseRequest.update({
       where: { id: purchaseRequestId },
-      data: { status: "已转询价" },
+      data: { status: "已批准" },
     });
 
     return NextResponse.json({ data: inquiry }, { status: 201 });

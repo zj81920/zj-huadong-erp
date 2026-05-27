@@ -3,16 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard,
-  Users,
   Briefcase,
   ShoppingCart,
   FileText,
-  DollarSign,
   BarChart3,
   UserCircle,
-  Building2,
+  Settings,
   ChevronDown,
   ChevronRight,
   Gem,
@@ -35,6 +34,7 @@ const navSections: NavSection[] = [
     icon: <Gem className="w-4.5 h-4.5" />,
     items: [
       { label: "客户管理", href: "/business/customers" },
+      { label: "供应商管理", href: "/business/suppliers" },
       { label: "市场开发", href: "/business/project-leads" },
       { label: "投标管理", href: "/business/biddings" },
       { label: "商务报价", href: "/business/quotations" },
@@ -47,7 +47,6 @@ const navSections: NavSection[] = [
       { label: "项目立项", href: "/projects" },
       { label: "项目计划", href: "/projects/plans" },
       { label: "项目进度", href: "/projects/progress" },
-      { label: "设计管理", href: "/projects/design-tasks" },
       { label: "设计外包", href: "/projects/outsourcing" },
     ],
   },
@@ -57,7 +56,6 @@ const navSections: NavSection[] = [
     items: [
       { label: "采购需求", href: "/procurement/requests" },
       { label: "询价管理", href: "/procurement/inquiries" },
-      { label: "采购合同", href: "/procurement/contracts" },
       { label: "到货验收", href: "/procurement/deliveries" },
     ],
   },
@@ -67,47 +65,42 @@ const navSections: NavSection[] = [
     items: [
       { label: "收入合同", href: "/contracts/income" },
       { label: "支出合同", href: "/contracts/expense" },
-      { label: "非合同收支", href: "/contracts/non-contract" },
-    ],
-  },
-  {
-    title: "费用管理",
-    icon: <DollarSign className="w-4.5 h-4.5" />,
-    items: [
-      { label: "项目预算", href: "/expenses/budgets" },
-      { label: "费用报销", href: "/expenses/reports" },
-      { label: "备用金借款", href: "/expenses/loans" },
     ],
   },
   {
     title: "财务管理",
     icon: <BarChart3 className="w-4.5 h-4.5" />,
     items: [
-      { label: "应收管理", href: "/finance/receivables" },
-      { label: "应付管理", href: "/finance/payables" },
-      { label: "收付款登记", href: "/finance/payments" },
+      { label: "财务收入", href: "/finance/income" },
+      { label: "财务支出", href: "/finance/expense" },
       { label: "财务报表", href: "/finance/reports" },
-      { label: "股东出资", href: "/finance/shareholders" },
+      { label: "银行账户", href: "/finance/bank-accounts" },
     ],
   },
   {
-    title: "人事管理",
+    title: "人事行政管理",
     icon: <UserCircle className="w-4.5 h-4.5" />,
-    items: [{ label: "员工档案", href: "/hr/employees" }],
-  },
-  {
-    title: "行政管理",
-    icon: <Building2 className="w-4.5 h-4.5" />,
     items: [
+      { label: "员工档案", href: "/hr/employees" },
       { label: "办公用品", href: "/admin/supplies" },
       { label: "证照管理", href: "/admin/certificates" },
       { label: "印章管理", href: "/admin/seals" },
+    ],
+  },
+  {
+    title: "系统设置",
+    icon: <Settings className="w-4.5 h-4.5" />,
+    items: [
+      { label: "角色设置", href: "/settings/roles" },
+      { label: "用户设置", href: "/settings/users" },
+      { label: "流程设置", href: "/settings/approval-flow" },
     ],
   },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [expandedSections, setExpandedSections] = useState<string[]>([
     "商务管理",
     "项目管理",
@@ -192,13 +185,15 @@ export default function Sidebar() {
 
       <div className="p-4 border-t border-[#E5E5EA] flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-[#007AFF] flex items-center justify-center text-white text-sm font-semibold">
-          管
+          {user?.realName?.charAt(0) || "用"}
         </div>
         <div className="flex flex-col">
           <span className="text-[13px] font-semibold text-[#1D1D1F]">
-            管理员
+            {user?.realName || "未登录"}
           </span>
-          <span className="text-[11px] text-[#86868B]">系统管理员</span>
+          <span className="text-[11px] text-[#86868B]">
+            {user?.department || user?.username || ""}
+          </span>
         </div>
       </div>
     </aside>
