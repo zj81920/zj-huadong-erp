@@ -35,11 +35,6 @@ export default function DashboardLayout({
                 {user.department}
               </span>
             )}
-            {user?.roles && user.roles.length > 0 && (
-              <span className="text-xs bg-blue-50 text-[#007AFF] rounded-md px-2 py-0.5">
-                {user.roles.map((r) => r.name).join("、")}
-              </span>
-            )}
           </div>
           <button
             onClick={logout}

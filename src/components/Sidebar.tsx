@@ -91,6 +91,7 @@ const navSections: NavSection[] = [
     title: "系统设置",
     icon: <Settings className="w-4.5 h-4.5" />,
     items: [
+      { label: "部门设置", href: "/settings/departments" },
       { label: "角色设置", href: "/settings/roles" },
       { label: "用户设置", href: "/settings/users" },
       { label: "流程设置", href: "/settings/approval-flow" },

@@ -8,23 +8,28 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { code, name, description, isProjectRole, sort, isActive } = body;
+    const { name, description, departmentId, isProjectRole, sort, isActive } = body;
+
     const existing = await prisma.role.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "角色不存在" }, { status: 404 });
     }
-    if (code && code !== existing.code) {
-      const duplicate = await prisma.role.findUnique({ where: { code } });
+
+    if (name && name.trim() !== existing.name) {
+      const duplicate = await prisma.role.findFirst({
+        where: { name: name.trim(), isActive: true, id: { not: id } },
+      });
       if (duplicate) {
-        return NextResponse.json({ error: "该角色编码已存在" }, { status: 409 });
+        return NextResponse.json({ error: "该角色名称已存在" }, { status: 409 });
       }
     }
+
     const role = await prisma.role.update({
       where: { id },
       data: {
-        ...(code !== undefined && { code }),
-        ...(name !== undefined && { name }),
+        ...(name !== undefined && { name: name.trim() }),
         ...(description !== undefined && { description: description || null }),
+        ...(departmentId !== undefined && { departmentId: departmentId || null }),
         ...(isProjectRole !== undefined && { isProjectRole }),
         ...(sort !== undefined && { sort }),
         ...(isActive !== undefined && { isActive }),

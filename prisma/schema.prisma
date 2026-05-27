@@ -9,6 +9,19 @@ datasource db {
 
 // ==================== 基础/系统表 ====================
 
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  sort      Int      @default(0)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  roles Role[]
+
+  @@map("departments")
+}
+
 model User {
   id           String   @id @default(cuid())
   username     String   @unique
@@ -40,16 +53,19 @@ model User {
 }
 
 model Role {
-  id            String   @id @default(cuid())
-  code          String   @unique
+  id            String      @id @default(cuid())
+  code          String      @unique
   name          String
   description   String?
-  isProjectRole Boolean  @default(false) @map("is_project_role")
-  sort          Int      @default(0)
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  users         UserRole[]
+  departmentId  String?     @map("department_id")
+  isProjectRole Boolean     @default(false) @map("is_project_role")
+  sort          Int         @default(0)
+  isActive      Boolean     @default(true) @map("is_active")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  department Department? @relation(fields: [departmentId], references: [id])
+  users      UserRole[]
 
   @@map("roles")
 }

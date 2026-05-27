@@ -2,117 +2,72 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  Shield,
+  Building2,
   Plus,
   Pencil,
   Trash2,
-  Users,
   Search,
   Loader2,
   AlertCircle,
   Check,
-  Link2,
 } from "lucide-react";
 import Modal from "@/components/Modal";
-
-interface Role {
-  id: string;
-  code: string;
-  name: string;
-  description: string | null;
-  departmentId: string | null;
-  departmentName: string | null;
-  isProjectRole: boolean;
-  sort: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  userCount: number;
-}
 
 interface Department {
   id: string;
   name: string;
+  sort: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  roleCount: number;
 }
 
-interface RoleFormData {
+interface DeptFormData {
   name: string;
-  description: string;
-  departmentId: string;
-  isProjectRole: boolean;
   sort: number;
 }
 
-const DEFAULT_ROLES: { name: string; isProjectRole: boolean; sort: number }[] = [
-  { name: "经办人", isProjectRole: false, sort: 1 },
-  { name: "部门负责人", isProjectRole: false, sort: 2 },
-  { name: "项目经理", isProjectRole: true, sort: 3 },
-  { name: "项目管理部", isProjectRole: false, sort: 4 },
-  { name: "行政", isProjectRole: false, sort: 5 },
-  { name: "采购部", isProjectRole: false, sort: 6 },
-  { name: "设计负责人/生产经理", isProjectRole: true, sort: 7 },
-  { name: "财务", isProjectRole: false, sort: 8 },
-  { name: "出纳", isProjectRole: false, sort: 9 },
-  { name: "副总经理", isProjectRole: false, sort: 10 },
-  { name: "总经理", isProjectRole: false, sort: 11 },
-  { name: "董事长", isProjectRole: false, sort: 12 },
-];
-
-const emptyForm: RoleFormData = {
+const emptyForm: DeptFormData = {
   name: "",
-  description: "",
-  departmentId: "",
-  isProjectRole: false,
   sort: 0,
 };
 
-export default function RolesPage() {
-  const [roles, setRoles] = useState<Role[]>([]);
+export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   const [showModal, setShowModal] = useState(false);
-  const [editingRole, setEditingRole] = useState<Role | null>(null);
-  const [form, setForm] = useState<RoleFormData>(emptyForm);
+  const [editingDept, setEditingDept] = useState<Department | null>(null);
+  const [form, setForm] = useState<DeptFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const [deleteConfirm, setDeleteConfirm] = useState<Role | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Department | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
   const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const fetchRoles = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/roles");
-      if (res.ok) {
-        const json = await res.json();
-        setRoles(json.data);
-      }
-    } catch {
-      console.error("获取角色列表失败");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const fetchDepartments = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch("/api/departments");
       if (res.ok) {
         const json = await res.json();
         setDepartments(json.data);
       }
-    } catch {}
+    } catch {
+      console.error("获取部门列表失败");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    fetchRoles();
     fetchDepartments();
-  }, [fetchRoles, fetchDepartments]);
+  }, [fetchDepartments]);
 
   useEffect(() => {
     if (toast) {
@@ -121,40 +76,18 @@ export default function RolesPage() {
     }
   }, [toast]);
 
-  const handleInitDefaults = async () => {
-    setSaving(true);
-    try {
-      for (const role of DEFAULT_ROLES) {
-        await fetch("/api/roles", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(role),
-        });
-      }
-      setToast({ type: "success", text: "默认角色初始化成功" });
-      fetchRoles();
-    } catch {
-      setToast({ type: "error", text: "初始化默认角色失败" });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleOpenCreate = () => {
-    setEditingRole(null);
-    setForm({ ...emptyForm, sort: roles.length + 1 });
+    setEditingDept(null);
+    setForm({ ...emptyForm, sort: departments.length + 1 });
     setFormError("");
     setShowModal(true);
   };
 
-  const handleOpenEdit = (role: Role) => {
-    setEditingRole(role);
+  const handleOpenEdit = (dept: Department) => {
+    setEditingDept(dept);
     setForm({
-      name: role.name,
-      description: role.description || "",
-      departmentId: role.departmentId || "",
-      isProjectRole: role.isProjectRole,
-      sort: role.sort,
+      name: dept.name,
+      sort: dept.sort,
     });
     setFormError("");
     setShowModal(true);
@@ -162,7 +95,7 @@ export default function RolesPage() {
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      setFormError("角色名称不能为空");
+      setFormError("部门名称不能为空");
       return;
     }
 
@@ -172,16 +105,13 @@ export default function RolesPage() {
     try {
       const payload = {
         name: form.name.trim(),
-        description: form.description.trim() || null,
-        departmentId: form.departmentId || null,
-        isProjectRole: form.isProjectRole,
         sort: form.sort,
       };
 
-      const url = editingRole
-        ? `/api/roles/${editingRole.id}`
-        : "/api/roles";
-      const method = editingRole ? "PUT" : "POST";
+      const url = editingDept
+        ? `/api/departments/${editingDept.id}`
+        : "/api/departments";
+      const method = editingDept ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
@@ -193,8 +123,8 @@ export default function RolesPage() {
 
       if (res.ok) {
         setShowModal(false);
-        setToast({ type: "success", text: editingRole ? "角色更新成功" : "角色创建成功" });
-        fetchRoles();
+        setToast({ type: "success", text: editingDept ? "部门更新成功" : "部门创建成功" });
+        fetchDepartments();
       } else {
         setFormError(json.error || "操作失败");
       }
@@ -211,14 +141,14 @@ export default function RolesPage() {
     setDeleting(true);
     setDeleteError("");
     try {
-      const res = await fetch(`/api/roles/${deleteConfirm.id}`, {
+      const res = await fetch(`/api/departments/${deleteConfirm.id}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
         setDeleteConfirm(null);
-        setToast({ type: "success", text: "角色删除成功" });
-        fetchRoles();
+        setToast({ type: "success", text: "部门删除成功" });
+        fetchDepartments();
       } else {
         const json = await res.json();
         setDeleteError(json.error || "删除失败");
@@ -230,13 +160,9 @@ export default function RolesPage() {
     }
   };
 
-  const filteredRoles = roles.filter((role) => {
+  const filteredDepts = departments.filter((dept) => {
     if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      role.name.toLowerCase().includes(q) ||
-      (role.description && role.description.toLowerCase().includes(q))
-    );
+    return dept.name.toLowerCase().includes(search.toLowerCase());
   });
 
   return (
@@ -245,33 +171,17 @@ export default function RolesPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#007AFF]/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-[#007AFF]" />
+              <Building2 className="w-5 h-5 text-[#007AFF]" />
             </div>
             <div>
-              <h1>角色设置</h1>
-              <p>管理审批流程中的角色，角色用于流程节点配置</p>
+              <h1>部门设置</h1>
+              <p>管理部门信息，用于角色关联和人员组织</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {roles.length === 0 && (
-              <button
-                className="ios-btn ios-btn-secondary gap-1.5"
-                onClick={handleInitDefaults}
-                disabled={saving}
-              >
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
-                初始化默认角色
-              </button>
-            )}
-            <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
-              <Plus className="w-4 h-4" />
-              新增角色
-            </button>
-          </div>
+          <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
+            <Plus className="w-4 h-4" />
+            新增部门
+          </button>
         </div>
       </div>
 
@@ -282,13 +192,13 @@ export default function RolesPage() {
             <input
               type="text"
               className="ios-input pl-10"
-              placeholder="搜索角色名称..."
+              placeholder="搜索部门名称..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="ml-auto text-[13px] text-[#86868B]">
-            共 <span className="font-semibold text-[#1D1D1F]">{roles.length}</span> 个角色
+            共 <span className="font-semibold text-[#1D1D1F]">{departments.length}</span> 个部门
           </div>
         </div>
 
@@ -297,12 +207,12 @@ export default function RolesPage() {
             <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
-        ) : roles.length === 0 ? (
+        ) : departments.length === 0 ? (
           <div className="empty-state">
             <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-              <Shield className="w-8 h-8 text-[#86868B]" />
+              <Building2 className="w-8 h-8 text-[#86868B]" />
             </div>
-            <p>暂无角色，点击「初始化默认角色」快速创建</p>
+            <p>暂无部门，点击「新增部门」创建</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -310,63 +220,37 @@ export default function RolesPage() {
               <thead>
                 <tr>
                   <th>排序</th>
-                  <th>角色名称</th>
-                  <th>所属部门</th>
-                  <th>描述</th>
-                  <th>属性</th>
-                  <th>用户数</th>
+                  <th>部门名称</th>
+                  <th>关联角色数</th>
                   <th>操作</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredRoles.map((role) => (
-                  <tr key={role.id}>
+                {filteredDepts.map((dept) => (
+                  <tr key={dept.id}>
                     <td className="text-center">
                       <span className="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-[#F5F5F7] text-[13px] font-semibold text-[#86868B]">
-                        {role.sort}
+                        {dept.sort}
                       </span>
                     </td>
                     <td>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
-                          <Shield className="w-4 h-4 text-[#007AFF]" />
+                          <Building2 className="w-4 h-4 text-[#007AFF]" />
                         </div>
-                        <span className="font-semibold">{role.name}</span>
+                        <span className="font-semibold">{dept.name}</span>
                       </div>
                     </td>
                     <td>
-                      {role.departmentName ? (
-                        <span className="text-[13px] bg-[#F5F5F7] rounded-md px-2 py-1 text-[#1D1D1F]">
-                          {role.departmentName}
-                        </span>
-                      ) : (
-                        <span className="text-[#86868B]">-</span>
-                      )}
-                    </td>
-                    <td className="text-[#86868B] max-w-[200px] truncate">
-                      {role.description || "-"}
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        {role.isProjectRole && (
-                          <span className="ios-badge ios-badge-blue gap-1">
-                            <Link2 className="w-3 h-3" />
-                            项目关联
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      <span className="ios-badge ios-badge-gray gap-1">
-                        <Users className="w-3 h-3" />
-                        {role.userCount}
+                      <span className="text-[13px] text-[#86868B]">
+                        {dept.roleCount} 个角色
                       </span>
                     </td>
                     <td>
                       <div className="flex items-center gap-1">
                         <button
                           className="ios-btn ios-btn-ghost ios-btn-sm"
-                          onClick={() => handleOpenEdit(role)}
+                          onClick={() => handleOpenEdit(dept)}
                         >
                           <Pencil className="w-3.5 h-3.5" />
                           编辑
@@ -374,7 +258,7 @@ export default function RolesPage() {
                         <button
                           className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
                           onClick={() => {
-                            setDeleteConfirm(role);
+                            setDeleteConfirm(dept);
                             setDeleteError("");
                           }}
                         >
@@ -388,12 +272,12 @@ export default function RolesPage() {
               </tbody>
             </table>
 
-            {filteredRoles.length === 0 && search && (
+            {filteredDepts.length === 0 && search && (
               <div className="empty-state">
                 <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
                   <Search className="w-8 h-8 text-[#86868B]" />
                 </div>
-                <p>没有匹配「{search}」的角色</p>
+                <p>没有匹配「{search}」的部门</p>
               </div>
             )}
           </div>
@@ -403,8 +287,8 @@ export default function RolesPage() {
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title={editingRole ? "编辑角色" : "新增角色"}
-        maxWidth="520px"
+        title={editingDept ? "编辑部门" : "新增部门"}
+        maxWidth="480px"
       >
         <div className="space-y-4">
           {formError && (
@@ -416,68 +300,18 @@ export default function RolesPage() {
 
           <div>
             <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-              角色名称 <span className="text-[#FF3B30]">*</span>
+              部门名称 <span className="text-[#FF3B30]">*</span>
             </label>
             <input
               type="text"
               className="ios-input"
-              placeholder="如：部门负责人"
+              placeholder="如：项目管理部"
               value={form.name}
               onChange={(e) => {
                 setForm((prev) => ({ ...prev, name: e.target.value }));
                 if (formError) setFormError("");
               }}
             />
-          </div>
-
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-              所属部门
-            </label>
-            <select
-              className="ios-select"
-              value={form.departmentId}
-              onChange={(e) => setForm((prev) => ({ ...prev, departmentId: e.target.value }))}
-            >
-              <option value="">不关联部门</option>
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-              描述
-            </label>
-            <textarea
-              className="ios-textarea"
-              placeholder="角色描述（选填）"
-              value={form.description}
-              onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-4 rounded-xl bg-[#F5F5F7]">
-            <div>
-              <p className="text-[14px] font-semibold text-[#1D1D1F]">项目关联角色</p>
-              <p className="text-[12px] text-[#86868B] mt-0.5">开启后该角色将关联项目维度</p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={form.isProjectRole}
-              onClick={() => setForm((prev) => ({ ...prev, isProjectRole: !prev.isProjectRole }))}
-              className={`relative inline-flex h-[30px] w-[51px] flex-shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out ${
-                form.isProjectRole ? "bg-[#007AFF]" : "bg-[#E5E5EA]"
-              }`}
-            >
-              <span
-                className={`inline-block h-[26px] w-[26px] rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
-                  form.isProjectRole ? "translate-x-[23px]" : "translate-x-[1px]"
-                }`}
-              />
-            </button>
           </div>
 
           <div>
@@ -506,7 +340,7 @@ export default function RolesPage() {
               onClick={handleSubmit}
               disabled={saving}
             >
-              {saving ? "保存中..." : editingRole ? "保存修改" : "创建角色"}
+              {saving ? "保存中..." : editingDept ? "保存修改" : "创建部门"}
             </button>
           </div>
         </div>
@@ -526,13 +360,8 @@ export default function RolesPage() {
             <Trash2 className="w-7 h-7 text-[#FF3B30]" />
           </div>
           <p className="text-[15px] text-[#1D1D1F] mb-1">
-            确定要删除角色 <span className="font-semibold">{deleteConfirm?.name}</span> 吗？
+            确定要删除部门 <span className="font-semibold">{deleteConfirm?.name}</span> 吗？
           </p>
-          {deleteConfirm && deleteConfirm.userCount > 0 && (
-            <p className="text-[13px] text-[#FF9500] mb-2">
-              该角色下有 {deleteConfirm.userCount} 位关联用户，删除后将解除关联
-            </p>
-          )}
           <p className="text-[13px] text-[#86868B] mb-2">此操作不可撤销</p>
 
           {deleteError && (
