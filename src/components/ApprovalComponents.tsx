@@ -84,8 +84,8 @@ function SignatureImage({ src, name }: { src: string; name?: string }) {
         >
           <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-[#111827]">{name ? `${name}的签名` : "电子签名"}</span>
-              <button onClick={() => setEnlarged(false)} className="text-[#6B7280] hover:text-[#111827]">
+              <span className="text-sm font-semibold text-[#1C1917]">{name ? `${name}的签名` : "电子签名"}</span>
+              <button onClick={() => setEnlarged(false)} className="text-[#78716C] hover:text-[#1C1917]">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -155,11 +155,11 @@ export function ApprovalTimeline({ instance, loading }: ApprovalTimelineProps) {
 
   const getActionColor = (action: string) => {
     switch (action) {
-      case "initiate": return "text-[#111827]";
-      case "approve": return "text-[#6B7280]";
-      case "reject": return "text-[#6B7280]";
-      case "auto_skip": return "text-[#6B7280]";
-      default: return "text-[#6B7280]";
+      case "initiate": return "text-[#1C1917]";
+      case "approve": return "text-[#78716C]";
+      case "reject": return "text-[#78716C]";
+      case "auto_skip": return "text-[#78716C]";
+      default: return "text-[#78716C]";
     }
   };
 
@@ -177,9 +177,9 @@ export function ApprovalTimeline({ instance, loading }: ApprovalTimelineProps) {
     <div className="bento-card-static p-4">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-2 text-sm font-medium text-[#111827] w-full cursor-pointer"
+        className="flex items-center gap-2 text-sm font-medium text-[#1C1917] w-full cursor-pointer"
       >
-        <FileText className="w-4 h-4 text-[#111827]" />
+        <FileText className="w-4 h-4 text-[#1C1917]" />
         审批流程
         <ApprovalStatusBadge status={status} />
         <span className="ml-auto">
@@ -195,21 +195,21 @@ export function ApprovalTimeline({ instance, loading }: ApprovalTimelineProps) {
             const isLast = idx === flowNodes.length - 1;
 
             const borderColor =
-              nodeStatus === "done" ? "border-l-[#6B7280]" :
-              nodeStatus === "current" ? "border-l-[#111827]" :
-              nodeStatus === "rejected" ? "border-l-[#6B7280]" :
+              nodeStatus === "done" ? "border-l-[#78716C]" :
+              nodeStatus === "current" ? "border-l-[#1C1917]" :
+              nodeStatus === "rejected" ? "border-l-[#78716C]" :
               "border-l-[#D1D5DB]";
 
             const bgColor =
               nodeStatus === "done" ? "bg-[#F0FDF4]" :
               nodeStatus === "current" ? "bg-[#EFF6FF]" :
               nodeStatus === "rejected" ? "bg-[#FEF2F2]" :
-              "bg-[#F9FAFB]";
+              "bg-[#FAFAF9]";
 
             const iconBg =
-              nodeStatus === "done" ? "bg-[#6B7280]" :
-              nodeStatus === "current" ? "bg-[#111827]" :
-              nodeStatus === "rejected" ? "bg-[#6B7280]" :
+              nodeStatus === "done" ? "bg-[#78716C]" :
+              nodeStatus === "current" ? "bg-[#1C1917]" :
+              nodeStatus === "rejected" ? "bg-[#78716C]" :
               "bg-[#D1D5DB]";
 
             const iconContent =
@@ -234,35 +234,35 @@ export function ApprovalTimeline({ instance, loading }: ApprovalTimelineProps) {
                         {iconContent}
                       </div>
                       <span className={`text-[13px] font-semibold ${
-                        nodeStatus === "pending" ? "text-[#6B7280]" : "text-[#111827]"
+                        nodeStatus === "pending" ? "text-[#78716C]" : "text-[#1C1917]"
                       }`}>
                         {node.nodeName}
                       </span>
                     </div>
                     {nodeStatus === "pending" && (
-                      <span className="text-[11px] text-[#6B7280]">等待审批</span>
+                      <span className="text-[11px] text-[#78716C]">等待审批</span>
                     )}
                   </div>
 
                   {nodeActions.length > 0 && nodeActions.map((act) => (
                     <div key={act.id} className="mt-2 ml-8.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[12px] font-medium text-[#111827]">
+                        <span className="text-[12px] font-medium text-[#1C1917]">
                           {act.approver.realName}
                         </span>
                         <span className={`text-[11px] font-medium ${getActionColor(act.action)}`}>
                           {getActionLabel(act.action)}
                         </span>
                         {act.actedAt && (
-                          <span className="text-[11px] text-[#6B7280]">
+                          <span className="text-[11px] text-[#78716C]">
                             {formatActionTime(act.actedAt)}
                           </span>
                         )}
                       </div>
                       {act.comment && (
                         <div className="mt-1.5 flex items-start gap-1.5">
-                          <MessageSquare className="w-3 h-3 text-[#6B7280] shrink-0 mt-0.5" />
-                          <p className="text-[12px] text-[#48484A] bg-white/60 rounded-lg px-2.5 py-1.5 border border-[#E5E7EB]">
+                          <MessageSquare className="w-3 h-3 text-[#78716C] shrink-0 mt-0.5" />
+                          <p className="text-[12px] text-[#48484A] bg-white/60 rounded-lg px-2.5 py-1.5 border border-[#E7E5E4]">
                             {act.comment}
                           </p>
                         </div>
@@ -277,7 +277,7 @@ export function ApprovalTimeline({ instance, loading }: ApprovalTimelineProps) {
 
                   {nodeActions.length === 0 && nodeStatus === "current" && (
                     <div className="mt-2 ml-8.5">
-                      <span className="text-[11px] text-[#111827] animate-pulse">审批处理中...</span>
+                      <span className="text-[11px] text-[#1C1917] animate-pulse">审批处理中...</span>
                     </div>
                   )}
                 </div>
@@ -285,7 +285,7 @@ export function ApprovalTimeline({ instance, loading }: ApprovalTimelineProps) {
                 {!isLast && (
                   <div className="flex justify-center py-1">
                     <div className={`w-0.5 h-3 rounded-full ${
-                      nodeStatus === "done" ? "bg-[#6B7280]" : "bg-[#D1D5DB]"
+                      nodeStatus === "done" ? "bg-[#78716C]" : "bg-[#D1D5DB]"
                     }`} />
                   </div>
                 )}
@@ -587,7 +587,7 @@ export function ApprovalActionButton({
       <button
         onClick={handleSubmitApproval}
         disabled={loading}
-        className="ios-btn !bg-[#111827] !text-white text-sm hover:!bg-[#0066DD] disabled:opacity-50"
+        className="ios-btn !bg-[#1C1917] !text-white text-sm hover:!bg-[#0066DD] disabled:opacity-50"
       >
         {loading ? "提交中..." : "提交审批"}
       </button>
@@ -641,24 +641,24 @@ export function ApprovalActionButton({
                 <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#8B5CF6]/10">
                   <Archive className="w-4 h-4 text-[#8B5CF6]" />
                 </div>
-                <h3 className="text-[15px] font-bold text-[#111827]">合同归档</h3>
+                <h3 className="text-[15px] font-bold text-[#1C1917]">合同归档</h3>
               </div>
 
               <div className="mb-4">
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                  上传盖章扫描件 <span className="text-[#6B7280]">*</span>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                  上传盖章扫描件 <span className="text-[#78716C]">*</span>
                 </label>
                 {archiveFiles.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-2">
                     {archiveFiles.map((url, idx) => (
                       <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[12px]">
                         <FileCheck className="w-3.5 h-3.5 text-[#22C55E]" />
-                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:underline truncate max-w-[150px]">
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#1C1917] hover:underline truncate max-w-[150px]">
                           {url.split("/").pop() || `文件${idx + 1}`}
                         </a>
                         <button
                           type="button"
-                          className="text-[#6B7280] hover:text-[#6B7280]"
+                          className="text-[#78716C] hover:text-[#78716C]"
                           onClick={() => setArchiveFiles(prev => prev.filter((_, i) => i !== idx))}
                         >
                           <X className="w-3 h-3" />
@@ -676,7 +676,7 @@ export function ApprovalActionButton({
                   <Upload className="w-4 h-4" />
                   {archiveUploading ? "上传中..." : "选择盖章扫描件上传"}
                 </button>
-                <p className="text-[12px] text-[#6B7280] mt-1">
+                <p className="text-[12px] text-[#78716C] mt-1">
                   支持 PDF、JPG、PNG 格式，至少上传1个文件
                 </p>
               </div>
@@ -722,8 +722,8 @@ export function ApprovalActionButton({
       if (isAdmin && instanceId) {
         return (
           <div className="flex items-center gap-3">
-            <p className="text-[13px] text-[#6B7280] flex items-center gap-1.5">
-              <CheckCircle className="w-4 h-4 text-[#6B7280]" />
+            <p className="text-[13px] text-[#78716C] flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 text-[#78716C]" />
               已处理
             </p>
             <button
@@ -749,7 +749,7 @@ export function ApprovalActionButton({
                 }
               }}
               disabled={loading}
-              className="ios-btn !bg-[#6B7280] !text-white text-sm hover:!bg-[#E08600] disabled:opacity-50 flex items-center gap-1"
+              className="ios-btn !bg-[#78716C] !text-white text-sm hover:!bg-[#E08600] disabled:opacity-50 flex items-center gap-1"
             >
               <SkipForward className="w-3.5 h-3.5" />
               强制推进
@@ -758,8 +758,8 @@ export function ApprovalActionButton({
         );
       }
       return (
-        <p className="text-[13px] text-[#6B7280] flex items-center gap-1.5">
-          <CheckCircle className="w-4 h-4 text-[#6B7280]" />
+        <p className="text-[13px] text-[#78716C] flex items-center gap-1.5">
+          <CheckCircle className="w-4 h-4 text-[#78716C]" />
           已处理
         </p>
       );
@@ -771,7 +771,7 @@ export function ApprovalActionButton({
           <button
             onClick={() => openConfirm("approve")}
             disabled={loading}
-            className="ios-btn !bg-[#6B7280] !text-white text-sm hover:!bg-[#2DB84E] disabled:opacity-50 flex items-center gap-1"
+            className="ios-btn !bg-[#78716C] !text-white text-sm hover:!bg-[#2DB84E] disabled:opacity-50 flex items-center gap-1"
           >
             <CheckCircle className="w-3.5 h-3.5" />
             {loading ? "处理中..." : "通过"}
@@ -779,7 +779,7 @@ export function ApprovalActionButton({
           <button
             onClick={() => openConfirm("reject")}
             disabled={loading}
-            className="ios-btn !bg-[#6B7280] !text-white text-sm hover:!bg-[#E0342B] disabled:opacity-50 flex items-center gap-1"
+            className="ios-btn !bg-[#78716C] !text-white text-sm hover:!bg-[#E0342B] disabled:opacity-50 flex items-center gap-1"
           >
             <XCircle className="w-3.5 h-3.5" />
             驳回
@@ -808,7 +808,7 @@ export function ApprovalActionButton({
                 }
               }}
               disabled={loading}
-              className="ios-btn !bg-[#6B7280] !text-white text-sm hover:!bg-[#E08600] disabled:opacity-50 flex items-center gap-1"
+              className="ios-btn !bg-[#78716C] !text-white text-sm hover:!bg-[#E08600] disabled:opacity-50 flex items-center gap-1"
             >
               <SkipForward className="w-3.5 h-3.5" />
               强制推进
@@ -821,22 +821,22 @@ export function ApprovalActionButton({
             <div className="bg-white rounded-2xl p-5 w-[400px] max-w-[90vw] shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-2.5 mb-4">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  confirmAction === "approve" ? "bg-[#6B7280]/10" : "bg-[#6B7280]/10"
+                  confirmAction === "approve" ? "bg-[#78716C]/10" : "bg-[#78716C]/10"
                 }`}>
                   {confirmAction === "approve" ? (
-                    <CheckCircle className="w-4 h-4 text-[#6B7280]" />
+                    <CheckCircle className="w-4 h-4 text-[#78716C]" />
                   ) : (
-                    <XCircle className="w-4 h-4 text-[#6B7280]" />
+                    <XCircle className="w-4 h-4 text-[#78716C]" />
                   )}
                 </div>
-                <h3 className="text-[15px] font-bold text-[#111827]">
+                <h3 className="text-[15px] font-bold text-[#1C1917]">
                   {confirmAction === "approve" ? "确认通过" : "确认驳回"}
                 </h3>
               </div>
 
               <div className="mb-4">
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                  审批意见{confirmAction === "reject" && <span className="text-[#6B7280]"> *</span>}
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                  审批意见{confirmAction === "reject" && <span className="text-[#78716C]"> *</span>}
                 </label>
                 <textarea
                   ref={commentRef}
@@ -857,8 +857,8 @@ export function ApprovalActionButton({
                 <button
                   className={`ios-btn text-white text-sm flex items-center gap-1 ${
                     confirmAction === "approve"
-                      ? "!bg-[#6B7280] hover:!bg-[#2DB84E]"
-                      : "!bg-[#6B7280] hover:!bg-[#E0342B]"
+                      ? "!bg-[#78716C] hover:!bg-[#2DB84E]"
+                      : "!bg-[#78716C] hover:!bg-[#E0342B]"
                   }`}
                   onClick={handleConfirmAction}
                 >
@@ -874,16 +874,16 @@ export function ApprovalActionButton({
           <div className="fixed inset-0 z-[9998] bg-black/40 flex items-center justify-center" onClick={() => setShowFinanceModal(false)}>
             <div className="bg-white rounded-2xl p-5 w-[440px] max-w-[90vw] shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#111827]/10">
-                  <CreditCard className="w-4 h-4 text-[#111827]" />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#1C1917]/10">
+                  <CreditCard className="w-4 h-4 text-[#1C1917]" />
                 </div>
-                <h3 className="text-[15px] font-bold text-[#111827]">财务审批 - 选择支付信息</h3>
+                <h3 className="text-[15px] font-bold text-[#1C1917]">财务审批 - 选择支付信息</h3>
               </div>
 
               <div className="space-y-4 mb-4">
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                    支付方式 <span className="text-[#6B7280]">*</span>
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                    支付方式 <span className="text-[#78716C]">*</span>
                   </label>
                   <select
                     className="ios-select"
@@ -898,8 +898,8 @@ export function ApprovalActionButton({
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                    银行账户 <span className="text-[#6B7280]">*</span>
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                    银行账户 <span className="text-[#78716C]">*</span>
                   </label>
                   <select
                     className="ios-select"
@@ -917,7 +917,7 @@ export function ApprovalActionButton({
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">审批意见</label>
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">审批意见</label>
                   <input
                     type="text"
                     className="ios-input"
@@ -936,7 +936,7 @@ export function ApprovalActionButton({
                   取消
                 </button>
                 <button
-                  className="ios-btn !bg-[#6B7280] !text-white text-sm hover:!bg-[#2DB84E] disabled:opacity-50 flex items-center gap-1"
+                  className="ios-btn !bg-[#78716C] !text-white text-sm hover:!bg-[#2DB84E] disabled:opacity-50 flex items-center gap-1"
                   disabled={loading || !selectedBankAccountId}
                   onClick={handleFinanceApprove}
                 >

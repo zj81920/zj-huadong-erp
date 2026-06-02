@@ -65,8 +65,8 @@ export default function ProjectPicker({
     <>
       <div>
         {label && (
-          <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-            {label} {required && <span className="text-[#6B7280]">*</span>}
+          <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+            {label} {required && <span className="text-[#78716C]">*</span>}
           </label>
         )}
         <div className="flex items-center gap-2">
@@ -75,9 +75,9 @@ export default function ProjectPicker({
               <>
                 <span className="flex-1 truncate text-[13px]">
                   {selectedLead.project?.projectCode ? (
-                    <span className="font-mono font-semibold text-[#111827]">{selectedLead.project.projectCode}</span>
+                    <span className="font-mono font-semibold text-[#1C1917]">{selectedLead.project.projectCode}</span>
                   ) : (
-                    <span className="font-mono font-semibold text-[#111827]">{selectedLead.projectSourceId}</span>
+                    <span className="font-mono font-semibold text-[#1C1917]">{selectedLead.projectSourceId}</span>
                   )}
                   <span className="mx-1">-</span>
                   <span>{selectedLead.project?.name || selectedLead.projectName}</span>
@@ -88,19 +88,19 @@ export default function ProjectPicker({
                     className="ml-1"
                     onClick={() => onChange("", {} as ProjectLeadItem)}
                   >
-                    <svg className="w-4 h-4 text-[#6B7280] hover:text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-[#78716C] hover:text-[#78716C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 )}
               </>
             ) : (
-              <span className="flex-1 text-[13px] text-[#6B7280]">{placeholder}</span>
+              <span className="flex-1 text-[13px] text-[#78716C]">{placeholder}</span>
             )}
           </div>
           <button
             type="button"
-            className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827] whitespace-nowrap"
+            className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917] whitespace-nowrap"
             onClick={() => {
               setSearchText("");
               setShowPicker(true);
@@ -120,7 +120,7 @@ export default function ProjectPicker({
       >
         <div className="space-y-3">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -131,7 +131,7 @@ export default function ProjectPicker({
             />
           </div>
 
-          <div className="max-h-[400px] overflow-y-auto rounded-xl border border-[#E5E7EB]">
+          <div className="max-h-[400px] overflow-y-auto rounded-xl border border-[#E7E5E4]">
             <table className="ios-table">
               <thead>
                 <tr>
@@ -146,7 +146,7 @@ export default function ProjectPicker({
                 {filteredLeads.map((l) => (
                   <tr key={l.projectSourceId}>
                     <td>
-                      <span className="font-mono text-[13px] font-semibold text-[#111827]">
+                      <span className="font-mono text-[13px] font-semibold text-[#1C1917]">
                         {l.projectSourceId}
                       </span>
                     </td>
@@ -177,7 +177,7 @@ export default function ProjectPicker({
                 ))}
                 {filteredLeads.length === 0 && (
                   <tr>
-                    <td colSpan={showCustomer ? 5 : 4} className="text-center py-8 text-[#6B7280]">
+                    <td colSpan={showCustomer ? 5 : 4} className="text-center py-8 text-[#78716C]">
                       无匹配项目
                     </td>
                   </tr>

@@ -1476,13 +1476,13 @@ export default function FinanceExpensePage() {
         <div className="bento-card-static">
           {loading ? (
             <div className="empty-state">
-              <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
           ) : payables.length === 0 ? (
             <div className="empty-state">
-              <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-                <ArrowDownCircle className="w-8 h-8 text-[#6B7280]" />
+              <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+                <ArrowDownCircle className="w-8 h-8 text-[#78716C]" />
               </div>
               <p>暂无合同支出记录</p>
             </div>
@@ -1521,14 +1521,14 @@ export default function FinanceExpensePage() {
                       : (p.sourceContract ? formatAmount(parseFloat(p.sourceContract.totalAmount)) : "-");
                     return (
                       <tr key={p.id}>
-                        <td className="font-mono text-[13px] font-semibold text-[#111827]">
+                        <td className="font-mono text-[13px] font-semibold text-[#1C1917]">
                           {sourceNo}
                         </td>
                         <td>
                           {projectName ? (
                             <div>
-                              <span className="font-semibold text-[#111827]">{projectName}</span>
-                              <span className="block text-[11px] text-[#6B7280]">{p.projectSourceId}</span>
+                              <span className="font-semibold text-[#1C1917]">{projectName}</span>
+                              <span className="block text-[11px] text-[#78716C]">{p.projectSourceId}</span>
                             </div>
                           ) : p.projectSourceId || "-"}
                         </td>
@@ -1538,16 +1538,16 @@ export default function FinanceExpensePage() {
                               {isOutsourcing ? (
                                 <span className="ios-badge ios-badge-green text-[11px]!">个人</span>
                               ) : (
-                                <Building2 className="w-3.5 h-3.5 text-[#6B7280]" />
+                                <Building2 className="w-3.5 h-3.5 text-[#78716C]" />
                               )}
                               {counterparty}
                             </div>
                           ) : "-"}
                         </td>
                         <td className="font-semibold">{sourceAmount}</td>
-                        <td className="font-semibold text-[#6B7280]">{formatAmount(p.amount)}</td>
+                        <td className="font-semibold text-[#78716C]">{formatAmount(p.amount)}</td>
                         <td className="font-semibold">{formatAmount(p.paidAmount)}</td>
-                        <td className="font-semibold text-[#6B7280]">{formatAmount(unpaid)}</td>
+                        <td className="font-semibold text-[#78716C]">{formatAmount(unpaid)}</td>
                         <td>{getStatusBadge(p.status)}</td>
                         <td>
                           <div className="flex items-center gap-1">
@@ -1565,7 +1565,7 @@ export default function FinanceExpensePage() {
                             )}
                             {unpaid > 0 && !apps.some((a) => a.approvalStatus === "草稿" || a.approvalStatus === "审批中") && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
                                 onClick={() => {
                                   setPaymentAppForm((prev) => ({ ...prev, payableId: p.id, amount: String(unpaid) }));
                                   setFormError("");
@@ -1578,7 +1578,7 @@ export default function FinanceExpensePage() {
                             )}
                             {isAdmin && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => handleDeletePayable(p.id)}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1601,7 +1601,7 @@ export default function FinanceExpensePage() {
         <div className="bento-card-static">
           <div className="filter-bar">
             <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
               <input
                 type="text"
                 className="ios-input pl-10"
@@ -1613,20 +1613,20 @@ export default function FinanceExpensePage() {
                 }}
               />
             </div>
-            <div className="ml-auto text-[13px] text-[#6B7280]">
-              共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
+            <div className="ml-auto text-[13px] text-[#78716C]">
+              共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
             </div>
           </div>
 
           {loading ? (
             <div className="empty-state">
-              <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
           ) : nonContractExpenses.length === 0 ? (
             <div className="empty-state">
-              <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-                <DollarSign className="w-8 h-8 text-[#6B7280]" />
+              <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+                <DollarSign className="w-8 h-8 text-[#78716C]" />
               </div>
               <p>{search ? "没有匹配的支出记录" : "暂无其他支出记录"}</p>
             </div>
@@ -1658,7 +1658,7 @@ export default function FinanceExpensePage() {
                   {nonContractExpenses.map((item) => {
                     const nextStatuses = appStatusFlow[item.status] || [];
                     return (
-                      <tr key={item.id} className={isSelectedOtherExpense(item.id) ? "bg-[#111827]/5" : ""}>
+                      <tr key={item.id} className={isSelectedOtherExpense(item.id) ? "bg-[#1C1917]/5" : ""}>
                         {isAdmin && (
                           <td className="w-10">
                             <input
@@ -1670,10 +1670,10 @@ export default function FinanceExpensePage() {
                           </td>
                         )}
                         <td className="font-semibold">{item.counterparty || "-"}</td>
-                        <td className="text-[#6B7280] font-semibold">{formatAmount(item.amount)}</td>
-                        <td className="text-[#6B7280]">{formatDate(item.transactionDate)}</td>
-                        <td className="text-[#6B7280] max-w-[200px] truncate">{item.description || "-"}</td>
-                        <td className="text-[#6B7280]">{item.project?.name || item.projectSourceId || "-"}</td>
+                        <td className="text-[#78716C] font-semibold">{formatAmount(item.amount)}</td>
+                        <td className="text-[#78716C]">{formatDate(item.transactionDate)}</td>
+                        <td className="text-[#78716C] max-w-[200px] truncate">{item.description || "-"}</td>
+                        <td className="text-[#78716C]">{item.project?.name || item.projectSourceId || "-"}</td>
                         <td>
                           <AdminStatusOverride
                             businessType="non_contract_expense"
@@ -1713,7 +1713,7 @@ export default function FinanceExpensePage() {
                             </button>
                             {(item.status === "草稿" || item.status === "已驳回" || isAdmin) && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => {
                                   setDeleteTarget({ type: "otherExpense", id: item.id, status: item.status });
                                   setModalType("deleteConfirm");
@@ -1725,7 +1725,7 @@ export default function FinanceExpensePage() {
                             {nextStatuses.map((ns) => (
                               <button
                                 key={ns}
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
                                 onClick={() => handleStatusChange("nonContractExpense", item.id, ns)}
                               >
                                 <ChevronRight className="w-3.5 h-3.5" />
@@ -1740,7 +1740,7 @@ export default function FinanceExpensePage() {
                 </tbody>
               </table>
               {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                   <button
                     className="ios-btn ios-btn-secondary ios-btn-sm"
                     disabled={pagination.page <= 1}
@@ -1748,7 +1748,7 @@ export default function FinanceExpensePage() {
                   >
                     上一页
                   </button>
-                  <span className="text-[13px] text-[#6B7280] px-3">{pagination.page} / {pagination.totalPages}</span>
+                  <span className="text-[13px] text-[#78716C] px-3">{pagination.page} / {pagination.totalPages}</span>
                   <button
                     className="ios-btn ios-btn-secondary ios-btn-sm"
                     disabled={pagination.page >= pagination.totalPages}
@@ -1778,13 +1778,13 @@ export default function FinanceExpensePage() {
         <div className="bento-card-static">
           {loading ? (
             <div className="empty-state">
-              <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
           ) : lendingOuts.length === 0 ? (
             <div className="empty-state">
-              <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-                <Landmark className="w-8 h-8 text-[#6B7280]" />
+              <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+                <Landmark className="w-8 h-8 text-[#78716C]" />
               </div>
               <p>暂无借出款记录</p>
             </div>
@@ -1817,7 +1817,7 @@ export default function FinanceExpensePage() {
                   {lendingOuts.map((item) => {
                     const nextStatuses = lendingStatusFlow[item.status] || [];
                     return (
-                      <tr key={item.id} className={isSelectedLendingOut(item.id) ? "bg-[#111827]/5" : ""}>
+                      <tr key={item.id} className={isSelectedLendingOut(item.id) ? "bg-[#1C1917]/5" : ""}>
                         {isAdmin && (
                           <td className="w-10">
                             <input
@@ -1832,10 +1832,10 @@ export default function FinanceExpensePage() {
                           <span className="ios-badge ios-badge-blue">{item.lendingType}</span>
                         </td>
                         <td className="font-semibold">{item.borrowerName}</td>
-                        <td className="text-[#6B7280] font-semibold">{formatAmount(item.amount)}</td>
+                        <td className="text-[#78716C] font-semibold">{formatAmount(item.amount)}</td>
                         <td className="font-semibold">{formatAmount(item.returnedAmount)}</td>
-                        <td className="font-semibold text-[#6B7280]">{formatAmount(item.remainingAmount)}</td>
-                        <td className="text-[#6B7280]">{formatDate(item.lendingDate)}</td>
+                        <td className="font-semibold text-[#78716C]">{formatAmount(item.remainingAmount)}</td>
+                        <td className="text-[#78716C]">{formatDate(item.lendingDate)}</td>
                         <td>
                           <AdminStatusOverride
                             businessType="lending_out"
@@ -1868,7 +1868,7 @@ export default function FinanceExpensePage() {
                             </button>
                             {item.remainingAmount > 0 && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
                                 onClick={() => openLendingReturnModal(item)}
                               >
                                 <Wallet className="w-3.5 h-3.5" />
@@ -1877,7 +1877,7 @@ export default function FinanceExpensePage() {
                             )}
                             {isAdmin && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => handleDeleteLendingOut(item.id)}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1886,7 +1886,7 @@ export default function FinanceExpensePage() {
                             {nextStatuses.map((ns) => (
                               <button
                                 key={ns}
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
                                 onClick={() => handleStatusChange("lendingOut", item.id, ns)}
                               >
                                 <ChevronRight className="w-3.5 h-3.5" />
@@ -1920,7 +1920,7 @@ export default function FinanceExpensePage() {
         <div className="bento-card-static">
           <div className="filter-bar">
             <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
               <input
                 type="text"
                 className="ios-input pl-10"
@@ -1932,20 +1932,20 @@ export default function FinanceExpensePage() {
                 }}
               />
             </div>
-            <div className="ml-auto text-[13px] text-[#6B7280]">
-              共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
+            <div className="ml-auto text-[13px] text-[#78716C]">
+              共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
             </div>
           </div>
 
           {loading ? (
             <div className="empty-state">
-              <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
           ) : expenseReports.length === 0 ? (
             <div className="empty-state">
-              <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-                <FileText className="w-8 h-8 text-[#6B7280]" />
+              <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+                <FileText className="w-8 h-8 text-[#78716C]" />
               </div>
               <p>{search ? "没有匹配的报销记录" : "暂无费用报销记录"}</p>
             </div>
@@ -1976,7 +1976,7 @@ export default function FinanceExpensePage() {
                   {expenseReports.map((item) => {
                     const nextStatuses = appStatusFlow[item.status] || [];
                     return (
-                      <tr key={item.id} className={isSelectedExpenseReport(item.id) ? "bg-[#111827]/5" : ""}>
+                      <tr key={item.id} className={isSelectedExpenseReport(item.id) ? "bg-[#1C1917]/5" : ""}>
                         {isAdmin && (
                           <td className="w-10">
                             <input
@@ -1991,7 +1991,7 @@ export default function FinanceExpensePage() {
                         <td>
                           <span className="ios-badge ios-badge-blue">{item.expenseType}</span>
                         </td>
-                        <td className="text-[#6B7280] font-semibold">{formatAmount(item.amount)}</td>
+                        <td className="text-[#78716C] font-semibold">{formatAmount(item.amount)}</td>
                         <td>
                           <AdminStatusOverride
                             businessType="expense_report"
@@ -2024,7 +2024,7 @@ export default function FinanceExpensePage() {
                             </button>
                             {isAdmin && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => handleDeleteExpenseReport(item.id)}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -2033,7 +2033,7 @@ export default function FinanceExpensePage() {
                             {nextStatuses.map((ns) => (
                               <button
                                 key={ns}
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
                                 onClick={() => handleStatusChange("expenseReport", item.id, ns)}
                               >
                                 <ChevronRight className="w-3.5 h-3.5" />
@@ -2042,7 +2042,7 @@ export default function FinanceExpensePage() {
                             ))}
                           </div>
                         </td>
-                        <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
+                        <td className="text-[#78716C] text-[12px] whitespace-nowrap">
                           {item.lastModifiedBy && (
                             <span>{item.lastModifiedBy}</span>
                           )}
@@ -2054,7 +2054,7 @@ export default function FinanceExpensePage() {
                 </tbody>
               </table>
               {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                   <button
                     className="ios-btn ios-btn-secondary ios-btn-sm"
                     disabled={pagination.page <= 1}
@@ -2062,7 +2062,7 @@ export default function FinanceExpensePage() {
                   >
                     上一页
                   </button>
-                  <span className="text-[13px] text-[#6B7280] px-3">{pagination.page} / {pagination.totalPages}</span>
+                  <span className="text-[13px] text-[#78716C] px-3">{pagination.page} / {pagination.totalPages}</span>
                   <button
                     className="ios-btn ios-btn-secondary ios-btn-sm"
                     disabled={pagination.page >= pagination.totalPages}
@@ -2092,7 +2092,7 @@ export default function FinanceExpensePage() {
         <div className="bento-card-static">
           <div className="filter-bar">
             <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
               <input
                 type="text"
                 className="ios-input pl-10"
@@ -2104,20 +2104,20 @@ export default function FinanceExpensePage() {
                 }}
               />
             </div>
-            <div className="ml-auto text-[13px] text-[#6B7280]">
-              共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
+            <div className="ml-auto text-[13px] text-[#78716C]">
+              共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
             </div>
           </div>
 
           {loading ? (
             <div className="empty-state">
-              <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
           ) : salaryBatches.length === 0 ? (
             <div className="empty-state">
-              <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-                <CreditCard className="w-8 h-8 text-[#6B7280]" />
+              <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+                <CreditCard className="w-8 h-8 text-[#78716C]" />
               </div>
               <p>{search ? "没有匹配的工资批次" : "暂无工资发放批次"}</p>
             </div>
@@ -2149,7 +2149,7 @@ export default function FinanceExpensePage() {
                 </thead>
                 <tbody>
                   {salaryBatches.map((batch) => (
-                    <tr key={batch.id} className={isSelectedSalary(batch.id) ? "bg-[#111827]/5" : ""}>
+                    <tr key={batch.id} className={isSelectedSalary(batch.id) ? "bg-[#1C1917]/5" : ""}>
                       {isAdmin && (
                         <td className="w-10">
                           <input
@@ -2166,7 +2166,7 @@ export default function FinanceExpensePage() {
                       <td>{batch.employeeCount}</td>
                       <td>{formatAmount(batch.totalGrossSalary)}</td>
                       <td className="font-semibold">{formatAmount(batch.totalNetSalary)}</td>
-                      <td className="text-[#6B7280]">{formatAmount(batch.totalBankOutflow)}</td>
+                      <td className="text-[#78716C]">{formatAmount(batch.totalBankOutflow)}</td>
                       <td>
                         <AdminStatusOverride
                           businessType="salary_payment"
@@ -2203,7 +2203,7 @@ export default function FinanceExpensePage() {
                                 编辑
                               </button>
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => handleDeleteBatch(batch.id, batch.status)}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -2226,7 +2226,7 @@ export default function FinanceExpensePage() {
                 </tbody>
               </table>
               {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                   <button
                     className="ios-btn ios-btn-secondary ios-btn-sm"
                     disabled={pagination.page <= 1}
@@ -2234,7 +2234,7 @@ export default function FinanceExpensePage() {
                   >
                     上一页
                   </button>
-                  <span className="text-[13px] text-[#6B7280] px-3">{pagination.page} / {pagination.totalPages}</span>
+                  <span className="text-[13px] text-[#78716C] px-3">{pagination.page} / {pagination.totalPages}</span>
                   <button
                     className="ios-btn ios-btn-secondary ios-btn-sm"
                     disabled={pagination.page >= pagination.totalPages}
@@ -2264,13 +2264,13 @@ export default function FinanceExpensePage() {
         <div className="bento-card-static">
           {loading ? (
             <div className="empty-state">
-              <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
           ) : borrowingReturnApps.length === 0 ? (
             <div className="empty-state">
-              <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-                <RotateCcw className="w-8 h-8 text-[#6B7280]" />
+              <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+                <RotateCcw className="w-8 h-8 text-[#78716C]" />
               </div>
               <p>暂无借入资金归还记录</p>
             </div>
@@ -2301,7 +2301,7 @@ export default function FinanceExpensePage() {
                 </thead>
                 <tbody>
                   {borrowingReturnApps.map((item) => (
-                    <tr key={item.id} className={isSelectedBorrowReturn(item.id) ? "bg-[#111827]/5" : ""}>
+                    <tr key={item.id} className={isSelectedBorrowReturn(item.id) ? "bg-[#1C1917]/5" : ""}>
                       {isAdmin && (
                         <td className="w-10">
                           <input
@@ -2316,9 +2316,9 @@ export default function FinanceExpensePage() {
                         <span className="ios-badge ios-badge-blue">{sourceTypeMap[item.sourceType] || item.sourceType}</span>
                       </td>
                       <td className="font-semibold">{item.sourceName}</td>
-                      <td className="text-[#6B7280]">{formatAmount(parseFloat(item.sourceAmount))}</td>
-                      <td className="text-[#6B7280] font-semibold">{formatAmount(parseFloat(item.returnAmount))}</td>
-                      <td className="text-[#6B7280]">{formatDate(item.returnDate)}</td>
+                      <td className="text-[#78716C]">{formatAmount(parseFloat(item.sourceAmount))}</td>
+                      <td className="text-[#78716C] font-semibold">{formatAmount(parseFloat(item.returnAmount))}</td>
+                      <td className="text-[#78716C]">{formatDate(item.returnDate)}</td>
                       <td>{getStatusBadge(item.status)}</td>
                       <td>
                         <AdminStatusOverride
@@ -2377,11 +2377,11 @@ export default function FinanceExpensePage() {
       >
         <div className="space-y-5">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">{formError}</div>
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">关联应付记录 <span className="text-[#6B7280]">*</span></label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">关联应付记录 <span className="text-[#78716C]">*</span></label>
             <select
               className="ios-select"
               value={paymentAppForm.payableId}
@@ -2414,29 +2414,29 @@ export default function FinanceExpensePage() {
               ? (outsourcing ? Number(outsourcing.amount) : 0)
               : (contract ? parseFloat(contract.totalAmount) : 0);
             return (
-              <div className="p-3.5 rounded-xl bg-[#F9FAFB] space-y-2.5">
+              <div className="p-3.5 rounded-xl bg-[#FAFAF9] space-y-2.5">
                 <div className="flex items-center gap-2 text-[13px]">
-                  <FileText className="w-3.5 h-3.5 text-[#111827] shrink-0" />
-                  <span className="font-mono font-semibold text-[#111827]">{sourceNo}</span>
-                  <span className="text-[#9CA3AF]">|</span>
+                  <FileText className="w-3.5 h-3.5 text-[#1C1917] shrink-0" />
+                  <span className="font-mono font-semibold text-[#1C1917]">{sourceNo}</span>
+                  <span className="text-[#A8A29E]">|</span>
                   {isOutsourcing ? (
                     <span className="ios-badge ios-badge-green text-[11px]!">个人</span>
                   ) : (
-                    <Building2 className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />
+                    <Building2 className="w-3.5 h-3.5 text-[#78716C] shrink-0" />
                   )}
                   <span className="truncate">{counterparty || "-"}</span>
                 </div>
                 {projectName && (
                   <div className="flex items-center gap-1.5 text-[12px]">
-                    <span className="text-[#6B7280]">关联项目:</span>
-                    <span className="font-semibold text-[#111827]">{projectName}</span>
-                    <span className="text-[#6B7280]">({projectId})</span>
+                    <span className="text-[#78716C]">关联项目:</span>
+                    <span className="font-semibold text-[#1C1917]">{projectName}</span>
+                    <span className="text-[#78716C]">({projectId})</span>
                   </div>
                 )}
                 <div className="flex items-center gap-4 text-[12px]">
-                  <span className="text-[#6B7280]">{isOutsourcing ? "外包" : "合同"} <span className="font-semibold text-[#111827]">{formatAmount(sourceAmount)}</span></span>
-                  <span className="text-[#6B7280]">已付 <span className="font-semibold text-[#6B7280]">{formatAmount(selectedPayable.paidAmount)}</span></span>
-                  <span className="text-[#6B7280]">未付 <span className="font-semibold text-[#6B7280]">{formatAmount(selectedPayable.amount - selectedPayable.paidAmount)}</span></span>
+                  <span className="text-[#78716C]">{isOutsourcing ? "外包" : "合同"} <span className="font-semibold text-[#1C1917]">{formatAmount(sourceAmount)}</span></span>
+                  <span className="text-[#78716C]">已付 <span className="font-semibold text-[#78716C]">{formatAmount(selectedPayable.paidAmount)}</span></span>
+                  <span className="text-[#78716C]">未付 <span className="font-semibold text-[#78716C]">{formatAmount(selectedPayable.amount - selectedPayable.paidAmount)}</span></span>
                 </div>
               </div>
             );
@@ -2444,9 +2444,9 @@ export default function FinanceExpensePage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">本次付款金额 <span className="text-[#6B7280]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">本次付款金额 <span className="text-[#78716C]">*</span></label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7280] text-[15px] font-medium">¥</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#78716C] text-[15px] font-medium">¥</span>
                 <input
                   type="number"
                   className="ios-input pl-8 text-[17px] font-semibold"
@@ -2461,7 +2461,7 @@ export default function FinanceExpensePage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">付款事由</label>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">付款事由</label>
                 <input
                   type="text"
                   className="ios-input"
@@ -2471,7 +2471,7 @@ export default function FinanceExpensePage() {
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">申请人 <span className="text-[#6B7280]">*</span></label>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">申请人 <span className="text-[#78716C]">*</span></label>
                 <select
                   className="ios-select"
                   value={paymentAppForm.applicantId}
@@ -2486,7 +2486,7 @@ export default function FinanceExpensePage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
               <input
                 type="text"
                 className="ios-input"
@@ -2497,7 +2497,7 @@ export default function FinanceExpensePage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setModalType(null)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitPaymentApp} disabled={saving}>
               {saving ? "保存中..." : "提交申请"}
@@ -2514,11 +2514,11 @@ export default function FinanceExpensePage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">{formError}</div>
           )}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">金额（元） <span className="text-[#6B7280]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">金额（元） <span className="text-[#78716C]">*</span></label>
               <input
                 type="number"
                 className="ios-input"
@@ -2530,7 +2530,7 @@ export default function FinanceExpensePage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">交易对方</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">交易对方</label>
               <input
                 type="text"
                 className="ios-input"
@@ -2541,7 +2541,7 @@ export default function FinanceExpensePage() {
             </div>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">交易日期</label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">交易日期</label>
             <input
               type="date"
               className="ios-input"
@@ -2550,7 +2550,7 @@ export default function FinanceExpensePage() {
             />
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">说明</label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">说明</label>
             <textarea
               className="ios-textarea"
               placeholder="请输入说明"
@@ -2566,7 +2566,7 @@ export default function FinanceExpensePage() {
               label="关联项目"
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setModalType(null)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitOtherExpense} disabled={saving}>
               {saving ? "保存中..." : editingOtherExpense ? "保存修改" : "创建支出"}
@@ -2583,10 +2583,10 @@ export default function FinanceExpensePage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">{formError}</div>
           )}
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">借出类型 <span className="text-[#6B7280]">*</span></label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">借出类型 <span className="text-[#78716C]">*</span></label>
             <select
               className="ios-select"
               value={lendingOutForm.lendingType}
@@ -2600,7 +2600,7 @@ export default function FinanceExpensePage() {
           </div>
           {lendingOutForm.lendingType === "投标保证金" && (
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">关联投标</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">关联投标</label>
               <select
                 className="ios-select"
                 value={lendingOutForm.biddingId}
@@ -2616,7 +2616,7 @@ export default function FinanceExpensePage() {
             </div>
           )}
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">借入方 <span className="text-[#6B7280]">*</span></label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">借入方 <span className="text-[#78716C]">*</span></label>
             <input
               type="text"
               className="ios-input"
@@ -2627,7 +2627,7 @@ export default function FinanceExpensePage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">借出金额（元） <span className="text-[#6B7280]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">借出金额（元） <span className="text-[#78716C]">*</span></label>
               <input
                 type="number"
                 className="ios-input"
@@ -2639,7 +2639,7 @@ export default function FinanceExpensePage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">借出日期</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">借出日期</label>
               <input
                 type="date"
                 className="ios-input"
@@ -2649,7 +2649,7 @@ export default function FinanceExpensePage() {
             </div>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">预计归还日期</label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">预计归还日期</label>
             <input
               type="date"
               className="ios-input"
@@ -2658,7 +2658,7 @@ export default function FinanceExpensePage() {
             />
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">说明</label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">说明</label>
             <textarea
               className="ios-textarea"
               placeholder="请输入说明"
@@ -2666,7 +2666,7 @@ export default function FinanceExpensePage() {
               onChange={(e) => setLendingOutForm((p) => ({ ...p, description: e.target.value }))}
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setModalType(null)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitLendingOut} disabled={saving}>
               {saving ? "保存中..." : "创建借出"}
@@ -2683,13 +2683,13 @@ export default function FinanceExpensePage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">{formError}</div>
           )}
           {returnTargetLending && (
-            <div className="p-3 rounded-xl bg-[#F9FAFB]">
-              <p className="text-[13px] text-[#6B7280] mb-1">借出记录</p>
+            <div className="p-3 rounded-xl bg-[#FAFAF9]">
+              <p className="text-[13px] text-[#78716C] mb-1">借出记录</p>
               <p className="text-[14px] font-semibold">{returnTargetLending.borrowerName} - {formatAmount(returnTargetLending.amount)}</p>
-              <div className="flex gap-4 mt-1 text-[12px] text-[#6B7280]">
+              <div className="flex gap-4 mt-1 text-[12px] text-[#78716C]">
                 <span>已收回: {formatAmount(returnTargetLending.returnedAmount)}</span>
                 <span>剩余: {formatAmount(returnTargetLending.remainingAmount)}</span>
               </div>
@@ -2697,7 +2697,7 @@ export default function FinanceExpensePage() {
           )}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">收回金额（元） <span className="text-[#6B7280]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">收回金额（元） <span className="text-[#78716C]">*</span></label>
               <input
                 type="number"
                 className="ios-input"
@@ -2710,7 +2710,7 @@ export default function FinanceExpensePage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">收回日期</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">收回日期</label>
               <input
                 type="date"
                 className="ios-input"
@@ -2720,7 +2720,7 @@ export default function FinanceExpensePage() {
             </div>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
             <textarea
               className="ios-textarea"
               placeholder="请输入备注"
@@ -2728,7 +2728,7 @@ export default function FinanceExpensePage() {
               onChange={(e) => setLendingReturnForm((p) => ({ ...p, remark: e.target.value }))}
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button className="ios-btn ios-btn-secondary" onClick={() => { setModalType(null); setReturnTargetLending(null); }}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitLendingReturn} disabled={saving}>
               {saving ? "保存中..." : "确认收回"}
@@ -2745,15 +2745,15 @@ export default function FinanceExpensePage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">{formError}</div>
           )}
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">报销人</label>
-            <input readOnly value={currentUser?.realName || ""} className="ios-input bg-[#F9FAFB]" />
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">报销人</label>
+            <input readOnly value={currentUser?.realName || ""} className="ios-input bg-[#FAFAF9]" />
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[13px] font-semibold text-[#111827]">报销明细</label>
+              <label className="text-[13px] font-semibold text-[#1C1917]">报销明细</label>
               <button className="ios-btn ios-btn-secondary ios-btn-sm" onClick={addExpenseItem}>
                 <Plus className="w-3.5 h-3.5" />
                 添加行
@@ -2762,18 +2762,18 @@ export default function FinanceExpensePage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-[#E5E7EB]">
-                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#6B7280]">费用说明 *</th>
-                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#6B7280]">关联项目</th>
-                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#6B7280]">报销金额 *</th>
-                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#6B7280]">费用类型 *</th>
-                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#6B7280]">上传发票 *</th>
+                  <tr className="border-b border-[#E7E5E4]">
+                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">费用说明 *</th>
+                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">关联项目</th>
+                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">报销金额 *</th>
+                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">费用类型 *</th>
+                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">上传发票 *</th>
                     <th className="w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {expenseReportForm.items.map((item, index) => (
-                    <tr key={index} className="border-b border-[#F3F4F6]">
+                    <tr key={index} className="border-b border-[#F5F5F4]">
                       <td className="py-2 px-2">
                         <input
                           type="text"
@@ -2787,7 +2787,7 @@ export default function FinanceExpensePage() {
                         <div className="flex items-center gap-1.5">
                           <input
                             type="checkbox"
-                            className="w-3.5 h-3.5 rounded border-[#9CA3AF] accent-[#111827] shrink-0"
+                            className="w-3.5 h-3.5 rounded border-[#A8A29E] accent-[#1C1917] shrink-0"
                             checked={item.relateProject}
                             onChange={(e) => updateExpenseItem(index, "relateProject", e.target.checked)}
                           />
@@ -2800,7 +2800,7 @@ export default function FinanceExpensePage() {
                               placeholder="选择项目"
                             />
                           ) : (
-                            <span className="text-[12px] text-[#6B7280]">-</span>
+                            <span className="text-[12px] text-[#78716C]">-</span>
                           )}
                         </div>
                       </td>
@@ -2850,13 +2850,13 @@ export default function FinanceExpensePage() {
                             <div className="flex flex-col gap-0.5">
                               {item.invoiceAttachments.map((url: string, idx: number) => (
                                 <div key={idx} className="flex items-center gap-1">
-                                  <a href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#111827] hover:underline truncate max-w-[80px]">
+                                  <a href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#1C1917] hover:underline truncate max-w-[80px]">
                                     发票{idx + 1}
                                   </a>
                                   <button
                                     type="button"
                                     onClick={() => removeAttachment(index, idx)}
-                                    className="text-[#6B7280] text-[10px] hover:opacity-70 shrink-0"
+                                    className="text-[#78716C] text-[10px] hover:opacity-70 shrink-0"
                                   >
                                     ✕
                                   </button>
@@ -2869,7 +2869,7 @@ export default function FinanceExpensePage() {
                       <td className="py-2 px-1">
                         {expenseReportForm.items.length > 1 && (
                           <button
-                            className="p-1 text-[#6B7280] hover:bg-[#6B7280]/10 rounded-lg"
+                            className="p-1 text-[#78716C] hover:bg-[#78716C]/10 rounded-lg"
                             onClick={() => removeExpenseItem(index)}
                           >
                             <MinusCircle className="w-4 h-4" />
@@ -2881,12 +2881,12 @@ export default function FinanceExpensePage() {
                 </tbody>
               </table>
             </div>
-            <div className="mt-3 p-3 rounded-xl bg-[#F9FAFB] flex items-center justify-between">
-              <span className="text-[13px] font-semibold text-[#111827]">总金额</span>
-              <span className="text-[15px] font-bold text-[#6B7280]">{formatAmount(getExpenseTotal())}</span>
+            <div className="mt-3 p-3 rounded-xl bg-[#FAFAF9] flex items-center justify-between">
+              <span className="text-[13px] font-semibold text-[#1C1917]">总金额</span>
+              <span className="text-[15px] font-bold text-[#78716C]">{formatAmount(getExpenseTotal())}</span>
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setModalType(null)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitExpenseReport} disabled={saving}>
               {saving ? "保存中..." : "提交报销"}
@@ -2903,11 +2903,11 @@ export default function FinanceExpensePage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">{formError}</div>
           )}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">工资周期 <span className="text-[#6B7280]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">工资周期 <span className="text-[#78716C]">*</span></label>
               <input
                 type="month"
                 className="ios-input"
@@ -2916,7 +2916,7 @@ export default function FinanceExpensePage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">批次名称 <span className="text-[#6B7280]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">批次名称 <span className="text-[#78716C]">*</span></label>
               <input
                 type="text"
                 className="ios-input"
@@ -2926,29 +2926,29 @@ export default function FinanceExpensePage() {
             </div>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">选择发放员工 <span className="text-[#6B7280]">*</span>（在职员工）</label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">选择发放员工 <span className="text-[#78716C]">*</span>（在职员工）</label>
             <div className="max-h-[300px] overflow-y-auto border rounded-xl p-3 space-y-2">
               {users.map((u) => (
                 <label key={u.id} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-3.5 h-3.5 rounded border-[#9CA3AF] accent-[#111827]"
+                    className="w-3.5 h-3.5 rounded border-[#A8A29E] accent-[#1C1917]"
                     checked={batchFormEmployees.includes(u.id)}
                     onChange={(e) => {
                       if (e.target.checked) setBatchFormEmployees((prev) => [...prev, u.id]);
                       else setBatchFormEmployees((prev) => prev.filter((id) => id !== u.id));
                     }}
                   />
-                  <span className="text-[13px] text-[#111827]">{u.realName}</span>
+                  <span className="text-[13px] text-[#1C1917]">{u.realName}</span>
                 </label>
               ))}
             </div>
             {batchFormEmployees.length > 0 && (
-              <p className="text-[12px] text-[#6B7280] mt-1">已选 {batchFormEmployees.length} 人</p>
+              <p className="text-[12px] text-[#78716C] mt-1">已选 {batchFormEmployees.length} 人</p>
             )}
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
             <textarea
               className="ios-textarea"
               placeholder="请输入备注"
@@ -2956,7 +2956,7 @@ export default function FinanceExpensePage() {
               onChange={(e) => setBatchFormRemark(e.target.value)}
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowBatchForm(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleCreateBatch} disabled={saving}>
               {saving ? "创建中..." : "创建批次"}
@@ -2973,11 +2973,11 @@ export default function FinanceExpensePage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">{formError}</div>
           )}
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">批次名称</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">批次名称</label>
               <input
                 type="text"
                 className="ios-input"
@@ -2986,7 +2986,7 @@ export default function FinanceExpensePage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
               <input
                 type="text"
                 className="ios-input"
@@ -3019,19 +3019,19 @@ export default function FinanceExpensePage() {
                     <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.baseSalary} onChange={(e) => updateBatchItem(idx, "baseSalary", e.target.value)} /></td>
                     <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.bonus} onChange={(e) => updateBatchItem(idx, "bonus", e.target.value)} /></td>
                     <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.allowance} onChange={(e) => updateBatchItem(idx, "allowance", e.target.value)} /></td>
-                    <td className="font-semibold text-[#111827]">{formatAmount(item.grossSalary)}</td>
+                    <td className="font-semibold text-[#1C1917]">{formatAmount(item.grossSalary)}</td>
                     <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.socialInsurancePersonal} onChange={(e) => updateBatchItem(idx, "socialInsurancePersonal", e.target.value)} /></td>
                     <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.housingFundPersonal} onChange={(e) => updateBatchItem(idx, "housingFundPersonal", e.target.value)} /></td>
                     <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.incomeTax} onChange={(e) => updateBatchItem(idx, "incomeTax", e.target.value)} /></td>
                     <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.otherDeduction} onChange={(e) => updateBatchItem(idx, "otherDeduction", e.target.value)} /></td>
-                    <td className="text-[#6B7280]">{formatAmount(item.totalDeduction)}</td>
-                    <td className="font-semibold text-[#6B7280]">{formatAmount(item.netSalary)}</td>
+                    <td className="text-[#78716C]">{formatAmount(item.totalDeduction)}</td>
+                    <td className="font-semibold text-[#78716C]">{formatAmount(item.netSalary)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setModalType(null)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSaveBatchItems} disabled={saving}>
               {saving ? "保存中..." : "保存明细"}
@@ -3047,11 +3047,11 @@ export default function FinanceExpensePage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">确定要删除该记录吗？</p>
-          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
+          <p className="text-[15px] text-[#1C1917] mb-1">确定要删除该记录吗？</p>
+          <p className="text-[13px] text-[#78716C] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => { setModalType(null); setDeleteTarget(null); }}>取消</button>
             <button
@@ -3077,12 +3077,12 @@ export default function FinanceExpensePage() {
           <div className="space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#6B7280]/10 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-[#6B7280]" />
+                <div className="w-10 h-10 rounded-full bg-[#78716C]/10 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-[#78716C]" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-bold text-[#111827]">{detailOtherExpense.counterparty || "未指定交易对方"}</h3>
-                  <p className="text-[13px] text-[#6B7280]">非合同支出</p>
+                  <h3 className="text-[15px] font-bold text-[#1C1917]">{detailOtherExpense.counterparty || "未指定交易对方"}</h3>
+                  <p className="text-[13px] text-[#78716C]">非合同支出</p>
                 </div>
               </div>
               <AdminStatusOverride
@@ -3101,29 +3101,29 @@ export default function FinanceExpensePage() {
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">支出金额</p>
-                <p className="text-[14px] font-bold text-[#6B7280]">{formatAmount(detailOtherExpense.amount)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">支出金额</p>
+                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(detailOtherExpense.amount)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">交易日期</p>
-                <p className="text-[14px] text-[#111827]">{formatDate(detailOtherExpense.transactionDate)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">交易日期</p>
+                <p className="text-[14px] text-[#1C1917]">{formatDate(detailOtherExpense.transactionDate)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">关联项目</p>
-                <p className="text-[14px] text-[#111827]">{detailOtherExpense.project?.name || detailOtherExpense.projectSourceId || "-"}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">关联项目</p>
+                <p className="text-[14px] text-[#1C1917]">{detailOtherExpense.project?.name || detailOtherExpense.projectSourceId || "-"}</p>
               </div>
             </div>
 
             {detailOtherExpense.description && (
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">说明</p>
-                <p className="text-[14px] text-[#111827] whitespace-pre-wrap leading-relaxed bg-[#F9FAFB] p-3 rounded-xl">{detailOtherExpense.description}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">说明</p>
+                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">{detailOtherExpense.description}</p>
               </div>
             )}
 
             {detailOtherExpense.bankAccountId && (
-              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#111827]/10">
-                <p className="text-[12px] font-semibold text-[#111827] mb-1">支付信息</p>
+              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#1C1917]/10">
+                <p className="text-[12px] font-semibold text-[#1C1917] mb-1">支付信息</p>
                 <div className="flex items-center gap-4 text-[13px]">
                   <span>支付方式：{detailOtherExpense.paymentMethod || "-"}</span>
                   {detailOtherExpense.bankAccount && (
@@ -3151,12 +3151,12 @@ export default function FinanceExpensePage() {
           <div className="space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#6B7280]/10 flex items-center justify-center">
-                  <Landmark className="w-5 h-5 text-[#6B7280]" />
+                <div className="w-10 h-10 rounded-full bg-[#78716C]/10 flex items-center justify-center">
+                  <Landmark className="w-5 h-5 text-[#78716C]" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-bold text-[#111827]">{detailLendingOut.borrowerName}</h3>
-                  <p className="text-[13px] text-[#6B7280]">{detailLendingOut.lendingType}</p>
+                  <h3 className="text-[15px] font-bold text-[#1C1917]">{detailLendingOut.borrowerName}</h3>
+                  <p className="text-[13px] text-[#78716C]">{detailLendingOut.lendingType}</p>
                 </div>
               </div>
               <AdminStatusOverride
@@ -3175,47 +3175,47 @@ export default function FinanceExpensePage() {
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">借出金额</p>
-                <p className="text-[14px] font-bold text-[#6B7280]">{formatAmount(detailLendingOut.amount)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">借出金额</p>
+                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(detailLendingOut.amount)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">已收回</p>
-                <p className="text-[14px] font-medium text-[#111827]">{formatAmount(detailLendingOut.returnedAmount)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">已收回</p>
+                <p className="text-[14px] font-medium text-[#1C1917]">{formatAmount(detailLendingOut.returnedAmount)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">未收回</p>
-                <p className="text-[14px] font-bold text-[#6B7280]">{formatAmount(detailLendingOut.remainingAmount)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">未收回</p>
+                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(detailLendingOut.remainingAmount)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">借出日期</p>
-                <p className="text-[14px] text-[#111827]">{formatDate(detailLendingOut.lendingDate)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">借出日期</p>
+                <p className="text-[14px] text-[#1C1917]">{formatDate(detailLendingOut.lendingDate)}</p>
               </div>
               {detailLendingOut.expectedReturnDate && (
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">预计归还日期</p>
-                  <p className="text-[14px] text-[#111827]">{formatDate(detailLendingOut.expectedReturnDate)}</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">预计归还日期</p>
+                  <p className="text-[14px] text-[#1C1917]">{formatDate(detailLendingOut.expectedReturnDate)}</p>
                 </div>
               )}
             </div>
 
             {detailLendingOut.description && (
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">说明</p>
-                <p className="text-[14px] text-[#111827] whitespace-pre-wrap leading-relaxed bg-[#F9FAFB] p-3 rounded-xl">{detailLendingOut.description}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">说明</p>
+                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">{detailLendingOut.description}</p>
               </div>
             )}
 
             {detailLendingOut.returns && detailLendingOut.returns.length > 0 && (
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-2">归还记录</p>
+                <p className="text-[12px] text-[#78716C] mb-2">归还记录</p>
                 <div className="space-y-2">
                   {detailLendingOut.returns.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between p-2.5 bg-[#F9FAFB] rounded-xl">
+                    <div key={r.id} className="flex items-center justify-between p-2.5 bg-[#FAFAF9] rounded-xl">
                       <div>
-                        <p className="text-[13px] font-medium text-[#111827]">{formatAmount(r.amount)}</p>
-                        <p className="text-[12px] text-[#6B7280]">{formatDate(r.returnDate)}</p>
+                        <p className="text-[13px] font-medium text-[#1C1917]">{formatAmount(r.amount)}</p>
+                        <p className="text-[12px] text-[#78716C]">{formatDate(r.returnDate)}</p>
                       </div>
-                      {r.remark && <p className="text-[12px] text-[#6B7280]">{r.remark}</p>}
+                      {r.remark && <p className="text-[12px] text-[#78716C]">{r.remark}</p>}
                     </div>
                   ))}
                 </div>
@@ -3223,8 +3223,8 @@ export default function FinanceExpensePage() {
             )}
 
             {detailLendingOut.bankAccountId && (
-              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#111827]/10">
-                <p className="text-[12px] font-semibold text-[#111827] mb-1">支付信息</p>
+              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#1C1917]/10">
+                <p className="text-[12px] font-semibold text-[#1C1917] mb-1">支付信息</p>
                 <div className="flex items-center gap-4 text-[13px]">
                   <span>支付方式：{detailLendingOut.paymentMethod || "-"}</span>
                   {detailLendingOut.bankAccount && (
@@ -3256,8 +3256,8 @@ export default function FinanceExpensePage() {
                   <FileText className="w-5 h-5 text-[#5856D6]" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-bold text-[#111827]">{detailExpenseReport.applicant?.realName || "-"}</h3>
-                  <p className="text-[13px] text-[#6B7280]">{detailExpenseReport.expenseType}</p>
+                  <h3 className="text-[15px] font-bold text-[#1C1917]">{detailExpenseReport.applicant?.realName || "-"}</h3>
+                  <p className="text-[13px] text-[#78716C]">{detailExpenseReport.expenseType}</p>
                 </div>
               </div>
               <AdminStatusOverride
@@ -3276,41 +3276,41 @@ export default function FinanceExpensePage() {
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">报销总金额</p>
-                <p className="text-[14px] font-bold text-[#6B7280]">{formatAmount(detailExpenseReport.amount)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">报销总金额</p>
+                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(detailExpenseReport.amount)}</p>
               </div>
               {detailExpenseReport.loanOffsetAmount > 0 && (
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">借款抵扣</p>
-                  <p className="text-[14px] text-[#6B7280]">{formatAmount(detailExpenseReport.loanOffsetAmount)}</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">借款抵扣</p>
+                  <p className="text-[14px] text-[#78716C]">{formatAmount(detailExpenseReport.loanOffsetAmount)}</p>
                 </div>
               )}
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#111827]">{formatDate(detailExpenseReport.createdAt)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
+                <p className="text-[14px] text-[#1C1917]">{formatDate(detailExpenseReport.createdAt)}</p>
               </div>
             </div>
 
             {detailExpenseReport.items && detailExpenseReport.items.length > 0 && (
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-2">报销明细</p>
+                <p className="text-[12px] text-[#78716C] mb-2">报销明细</p>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[600px]">
                     <thead>
-                      <tr className="border-b border-[#E5E7EB]">
-                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#6B7280]">费用说明</th>
-                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#6B7280]">关联项目</th>
-                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#6B7280]">报销金额</th>
-                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#6B7280]">费用类型</th>
-                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#6B7280]">发票附件</th>
+                      <tr className="border-b border-[#E7E5E4]">
+                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">费用说明</th>
+                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">关联项目</th>
+                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">报销金额</th>
+                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">费用类型</th>
+                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">发票附件</th>
                       </tr>
                     </thead>
                     <tbody>
                       {detailExpenseReport.items.map((it) => (
-                        <tr key={it.id} className="border-b border-[#F3F4F6]">
-                          <td className="py-2 px-2 text-[13px] text-[#111827]">{it.description || "-"}</td>
-                          <td className="py-2 px-2 text-[13px] text-[#111827]">{it.project?.name || it.projectSourceId || "-"}</td>
-                          <td className="py-2 px-2 text-[13px] font-medium text-[#6B7280]">{formatAmount(it.amount)}</td>
+                        <tr key={it.id} className="border-b border-[#F5F5F4]">
+                          <td className="py-2 px-2 text-[13px] text-[#1C1917]">{it.description || "-"}</td>
+                          <td className="py-2 px-2 text-[13px] text-[#1C1917]">{it.project?.name || it.projectSourceId || "-"}</td>
+                          <td className="py-2 px-2 text-[13px] font-medium text-[#78716C]">{formatAmount(it.amount)}</td>
                           <td className="py-2 px-2">
                             <span className="ios-badge ios-badge-blue text-[11px]">{it.expenseType}</span>
                           </td>
@@ -3318,13 +3318,13 @@ export default function FinanceExpensePage() {
                             {it.invoiceAttachments && it.invoiceAttachments.length > 0 ? (
                               <div className="flex flex-col gap-0.5">
                                 {it.invoiceAttachments.map((url: string, idx: number) => (
-                                  <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#111827] hover:underline">
+                                  <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#1C1917] hover:underline">
                                     发票{idx + 1}
                                   </a>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-[12px] text-[#6B7280]">-</span>
+                              <span className="text-[12px] text-[#78716C]">-</span>
                             )}
                           </td>
                         </tr>
@@ -3336,8 +3336,8 @@ export default function FinanceExpensePage() {
             )}
 
             {detailExpenseReport.bankAccountId && (
-              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#111827]/10">
-                <p className="text-[12px] font-semibold text-[#111827] mb-1">支付信息</p>
+              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#1C1917]/10">
+                <p className="text-[12px] font-semibold text-[#1C1917] mb-1">支付信息</p>
                 <div className="flex items-center gap-4 text-[13px]">
                   <span>支付方式：{detailExpenseReport.paymentMethod || "-"}</span>
                   {detailExpenseReport.bankAccount && (
@@ -3365,12 +3365,12 @@ export default function FinanceExpensePage() {
           <div className="space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#6B7280]/10 flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-[#6B7280]" />
+                <div className="w-10 h-10 rounded-full bg-[#78716C]/10 flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-[#78716C]" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-bold text-[#111827]">{salaryBatchDetail.title}</h3>
-                  <p className="text-[13px] text-[#6B7280]">{salaryBatchDetail.batchNo} · {salaryBatchDetail.period}</p>
+                  <h3 className="text-[15px] font-bold text-[#1C1917]">{salaryBatchDetail.title}</h3>
+                  <p className="text-[13px] text-[#78716C]">{salaryBatchDetail.batchNo} · {salaryBatchDetail.period}</p>
                 </div>
               </div>
               <AdminStatusOverride
@@ -3389,49 +3389,49 @@ export default function FinanceExpensePage() {
 
             <div className="grid grid-cols-3 gap-x-6 gap-y-3">
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">人数</p>
-                <p className="text-[14px] text-[#111827]">{salaryBatchDetail.employeeCount}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">人数</p>
+                <p className="text-[14px] text-[#1C1917]">{salaryBatchDetail.employeeCount}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">应发总额</p>
-                <p className="text-[14px] font-medium text-[#111827]">{formatAmount(salaryBatchDetail.totalGrossSalary)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">应发总额</p>
+                <p className="text-[14px] font-medium text-[#1C1917]">{formatAmount(salaryBatchDetail.totalGrossSalary)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">实发总额</p>
-                <p className="text-[14px] font-bold text-[#6B7280]">{formatAmount(salaryBatchDetail.totalNetSalary)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">实发总额</p>
+                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(salaryBatchDetail.totalNetSalary)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">社保个人合计</p>
-                <p className="text-[14px] text-[#111827]">{formatAmount(salaryBatchDetail.totalSocialInsurancePersonal)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">社保个人合计</p>
+                <p className="text-[14px] text-[#1C1917]">{formatAmount(salaryBatchDetail.totalSocialInsurancePersonal)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">公积金个人合计</p>
-                <p className="text-[14px] text-[#111827]">{formatAmount(salaryBatchDetail.totalHousingFundPersonal)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">公积金个人合计</p>
+                <p className="text-[14px] text-[#1C1917]">{formatAmount(salaryBatchDetail.totalHousingFundPersonal)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">个税合计</p>
-                <p className="text-[14px] text-[#111827]">{formatAmount(salaryBatchDetail.totalIncomeTax)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">个税合计</p>
+                <p className="text-[14px] text-[#1C1917]">{formatAmount(salaryBatchDetail.totalIncomeTax)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">银行总支出</p>
-                <p className="text-[14px] font-bold text-[#6B7280]">{formatAmount(salaryBatchDetail.totalBankOutflow)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">银行总支出</p>
+                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(salaryBatchDetail.totalBankOutflow)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#111827]">{formatDate(salaryBatchDetail.createdAt)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
+                <p className="text-[14px] text-[#1C1917]">{formatDate(salaryBatchDetail.createdAt)}</p>
               </div>
             </div>
 
             {salaryBatchDetail.remark && (
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">备注</p>
-                <p className="text-[14px] text-[#111827] whitespace-pre-wrap leading-relaxed bg-[#F9FAFB] p-3 rounded-xl">{salaryBatchDetail.remark}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">备注</p>
+                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">{salaryBatchDetail.remark}</p>
               </div>
             )}
 
             {salaryBatchDetail.items && salaryBatchDetail.items.length > 0 && (
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-2">工资明细</p>
+                <p className="text-[12px] text-[#78716C] mb-2">工资明细</p>
                 <div className="overflow-x-auto">
                   <table className="ios-table text-[12px]">
                     <thead>
@@ -3456,13 +3456,13 @@ export default function FinanceExpensePage() {
                           <td>{formatAmount(item.baseSalary)}</td>
                           <td>{formatAmount(item.bonus)}</td>
                           <td>{formatAmount(item.allowance)}</td>
-                          <td className="font-medium text-[#111827]">{formatAmount(item.grossSalary)}</td>
+                          <td className="font-medium text-[#1C1917]">{formatAmount(item.grossSalary)}</td>
                           <td>{formatAmount(item.socialInsurancePersonal)}</td>
                           <td>{formatAmount(item.housingFundPersonal)}</td>
                           <td>{formatAmount(item.incomeTax)}</td>
                           <td>{formatAmount(item.otherDeduction)}</td>
-                          <td className="text-[#6B7280]">{formatAmount(item.totalDeduction)}</td>
-                          <td className="font-semibold text-[#6B7280]">{formatAmount(item.netSalary)}</td>
+                          <td className="text-[#78716C]">{formatAmount(item.totalDeduction)}</td>
+                          <td className="font-semibold text-[#78716C]">{formatAmount(item.netSalary)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -3472,8 +3472,8 @@ export default function FinanceExpensePage() {
             )}
 
             {salaryBatchDetail.bankAccountId && (
-              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#111827]/10">
-                <p className="text-[12px] font-semibold text-[#111827] mb-1">支付信息</p>
+              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#1C1917]/10">
+                <p className="text-[12px] font-semibold text-[#1C1917] mb-1">支付信息</p>
                 <div className="flex items-center gap-4 text-[13px]">
                   <span>支付方式：{salaryBatchDetail.paymentMethod || "-"}</span>
                   {salaryBatchDetail.bankAccount && (
@@ -3501,12 +3501,12 @@ export default function FinanceExpensePage() {
           <div className="space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#111827]/10 flex items-center justify-center">
-                  <RotateCcw className="w-5 h-5 text-[#111827]" />
+                <div className="w-10 h-10 rounded-full bg-[#1C1917]/10 flex items-center justify-center">
+                  <RotateCcw className="w-5 h-5 text-[#1C1917]" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-bold text-[#111827]">{detailBorrowingReturnApp.sourceName}</h3>
-                  <p className="text-[13px] text-[#6B7280]">{sourceTypeMap[detailBorrowingReturnApp.sourceType] || detailBorrowingReturnApp.sourceType}</p>
+                  <h3 className="text-[15px] font-bold text-[#1C1917]">{detailBorrowingReturnApp.sourceName}</h3>
+                  <p className="text-[13px] text-[#78716C]">{sourceTypeMap[detailBorrowingReturnApp.sourceType] || detailBorrowingReturnApp.sourceType}</p>
                 </div>
               </div>
               <AdminStatusOverride
@@ -3527,39 +3527,39 @@ export default function FinanceExpensePage() {
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">原始金额</p>
-                <p className="text-[14px] font-medium text-[#111827]">{formatAmount(parseFloat(detailBorrowingReturnApp.sourceAmount))}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">原始金额</p>
+                <p className="text-[14px] font-medium text-[#1C1917]">{formatAmount(parseFloat(detailBorrowingReturnApp.sourceAmount))}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">归还金额</p>
-                <p className="text-[14px] font-bold text-[#6B7280]">{formatAmount(parseFloat(detailBorrowingReturnApp.returnAmount))}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">归还金额</p>
+                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(parseFloat(detailBorrowingReturnApp.returnAmount))}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">归还日期</p>
-                <p className="text-[14px] text-[#111827]">{formatDate(detailBorrowingReturnApp.returnDate)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">归还日期</p>
+                <p className="text-[14px] text-[#1C1917]">{formatDate(detailBorrowingReturnApp.returnDate)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#111827]">{formatDate(detailBorrowingReturnApp.createdAt)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
+                <p className="text-[14px] text-[#1C1917]">{formatDate(detailBorrowingReturnApp.createdAt)}</p>
               </div>
               {detailBorrowingReturnApp.executedAt && (
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">执行时间</p>
-                  <p className="text-[14px] text-[#111827]">{formatDate(detailBorrowingReturnApp.executedAt)}</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">执行时间</p>
+                  <p className="text-[14px] text-[#1C1917]">{formatDate(detailBorrowingReturnApp.executedAt)}</p>
                 </div>
               )}
             </div>
 
             {detailBorrowingReturnApp.remark && (
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">备注</p>
-                <p className="text-[14px] text-[#111827] whitespace-pre-wrap leading-relaxed bg-[#F9FAFB] p-3 rounded-xl">{detailBorrowingReturnApp.remark}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">备注</p>
+                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">{detailBorrowingReturnApp.remark}</p>
               </div>
             )}
 
             {detailBorrowingReturnApp.bankAccountId && (
-              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#111827]/10">
-                <p className="text-[12px] font-semibold text-[#111827] mb-1">支付信息</p>
+              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#1C1917]/10">
+                <p className="text-[12px] font-semibold text-[#1C1917] mb-1">支付信息</p>
                 <div className="flex items-center gap-4 text-[13px]">
                   <span>支付方式：{detailBorrowingReturnApp.paymentMethod || "-"}</span>
                   {detailBorrowingReturnApp.bankAccount && (
@@ -3585,8 +3585,8 @@ export default function FinanceExpensePage() {
       >
         {statusFlowTarget && statusFlowTarget.type === "payableApps" && (
           <div className="space-y-4">
-            <div className="p-3 rounded-xl bg-[#F9FAFB]">
-              <p className="text-[13px] text-[#6B7280] mb-1">应付状态</p>
+            <div className="p-3 rounded-xl bg-[#FAFAF9]">
+              <p className="text-[13px] text-[#78716C] mb-1">应付状态</p>
               <div>{getStatusBadge(statusFlowTarget.status)}</div>
             </div>
 
@@ -3594,7 +3594,7 @@ export default function FinanceExpensePage() {
               const apps = getPayableApplications(statusFlowTarget.id);
               if (apps.length === 0) {
                 return (
-                  <div className="text-center py-6 text-[#6B7280] text-[13px] rounded-xl bg-[#F9FAFB]">
+                  <div className="text-center py-6 text-[#78716C] text-[13px] rounded-xl bg-[#FAFAF9]">
                     暂无付款申请记录
                   </div>
                 );
@@ -3606,14 +3606,14 @@ export default function FinanceExpensePage() {
                     const isRejected = app.approvalStatus === "已驳回";
                     const isEditing = editingPaymentAppId === app.id;
                     return (
-                      <div key={app.id} className="rounded-xl border border-[#E5E7EB] overflow-hidden">
-                        <div className="p-3 bg-[#F9FAFB]">
+                      <div key={app.id} className="rounded-xl border border-[#E7E5E4] overflow-hidden">
+                        <div className="p-3 bg-[#FAFAF9]">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-[13px] font-semibold text-[#111827]">
+                              <span className="text-[13px] font-semibold text-[#1C1917]">
                                 {app.applicant?.realName || "-"}
                               </span>
-                              <span className="text-[12px] text-[#6B7280]">
+                              <span className="text-[12px] text-[#78716C]">
                                 {formatDate(app.createdAt)}
                               </span>
                             </div>
@@ -3637,11 +3637,11 @@ export default function FinanceExpensePage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-4 text-[12px]">
-                            <span className="text-[#6B7280]">
-                              申请金额 <span className="font-semibold text-[#111827]">{formatAmount(app.amount)}</span>
+                            <span className="text-[#78716C]">
+                              申请金额 <span className="font-semibold text-[#1C1917]">{formatAmount(app.amount)}</span>
                             </span>
                             {app.paymentReason && (
-                              <span className="text-[#6B7280] truncate max-w-[200px]">
+                              <span className="text-[#78716C] truncate max-w-[200px]">
                                 事由：{app.paymentReason}
                               </span>
                             )}
@@ -3649,9 +3649,9 @@ export default function FinanceExpensePage() {
                         </div>
 
                         {isEditing && (
-                          <div className="p-3 space-y-3 border-t border-[#E5E7EB]">
+                          <div className="p-3 space-y-3 border-t border-[#E7E5E4]">
                             <div>
-                              <label className="block text-[12px] font-semibold text-[#111827] mb-1">本次付款金额</label>
+                              <label className="block text-[12px] font-semibold text-[#1C1917] mb-1">本次付款金额</label>
                               <input
                                 type="number"
                                 className="ios-input"
@@ -3662,7 +3662,7 @@ export default function FinanceExpensePage() {
                               />
                             </div>
                             <div>
-                              <label className="block text-[12px] font-semibold text-[#111827] mb-1">付款事由</label>
+                              <label className="block text-[12px] font-semibold text-[#1C1917] mb-1">付款事由</label>
                               <input
                                 type="text"
                                 className="ios-input"
@@ -3671,7 +3671,7 @@ export default function FinanceExpensePage() {
                               />
                             </div>
                             <div>
-                              <label className="block text-[12px] font-semibold text-[#111827] mb-1">申请人</label>
+                              <label className="block text-[12px] font-semibold text-[#1C1917] mb-1">申请人</label>
                               <select
                                 className="ios-select"
                                 value={editingPaymentAppForm.applicantId}
@@ -3772,17 +3772,17 @@ export default function FinanceExpensePage() {
 
                         {app.paymentVouchers && app.paymentVouchers.length > 0 && (
                           <div className="p-3">
-                            <p className="text-[12px] font-semibold text-[#111827] mb-2">支付凭据</p>
+                            <p className="text-[12px] font-semibold text-[#1C1917] mb-2">支付凭据</p>
                             <div className="space-y-2">
                               {app.paymentVouchers.map((v) => (
                                 <div key={v.id} className="flex items-center justify-between p-2.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0]">
                                   <div className="text-[12px]">
-                                    <span className="font-semibold text-[#111827]">{formatAmount(v.amount)}</span>
-                                    <span className="text-[#6B7280] ml-2">{formatDate(v.paymentDate)}</span>
-                                    {v.paymentMethod && <span className="text-[#6B7280] ml-2">{v.paymentMethod}</span>}
+                                    <span className="font-semibold text-[#1C1917]">{formatAmount(v.amount)}</span>
+                                    <span className="text-[#78716C] ml-2">{formatDate(v.paymentDate)}</span>
+                                    {v.paymentMethod && <span className="text-[#78716C] ml-2">{v.paymentMethod}</span>}
                                   </div>
                                   {v.bankAccount && (
-                                    <span className="text-[11px] text-[#6B7280]">{v.bankAccount}</span>
+                                    <span className="text-[11px] text-[#78716C]">{v.bankAccount}</span>
                                   )}
                                 </div>
                               ))}
@@ -3802,7 +3802,7 @@ export default function FinanceExpensePage() {
               );
             })()}
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+            <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
               <button className="ios-btn ios-btn-secondary" onClick={() => { setModalType(null); setStatusFlowTarget(null); }}>关闭</button>
             </div>
           </div>
@@ -3810,12 +3810,12 @@ export default function FinanceExpensePage() {
 
         {statusFlowTarget && statusFlowTarget.type !== "payableApps" && (
           <div className="space-y-4">
-            <div className="p-3 rounded-xl bg-[#F9FAFB]">
-              <p className="text-[13px] text-[#6B7280] mb-1">当前状态</p>
+            <div className="p-3 rounded-xl bg-[#FAFAF9]">
+              <p className="text-[13px] text-[#78716C] mb-1">当前状态</p>
               <div>{getStatusBadge(statusFlowTarget.status)}</div>
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-[#111827] mb-2">可流转状态</p>
+              <p className="text-[13px] font-semibold text-[#1C1917] mb-2">可流转状态</p>
               <div className="flex flex-wrap gap-2">
                 {(() => {
                   const flow = statusFlowTarget.type === "lendingOut" ? lendingStatusFlow : appStatusFlow;
@@ -3834,11 +3834,11 @@ export default function FinanceExpensePage() {
                           {ns}
                         </button>
                       ))
-                    : <p className="text-[13px] text-[#6B7280]">无可用流转</p>;
+                    : <p className="text-[13px] text-[#78716C]">无可用流转</p>;
                 })()}
               </div>
             </div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+            <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
               <button className="ios-btn ios-btn-secondary" onClick={() => { setModalType(null); setStatusFlowTarget(null); }}>关闭</button>
             </div>
           </div>

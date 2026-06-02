@@ -49,7 +49,7 @@ export function BatchDeleteBar({
 
   return (
     <>
-      <div className="sticky bottom-4 z-10 flex items-center justify-between bg-[#6B7280] text-white rounded-2xl px-5 py-3 shadow-lg mx-1">
+      <div className="sticky bottom-4 z-10 flex items-center justify-between bg-[#78716C] text-white rounded-2xl px-5 py-3 shadow-lg mx-1">
         <div className="flex items-center gap-3">
           <span className="text-[14px] font-semibold">
             已选 {selectedIds.length} 项
@@ -77,13 +77,13 @@ export function BatchDeleteBar({
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要删除这 <span className="font-semibold">{selectedIds.length}</span> 条记录吗？
           </p>
-          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#78716C] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"

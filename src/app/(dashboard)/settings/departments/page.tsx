@@ -176,8 +176,8 @@ export default function DepartmentsPage() {
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-[#111827]" />
+            <div className="w-10 h-10 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-[#1C1917]" />
             </div>
             <div>
               <h1>部门设置</h1>
@@ -194,7 +194,7 @@ export default function DepartmentsPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -203,20 +203,20 @@ export default function DepartmentsPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="ml-auto text-[13px] text-[#6B7280]">
-            共 <span className="font-semibold text-[#111827]">{departments.length}</span> 个部门
+          <div className="ml-auto text-[13px] text-[#78716C]">
+            共 <span className="font-semibold text-[#1C1917]">{departments.length}</span> 个部门
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : departments.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <Building2 className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <Building2 className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>暂无部门，点击「新增部门」创建</p>
           </div>
@@ -236,20 +236,20 @@ export default function DepartmentsPage() {
                 {filteredDepts.map((dept) => (
                   <tr key={dept.id}>
                     <td className="text-center">
-                      <span className="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-[#F9FAFB] text-[13px] font-semibold text-[#6B7280]">
+                      <span className="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-[#FAFAF9] text-[13px] font-semibold text-[#78716C]">
                         {dept.sort}
                       </span>
                     </td>
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="w-4 h-4 text-[#111827]" />
+                        <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="w-4 h-4 text-[#1C1917]" />
                         </div>
                         <span className="font-semibold">{dept.name}</span>
                       </div>
                     </td>
                     <td>
-                      <span className="text-[13px] text-[#6B7280]">
+                      <span className="text-[13px] text-[#78716C]">
                         {dept.roleCount} 个角色
                       </span>
                     </td>
@@ -263,7 +263,7 @@ export default function DepartmentsPage() {
                           编辑
                         </button>
                         <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                           onClick={() => {
                             setDeleteConfirm(dept);
                             setDeleteError("");
@@ -274,7 +274,7 @@ export default function DepartmentsPage() {
                         </button>
                       </div>
                     </td>
-                    <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
+                    <td className="text-[#78716C] text-[12px] whitespace-nowrap">
                       {dept.lastModifiedBy && (
                         <span>{dept.lastModifiedBy}</span>
                       )}
@@ -287,8 +287,8 @@ export default function DepartmentsPage() {
 
             {filteredDepts.length === 0 && search && (
               <div className="empty-state">
-                <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-                  <Search className="w-8 h-8 text-[#6B7280]" />
+                <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+                  <Search className="w-8 h-8 text-[#78716C]" />
                 </div>
                 <p>没有匹配「{search}」的部门</p>
               </div>
@@ -305,15 +305,15 @@ export default function DepartmentsPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {formError}
             </div>
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-              部门名称 <span className="text-[#6B7280]">*</span>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+              部门名称 <span className="text-[#78716C]">*</span>
             </label>
             <input
               type="text"
@@ -328,7 +328,7 @@ export default function DepartmentsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
               排序
             </label>
             <input
@@ -341,7 +341,7 @@ export default function DepartmentsPage() {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -369,16 +369,16 @@ export default function DepartmentsPage() {
         maxWidth="420px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要删除部门 <span className="font-semibold">{deleteConfirm?.name}</span> 吗？
           </p>
-          <p className="text-[13px] text-[#6B7280] mb-2">此操作不可撤销</p>
+          <p className="text-[13px] text-[#78716C] mb-2">此操作不可撤销</p>
 
           {deleteError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium flex items-center gap-2 justify-center mb-4">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium flex items-center gap-2 justify-center mb-4">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {deleteError}
             </div>
@@ -409,8 +409,8 @@ export default function DepartmentsPage() {
         <div
           className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-lg text-[14px] font-semibold backdrop-blur-xl transition-all duration-300 ${
             toast.type === "success"
-              ? "bg-[#6B7280]/90 text-white"
-              : "bg-[#6B7280]/90 text-white"
+              ? "bg-[#78716C]/90 text-white"
+              : "bg-[#78716C]/90 text-white"
           }`}
         >
           {toast.type === "success" ? (

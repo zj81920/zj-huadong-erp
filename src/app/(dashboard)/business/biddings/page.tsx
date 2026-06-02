@@ -101,31 +101,31 @@ export default function BiddingsPage() {
 
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bento-card-static flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#111827]/10 flex items-center justify-center"><BarChart3 className="w-5 h-5 text-[#111827]" /></div>
-          <div><p className="text-[12px] text-[#6B7280]">投标总数</p><p className="text-[20px] font-bold text-[#111827]">{pagination.total}</p></div>
+          <div className="w-10 h-10 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center"><BarChart3 className="w-5 h-5 text-[#1C1917]" /></div>
+          <div><p className="text-[12px] text-[#78716C]">投标总数</p><p className="text-[20px] font-bold text-[#1C1917]">{pagination.total}</p></div>
         </div>
         <div className="bento-card-static flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center"><Trophy className="w-5 h-5 text-[#6B7280]" /></div>
-          <div><p className="text-[12px] text-[#6B7280]">中标</p><p className="text-[20px] font-bold text-[#6B7280]">{winCount}</p></div>
+          <div className="w-10 h-10 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><Trophy className="w-5 h-5 text-[#78716C]" /></div>
+          <div><p className="text-[12px] text-[#78716C]">中标</p><p className="text-[20px] font-bold text-[#78716C]">{winCount}</p></div>
         </div>
         <div className="bento-card-static flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center"><Trophy className="w-5 h-5 text-[#6B7280]" /></div>
-          <div><p className="text-[12px] text-[#6B7280]">未中标</p><p className="text-[20px] font-bold text-[#6B7280]">{loseCount}</p></div>
+          <div className="w-10 h-10 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><Trophy className="w-5 h-5 text-[#78716C]" /></div>
+          <div><p className="text-[12px] text-[#78716C]">未中标</p><p className="text-[20px] font-bold text-[#78716C]">{loseCount}</p></div>
         </div>
         <div className="bento-card-static flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-[#6B7280]" /></div>
-          <div><p className="text-[12px] text-[#6B7280]">中标率</p><p className="text-[20px] font-bold text-[#6B7280]">{winRate}%</p></div>
+          <div className="w-10 h-10 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-[#78716C]" /></div>
+          <div><p className="text-[12px] text-[#78716C]">中标率</p><p className="text-[20px] font-bold text-[#78716C]">{winRate}%</p></div>
         </div>
         <div className="bento-card-static flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center"><DollarSign className="w-5 h-5 text-[#6B7280]" /></div>
-          <div><p className="text-[12px] text-[#6B7280]">投标总金额</p><p className="text-[16px] font-bold text-[#111827]">{formatMoney(totalBidAmount)}</p></div>
+          <div className="w-10 h-10 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><DollarSign className="w-5 h-5 text-[#78716C]" /></div>
+          <div><p className="text-[12px] text-[#78716C]">投标总金额</p><p className="text-[16px] font-bold text-[#1C1917]">{formatMoney(totalBidAmount)}</p></div>
         </div>
       </div>
 
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input type="text" className="ios-input pl-10" placeholder="搜索项目ID、名称..." value={search} onChange={(e) => { setSearch(e.target.value); setPagination((p) => ({ ...p, page: 1 })); }} />
           </div>
           <select className="ios-select w-[140px]" value={filterResult} onChange={(e) => { setFilterResult(e.target.value); setPagination((p) => ({ ...p, page: 1 })); }}>
@@ -133,13 +133,13 @@ export default function BiddingsPage() {
             <option value="中标">中标</option>
             <option value="未中标">未中标</option>
           </select>
-          <div className="ml-auto text-[13px] text-[#6B7280]">共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录</div>
+          <div className="ml-auto text-[13px] text-[#78716C]">共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录</div>
         </div>
 
         {loading ? (
-          <div className="empty-state"><div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" /><p>加载中...</p></div>
+          <div className="empty-state"><div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" /><p>加载中...</p></div>
         ) : biddings.length === 0 ? (
-          <div className="empty-state"><Trophy className="w-8 h-8 text-[#6B7280]" /><p>{search || filterResult ? "没有匹配的投标记录" : "暂无投标记录"}</p></div>
+          <div className="empty-state"><Trophy className="w-8 h-8 text-[#78716C]" /><p>{search || filterResult ? "没有匹配的投标记录" : "暂无投标记录"}</p></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="ios-table">
@@ -150,11 +150,11 @@ export default function BiddingsPage() {
                   const bsc = bondStatusConfig[b.bondPaymentStatus] || bondStatusConfig["未付"];
                   return (
                     <tr key={b.id}>
-                      <td><span className="font-mono text-[13px] font-semibold text-[#111827]">{b.projectSourceId}</span></td>
+                      <td><span className="font-mono text-[13px] font-semibold text-[#1C1917]">{b.projectSourceId}</span></td>
                       <td className="font-semibold">{b.projectLead.projectName}</td>
                       <td>{b.projectLead.customer.name}</td>
-                      <td className="text-[#6B7280]">{formatDate(b.bidDeadline)}</td>
-                      <td><div className="flex items-center gap-1.5"><span className="text-[#6B7280]">{formatMoney(b.bondAmount)}</span><span className={`ios-badge text-[10px] ${bsc.color}`}>{bsc.label}</span></div></td>
+                      <td className="text-[#78716C]">{formatDate(b.bidDeadline)}</td>
+                      <td><div className="flex items-center gap-1.5"><span className="text-[#78716C]">{formatMoney(b.bondAmount)}</span><span className={`ios-badge text-[10px] ${bsc.color}`}>{bsc.label}</span></div></td>
                       <td className="font-semibold">{formatMoney(b.bidAmount)}</td>
                       <td>{rc ? <span className={`ios-badge ${rc.color}`}>{rc.label}</span> : <span className="ios-badge ios-badge-gray">待定</span>}</td>
                       <td><button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => setDetailBidding(b)}><Eye className="w-3.5 h-3.5" /></button></td>
@@ -164,9 +164,9 @@ export default function BiddingsPage() {
               </tbody>
             </table>
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button className="ios-btn ios-btn-secondary ios-btn-sm" disabled={pagination.page <= 1} onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}>上一页</button>
-                <span className="text-[13px] text-[#6B7280] px-3">{pagination.page} / {pagination.totalPages}</span>
+                <span className="text-[13px] text-[#78716C] px-3">{pagination.page} / {pagination.totalPages}</span>
                 <button className="ios-btn ios-btn-secondary ios-btn-sm" disabled={pagination.page >= pagination.totalPages} onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}>下一页</button>
               </div>
             )}
@@ -177,19 +177,19 @@ export default function BiddingsPage() {
       <Modal isOpen={!!detailBidding} onClose={() => setDetailBidding(null)} title="投标详情" maxWidth="680px">
         {detailBidding && (
           <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F3F4F6]">
-              <div className="w-12 h-12 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center"><Trophy className="w-6 h-6 text-[#6B7280]" /></div>
-              <div><p className="text-[17px] font-bold text-[#111827]">{detailBidding.projectLead.projectName}</p><p className="text-[13px] text-[#111827] font-mono font-semibold">{detailBidding.projectSourceId}</p></div>
+            <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
+              <div className="w-12 h-12 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><Trophy className="w-6 h-6 text-[#78716C]" /></div>
+              <div><p className="text-[17px] font-bold text-[#1C1917]">{detailBidding.projectLead.projectName}</p><p className="text-[13px] text-[#1C1917] font-mono font-semibold">{detailBidding.projectSourceId}</p></div>
               {detailBidding.bidResult ? <span className={`ios-badge ml-auto ${resultConfig[detailBidding.bidResult]?.color || "ios-badge-gray"}`}>{detailBidding.bidResult}</span> : <span className="ios-badge ios-badge-gray ml-auto">待定</span>}
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">客户</p><p className="text-[14px] font-semibold text-[#111827]">{detailBidding.projectLead.customer.name}</p></div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">投标截止</p><p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailBidding.bidDeadline)}</p></div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">投标金额</p><p className="text-[14px] font-semibold text-[#111827]">{formatMoney(detailBidding.bidAmount)}</p></div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">保证金 / 状态</p><p className="text-[14px] font-semibold text-[#111827]">{formatMoney(detailBidding.bondAmount)} <span className={`ios-badge text-[10px] ${bondStatusConfig[detailBidding.bondPaymentStatus]?.color || "ios-badge-gray"}`}>{detailBidding.bondPaymentStatus}</span></p></div>
-              {detailBidding.score && <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">评分</p><p className="text-[14px] font-semibold text-[#111827]">{detailBidding.score}</p></div>}
-              {detailBidding.tenderFileReg && <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">招标文件登记号</p><p className="text-[14px] font-semibold text-[#111827]">{detailBidding.tenderFileReg}</p></div>}
-              {detailBidding.failReason && <div className="p-3 rounded-xl bg-[#F9FAFB] col-span-2"><p className="text-[12px] text-[#6B7280] mb-1">未中标原因</p><p className="text-[14px] font-semibold text-[#111827]">{detailBidding.failReason}</p></div>}
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">客户</p><p className="text-[14px] font-semibold text-[#1C1917]">{detailBidding.projectLead.customer.name}</p></div>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">投标截止</p><p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailBidding.bidDeadline)}</p></div>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">投标金额</p><p className="text-[14px] font-semibold text-[#1C1917]">{formatMoney(detailBidding.bidAmount)}</p></div>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">保证金 / 状态</p><p className="text-[14px] font-semibold text-[#1C1917]">{formatMoney(detailBidding.bondAmount)} <span className={`ios-badge text-[10px] ${bondStatusConfig[detailBidding.bondPaymentStatus]?.color || "ios-badge-gray"}`}>{detailBidding.bondPaymentStatus}</span></p></div>
+              {detailBidding.score && <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">评分</p><p className="text-[14px] font-semibold text-[#1C1917]">{detailBidding.score}</p></div>}
+              {detailBidding.tenderFileReg && <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">招标文件登记号</p><p className="text-[14px] font-semibold text-[#1C1917]">{detailBidding.tenderFileReg}</p></div>}
+              {detailBidding.failReason && <div className="p-3 rounded-xl bg-[#FAFAF9] col-span-2"><p className="text-[12px] text-[#78716C] mb-1">未中标原因</p><p className="text-[14px] font-semibold text-[#1C1917]">{detailBidding.failReason}</p></div>}
             </div>
           </div>
         )}

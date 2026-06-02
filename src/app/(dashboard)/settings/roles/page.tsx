@@ -324,8 +324,8 @@ export default function RolesPage() {
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-[#111827]" />
+            <div className="w-10 h-10 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-[#1C1917]" />
             </div>
             <div>
               <h1>角色设置</h1>
@@ -358,7 +358,7 @@ export default function RolesPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -367,20 +367,20 @@ export default function RolesPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="ml-auto text-[13px] text-[#6B7280]">
-            共 <span className="font-semibold text-[#111827]">{roles.length}</span> 个角色
+          <div className="ml-auto text-[13px] text-[#78716C]">
+            共 <span className="font-semibold text-[#1C1917]">{roles.length}</span> 个角色
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : roles.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <Shield className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <Shield className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>暂无角色，点击「初始化默认角色」快速创建</p>
           </div>
@@ -405,28 +405,28 @@ export default function RolesPage() {
                 {filteredRoles.map((role) => (
                   <tr key={role.id}>
                     <td className="text-center">
-                      <span className="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-[#F9FAFB] text-[13px] font-semibold text-[#6B7280]">
+                      <span className="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-[#FAFAF9] text-[13px] font-semibold text-[#78716C]">
                         {role.sort}
                       </span>
                     </td>
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                          <Shield className="w-4 h-4 text-[#111827]" />
+                        <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                          <Shield className="w-4 h-4 text-[#1C1917]" />
                         </div>
                         <span className="font-semibold">{role.name}</span>
                       </div>
                     </td>
                     <td>
                       {role.departmentName ? (
-                        <span className="text-[13px] bg-[#F9FAFB] rounded-md px-2 py-1 text-[#111827]">
+                        <span className="text-[13px] bg-[#FAFAF9] rounded-md px-2 py-1 text-[#1C1917]">
                           {role.departmentName}
                         </span>
                       ) : (
-                        <span className="text-[#6B7280]">-</span>
+                        <span className="text-[#78716C]">-</span>
                       )}
                     </td>
-                    <td className="text-[#6B7280] max-w-[200px] truncate">
+                    <td className="text-[#78716C] max-w-[200px] truncate">
                       {role.description || "-"}
                     </td>
                     <td>
@@ -439,9 +439,9 @@ export default function RolesPage() {
                     </td>
                     <td className="text-center">
                       {role.isGlobalVisible ? (
-                        <Check className="w-4 h-4 text-[#6B7280] mx-auto" />
+                        <Check className="w-4 h-4 text-[#78716C] mx-auto" />
                       ) : (
-                        <span className="text-[#6B7280]">-</span>
+                        <span className="text-[#78716C]">-</span>
                       )}
                     </td>
                     <td>
@@ -477,7 +477,7 @@ export default function RolesPage() {
                               </button>
                               {role.code !== "finance" && (
                                 <button
-                                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                   onClick={() => {
                                     setDeleteConfirm(role);
                                     setDeleteError("");
@@ -492,7 +492,7 @@ export default function RolesPage() {
                         })()}
                       </div>
                     </td>
-                    <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
+                    <td className="text-[#78716C] text-[12px] whitespace-nowrap">
                       {role.lastModifiedBy && (
                         <span>{role.lastModifiedBy}</span>
                       )}
@@ -505,8 +505,8 @@ export default function RolesPage() {
 
             {filteredRoles.length === 0 && search && (
               <div className="empty-state">
-                <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-                  <Search className="w-8 h-8 text-[#6B7280]" />
+                <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+                  <Search className="w-8 h-8 text-[#78716C]" />
                 </div>
                 <p>没有匹配「{search}」的角色</p>
               </div>
@@ -523,19 +523,19 @@ export default function RolesPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {formError}
             </div>
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-              角色名称 <span className="text-[#6B7280]">*</span>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+              角色名称 <span className="text-[#78716C]">*</span>
             </label>
             <input
               type="text"
-              className={editingRole?.code === "finance" ? "ios-input !bg-[#F9FAFB] !cursor-not-allowed !text-[#6B7280]" : "ios-input"}
+              className={editingRole?.code === "finance" ? "ios-input !bg-[#FAFAF9] !cursor-not-allowed !text-[#78716C]" : "ios-input"}
               placeholder="如：部门负责人"
               value={form.name}
               disabled={editingRole?.code === "finance"}
@@ -545,12 +545,12 @@ export default function RolesPage() {
               }}
             />
             {editingRole?.code === "finance" && (
-              <p className="text-[11px] text-[#6B7280] mt-1">系统角色名称不可修改</p>
+              <p className="text-[11px] text-[#78716C] mt-1">系统角色名称不可修改</p>
             )}
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
               所属部门
             </label>
             <select
@@ -566,7 +566,7 @@ export default function RolesPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
               描述
             </label>
             <textarea
@@ -577,10 +577,10 @@ export default function RolesPage() {
             />
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-xl bg-[#F9FAFB]">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-[#FAFAF9]">
             <div>
-              <p className="text-[14px] font-semibold text-[#111827]">项目关联角色</p>
-              <p className="text-[12px] text-[#6B7280] mt-0.5">开启后该角色将关联项目维度</p>
+              <p className="text-[14px] font-semibold text-[#1C1917]">项目关联角色</p>
+              <p className="text-[12px] text-[#78716C] mt-0.5">开启后该角色将关联项目维度</p>
             </div>
             <button
               type="button"
@@ -588,7 +588,7 @@ export default function RolesPage() {
               aria-checked={form.isProjectRole}
               onClick={() => setForm((prev) => ({ ...prev, isProjectRole: !prev.isProjectRole }))}
               className={`relative inline-flex h-[30px] w-[51px] flex-shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out ${
-                form.isProjectRole ? "bg-[#111827]" : "bg-[#E5E7EB]"
+                form.isProjectRole ? "bg-[#1C1917]" : "bg-[#E7E5E4]"
               }`}
             >
               <span
@@ -600,7 +600,7 @@ export default function RolesPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-2">
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-2">
               可访问模块
             </label>
             <div className="space-y-2">
@@ -609,24 +609,24 @@ export default function RolesPage() {
                 const checked = form.accessibleModules.includes(mod.key);
                 const selectedSubs = subOptions.filter((s) => form.accessibleModules.includes(s.key));
                 return (
-                  <div key={mod.key} className="rounded-xl border border-[#F3F4F6] overflow-hidden">
+                  <div key={mod.key} className="rounded-xl border border-[#F5F5F4] overflow-hidden">
                     <label
                       className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150 ${
-                        checked ? "bg-[#111827]/6" : "bg-white hover:bg-[#FFFFFF]"
+                        checked ? "bg-[#1C1917]/6" : "bg-white hover:bg-[#FFFFFF]"
                       }`}
                     >
                       <span
                         className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                          checked ? "border-[#111827] bg-[#111827]" : "border-[#D1D5DB] bg-white"
+                          checked ? "border-[#1C1917] bg-[#1C1917]" : "border-[#D1D5DB] bg-white"
                         }`}
                       >
                         {checked && <span className="w-2 h-2 rounded-full bg-white" />}
                       </span>
-                      <span className={`text-[14px] font-semibold flex-1 ${checked ? "text-[#111827]" : "text-[#111827]"}`}>
+                      <span className={`text-[14px] font-semibold flex-1 ${checked ? "text-[#1C1917]" : "text-[#1C1917]"}`}>
                         {mod.label}
                       </span>
                       {checked && subOptions.length > 0 && (
-                        <span className="text-[11px] text-[#6B7280]">
+                        <span className="text-[11px] text-[#78716C]">
                           {selectedSubs.length}/{subOptions.length}
                         </span>
                       )}
@@ -653,7 +653,7 @@ export default function RolesPage() {
                       />
                     </label>
                     {checked && subOptions.length > 0 && (
-                      <div className="px-4 pb-3 pt-1 border-t border-[#F3F4F6] bg-[#FFFFFF]">
+                      <div className="px-4 pb-3 pt-1 border-t border-[#F5F5F4] bg-[#FFFFFF]">
                         <div className="space-y-1.5">
                           {subOptions.map((sub) => {
                             const subChecked = form.accessibleModules.includes(sub.key);
@@ -664,12 +664,12 @@ export default function RolesPage() {
                               <div key={sub.key}>
                                 <label className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-150 text-[13px] ${
                                   subChecked
-                                    ? "bg-[#111827]/10 text-[#111827] font-medium"
-                                    : "bg-white text-[#6E6E73] hover:bg-[#F3F4F6]"
+                                    ? "bg-[#1C1917]/10 text-[#1C1917] font-medium"
+                                    : "bg-white text-[#6E6E73] hover:bg-[#F5F5F4]"
                                 }`}>
                                   <span
                                     className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                                      subChecked ? "border-[#111827] bg-[#111827]" : "border-[#D1D5DB] bg-white"
+                                      subChecked ? "border-[#1C1917] bg-[#1C1917]" : "border-[#D1D5DB] bg-white"
                                     }`}
                                   >
                                     {subChecked && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
@@ -703,14 +703,14 @@ export default function RolesPage() {
                                     }}
                                   />
                                   {subChecked && tabOptions.length > 0 && (
-                                    <span className="text-[11px] text-[#6B7280]">
+                                    <span className="text-[11px] text-[#78716C]">
                                       {selectedTabs.length}/{tabOptions.length}
                                     </span>
                                   )}
                                   {subChecked && tabOptions.length > 0 && (
                                     <button
                                       type="button"
-                                      className="text-[11px] text-[#111827] hover:underline"
+                                      className="text-[11px] text-[#1C1917] hover:underline"
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
@@ -741,13 +741,13 @@ export default function RolesPage() {
                                           key={tab.key}
                                           className={`flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer transition-all duration-150 text-[12px] ${
                                             tabChecked
-                                              ? "bg-[#111827]/8 text-[#111827] font-medium"
-                                              : "bg-white text-[#6B7280] hover:bg-[#F3F4F6]"
+                                              ? "bg-[#1C1917]/8 text-[#1C1917] font-medium"
+                                              : "bg-white text-[#78716C] hover:bg-[#F5F5F4]"
                                           }`}
                                         >
                                           <span
                                             className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                                              tabChecked ? "border-[#111827] bg-[#111827]" : "border-[#D1D5DB] bg-white"
+                                              tabChecked ? "border-[#1C1917] bg-[#1C1917]" : "border-[#D1D5DB] bg-white"
                                             }`}
                                           >
                                             {tabChecked && <span className="w-1 h-1 rounded-full bg-white" />}
@@ -786,10 +786,10 @@ export default function RolesPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-xl bg-[#F9FAFB]">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-[#FAFAF9]">
             <div>
-              <p className="text-[14px] font-semibold text-[#111827]">全局可见</p>
-              <p className="text-[12px] text-[#6B7280] mt-0.5">开启后该角色可查看所有模块、所有项目数据</p>
+              <p className="text-[14px] font-semibold text-[#1C1917]">全局可见</p>
+              <p className="text-[12px] text-[#78716C] mt-0.5">开启后该角色可查看所有模块、所有项目数据</p>
             </div>
             <button
               type="button"
@@ -797,7 +797,7 @@ export default function RolesPage() {
               aria-checked={form.isGlobalVisible}
               onClick={() => setForm((prev) => ({ ...prev, isGlobalVisible: !prev.isGlobalVisible }))}
               className={`relative inline-flex h-[30px] w-[51px] flex-shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out ${
-                form.isGlobalVisible ? "bg-[#111827]" : "bg-[#E5E7EB]"
+                form.isGlobalVisible ? "bg-[#1C1917]" : "bg-[#E7E5E4]"
               }`}
             >
               <span
@@ -809,7 +809,7 @@ export default function RolesPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
               排序
             </label>
             <input
@@ -822,7 +822,7 @@ export default function RolesPage() {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -850,21 +850,21 @@ export default function RolesPage() {
         maxWidth="420px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要删除角色 <span className="font-semibold">{deleteConfirm?.name}</span> 吗？
           </p>
           {deleteConfirm && deleteConfirm.userCount > 0 && (
-            <p className="text-[13px] text-[#6B7280] mb-2">
+            <p className="text-[13px] text-[#78716C] mb-2">
               该角色下有 {deleteConfirm.userCount} 位关联用户，删除后将解除关联
             </p>
           )}
-          <p className="text-[13px] text-[#6B7280] mb-2">此操作不可撤销</p>
+          <p className="text-[13px] text-[#78716C] mb-2">此操作不可撤销</p>
 
           {deleteError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium flex items-center gap-2 justify-center mb-4">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium flex items-center gap-2 justify-center mb-4">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {deleteError}
             </div>
@@ -895,8 +895,8 @@ export default function RolesPage() {
         <div
           className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-lg text-[14px] font-semibold backdrop-blur-xl transition-all duration-300 ${
             toast.type === "success"
-              ? "bg-[#6B7280]/90 text-white"
-              : "bg-[#6B7280]/90 text-white"
+              ? "bg-[#78716C]/90 text-white"
+              : "bg-[#78716C]/90 text-white"
           }`}
         >
           {toast.type === "success" ? (

@@ -102,31 +102,31 @@ export default function QuotationsPage() {
 
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bento-card-static flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#111827]/10 flex items-center justify-center"><BarChart3 className="w-5 h-5 text-[#111827]" /></div>
-          <div><p className="text-[12px] text-[#6B7280]">报价总数</p><p className="text-[20px] font-bold text-[#111827]">{pagination.total}</p></div>
+          <div className="w-10 h-10 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center"><BarChart3 className="w-5 h-5 text-[#1C1917]" /></div>
+          <div><p className="text-[12px] text-[#78716C]">报价总数</p><p className="text-[20px] font-bold text-[#1C1917]">{pagination.total}</p></div>
         </div>
         <div className="bento-card-static flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center"><CheckCircle className="w-5 h-5 text-[#6B7280]" /></div>
-          <div><p className="text-[12px] text-[#6B7280]">已批准</p><p className="text-[20px] font-bold text-[#6B7280]">{approvedCount}</p></div>
+          <div className="w-10 h-10 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><CheckCircle className="w-5 h-5 text-[#78716C]" /></div>
+          <div><p className="text-[12px] text-[#78716C]">已批准</p><p className="text-[20px] font-bold text-[#78716C]">{approvedCount}</p></div>
         </div>
         <div className="bento-card-static flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center"><Clock className="w-5 h-5 text-[#6B7280]" /></div>
-          <div><p className="text-[12px] text-[#6B7280]">审批中</p><p className="text-[20px] font-bold text-[#6B7280]">{pendingCount}</p></div>
+          <div className="w-10 h-10 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><Clock className="w-5 h-5 text-[#78716C]" /></div>
+          <div><p className="text-[12px] text-[#78716C]">审批中</p><p className="text-[20px] font-bold text-[#78716C]">{pendingCount}</p></div>
         </div>
         <div className="bento-card-static flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center"><DollarSign className="w-5 h-5 text-[#6B7280]" /></div>
-          <div><p className="text-[12px] text-[#6B7280]">报价总金额</p><p className="text-[16px] font-bold text-[#111827]">{formatMoney(totalAmount)}</p></div>
+          <div className="w-10 h-10 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><DollarSign className="w-5 h-5 text-[#78716C]" /></div>
+          <div><p className="text-[12px] text-[#78716C]">报价总金额</p><p className="text-[16px] font-bold text-[#1C1917]">{formatMoney(totalAmount)}</p></div>
         </div>
         <div className="bento-card-static flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#111827]/10 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-[#111827]" /></div>
-          <div><p className="text-[12px] text-[#6B7280]">平均利润率</p><p className="text-[20px] font-bold text-[#6B7280]">{avgProfit !== null ? `${avgProfit.toFixed(1)}%` : "-"}</p></div>
+          <div className="w-10 h-10 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-[#1C1917]" /></div>
+          <div><p className="text-[12px] text-[#78716C]">平均利润率</p><p className="text-[20px] font-bold text-[#78716C]">{avgProfit !== null ? `${avgProfit.toFixed(1)}%` : "-"}</p></div>
         </div>
       </div>
 
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input type="text" className="ios-input pl-10" placeholder="搜索客户、项目名称..." value={search} onChange={(e) => { setSearch(e.target.value); setPagination((p) => ({ ...p, page: 1 })); }} />
           </div>
           <select className="ios-select w-[140px]" value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPagination((p) => ({ ...p, page: 1 })); }}>
@@ -136,13 +136,13 @@ export default function QuotationsPage() {
             <option value="已批准">已批准</option>
             <option value="已驳回">已驳回</option>
           </select>
-          <div className="ml-auto text-[13px] text-[#6B7280]">共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录</div>
+          <div className="ml-auto text-[13px] text-[#78716C]">共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录</div>
         </div>
 
         {loading ? (
-          <div className="empty-state"><div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" /><p>加载中...</p></div>
+          <div className="empty-state"><div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" /><p>加载中...</p></div>
         ) : quotations.length === 0 ? (
-          <div className="empty-state"><Calculator className="w-8 h-8 text-[#6B7280]" /><p>{search || filterStatus ? "没有匹配的报价单" : "暂无报价单"}</p></div>
+          <div className="empty-state"><Calculator className="w-8 h-8 text-[#78716C]" /><p>{search || filterStatus ? "没有匹配的报价单" : "暂无报价单"}</p></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="ios-table">
@@ -152,20 +152,20 @@ export default function QuotationsPage() {
                   <tr key={q.id}>
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[11px] font-bold text-[#111827]">{q.customer.name[0]}</span>
+                        <div className="w-7 h-7 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-[11px] font-bold text-[#1C1917]">{q.customer.name[0]}</span>
                         </div>
                         <span className="font-semibold">{q.customer.name}</span>
                       </div>
                     </td>
-                    <td>{q.projectLead ? <span className="font-mono text-[12px] text-[#111827]">{q.projectLead.projectSourceId}</span> : <span className="text-[#6B7280]">-</span>}</td>
+                    <td>{q.projectLead ? <span className="font-mono text-[12px] text-[#1C1917]">{q.projectLead.projectSourceId}</span> : <span className="text-[#78716C]">-</span>}</td>
                     <td className="font-semibold">{formatMoney(q.totalAmount)}</td>
-                    <td>{q.profitMargin ? <span className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5 text-[#6B7280]" /><span className="text-[#6B7280] font-semibold">{q.profitMargin}%</span></span> : "-"}</td>
+                    <td>{q.profitMargin ? <span className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5 text-[#78716C]" /><span className="text-[#78716C] font-semibold">{q.profitMargin}%</span></span> : "-"}</td>
                     <td><span className="ios-badge ios-badge-gray">v{q.version}</span></td>
                     <td><span className={`ios-badge ${quotationStatusConfig[q.status]?.color || "ios-badge-gray"}`}>{quotationStatusConfig[q.status]?.label || q.status}</span></td>
                     <td><span className={`ios-badge ${approvalStatusConfig[q.approvalStatus]?.color || "ios-badge-gray"}`}>{approvalStatusConfig[q.approvalStatus]?.label || q.approvalStatus}</span></td>
                     <td><button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => setDetailQuotation(q)}><Eye className="w-3.5 h-3.5" /></button></td>
-                    <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
+                    <td className="text-[#78716C] text-[12px] whitespace-nowrap">
                       {q.lastModifiedBy && (
                         <span>{q.lastModifiedBy}</span>
                       )}
@@ -176,9 +176,9 @@ export default function QuotationsPage() {
               </tbody>
             </table>
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button className="ios-btn ios-btn-secondary ios-btn-sm" disabled={pagination.page <= 1} onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}>上一页</button>
-                <span className="text-[13px] text-[#6B7280] px-3">{pagination.page} / {pagination.totalPages}</span>
+                <span className="text-[13px] text-[#78716C] px-3">{pagination.page} / {pagination.totalPages}</span>
                 <button className="ios-btn ios-btn-secondary ios-btn-sm" disabled={pagination.page >= pagination.totalPages} onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}>下一页</button>
               </div>
             )}
@@ -189,19 +189,19 @@ export default function QuotationsPage() {
       <Modal isOpen={!!detailQuotation} onClose={() => setDetailQuotation(null)} title="报价单详情" maxWidth="680px">
         {detailQuotation && (
           <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F3F4F6]">
-              <div className="w-12 h-12 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center"><Calculator className="w-6 h-6 text-[#6B7280]" /></div>
-              <div><p className="text-[17px] font-bold text-[#111827]">{detailQuotation.customer.name} - 报价单</p><p className="text-[13px] text-[#6B7280]">版本 v{detailQuotation.version}</p></div>
+            <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
+              <div className="w-12 h-12 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><Calculator className="w-6 h-6 text-[#78716C]" /></div>
+              <div><p className="text-[17px] font-bold text-[#1C1917]">{detailQuotation.customer.name} - 报价单</p><p className="text-[13px] text-[#78716C]">版本 v{detailQuotation.version}</p></div>
               <span className={`ios-badge ml-auto ${approvalStatusConfig[detailQuotation.approvalStatus]?.color || "ios-badge-gray"}`}>{detailQuotation.approvalStatus}</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">关联项目</p><p className="text-[14px] font-semibold text-[#111827]">{detailQuotation.projectLead ? detailQuotation.projectLead.projectName : "（无关联）"}</p></div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">报价总金额</p><p className="text-[14px] font-semibold text-[#111827]">{formatMoney(detailQuotation.totalAmount)}</p></div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">利润率</p><p className="text-[14px] font-semibold text-[#6B7280]">{detailQuotation.profitMargin ? `${detailQuotation.profitMargin}%` : "-"}</p></div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">报价状态</p><span className={`ios-badge ${quotationStatusConfig[detailQuotation.status]?.color || "ios-badge-gray"}`}>{quotationStatusConfig[detailQuotation.status]?.label || detailQuotation.status}</span></div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">创建时间</p><p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailQuotation.createdAt)}</p></div>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">关联项目</p><p className="text-[14px] font-semibold text-[#1C1917]">{detailQuotation.projectLead ? detailQuotation.projectLead.projectName : "（无关联）"}</p></div>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">报价总金额</p><p className="text-[14px] font-semibold text-[#1C1917]">{formatMoney(detailQuotation.totalAmount)}</p></div>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">利润率</p><p className="text-[14px] font-semibold text-[#78716C]">{detailQuotation.profitMargin ? `${detailQuotation.profitMargin}%` : "-"}</p></div>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">报价状态</p><span className={`ios-badge ${quotationStatusConfig[detailQuotation.status]?.color || "ios-badge-gray"}`}>{quotationStatusConfig[detailQuotation.status]?.label || detailQuotation.status}</span></div>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">创建时间</p><p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailQuotation.createdAt)}</p></div>
             </div>
-            {detailQuotation.adjustmentReason && <div className="p-3 rounded-xl bg-[#F9FAFB]"><p className="text-[12px] text-[#6B7280] mb-1">调整原因</p><p className="text-[14px] font-semibold text-[#111827]">{detailQuotation.adjustmentReason}</p></div>}
+            {detailQuotation.adjustmentReason && <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">调整原因</p><p className="text-[14px] font-semibold text-[#1C1917]">{detailQuotation.adjustmentReason}</p></div>}
           </div>
         )}
       </Modal>

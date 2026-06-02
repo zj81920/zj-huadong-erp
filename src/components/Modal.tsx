@@ -46,13 +46,13 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "56
       }}
     >
       <div className="ios-modal" style={{ maxWidth }}>
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#F3F4F6]">
-          <h2 className="text-[17px] font-bold text-[#111827]">{title}</h2>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[#F5F5F4]">
+          <h2 className="text-[17px] font-bold text-[#1C1917]">{title}</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-[#F9FAFB] hover:bg-[#E5E7EB] flex items-center justify-center transition-colors duration-150"
+            className="w-8 h-8 rounded-full bg-[#FAFAF9] hover:bg-[#E7E5E4] flex items-center justify-center transition-colors duration-150"
           >
-            <X className="w-4 h-4 text-[#6B7280]" />
+            <X className="w-4 h-4 text-[#78716C]" />
           </button>
         </div>
         <div className="px-6 py-5">{children}</div>

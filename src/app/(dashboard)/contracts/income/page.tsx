@@ -737,7 +737,7 @@ export default function IncomeContractsPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -782,9 +782,9 @@ export default function IncomeContractsPage() {
             ))}
           </select>
 
-          <div className="ml-auto text-[13px] text-[#6B7280]">
+          <div className="ml-auto text-[13px] text-[#78716C]">
             共{" "}
-            <span className="font-semibold text-[#111827]">
+            <span className="font-semibold text-[#1C1917]">
               {pagination.total}
             </span>{" "}
             条记录
@@ -793,13 +793,13 @@ export default function IncomeContractsPage() {
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : contracts.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <FileText className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <FileText className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>
               {search || filterStatus || filterProject
@@ -826,12 +826,12 @@ export default function IncomeContractsPage() {
               </thead>
               <tbody>
                 {contracts.map((contract) => (
-                  <tr key={contract.id} className={isSelected(contract.id) ? "bg-[#111827]/5" : ""}>
+                  <tr key={contract.id} className={isSelected(contract.id) ? "bg-[#1C1917]/5" : ""}>
                     {isAdminUser && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(contract.id)} onChange={() => toggleSelect(contract.id)} /></td>}
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-4 h-4 text-[#111827]" />
+                        <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-4 h-4 text-[#1C1917]" />
                         </div>
                         <span className="font-semibold">
                           {contract.contractNo}
@@ -840,25 +840,25 @@ export default function IncomeContractsPage() {
                     </td>
                     <td>
                       <div className="flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5 text-[#6B7280]" />
+                        <Building2 className="w-3.5 h-3.5 text-[#78716C]" />
                         {contract.customer.name}
                       </div>
                     </td>
-                    <td className="text-[#6B7280]">
+                    <td className="text-[#78716C]">
                       {contract.project ? (
                         <div>
-                          <span className="font-semibold text-[#111827]">{contract.project.name}</span>
-                          <span className="block text-[11px] text-[#6B7280]">{contract.projectSourceId}</span>
+                          <span className="font-semibold text-[#1C1917]">{contract.project.name}</span>
+                          <span className="block text-[11px] text-[#78716C]">{contract.projectSourceId}</span>
                         </div>
                       ) : contract.projectSourceId || "-"}
                     </td>
                     <td className="font-semibold">
                       {formatAmount(contract.totalAmount)}
                     </td>
-                    <td className="text-[#6B7280]">
+                    <td className="text-[#78716C]">
                       {contract.taxRate || "-"}
                     </td>
-                    <td className="text-[#6B7280]">
+                    <td className="text-[#78716C]">
                       {contract.pricingMethod || "-"}
                     </td>
                     <td>
@@ -866,7 +866,7 @@ export default function IncomeContractsPage() {
                         {contract.status}
                       </span>
                     </td>
-                    <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
+                    <td className="text-[#78716C] text-[12px] whitespace-nowrap">
                       {contract.lastModifiedBy && (
                         <span>{contract.lastModifiedBy}</span>
                       )}
@@ -891,7 +891,7 @@ export default function IncomeContractsPage() {
                               编辑
                             </button>
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                               onClick={() => setDeleteConfirm(contract)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -901,7 +901,7 @@ export default function IncomeContractsPage() {
                         )}
                         {statusActionsMap[contract.status] && (
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
                             onClick={() => {
                               const next = statusActionsMap[contract.status][0];
                               if (next.nextStatus === "合同归档") {
@@ -924,7 +924,7 @@ export default function IncomeContractsPage() {
                           statusActionsMap["生效"] &&
                           statusActionsMap["生效"].length > 1 && (
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                               onClick={() =>
                                 handleStatusChange(contract, "关闭")
                               }
@@ -940,7 +940,7 @@ export default function IncomeContractsPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -950,7 +950,7 @@ export default function IncomeContractsPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#6B7280] px-3">
+                <span className="text-[13px] text-[#78716C] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -978,15 +978,15 @@ export default function IncomeContractsPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                合同编号 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                合同编号 <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="text"
@@ -998,13 +998,13 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                客户 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                客户 <span className="text-[#78716C]">*</span>
               </label>
               {form.projectSourceId ? (
                 <input
                   type="text"
-                  className="ios-input bg-[#F9FAFB]"
+                  className="ios-input bg-[#FAFAF9]"
                   value={
                     projects.find((p) => p.projectSourceId === form.projectSourceId)?.name
                       ? (() => {
@@ -1033,7 +1033,7 @@ export default function IncomeContractsPage() {
                     </select>
                     <button
                       type="button"
-                      className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827] whitespace-nowrap"
+                      className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917] whitespace-nowrap"
                       onClick={() => {
                         setCustomerError("");
                         setCustomerForm({
@@ -1055,7 +1055,7 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 关联项目
               </label>
               <div className="flex items-center gap-2">
@@ -1063,22 +1063,22 @@ export default function IncomeContractsPage() {
                   {form.projectSourceId ? (
                     <>
                       <span className="flex-1 truncate text-[13px]">
-                        <span className="font-mono font-semibold text-[#111827]">{form.projectSourceId}</span>
+                        <span className="font-mono font-semibold text-[#1C1917]">{form.projectSourceId}</span>
                         <span className="mx-1">-</span>
                         <span>{projects.find((p) => p.projectSourceId === form.projectSourceId)?.name || ""}</span>
                       </span>
                       <X
-                        className="w-4 h-4 text-[#6B7280] hover:text-[#6B7280] flex-shrink-0 cursor-pointer"
+                        className="w-4 h-4 text-[#78716C] hover:text-[#78716C] flex-shrink-0 cursor-pointer"
                         onClick={() => setForm((prev) => ({ ...prev, projectSourceId: "", customerId: "" }))}
                       />
                     </>
                   ) : (
-                    <span className="flex-1 text-[13px] text-[#6B7280]">不关联项目</span>
+                    <span className="flex-1 text-[13px] text-[#78716C]">不关联项目</span>
                   )}
                 </div>
                 <button
                   type="button"
-                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827] whitespace-nowrap"
+                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917] whitespace-nowrap"
                   onClick={() => {
                     setLeadSearchText("");
                     setShowLeadPicker(true);
@@ -1091,8 +1091,8 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                合同金额 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                合同金额 <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="number"
@@ -1106,7 +1106,7 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 合同税率
               </label>
               <select
@@ -1125,7 +1125,7 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 计价方式
               </label>
               <select
@@ -1141,7 +1141,7 @@ export default function IncomeContractsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
               合同草稿
             </label>
             <input
@@ -1195,12 +1195,12 @@ export default function IncomeContractsPage() {
                 {form.draftFiles.map((url, idx) => (
                   <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[12px]">
                     <FileCheck className="w-3.5 h-3.5 text-[#22C55E]" />
-                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:underline truncate max-w-[150px]">
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#1C1917] hover:underline truncate max-w-[150px]">
                       {url.split("/").pop() || `文件${idx + 1}`}
                     </a>
                     <button
                       type="button"
-                      className="text-[#6B7280] hover:text-[#6B7280]"
+                      className="text-[#78716C] hover:text-[#78716C]"
                       onClick={() => setForm((prev) => ({ ...prev, draftFiles: prev.draftFiles.filter((_, i) => i !== idx) }))}
                     >
                       <X className="w-3 h-3" />
@@ -1218,21 +1218,21 @@ export default function IncomeContractsPage() {
               <Upload className="w-4 h-4" />
               {uploading ? "上传中..." : "选择合同草稿文件上传"}
             </button>
-            <p className="text-[12px] text-[#6B7280] mt-1">
+            <p className="text-[12px] text-[#78716C] mt-1">
               支持 PDF、DOC、DOCX、JPG、PNG 格式，上传后自动AI分析
             </p>
           </div>
 
           {aiAnalyzing && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-[#111827]/5 text-[#111827] text-[13px]">
-              <div className="w-4 h-4 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-[#1C1917]/5 text-[#1C1917] text-[13px]">
+              <div className="w-4 h-4 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
               AI 正在分析合同内容...
             </div>
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-              合同概要 {aiAnalyzing && <span className="text-[#6B7280] font-normal">（AI生成中...）</span>}
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+              合同概要 {aiAnalyzing && <span className="text-[#78716C] font-normal">（AI生成中...）</span>}
             </label>
             <textarea
               className="ios-input min-h-[80px] resize-none"
@@ -1241,12 +1241,12 @@ export default function IncomeContractsPage() {
               onChange={(e) => updateForm("contractSummary", e.target.value)}
               maxLength={300}
             />
-            <p className="text-[11px] text-[#6B7280] mt-1 text-right">{form.contractSummary.length}/300</p>
+            <p className="text-[11px] text-[#78716C] mt-1 text-right">{form.contractSummary.length}/300</p>
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-              付款方式 {aiAnalyzing && <span className="text-[#6B7280] font-normal">（AI生成中...）</span>}
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+              付款方式 {aiAnalyzing && <span className="text-[#78716C] font-normal">（AI生成中...）</span>}
             </label>
             <textarea
               className="ios-input min-h-[60px] resize-none"
@@ -1258,12 +1258,12 @@ export default function IncomeContractsPage() {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-[13px] font-semibold text-[#111827]">
+              <label className="block text-[13px] font-semibold text-[#1C1917]">
                 分期付款
               </label>
               <button
                 type="button"
-                className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
+                className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
                 onClick={addSplitStage}
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -1271,7 +1271,7 @@ export default function IncomeContractsPage() {
               </button>
             </div>
             {form.splitStages.length === 0 ? (
-              <div className="text-[13px] text-[#6B7280] py-3 text-center rounded-xl bg-[#F9FAFB]">
+              <div className="text-[13px] text-[#78716C] py-3 text-center rounded-xl bg-[#FAFAF9]">
                 暂无分期，点击"添加阶段"创建
               </div>
             ) : (
@@ -1279,9 +1279,9 @@ export default function IncomeContractsPage() {
                 {form.splitStages.map((stage, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 p-3 rounded-xl bg-[#F9FAFB]"
+                    className="flex items-center gap-2 p-3 rounded-xl bg-[#FAFAF9]"
                   >
-                    <span className="text-[12px] font-semibold text-[#6B7280] w-6 flex-shrink-0">
+                    <span className="text-[12px] font-semibold text-[#78716C] w-6 flex-shrink-0">
                       P{index + 1}
                     </span>
                     <input
@@ -1306,16 +1306,16 @@ export default function IncomeContractsPage() {
                     />
                     <button
                       type="button"
-                      className="w-8 h-8 rounded-full bg-[#6B7280]/10 hover:bg-[#6B7280]/20 flex items-center justify-center flex-shrink-0 transition-colors duration-150"
+                      className="w-8 h-8 rounded-full bg-[#78716C]/10 hover:bg-[#78716C]/20 flex items-center justify-center flex-shrink-0 transition-colors duration-150"
                       onClick={() => removeSplitStage(index)}
                     >
-                      <Trash2 className="w-3.5 h-3.5 text-[#6B7280]" />
+                      <Trash2 className="w-3.5 h-3.5 text-[#78716C]" />
                     </button>
                   </div>
                 ))}
                 <div className="flex items-center justify-between px-3 py-2 text-[13px]">
-                  <span className="text-[#6B7280]">分期合计</span>
-                  <span className="font-semibold text-[#111827]">
+                  <span className="text-[#78716C]">分期合计</span>
+                  <span className="font-semibold text-[#1C1917]">
                     {formatAmount(
                       form.splitStages.reduce((sum, s) => {
                         const val =
@@ -1331,7 +1331,7 @@ export default function IncomeContractsPage() {
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -1361,20 +1361,20 @@ export default function IncomeContractsPage() {
       >
         {detailLoading ? (
           <div className="flex items-center justify-center py-10">
-            <div className="w-8 h-8 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : detailContract ? (
           <div className="space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#111827]/10 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-[#111827]" />
+                <div className="w-10 h-10 rounded-full bg-[#1C1917]/10 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-[#1C1917]" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-bold text-[#111827]">
+                  <h3 className="text-[15px] font-bold text-[#1C1917]">
                     {detailContract.contractNo}
                   </h3>
-                  <p className="text-[13px] text-[#6B7280]">
+                  <p className="text-[13px] text-[#78716C]">
                     {detailContract.projectSourceId || "未关联项目"}
                   </p>
                 </div>
@@ -1393,56 +1393,56 @@ export default function IncomeContractsPage() {
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">客户名称</p>
-                <p className="text-[14px] font-medium text-[#111827] flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#6B7280]" />
+                <p className="text-[12px] text-[#78716C] mb-0.5">客户名称</p>
+                <p className="text-[14px] font-medium text-[#1C1917] flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-[#78716C]" />
                   {detailContract.customer.name}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">合同金额</p>
-                <p className="text-[14px] font-bold text-[#111827]">
+                <p className="text-[12px] text-[#78716C] mb-0.5">合同金额</p>
+                <p className="text-[14px] font-bold text-[#1C1917]">
                   {formatAmount(detailContract.totalAmount)}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">合同税率</p>
-                <p className="text-[14px] text-[#111827]">
+                <p className="text-[12px] text-[#78716C] mb-0.5">合同税率</p>
+                <p className="text-[14px] text-[#1C1917]">
                   {detailContract.taxRate || "-"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">计价方式</p>
-                <p className="text-[14px] text-[#111827]">
+                <p className="text-[12px] text-[#78716C] mb-0.5">计价方式</p>
+                <p className="text-[14px] text-[#1C1917]">
                   {detailContract.pricingMethod || "-"}
                 </p>
               </div>
               {detailContract.signedDate && (
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">签订日期</p>
-                  <p className="text-[14px] text-[#111827]">
+                  <p className="text-[12px] text-[#78716C] mb-0.5">签订日期</p>
+                  <p className="text-[14px] text-[#1C1917]">
                     {formatDate(detailContract.signedDate)}
                   </p>
                 </div>
               )}
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#111827]">
+                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
+                <p className="text-[14px] text-[#1C1917]">
                   {formatDate(detailContract.createdAt)}
                 </p>
               </div>
               {detailContract.customer.contactPerson && (
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">联系人</p>
-                  <p className="text-[14px] text-[#111827]">
+                  <p className="text-[12px] text-[#78716C] mb-0.5">联系人</p>
+                  <p className="text-[14px] text-[#1C1917]">
                     {detailContract.customer.contactPerson}
                   </p>
                 </div>
               )}
               {detailContract.customer.phone && (
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">联系电话</p>
-                  <p className="text-[14px] text-[#111827]">
+                  <p className="text-[12px] text-[#78716C] mb-0.5">联系电话</p>
+                  <p className="text-[14px] text-[#1C1917]">
                     {detailContract.customer.phone}
                   </p>
                 </div>
@@ -1451,8 +1451,8 @@ export default function IncomeContractsPage() {
 
             {detailContract.contractSummary && (
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">合同概要</p>
-                <p className="text-[14px] text-[#111827] whitespace-pre-wrap leading-relaxed bg-[#F9FAFB] p-3 rounded-xl">
+                <p className="text-[12px] text-[#78716C] mb-0.5">合同概要</p>
+                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">
                   {detailContract.contractSummary}
                 </p>
               </div>
@@ -1460,8 +1460,8 @@ export default function IncomeContractsPage() {
 
             {detailContract.paymentTerms && (
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">付款方式</p>
-                <p className="text-[14px] text-[#111827] whitespace-pre-wrap leading-relaxed bg-[#F9FAFB] p-3 rounded-xl">
+                <p className="text-[12px] text-[#78716C] mb-0.5">付款方式</p>
+                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">
                   {detailContract.paymentTerms}
                 </p>
               </div>
@@ -1469,7 +1469,7 @@ export default function IncomeContractsPage() {
 
             {detailContract.scannedUrl && (
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-1">合同草稿</p>
+                <p className="text-[12px] text-[#78716C] mb-1">合同草稿</p>
                 {(() => {
                   let files: string[] = [];
                   try {
@@ -1486,7 +1486,7 @@ export default function IncomeContractsPage() {
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[12px] text-[#111827] hover:underline"
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[12px] text-[#1C1917] hover:underline"
                         >
                           <FileCheck className="w-3.5 h-3.5 text-[#22C55E]" />
                           {url.split("/").pop() || `文件${idx + 1}`}
@@ -1508,7 +1508,7 @@ export default function IncomeContractsPage() {
               }
               return (
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-1">归档扫描件</p>
+                  <p className="text-[12px] text-[#78716C] mb-1">归档扫描件</p>
                   <div className="flex flex-wrap gap-2">
                     {files.map((url, idx) => (
                       <a
@@ -1516,7 +1516,7 @@ export default function IncomeContractsPage() {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] text-[12px] text-[#111827] hover:underline"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] text-[12px] text-[#1C1917] hover:underline"
                       >
                         <FileCheck className="w-3.5 h-3.5 text-[#3B82F6]" />
                         {url.split("/").pop() || `扫描件${idx + 1}`}
@@ -1532,10 +1532,10 @@ export default function IncomeContractsPage() {
               detailContract.splitStages.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[13px] font-semibold text-[#111827]">
+                    <p className="text-[13px] font-semibold text-[#1C1917]">
                       分期付款 ({detailContract.splitStages.length}期)
                     </p>
-                    <span className="text-[13px] font-bold text-[#111827]">
+                    <span className="text-[13px] font-bold text-[#1C1917]">
                       合计{" "}
                       {formatAmount(
                         detailContract.splitStages.reduce((sum, s) => {
@@ -1559,7 +1559,7 @@ export default function IncomeContractsPage() {
                     <tbody>
                       {detailContract.splitStages.map((stage, index) => (
                         <tr key={index}>
-                          <td className="text-[#6B7280]">P{index + 1}</td>
+                          <td className="text-[#78716C]">P{index + 1}</td>
                           <td>{stage.name || "-"}</td>
                           <td className="font-semibold">
                             {formatAmount(stage.amount)}
@@ -1574,8 +1574,8 @@ export default function IncomeContractsPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#6B7280]" />
-                  <p className="text-[13px] font-semibold text-[#111827]">
+                  <FileText className="w-4 h-4 text-[#78716C]" />
+                  <p className="text-[13px] font-semibold text-[#1C1917]">
                     开票登记 ({contractInvoices.length})
                   </p>
                 </div>
@@ -1624,26 +1624,26 @@ export default function IncomeContractsPage() {
                           <td>
                             <span className="ios-badge ios-badge-blue text-[11px]">{inv.invoiceType}</span>
                           </td>
-                          <td className="font-mono font-semibold text-[#111827]">
+                          <td className="font-mono font-semibold text-[#1C1917]">
                             {parseFloat(inv.totalAmount || inv.amount || 0).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
                           </td>
-                          <td className="text-[#6B7280]">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString("zh-CN") : "-"}</td>
+                          <td className="text-[#78716C]">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString("zh-CN") : "-"}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  <div className="mt-3 p-3 rounded-xl bg-[#F9FAFB]">
+                  <div className="mt-3 p-3 rounded-xl bg-[#FAFAF9]">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[12px] text-[#6B7280]">已开票金额 / 合同总额</span>
-                      <span className="text-[13px] font-semibold text-[#111827]">
+                      <span className="text-[12px] text-[#78716C]">已开票金额 / 合同总额</span>
+                      <span className="text-[13px] font-semibold text-[#1C1917]">
                         ¥{contractInvoices.reduce((sum: number, inv: any) => sum + (parseFloat(inv.totalAmount || inv.amount || 0)), 0).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
                         {" / "}
                         {formatAmount(detailContract.totalAmount)}
                       </span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-[#E5E7EB] overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-[#E7E5E4] overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-[#111827] transition-all duration-500"
+                        className="h-full rounded-full bg-[#1C1917] transition-all duration-500"
                         style={{
                           width: `${Math.min(100, (contractInvoices.reduce((sum: number, inv: any) => sum + (parseFloat(inv.totalAmount || inv.amount || 0)), 0) / Math.max(0.01, parseFloat(detailContract.totalAmount || "0"))) * 100).toFixed(1)}%`,
                         }}
@@ -1652,7 +1652,7 @@ export default function IncomeContractsPage() {
                   </div>
                 </>
               ) : (
-                <div className="text-center py-6 text-[#6B7280] text-[13px] rounded-xl bg-[#F9FAFB]">
+                <div className="text-center py-6 text-[#78716C] text-[13px] rounded-xl bg-[#FAFAF9]">
                   暂无开票记录
                 </div>
               )}
@@ -1661,7 +1661,7 @@ export default function IncomeContractsPage() {
             <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
           </div>
         ) : (
-          <div className="text-center py-10 text-[#6B7280]">
+          <div className="text-center py-10 text-[#78716C]">
             未找到合同信息
           </div>
         )}
@@ -1674,15 +1674,15 @@ export default function IncomeContractsPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要删除收入合同{" "}
             <span className="font-semibold">{deleteConfirm?.contractNo}</span>{" "}
             吗？
           </p>
-          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#78716C] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"
@@ -1709,14 +1709,14 @@ export default function IncomeContractsPage() {
       >
         <div className="space-y-4">
           {customerError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {customerError}
             </div>
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-              客户名称 <span className="text-[#6B7280]">*</span>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+              客户名称 <span className="text-[#78716C]">*</span>
             </label>
             <input
               type="text"
@@ -1732,7 +1732,7 @@ export default function IncomeContractsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">联系人</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系人</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1742,7 +1742,7 @@ export default function IncomeContractsPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">电话</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">电话</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1752,7 +1752,7 @@ export default function IncomeContractsPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">行业类型</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">行业类型</label>
               <select
                 className="ios-select"
                 value={customerForm.industryType}
@@ -1764,7 +1764,7 @@ export default function IncomeContractsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">客户等级</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户等级</label>
               <select
                 className="ios-select"
                 value={customerForm.customerGrade}
@@ -1777,7 +1777,7 @@ export default function IncomeContractsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowCustomerModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleCreateCustomer} disabled={customerSaving}>
               {customerSaving ? "保存中..." : "确认创建"}
@@ -1794,7 +1794,7 @@ export default function IncomeContractsPage() {
       >
         <div className="space-y-3">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -1805,7 +1805,7 @@ export default function IncomeContractsPage() {
             />
           </div>
 
-          <div className="max-h-[400px] overflow-y-auto rounded-xl border border-[#E5E7EB]">
+          <div className="max-h-[400px] overflow-y-auto rounded-xl border border-[#E7E5E4]">
             <table className="ios-table">
               <thead>
                 <tr>
@@ -1834,7 +1834,7 @@ export default function IncomeContractsPage() {
                     return (
                       <tr key={p.projectSourceId}>
                         <td>
-                          <span className="font-mono text-[13px] font-semibold text-[#111827]">
+                          <span className="font-mono text-[13px] font-semibold text-[#1C1917]">
                             {p.projectSourceId}
                           </span>
                         </td>
@@ -1877,7 +1877,7 @@ export default function IncomeContractsPage() {
                   );
                 }).length === 0 && (
                   <tr>
-                    <td colSpan={5} className="text-center py-8 text-[#6B7280]">
+                    <td colSpan={5} className="text-center py-8 text-[#78716C]">
                       无匹配项目
                     </td>
                   </tr>
@@ -1905,15 +1905,15 @@ export default function IncomeContractsPage() {
       >
         <div className="space-y-4">
           {invoiceError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {invoiceError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                发票号码 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                发票号码 <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="text"
@@ -1928,7 +1928,7 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">发票代码</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">发票代码</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1939,7 +1939,7 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">发票类型</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">发票类型</label>
               <select
                 className="ios-select"
                 value={invoiceForm.invoiceType}
@@ -1953,7 +1953,7 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">开票日期</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开票日期</label>
               <input
                 type="date"
                 className="ios-input"
@@ -1963,8 +1963,8 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                不含税金额 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                不含税金额 <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="number"
@@ -1978,7 +1978,7 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">税率</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">税率</label>
               <select
                 className="ios-select"
                 value={invoiceForm.taxRate}
@@ -1992,27 +1992,27 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">税额（自动计算）</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">税额（自动计算）</label>
               <input
                 type="text"
-                className="ios-input bg-[#F9FAFB]"
+                className="ios-input bg-[#FAFAF9]"
                 value={invoiceForm.taxAmount ? `¥${invoiceForm.taxAmount}` : ""}
                 readOnly
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">价税合计（自动计算）</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">价税合计（自动计算）</label>
               <input
                 type="text"
-                className="ios-input bg-[#F9FAFB] font-semibold text-[#111827]"
+                className="ios-input bg-[#FAFAF9] font-semibold text-[#1C1917]"
                 value={invoiceForm.totalAmount ? `¥${invoiceForm.totalAmount}` : ""}
                 readOnly
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">购方名称</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">购方名称</label>
               <input
                 type="text"
                 className="ios-input"
@@ -2023,7 +2023,7 @@ export default function IncomeContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">购方税号</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">购方税号</label>
               <input
                 type="text"
                 className="ios-input"
@@ -2034,7 +2034,7 @@ export default function IncomeContractsPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
               <textarea
                 className="ios-input min-h-[60px] resize-none"
                 placeholder="备注信息"
@@ -2044,7 +2044,7 @@ export default function IncomeContractsPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">发票扫描件</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">发票扫描件</label>
               <input
                 ref={invoiceFileRef}
                 type="file"
@@ -2057,10 +2057,10 @@ export default function IncomeContractsPage() {
                   {invoiceForm.attachments.map((url, idx) => (
                     <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[12px]">
                       <FileCheck className="w-3.5 h-3.5 text-[#22C55E]" />
-                      <span className="text-[#111827] truncate max-w-[150px]">{invoiceUploadName || `附件${idx + 1}`}</span>
+                      <span className="text-[#1C1917] truncate max-w-[150px]">{invoiceUploadName || `附件${idx + 1}`}</span>
                       <button
                         type="button"
-                        className="text-[#6B7280] hover:text-[#6B7280]"
+                        className="text-[#78716C] hover:text-[#78716C]"
                         onClick={() => setInvoiceForm(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== idx) }))}
                       >
                         <X className="w-3 h-3" />
@@ -2078,13 +2078,13 @@ export default function IncomeContractsPage() {
                 <Upload className="w-4 h-4" />
                 {invoiceUploading ? "上传中..." : "选择发票扫描件上传"}
               </button>
-              <p className="text-[12px] text-[#6B7280] mt-1">
+              <p className="text-[12px] text-[#78716C] mt-1">
                 支持 PDF、JPG、PNG、OFD 格式
               </p>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowInvoiceModal(false)}
@@ -2136,26 +2136,26 @@ export default function IncomeContractsPage() {
       >
         {archiveContract && (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-[#F9FAFB]">
-              <p className="text-[13px] text-[#6B7280] mb-1">合同编号</p>
-              <p className="text-[15px] font-bold text-[#111827]">{archiveContract.contractNo}</p>
+            <div className="p-4 rounded-xl bg-[#FAFAF9]">
+              <p className="text-[13px] text-[#78716C] mb-1">合同编号</p>
+              <p className="text-[15px] font-bold text-[#1C1917]">{archiveContract.contractNo}</p>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                上传盖章扫描件 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                上传盖章扫描件 <span className="text-[#78716C]">*</span>
               </label>
               {archiveFiles.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
                   {archiveFiles.map((url, idx) => (
                     <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[12px]">
                       <FileCheck className="w-3.5 h-3.5 text-[#22C55E]" />
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:underline truncate max-w-[150px]">
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#1C1917] hover:underline truncate max-w-[150px]">
                         {url.split("/").pop() || `文件${idx + 1}`}
                       </a>
                       <button
                         type="button"
-                        className="text-[#6B7280] hover:text-[#6B7280]"
+                        className="text-[#78716C] hover:text-[#78716C]"
                         onClick={() => setArchiveFiles(prev => prev.filter((_, i) => i !== idx))}
                       >
                         <X className="w-3 h-3" />
@@ -2173,7 +2173,7 @@ export default function IncomeContractsPage() {
                 <Upload className="w-4 h-4" />
                 {archiveUploading ? "上传中..." : "选择盖章扫描件上传"}
               </button>
-              <p className="text-[12px] text-[#6B7280] mt-1">
+              <p className="text-[12px] text-[#78716C] mt-1">
                 支持 PDF、JPG、PNG 格式，至少上传1个文件
               </p>
             </div>
@@ -2186,7 +2186,7 @@ export default function IncomeContractsPage() {
                 取消
               </button>
               <button
-                className="ios-btn !bg-[#111827] !text-white text-sm hover:!bg-[#0066DD] disabled:opacity-50 flex items-center gap-1"
+                className="ios-btn !bg-[#1C1917] !text-white text-sm hover:!bg-[#0066DD] disabled:opacity-50 flex items-center gap-1"
                 disabled={archiveFiles.length === 0 || archiveSaving}
                 onClick={async () => {
                   if (archiveFiles.length === 0) {

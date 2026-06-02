@@ -489,8 +489,8 @@ export default function EmployeesPage() {
             <h1>员工档案管理</h1>
             <p>管理公司员工人事档案、薪酬社保与附件信息</p>
           </div>
-          <p className="text-[13px] text-[#6B7280]">
-            员工账号请在 <span className="font-semibold text-[#111827]">系统设置 → 用户管理</span> 中创建，此处管理员工人事档案
+          <p className="text-[13px] text-[#78716C]">
+            员工账号请在 <span className="font-semibold text-[#1C1917]">系统设置 → 用户管理</span> 中创建，此处管理员工人事档案
           </p>
         </div>
       </div>
@@ -498,7 +498,7 @@ export default function EmployeesPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -566,20 +566,20 @@ export default function EmployeesPage() {
             <option value="false">已禁用</option>
           </select>
 
-          <div className="ml-auto text-[13px] text-[#6B7280]">
-            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#78716C]">
+            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : employees.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <UserX className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <UserX className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>{search || filterRole || filterDepartment || filterStatus || filterEmploymentStatus ? "没有匹配的员工记录" : "暂无员工记录"}</p>
           </div>
@@ -603,14 +603,14 @@ export default function EmployeesPage() {
                   <tr key={employee.id}>
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[13px] font-semibold text-[#111827]">
+                        <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-[13px] font-semibold text-[#1C1917]">
                             {employee.realName.charAt(0)}
                           </span>
                         </div>
                         <div>
                           <span className="font-semibold block">{employee.realName}</span>
-                          <span className="text-[11px] text-[#6B7280]">{employee.username}</span>
+                          <span className="text-[11px] text-[#78716C]">{employee.username}</span>
                         </div>
                       </div>
                     </td>
@@ -618,10 +618,10 @@ export default function EmployeesPage() {
                       {employee.department ? (
                         <span className="ios-badge ios-badge-orange">{employee.department}</span>
                       ) : (
-                        <span className="text-[#6B7280]">-</span>
+                        <span className="text-[#78716C]">-</span>
                       )}
                     </td>
-                    <td>{employee.position || <span className="text-[#6B7280]">-</span>}</td>
+                    <td>{employee.position || <span className="text-[#78716C]">-</span>}</td>
                     <td>
                       <span className={`ios-badge ${employmentStatusColorMap[employee.employmentStatus || "active"]}`}>
                         {employmentStatusLabelMap[employee.employmentStatus || "active"] || employee.employmentStatus}
@@ -666,7 +666,7 @@ export default function EmployeesPage() {
                         </button>
                         {employee.isActive && (
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                             onClick={() => setDeleteConfirm(employee)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -681,7 +681,7 @@ export default function EmployeesPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -689,7 +689,7 @@ export default function EmployeesPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#6B7280] px-3">
+                <span className="text-[13px] text-[#78716C] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -713,20 +713,20 @@ export default function EmployeesPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
-          <div className="flex gap-1 bg-[#F9FAFB] rounded-xl p-1">
+          <div className="flex gap-1 bg-[#FAFAF9] rounded-xl p-1">
             <button
-              className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition-all ${formTab === "basic" ? "bg-white text-[#111827] shadow-sm" : "text-[#6B7280]"}`}
+              className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition-all ${formTab === "basic" ? "bg-white text-[#1C1917] shadow-sm" : "text-[#78716C]"}`}
               onClick={() => setFormTab("basic")}
             >
               基本信息
             </button>
             <button
-              className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition-all ${formTab === "hr" ? "bg-white text-[#111827] shadow-sm" : "text-[#6B7280]"}`}
+              className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition-all ${formTab === "hr" ? "bg-white text-[#1C1917] shadow-sm" : "text-[#78716C]"}`}
               onClick={() => setFormTab("hr")}
             >
               人事信息
@@ -736,8 +736,8 @@ export default function EmployeesPage() {
           {formTab === "basic" && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                  用户名 <span className="text-[#6B7280]">*</span>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                  用户名 <span className="text-[#78716C]">*</span>
                 </label>
                 <input
                   type="text"
@@ -750,8 +750,8 @@ export default function EmployeesPage() {
               </div>
 
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                  姓名 <span className="text-[#6B7280]">*</span>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                  姓名 <span className="text-[#78716C]">*</span>
                 </label>
                 <input
                   type="text"
@@ -763,7 +763,7 @@ export default function EmployeesPage() {
               </div>
 
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">手机号</label>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">手机号</label>
                 <input
                   type="text"
                   className="ios-input"
@@ -774,7 +774,7 @@ export default function EmployeesPage() {
               </div>
 
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">邮箱</label>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">邮箱</label>
                 <input
                   type="email"
                   className="ios-input"
@@ -785,7 +785,7 @@ export default function EmployeesPage() {
               </div>
 
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">角色</label>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">角色</label>
                 <select
                   className="ios-select"
                   value={form.role}
@@ -798,7 +798,7 @@ export default function EmployeesPage() {
               </div>
 
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">部门</label>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">部门</label>
                 <select
                   className="ios-select"
                   value={form.department}
@@ -816,10 +816,10 @@ export default function EmployeesPage() {
           {formTab === "hr" && (
             <div className="space-y-5">
               <div>
-                <p className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide mb-3">个人信息</p>
+                <p className="text-[12px] font-semibold text-[#78716C] uppercase tracking-wide mb-3">个人信息</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">身份证号</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">身份证号</label>
                     <input
                       type="text"
                       className="ios-input"
@@ -831,7 +831,7 @@ export default function EmployeesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">出生日期</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">出生日期</label>
                     <input
                       type="date"
                       className="ios-input"
@@ -840,7 +840,7 @@ export default function EmployeesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">岗位/职位</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">岗位/职位</label>
                     <input
                       type="text"
                       className="ios-input"
@@ -850,7 +850,7 @@ export default function EmployeesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">在职状态</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">在职状态</label>
                     <select
                       className="ios-select"
                       value={form.employmentStatus}
@@ -862,7 +862,7 @@ export default function EmployeesPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">入职日期</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">入职日期</label>
                     <input
                       type="date"
                       className="ios-input"
@@ -874,10 +874,10 @@ export default function EmployeesPage() {
               </div>
 
               <div>
-                <p className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide mb-3">薪酬社保</p>
+                <p className="text-[12px] font-semibold text-[#78716C] uppercase tracking-wide mb-3">薪酬社保</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">基本工资（月）</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">基本工资（月）</label>
                     <input
                       type="number"
                       step="0.01"
@@ -888,7 +888,7 @@ export default function EmployeesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">社保缴费基数</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">社保缴费基数</label>
                     <input
                       type="number"
                       step="0.01"
@@ -899,7 +899,7 @@ export default function EmployeesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">公积金缴费基数</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">公积金缴费基数</label>
                     <input
                       type="number"
                       step="0.01"
@@ -910,7 +910,7 @@ export default function EmployeesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">公积金个人比例</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">公积金个人比例</label>
                     <input
                       type="number"
                       step="0.0001"
@@ -921,7 +921,7 @@ export default function EmployeesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">专项附加扣除/月</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">专项附加扣除/月</label>
                     <input
                       type="number"
                       step="0.01"
@@ -935,10 +935,10 @@ export default function EmployeesPage() {
               </div>
 
               <div>
-                <p className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide mb-3">银行信息</p>
+                <p className="text-[12px] font-semibold text-[#78716C] uppercase tracking-wide mb-3">银行信息</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">开户银行</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户银行</label>
                     <input
                       type="text"
                       className="ios-input"
@@ -948,7 +948,7 @@ export default function EmployeesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">银行账号</label>
+                    <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">银行账号</label>
                     <input
                       type="text"
                       className="ios-input"
@@ -961,7 +961,7 @@ export default function EmployeesPage() {
               </div>
 
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
                 <textarea
                   className="ios-input min-h-[72px] resize-none"
                   placeholder="其他备注信息"
@@ -972,7 +972,7 @@ export default function EmployeesPage() {
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -998,15 +998,15 @@ export default function EmployeesPage() {
       >
         {detailEmployee && (
           <div className="space-y-5 -mx-2">
-            <div className="flex items-center gap-4 pb-4 border-b border-[#F3F4F6]">
-              <div className="w-14 h-14 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-[22px] font-bold text-[#111827]">
+            <div className="flex items-center gap-4 pb-4 border-b border-[#F5F5F4]">
+              <div className="w-14 h-14 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-[22px] font-bold text-[#1C1917]">
                   {detailEmployee.realName.charAt(0)}
                 </span>
               </div>
               <div className="flex-1">
-                <p className="text-[17px] font-bold text-[#111827]">{detailEmployee.realName}</p>
-                <p className="text-[13px] text-[#6B7280]">@{detailEmployee.username}</p>
+                <p className="text-[17px] font-bold text-[#1C1917]">{detailEmployee.realName}</p>
+                <p className="text-[13px] text-[#78716C]">@{detailEmployee.username}</p>
               </div>
               <span className={`ios-badge ${employmentStatusColorMap[detailEmployee.employmentStatus || "active"]}`}>
                 {employmentStatusLabelMap[detailEmployee.employmentStatus || "active"]}
@@ -1017,10 +1017,10 @@ export default function EmployeesPage() {
             </div>
 
             <div>
-              <p className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide mb-3">基本信息</p>
+              <p className="text-[12px] font-semibold text-[#78716C] uppercase tracking-wide mb-3">基本信息</p>
               <div className="grid grid-cols-3 gap-y-3 gap-x-6">
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">部门</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">部门</p>
                   <p className="text-[14px] font-medium">
                     {detailEmployee.department ? (
                       <span className="ios-badge ios-badge-orange">{detailEmployee.department}</span>
@@ -1028,11 +1028,11 @@ export default function EmployeesPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">岗位</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">岗位</p>
                   <p className="text-[14px] font-medium">{detailEmployee.position || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">角色</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">角色</p>
                   <p className="text-[14px] font-medium">
                     <span className={`ios-badge ${detailEmployee.role === "admin" ? "ios-badge-red" : "ios-badge-blue"}`}>
                       {roleLabelMap[detailEmployee.role] || detailEmployee.role}
@@ -1040,39 +1040,39 @@ export default function EmployeesPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">手机号</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">手机号</p>
                   <p className="text-[14px] font-medium">{detailEmployee.phone || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">邮箱</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">邮箱</p>
                   <p className="text-[14px] font-medium">{detailEmployee.email || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">入职日期</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">入职日期</p>
                   <p className="text-[14px] font-medium">{formatDate(detailEmployee.hireDate)}</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <p className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide mb-3">身份信息</p>
+              <p className="text-[12px] font-semibold text-[#78716C] uppercase tracking-wide mb-3">身份信息</p>
               <div className="grid grid-cols-3 gap-y-3 gap-x-6">
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">身份证号</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">身份证号</p>
                   <p className="text-[14px] font-medium">{detailEmployee.idNumber || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">出生日期</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">出生日期</p>
                   <p className="text-[14px] font-medium">
                     {formatDate(detailEmployee.birthDate)}
                     {detailEmployee.birthDate && (
-                      <span className="text-[#6B7280] text-[12px] ml-1.5">({calcAge(detailEmployee.birthDate)})</span>
+                      <span className="text-[#78716C] text-[12px] ml-1.5">({calcAge(detailEmployee.birthDate)})</span>
                     )}
                   </p>
                 </div>
                 {detailEmployee.leaveDate && (
                   <div>
-                    <p className="text-[12px] text-[#6B7280] mb-0.5">离职日期</p>
+                    <p className="text-[12px] text-[#78716C] mb-0.5">离职日期</p>
                     <p className="text-[14px] font-medium">{formatDate(detailEmployee.leaveDate)}</p>
                   </div>
                 )}
@@ -1080,22 +1080,22 @@ export default function EmployeesPage() {
             </div>
 
             <div>
-              <p className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide mb-3">薪酬社保</p>
+              <p className="text-[12px] font-semibold text-[#78716C] uppercase tracking-wide mb-3">薪酬社保</p>
               <div className="grid grid-cols-3 gap-y-3 gap-x-6">
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">基本工资</p>
-                  <p className="text-[14px] font-semibold text-[#111827]">{formatMoney(detailEmployee.baseSalary)}</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">基本工资</p>
+                  <p className="text-[14px] font-semibold text-[#1C1917]">{formatMoney(detailEmployee.baseSalary)}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">社保基数</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">社保基数</p>
                   <p className="text-[14px] font-medium">{formatMoney(detailEmployee.socialInsuranceBase)}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">公积金基数</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">公积金基数</p>
                   <p className="text-[14px] font-medium">{formatMoney(detailEmployee.housingFundBase)}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">公积金比例</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">公积金比例</p>
                   <p className="text-[14px] font-medium">
                     {detailEmployee.housingFundRate != null
                       ? `${(Number(detailEmployee.housingFundRate) * 100).toFixed(2)}%`
@@ -1103,7 +1103,7 @@ export default function EmployeesPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">社保公司比例</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">社保公司比例</p>
                   <p className="text-[14px] font-medium">
                     {detailEmployee.socialInsuranceCompanyRate != null
                       ? `${(Number(detailEmployee.socialInsuranceCompanyRate) * 100).toFixed(2)}%`
@@ -1111,7 +1111,7 @@ export default function EmployeesPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">公积金公司比例</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">公积金公司比例</p>
                   <p className="text-[14px] font-medium">
                     {detailEmployee.housingFundCompanyRate != null
                       ? `${(Number(detailEmployee.housingFundCompanyRate) * 100).toFixed(2)}%`
@@ -1119,21 +1119,21 @@ export default function EmployeesPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">专项附加扣除</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">专项附加扣除</p>
                   <p className="text-[14px] font-medium">{formatMoney(detailEmployee.taxDeduction)}</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <p className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide mb-3">银行信息</p>
+              <p className="text-[12px] font-semibold text-[#78716C] uppercase tracking-wide mb-3">银行信息</p>
               <div className="grid grid-cols-3 gap-y-3 gap-x-6">
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">开户银行</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">开户银行</p>
                   <p className="text-[14px] font-medium">{detailEmployee.bankName || "-"}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#6B7280] mb-0.5">银行账号</p>
+                  <p className="text-[12px] text-[#78716C] mb-0.5">银行账号</p>
                   <p className="text-[14px] font-medium">{detailEmployee.bankAccount || "-"}</p>
                 </div>
               </div>
@@ -1141,14 +1141,14 @@ export default function EmployeesPage() {
 
             {detailEmployee.remark && (
               <div>
-                <p className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide mb-3">备注</p>
-                <p className="text-[14px] text-[#111827] bg-[#F9FAFB] rounded-xl p-3">{detailEmployee.remark}</p>
+                <p className="text-[12px] font-semibold text-[#78716C] uppercase tracking-wide mb-3">备注</p>
+                <p className="text-[14px] text-[#1C1917] bg-[#FAFAF9] rounded-xl p-3">{detailEmployee.remark}</p>
               </div>
             )}
 
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide">证件附件</p>
+                <p className="text-[12px] font-semibold text-[#78716C] uppercase tracking-wide">证件附件</p>
                 <div className="flex items-center gap-2">
                   <select
                     className="ios-select w-[120px] text-[12px] py-1.5"
@@ -1178,23 +1178,23 @@ export default function EmployeesPage() {
               </div>
 
               {detailLoading ? (
-                <div className="text-center py-6 text-[#6B7280] text-[13px]">加载附件...</div>
+                <div className="text-center py-6 text-[#78716C] text-[13px]">加载附件...</div>
               ) : detailAttachments.length === 0 ? (
-                <div className="text-center py-8 bg-[#F9FAFB] rounded-xl">
-                  <FileText className="w-8 h-8 text-[#6B7280] mx-auto mb-2" />
-                  <p className="text-[13px] text-[#6B7280]">暂无附件</p>
+                <div className="text-center py-8 bg-[#FAFAF9] rounded-xl">
+                  <FileText className="w-8 h-8 text-[#78716C] mx-auto mb-2" />
+                  <p className="text-[13px] text-[#78716C]">暂无附件</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {detailAttachments.map((att) => (
                     <div
                       key={att.id}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-[#F9FAFB] hover:bg-[#E5E7EB] transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-[#FAFAF9] hover:bg-[#E7E5E4] transition-colors"
                     >
-                      <FileText className="w-5 h-5 text-[#111827] flex-shrink-0" />
+                      <FileText className="w-5 h-5 text-[#1C1917] flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-[#111827] truncate">{att.fileName}</p>
-                        <p className="text-[11px] text-[#6B7280]">
+                        <p className="text-[13px] font-medium text-[#1C1917] truncate">{att.fileName}</p>
+                        <p className="text-[11px] text-[#78716C]">
                           {fileTypeLabelMap[att.fileType] || att.fileType}
                           {att.fileSize > 0 && ` · ${(att.fileSize / 1024).toFixed(1)}KB`}
                           {` · ${formatDate(att.createdAt)}`}
@@ -1209,7 +1209,7 @@ export default function EmployeesPage() {
                         <Download className="w-3.5 h-3.5" />
                       </a>
                       <button
-                        className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                        className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                         onClick={() => handleDeleteAttachment(att.id)}
                       >
                         <X className="w-3.5 h-3.5" />
@@ -1220,13 +1220,13 @@ export default function EmployeesPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#F3F4F6]">
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#F5F5F4]">
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">创建时间</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
                 <p className="text-[13px] font-medium">{formatDate(detailEmployee.createdAt)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">最后修改</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">最后修改</p>
                 <p className="text-[13px] font-medium">
                   {detailEmployee.lastModifiedBy && <span>{detailEmployee.lastModifiedBy} · </span>}
                   {formatDate(detailEmployee.updatedAt)}
@@ -1244,13 +1244,13 @@ export default function EmployeesPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要禁用员工 <span className="font-semibold">{deleteConfirm?.realName}</span> 吗？
           </p>
-          <p className="text-[13px] text-[#6B7280] mb-6">禁用后该员工将无法登录系统，可随时重新启用</p>
+          <p className="text-[13px] text-[#78716C] mb-6">禁用后该员工将无法登录系统，可随时重新启用</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"

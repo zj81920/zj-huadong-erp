@@ -66,10 +66,10 @@ const statusLabelMap: Record<string, string> = {
 };
 
 const statusColorMap: Record<string, string> = {
-  "执行": "bg-[#6B7280]",
-  "完工": "bg-[#111827]",
-  "暂停": "bg-[#6B7280]",
-  "终止": "bg-[#6B7280]",
+  "执行": "bg-[#78716C]",
+  "完工": "bg-[#1C1917]",
+  "暂停": "bg-[#78716C]",
+  "终止": "bg-[#78716C]",
 };
 
 export default function Dashboard() {
@@ -98,32 +98,32 @@ export default function Dashboard() {
       value: stats ? String(stats.projectCount) : "-",
       subtitle: stats?.activeEmployeeCount ? `${stats.activeEmployeeCount} 名在职员工` : "",
       icon: <Briefcase className="w-5 h-5" />,
-      tint: "#111827",
-      tintLight: "rgba(0, 122, 255, 0.08)",
+      tint: "#4338CA",
+      tintLight: "#EEF2FF",
     },
     {
       title: "总收入",
       value: stats ? formatMoney(stats.totalIncome) : "-",
       subtitle: `合同 ${formatMoney(stats?.incomeContractTotal || 0)}`,
       icon: <TrendingUp className="w-5 h-5" />,
-      tint: "#6B7280",
-      tintLight: "rgba(52, 199, 89, 0.08)",
+      tint: "#16A34A",
+      tintLight: "#F0FDF4",
     },
     {
       title: "总支出",
       value: stats ? formatMoney(stats.totalExpense) : "-",
       subtitle: `合同 ${formatMoney(stats?.expenseContractTotal || 0)}`,
       icon: <TrendingDown className="w-5 h-5" />,
-      tint: "#6B7280",
-      tintLight: "rgba(255, 149, 0, 0.08)",
+      tint: "#D97706",
+      tintLight: "#FFFBEB",
     },
     {
       title: "待审批",
       value: stats ? String(stats.pendingApprovals) : "-",
       subtitle: "待您处理",
       icon: <FileText className="w-5 h-5" />,
-      tint: "#6B7280",
-      tintLight: "rgba(175, 82, 222, 0.08)",
+      tint: "#DC2626",
+      tintLight: "#FEF2F2",
       onClick: () => router.push("/approvals"),
     },
   ];
@@ -167,7 +167,10 @@ export default function Dashboard() {
                 <div className="relative z-10 flex flex-col h-full">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-[12px] font-medium text-text-secondary">{card.title}</span>
-                    <div className="w-7 h-7 rounded flex items-center justify-center text-text-secondary">
+                    <div
+                      className="w-7 h-7 rounded flex items-center justify-center"
+                      style={{ backgroundColor: card.tintLight, color: card.tint }}
+                    >
                       {card.icon}
                     </div>
                   </div>
@@ -186,8 +189,8 @@ export default function Dashboard() {
             <div className="bento-card">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-[#6B7280]" />
-                  <h3 className="text-[15px] font-bold text-[#111827]">财务概览</h3>
+                  <DollarSign className="w-5 h-5 text-[#78716C]" />
+                  <h3 className="text-[15px] font-bold text-[#1C1917]">财务概览</h3>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-4">
@@ -314,7 +317,7 @@ export default function Dashboard() {
                         <td className="font-medium">{project.name}</td>
                         <td className="text-text-secondary">{project.customer?.name || "-"}</td>
                         <td>
-                          <span className="ios-badge ios-badge-gray">
+                          <span className={`ios-badge ${project.status === "执行" ? "ios-badge-green" : project.status === "完工" ? "ios-badge-blue" : project.status === "暂停" ? "ios-badge-orange" : "ios-badge-gray"}`}>
                             {statusLabelMap[project.status] || project.status}
                           </span>
                         </td>

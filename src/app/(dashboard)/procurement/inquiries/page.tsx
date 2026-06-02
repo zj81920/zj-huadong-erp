@@ -557,30 +557,30 @@ export default function InquiriesPage() {
 
       <div className="grid grid-cols-3 gap-5 mb-6">
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
-            <HelpCircle className="w-5 h-5 text-[#111827]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
+            <HelpCircle className="w-5 h-5 text-[#1C1917]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#6B7280]">采购单总数</p>
-            <p className="text-[24px] font-bold text-[#111827] leading-tight">{stats.total}</p>
+            <p className="text-[13px] text-[#78716C]">采购单总数</p>
+            <p className="text-[24px] font-bold text-[#1C1917] leading-tight">{stats.total}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
-            <Globe className="w-5 h-5 text-[#6B7280]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#78716C]/10 flex items-center justify-center">
+            <Globe className="w-5 h-5 text-[#78716C]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#6B7280]">线上询价中</p>
-            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.onlinePending}</p>
+            <p className="text-[13px] text-[#78716C]">线上询价中</p>
+            <p className="text-[24px] font-bold text-[#78716C] leading-tight">{stats.onlinePending}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-[#6B7280]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#78716C]/10 flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 text-[#78716C]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#6B7280]">已确认供应商</p>
-            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.confirmed}</p>
+            <p className="text-[13px] text-[#78716C]">已确认供应商</p>
+            <p className="text-[24px] font-bold text-[#78716C] leading-tight">{stats.confirmed}</p>
           </div>
         </div>
       </div>
@@ -588,7 +588,7 @@ export default function InquiriesPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -617,20 +617,20 @@ export default function InquiriesPage() {
             ))}
           </select>
 
-          <div className="ml-auto text-[13px] text-[#6B7280]">
-            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条采购单
+          <div className="ml-auto text-[13px] text-[#78716C]">
+            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条采购单
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : inquiries.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <HelpCircle className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <HelpCircle className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>{search || filterProjectSourceId ? "没有匹配的采购单记录" : "暂无采购单记录，点击右上角新增"}</p>
           </div>
@@ -656,28 +656,28 @@ export default function InquiriesPage() {
                   const isExpanded = expandedRows.has(inquiry.id);
                   return (
                     <Fragment key={inquiry.id}>
-                      <tr className={`${isExpanded ? "bg-[#F9FAFB]/60" : ""} ${isSelected(inquiry.id) ? "bg-[#111827]/5" : ""}`}>
+                      <tr className={`${isExpanded ? "bg-[#FAFAF9]/60" : ""} ${isSelected(inquiry.id) ? "bg-[#1C1917]/5" : ""}`}>
                         {isAdminUser && (
                           <td className="w-10">
                             <input type="checkbox" className="ios-checkbox" checked={isSelected(inquiry.id)} onChange={() => toggleSelect(inquiry.id)} />
                           </td>
                         )}
                         <td>
-                          <span className="font-mono text-[13px] font-semibold text-[#111827]">
+                          <span className="font-mono text-[13px] font-semibold text-[#1C1917]">
                             {inquiry.projectCode ? `${inquiry.projectCode} - ${inquiry.projectName}` : (inquiry.projectName || inquiry.projectSourceId)}
                           </span>
                         </td>
                         <td>
                           <div className="flex items-center gap-1.5">
                             <button
-                              className="w-6 h-6 rounded-md hover:bg-[#E5E7EB] flex items-center justify-center transition-colors"
+                              className="w-6 h-6 rounded-md hover:bg-[#E7E5E4] flex items-center justify-center transition-colors"
                               onClick={() => toggleRowExpand(inquiry.id)}
                               title={isExpanded ? "收起明细" : "展开明细"}
                             >
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-[#111827]" />
+                                <ChevronDown className="w-4 h-4 text-[#1C1917]" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-[#6B7280]" />
+                                <ChevronRight className="w-4 h-4 text-[#78716C]" />
                               )}
                             </button>
                             <span className="font-mono text-[13px] font-semibold">
@@ -685,8 +685,8 @@ export default function InquiriesPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="text-[#6B7280]">{formatDate(inquiry.inquiryDate)}</td>
-                        <td className="text-[#6B7280]">{formatDate(inquiry.closingDate)}</td>
+                        <td className="text-[#78716C]">{formatDate(inquiry.inquiryDate)}</td>
+                        <td className="text-[#78716C]">{formatDate(inquiry.closingDate)}</td>
                         <td>
                           <span className="ios-badge ios-badge-blue">{inquiry.supplierIds.length}</span>
                         </td>
@@ -699,7 +699,7 @@ export default function InquiriesPage() {
                         </td>
                         <td>
                           <select
-                            className="text-[12px] py-1 px-2 rounded-lg border border-[#D1D5DB] bg-white focus:outline-none focus:ring-1 focus:ring-[#111827]"
+                            className="text-[12px] py-1 px-2 rounded-lg border border-[#D1D5DB] bg-white focus:outline-none focus:ring-1 focus:ring-[#1C1917]"
                             value={inquiry.inquiryStatus || "草稿"}
                             onChange={async (e) => {
                               const newStatus = e.target.value;
@@ -737,7 +737,7 @@ export default function InquiriesPage() {
                             )}
                             {(inquiry.inquiryStatus === "草稿" || inquiry.inquiryStatus === "已驳回" || isAdminUser) && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => setDeleteConfirm(inquiry)}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -745,7 +745,7 @@ export default function InquiriesPage() {
                             )}
                             {inquiry.inquiryMode === "online" && inquiry.onlineToken && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
                                 onClick={() => {
                                   const url = `${window.location.origin}/inquiry/quote?token=${inquiry.onlineToken}`;
                                   navigator.clipboard.writeText(url);
@@ -759,7 +759,7 @@ export default function InquiriesPage() {
                             )}
                           </div>
                         </td>
-                        <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
+                        <td className="text-[#78716C] text-[12px] whitespace-nowrap">
                           {inquiry.lastModifiedBy && (
                             <span>{inquiry.lastModifiedBy}</span>
                           )}
@@ -769,35 +769,35 @@ export default function InquiriesPage() {
                       {isExpanded && (
                         <tr>
                           <td colSpan={10} className="p-0">
-                            <div className="px-10 py-4 bg-[#FFFFFF] border-t border-b border-[#E5E7EB]">
+                            <div className="px-10 py-4 bg-[#FFFFFF] border-t border-b border-[#E7E5E4]">
                               <div className="flex items-center gap-2 mb-3">
-                                <Package className="w-4 h-4 text-[#111827]" />
-                                <span className="text-[13px] font-semibold text-[#111827]">
+                                <Package className="w-4 h-4 text-[#1C1917]" />
+                                <span className="text-[13px] font-semibold text-[#1C1917]">
                                   物资明细（{inquiry.purchaseRequest?.items?.length || 0} 项）
                                 </span>
                               </div>
                               {inquiry.purchaseRequest?.items && inquiry.purchaseRequest.items.length > 0 ? (
-                                <div className="overflow-x-auto border border-[#E5E7EB] rounded-xl bg-white">
+                                <div className="overflow-x-auto border border-[#E7E5E4] rounded-xl bg-white">
                                   <table className="w-full text-[13px]">
-                                    <thead className="bg-[#F9FAFB]">
+                                    <thead className="bg-[#FAFAF9]">
                                       <tr>
-                                        <th className="py-2 px-3 text-center font-semibold text-[#6B7280] w-[44px]">序号</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">物资名称</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">规格型号</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">材质</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">品牌</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">标准号</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">单位</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">数量</th>
-                                        {inquiry.confirmedSupplierId && <th className="py-2 px-3 text-left font-semibold text-[#111827]">单价(元)</th>}
-                                        {inquiry.confirmedSupplierId && <th className="py-2 px-3 text-left font-semibold text-[#111827]">明细总价(元)</th>}
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">备注</th>
+                                        <th className="py-2 px-3 text-center font-semibold text-[#78716C] w-[44px]">序号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">物资名称</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">规格型号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">材质</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">品牌</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">标准号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">单位</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">数量</th>
+                                        {inquiry.confirmedSupplierId && <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">单价(元)</th>}
+                                        {inquiry.confirmedSupplierId && <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">明细总价(元)</th>}
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">备注</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {inquiry.purchaseRequest.items.map((item, index) => (
-                                        <tr key={item.id} className="border-t border-[#F3F4F6]">
-                                          <td className="py-2 px-3 text-center text-[#6B7280]">{index + 1}</td>
+                                        <tr key={item.id} className="border-t border-[#F5F5F4]">
+                                          <td className="py-2 px-3 text-center text-[#78716C]">{index + 1}</td>
                                           <td className="py-2 px-3 font-semibold">{item.materialName}</td>
                                           <td className="py-2 px-3">{item.spec || "-"}</td>
                                           <td className="py-2 px-3">{item.material || "-"}</td>
@@ -806,29 +806,29 @@ export default function InquiriesPage() {
                                           <td className="py-2 px-3">{item.unit || "-"}</td>
                                           <td className="py-2 px-3 font-mono">{item.quantity ?? "-"}</td>
                                           {inquiry.confirmedSupplierId && (
-                                            <td className="py-2 px-3 font-mono text-[#111827]">
+                                            <td className="py-2 px-3 font-mono text-[#1C1917]">
                                               {item.unitPrice != null ? `¥${Number(item.unitPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
                                             </td>
                                           )}
                                           {inquiry.confirmedSupplierId && (
-                                            <td className="py-2 px-3 font-mono font-semibold text-[#111827]">
+                                            <td className="py-2 px-3 font-mono font-semibold text-[#1C1917]">
                                               {item.totalPrice != null ? `¥${Number(item.totalPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
                                             </td>
                                           )}
-                                          <td className="py-2 px-3 text-[#6B7280] max-w-[120px] truncate" title={item.remark || undefined}>{item.remark || "-"}</td>
+                                          <td className="py-2 px-3 text-[#78716C] max-w-[120px] truncate" title={item.remark || undefined}>{item.remark || "-"}</td>
                                         </tr>
                                       ))}
                                     </tbody>
                                   </table>
                                 </div>
                               ) : (
-                                <p className="text-[13px] text-[#6B7280] text-center py-4">暂无物资明细</p>
+                                <p className="text-[13px] text-[#78716C] text-center py-4">暂无物资明细</p>
                               )}
                               {inquiry.inquiryStatus === "已批准" && inquiry.recommendedSupplierName && (
-                                <div className="mt-3 p-3 rounded-xl bg-[#6B7280]/5 border border-[#6B7280]/20">
+                                <div className="mt-3 p-3 rounded-xl bg-[#78716C]/5 border border-[#78716C]/20">
                                   <div className="flex items-center gap-2">
-                                    <CheckCircle className="w-4 h-4 text-[#6B7280]" />
-                                    <span className="text-[13px] font-semibold text-[#6B7280]">
+                                    <CheckCircle className="w-4 h-4 text-[#78716C]" />
+                                    <span className="text-[13px] font-semibold text-[#78716C]">
                                       已确认供应商：{inquiry.recommendedSupplierName}
                                     </span>
                                   </div>
@@ -845,7 +845,7 @@ export default function InquiriesPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -853,7 +853,7 @@ export default function InquiriesPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#6B7280] px-3">
+                <span className="text-[13px] text-[#78716C] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -886,20 +886,20 @@ export default function InquiriesPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className={editingInquiry ? "col-span-2" : ""}>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                采购需求 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                采购需求 <span className="text-[#78716C]">*</span>
               </label>
               {editingInquiry ? (
                 <input
                   type="text"
-                  className="ios-input bg-[#F9FAFB]"
+                  className="ios-input bg-[#FAFAF9]"
                   value={`${editingInquiry.purchaseRequest?.requestNo} (${editingInquiry.projectCode ? `${editingInquiry.projectCode} - ${editingInquiry.projectName}` : (editingInquiry.projectName || editingInquiry.projectSourceId)})`}
                   readOnly
                 />
@@ -920,10 +920,10 @@ export default function InquiriesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">项目名称</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">项目名称</label>
               <input
                 type="text"
-                className="ios-input bg-[#F9FAFB]"
+                className="ios-input bg-[#FAFAF9]"
                 value={(() => {
                   const pr = purchaseRequests.find(p => p.id === form.purchaseRequestId);
                   return pr ? (pr.project ? `${pr.project.projectSourceId} - ${pr.project.name}` : pr.projectSourceId) : (form.projectSourceId || "选择采购需求后自动填充");
@@ -933,7 +933,7 @@ export default function InquiriesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 <Calendar className="w-3.5 h-3.5 inline mr-1" />
                 要求交货日期
               </label>
@@ -948,7 +948,7 @@ export default function InquiriesPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 询价方式
               </label>
               <select
@@ -966,16 +966,16 @@ export default function InquiriesPage() {
           </div>
 
           {form.inquiryMode === "online" && (
-            <div className="p-3 rounded-xl bg-[#111827]/5 border border-[#111827]/20">
+            <div className="p-3 rounded-xl bg-[#1C1917]/5 border border-[#1C1917]/20">
               <div className="flex items-center gap-2 mb-2">
-                <Globe className="w-4 h-4 text-[#111827]" />
-                <span className="text-[13px] font-semibold text-[#111827]">线上询价模式</span>
+                <Globe className="w-4 h-4 text-[#1C1917]" />
+                <span className="text-[13px] font-semibold text-[#1C1917]">线上询价模式</span>
               </div>
-              <p className="text-[12px] text-[#6B7280] mb-2">
+              <p className="text-[12px] text-[#78716C] mb-2">
                 创建后将生成报价链接，供应商可通过链接在线提交报价
               </p>
               <div>
-                <label className="block text-[12px] text-[#111827] mb-1">线上报价截止时间</label>
+                <label className="block text-[12px] text-[#1C1917] mb-1">线上报价截止时间</label>
                 <input
                   type="datetime-local"
                   className="ios-input text-[13px]"
@@ -995,8 +995,8 @@ export default function InquiriesPage() {
             const isOnline = form.inquiryMode === "online";
             return selectedPrItems && selectedPrItems.length > 0 ? (
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-2">物资明细</label>
-                <div className="max-h-[240px] overflow-y-auto border border-[#E5E7EB] rounded-xl">
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-2">物资明细</label>
+                <div className="max-h-[240px] overflow-y-auto border border-[#E7E5E4] rounded-xl">
                   <table className="ios-table text-[12px]">
                     <thead>
                       <tr>
@@ -1016,10 +1016,10 @@ export default function InquiriesPage() {
                       {selectedPrItems.map((item) => (
                         <tr key={item.id}>
                           <td className="font-semibold">{item.materialName}</td>
-                          <td className="text-[#6B7280]">{item.spec || "-"}</td>
-                          <td className="text-[#6B7280]">{item.material || "-"}</td>
-                          <td className="text-[#6B7280]">{item.brand || "-"}</td>
-                          <td className="text-[#6B7280]">{item.standardNo || "-"}</td>
+                          <td className="text-[#78716C]">{item.spec || "-"}</td>
+                          <td className="text-[#78716C]">{item.material || "-"}</td>
+                          <td className="text-[#78716C]">{item.brand || "-"}</td>
+                          <td className="text-[#78716C]">{item.standardNo || "-"}</td>
                           <td>{item.unit || "-"}</td>
                           <td className="font-mono">{item.quantity ?? "-"}</td>
                           {!isOnline && (
@@ -1038,28 +1038,28 @@ export default function InquiriesPage() {
                             </td>
                           )}
                           {!isOnline && (
-                            <td className="font-semibold text-[#111827]">
+                            <td className="font-semibold text-[#1C1917]">
                               {itemPrices[item.id] && item.quantity
                                 ? `¥${(parseFloat(itemPrices[item.id]) * parseFloat(String(item.quantity))).toFixed(2)}`
                                 : "-"}
                             </td>
                           )}
-                          <td className="text-[#6B7280] max-w-[120px] truncate" title={item.remark || undefined}>{item.remark || "-"}</td>
+                          <td className="text-[#78716C] max-w-[120px] truncate" title={item.remark || undefined}>{item.remark || "-"}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
                 {isOnline && (
-                  <p className="text-[11px] text-[#6B7280] mt-1.5">线上询价模式下物资明细不可修改，供应商将在报价页面查看完整物资信息</p>
+                  <p className="text-[11px] text-[#78716C] mt-1.5">线上询价模式下物资明细不可修改，供应商将在报价页面查看完整物资信息</p>
                 )}
               </div>
             ) : null;
           })()}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-              选择供应商 <span className="text-[#6B7280]">*</span>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+              选择供应商 <span className="text-[#78716C]">*</span>
             </label>
             <select
               className="ios-select"
@@ -1084,11 +1084,11 @@ export default function InquiriesPage() {
                 {form.supplierIds.map((sid) => {
                   const supplier = suppliers.find((s) => s.id === sid);
                   return (
-                    <span key={sid} className="inline-flex items-center gap-1 px-2 py-1 bg-[#111827]/10 text-[#111827] rounded-lg text-[12px] font-medium">
+                    <span key={sid} className="inline-flex items-center gap-1 px-2 py-1 bg-[#1C1917]/10 text-[#1C1917] rounded-lg text-[12px] font-medium">
                       {supplier?.name || "未知"}
                       <button
                         type="button"
-                        className="w-4 h-4 rounded-full hover:bg-[#111827]/20 flex items-center justify-center"
+                        className="w-4 h-4 rounded-full hover:bg-[#1C1917]/20 flex items-center justify-center"
                         onClick={() => handleToggleSupplier(sid)}
                       >
                         <X className="w-3 h-3" />
@@ -1107,7 +1107,7 @@ export default function InquiriesPage() {
             if (selectedPrItems.length === 0) return null;
             return (
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-2">报价汇总（线下逐项录入）</label>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-2">报价汇总（线下逐项录入）</label>
                 <div className="space-y-3 max-h-[400px] overflow-y-auto">
                   {form.supplierIds.map((sid) => {
                     const supplier = suppliers.find((s) => s.id === sid);
@@ -1118,18 +1118,18 @@ export default function InquiriesPage() {
                       return sum + (qi?.totalPrice ? parseFloat(qi.totalPrice) : 0);
                     }, 0);
                     return (
-                      <div key={sid} className="p-3 rounded-xl border border-[#E5E7EB] bg-[#FFFFFF]">
+                      <div key={sid} className="p-3 rounded-xl border border-[#E7E5E4] bg-[#FFFFFF]">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-[13px] font-semibold text-[#111827]">
+                          <p className="text-[13px] font-semibold text-[#1C1917]">
                             {supplier?.name || "未知供应商"}
                           </p>
-                          <p className="text-[14px] font-bold text-[#111827]">
+                          <p className="text-[14px] font-bold text-[#1C1917]">
                             总报价: ¥{supplierTotal.toFixed(2)}
                           </p>
                         </div>
-                        <div className="overflow-x-auto border border-[#E5E7EB] rounded-lg bg-white">
+                        <div className="overflow-x-auto border border-[#E7E5E4] rounded-lg bg-white">
                           <table className="w-full text-[12px]">
-                            <thead className="bg-[#F9FAFB]">
+                            <thead className="bg-[#FAFAF9]">
                               <tr>
                                 <th className="py-1.5 px-2 text-left font-semibold min-w-[100px]">物资名称</th>
                                 <th className="py-1.5 px-2 text-left font-semibold">规格</th>
@@ -1144,9 +1144,9 @@ export default function InquiriesPage() {
                                 const key = `${sid}_${item.id}`;
                                 const qi = quoteItems[key] || { unitPrice: "", quantity: "", totalPrice: "" };
                                 return (
-                                  <tr key={item.id} className="border-t border-[#F3F4F6]">
+                                  <tr key={item.id} className="border-t border-[#F5F5F4]">
                                     <td className="py-1.5 px-2 font-semibold">{item.materialName}</td>
-                                    <td className="py-1.5 px-2 text-[#6B7280]">{item.spec || "-"}</td>
+                                    <td className="py-1.5 px-2 text-[#78716C]">{item.spec || "-"}</td>
                                     <td className="py-1.5 px-2">{item.quantity ?? "-"}</td>
                                     <td className="py-1.5 px-2">
                                       <input
@@ -1184,7 +1184,7 @@ export default function InquiriesPage() {
                                         }}
                                       />
                                     </td>
-                                    <td className="py-1.5 px-2 font-semibold text-[#111827]">
+                                    <td className="py-1.5 px-2 font-semibold text-[#1C1917]">
                                       {qi.totalPrice ? `¥${qi.totalPrice}` : "-"}
                                     </td>
                                   </tr>
@@ -1195,7 +1195,7 @@ export default function InquiriesPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-2 mt-2">
                           <div>
-                            <label className="block text-[11px] text-[#6B7280] mb-1">交货天数</label>
+                            <label className="block text-[11px] text-[#78716C] mb-1">交货天数</label>
                             <input
                               type="number"
                               className="ios-input text-[13px] py-1.5"
@@ -1205,7 +1205,7 @@ export default function InquiriesPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-[11px] text-[#6B7280] mb-1">备注</label>
+                            <label className="block text-[11px] text-[#78716C] mb-1">备注</label>
                             <input
                               type="text"
                               className="ios-input text-[13px] py-1.5"
@@ -1225,7 +1225,7 @@ export default function InquiriesPage() {
 
           <div className="pt-2">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[13px] font-semibold text-[#111827]">
+              <label className="text-[13px] font-semibold text-[#1C1917]">
                 <Paperclip className="w-4 h-4 inline mr-1.5 -mt-0.5" />
                 附件
               </label>
@@ -1248,23 +1248,23 @@ export default function InquiriesPage() {
             {form.attachments.length > 0 ? (
               <div className="space-y-1.5">
                 {form.attachments.map((att, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#F9FAFB]">
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#FAFAF9]">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <File className="w-3.5 h-3.5 text-[#6B7280] flex-shrink-0" />
-                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#111827] truncate hover:underline">{att.name}</a>
+                      <File className="w-3.5 h-3.5 text-[#78716C] flex-shrink-0" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#1C1917] truncate hover:underline">{att.name}</a>
                     </div>
-                    <button className="w-6 h-6 rounded-full hover:bg-[#E5E7EB] flex items-center justify-center flex-shrink-0" onClick={() => handleRemoveAttachment(idx)}>
-                      <X className="w-3 h-3 text-[#6B7280]" />
+                    <button className="w-6 h-6 rounded-full hover:bg-[#E7E5E4] flex items-center justify-center flex-shrink-0" onClick={() => handleRemoveAttachment(idx)}>
+                      <X className="w-3 h-3 text-[#78716C]" />
                     </button>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-[12px] text-[#6B7280] text-center py-3">暂无附件</p>
+              <p className="text-[12px] text-[#78716C] text-center py-3">暂无附件</p>
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmit} disabled={saving}>
               {saving ? "保存中..." : editingInquiry ? "保存修改" : "创建采购单"}
@@ -1281,13 +1281,13 @@ export default function InquiriesPage() {
       >
         {detailInquiry && (
           <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F3F4F6]">
-              <div className="w-12 h-12 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
-                <HelpCircle className="w-6 h-6 text-[#111827]" />
+            <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
+              <div className="w-12 h-12 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
+                <HelpCircle className="w-6 h-6 text-[#1C1917]" />
               </div>
               <div>
-                <p className="text-[17px] font-bold text-[#111827]">{detailInquiry.purchaseRequest?.requestNo}</p>
-                <p className="text-[13px] text-[#111827] font-mono font-semibold">{detailInquiry.projectCode ? `${detailInquiry.projectCode} - ${detailInquiry.projectName}` : (detailInquiry.projectName || detailInquiry.projectSourceId)}</p>
+                <p className="text-[17px] font-bold text-[#1C1917]">{detailInquiry.purchaseRequest?.requestNo}</p>
+                <p className="text-[13px] text-[#1C1917] font-mono font-semibold">{detailInquiry.projectCode ? `${detailInquiry.projectCode} - ${detailInquiry.projectName}` : (detailInquiry.projectName || detailInquiry.projectSourceId)}</p>
               </div>
               {detailInquiry.inquiryMode === "online" && (
                 <span className="ios-badge ios-badge-blue ml-auto mr-2">线上询价</span>
@@ -1295,39 +1295,39 @@ export default function InquiriesPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">物资数量</p>
-                <p className="text-[14px] font-semibold text-[#111827]">
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">物资数量</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">
                   {detailInquiry.purchaseRequest?.items?.length || 0} 项
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">
                   <Calendar className="w-3 h-3 inline mr-1" />
                   询价日期
                 </p>
-                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailInquiry.inquiryDate)}</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailInquiry.inquiryDate)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">
                   <Calendar className="w-3 h-3 inline mr-1" />
                   要求交货日期
                 </p>
-                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailInquiry.closingDate)}</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailInquiry.closingDate)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">项目名称</p>
-                <p className="text-[14px] font-semibold text-[#111827] font-mono">
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">项目名称</p>
+                <p className="text-[14px] font-semibold text-[#1C1917] font-mono">
                   {detailInquiry.projectCode ? `${detailInquiry.projectCode} - ${detailInquiry.projectName}` : (detailInquiry.projectName || detailInquiry.projectSourceId) || "-"}
                 </p>
               </div>
               {detailInquiry.onlineDeadline && (
-                <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                  <p className="text-[12px] text-[#6B7280] mb-1">
+                <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                  <p className="text-[12px] text-[#78716C] mb-1">
                     <Globe className="w-3 h-3 inline mr-1" />
                     线上截止时间
                   </p>
-                  <p className="text-[14px] font-semibold text-[#111827]">
+                  <p className="text-[14px] font-semibold text-[#1C1917]">
                     {new Date(detailInquiry.onlineDeadline).toLocaleString("zh-CN")}
                   </p>
                 </div>
@@ -1336,10 +1336,10 @@ export default function InquiriesPage() {
 
             {detailInquiry.purchaseRequest?.items && detailInquiry.purchaseRequest?.items?.length > 0 && (
               <div>
-                <p className="text-[13px] font-semibold text-[#111827] mb-2">
+                <p className="text-[13px] font-semibold text-[#1C1917] mb-2">
                   采购需求物资明细
                 </p>
-                <div className="max-h-[260px] overflow-y-auto border border-[#E5E7EB] rounded-xl">
+                <div className="max-h-[260px] overflow-y-auto border border-[#E7E5E4] rounded-xl">
                   <table className="ios-table text-[12px]">
                     <thead>
                       <tr>
@@ -1359,10 +1359,10 @@ export default function InquiriesPage() {
                       {detailInquiry.purchaseRequest?.items?.map((item: PurchaseRequestItem) => (
                         <tr key={item.id}>
                           <td className="font-semibold">{item.materialName}</td>
-                          <td className="text-[#6B7280]">{item.spec || "-"}</td>
-                          <td className="text-[#6B7280]">{item.material || "-"}</td>
-                          <td className="text-[#6B7280]">{item.brand || "-"}</td>
-                          <td className="text-[#6B7280]">{item.standardNo || "-"}</td>
+                          <td className="text-[#78716C]">{item.spec || "-"}</td>
+                          <td className="text-[#78716C]">{item.material || "-"}</td>
+                          <td className="text-[#78716C]">{item.brand || "-"}</td>
+                          <td className="text-[#78716C]">{item.standardNo || "-"}</td>
                           <td>{item.quantity ?? "-"}</td>
                           <td>{item.unit || "-"}</td>
                           {detailInquiry.confirmedSupplierId && (
@@ -1371,11 +1371,11 @@ export default function InquiriesPage() {
                             </td>
                           )}
                           {detailInquiry.confirmedSupplierId && (
-                            <td className="font-mono font-semibold text-[#111827]">
+                            <td className="font-mono font-semibold text-[#1C1917]">
                               {item.totalPrice != null ? `¥${Number(item.totalPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
                             </td>
                           )}
-                          <td className="text-[#6B7280] max-w-[120px] truncate" title={item.remark || undefined}>{item.remark || "-"}</td>
+                          <td className="text-[#78716C] max-w-[120px] truncate" title={item.remark || undefined}>{item.remark || "-"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1386,15 +1386,15 @@ export default function InquiriesPage() {
 
             {detailInquiry.attachments && detailInquiry.attachments.length > 0 && (
               <div>
-                <p className="text-[13px] font-semibold text-[#111827] mb-2">
+                <p className="text-[13px] font-semibold text-[#1C1917] mb-2">
                   <Paperclip className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
                   采购附件
                 </p>
                 <div className="space-y-1.5">
                   {detailInquiry.attachments.map((att, idx) => (
-                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-[#F9FAFB]">
-                      <File className="w-3.5 h-3.5 text-[#6B7280] flex-shrink-0" />
-                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#111827] truncate hover:underline">{att.name}</a>
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-[#FAFAF9]">
+                      <File className="w-3.5 h-3.5 text-[#78716C] flex-shrink-0" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#1C1917] truncate hover:underline">{att.name}</a>
                     </div>
                   ))}
                 </div>
@@ -1403,7 +1403,7 @@ export default function InquiriesPage() {
 
             {detailInquiry.confirmedSupplierId && detailInquiry.supplierQuotes && detailInquiry.supplierQuotes.some((sq: any) => sq.attachments && Array.isArray(sq.attachments) && sq.attachments.length > 0) && (
               <div>
-                <p className="text-[13px] font-semibold text-[#111827] mb-2">
+                <p className="text-[13px] font-semibold text-[#1C1917] mb-2">
                   <Paperclip className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
                   供应商报价附件
                 </p>
@@ -1411,17 +1411,17 @@ export default function InquiriesPage() {
                   {detailInquiry.supplierQuotes
                     .filter((sq: any) => sq.supplierId === detailInquiry.confirmedSupplierId)
                     .flatMap((sq: any) => (sq.attachments || []).map((att: { name: string; url: string }, idx: number) => (
-                      <div key={`sq-att-${idx}`} className="flex items-center gap-2 p-2 rounded-lg bg-[#F9FAFB]">
-                        <File className="w-3.5 h-3.5 text-[#6B7280] flex-shrink-0" />
-                        <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#111827] truncate hover:underline">{att.name}</a>
+                      <div key={`sq-att-${idx}`} className="flex items-center gap-2 p-2 rounded-lg bg-[#FAFAF9]">
+                        <File className="w-3.5 h-3.5 text-[#78716C] flex-shrink-0" />
+                        <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#1C1917] truncate hover:underline">{att.name}</a>
                       </div>
                     )))}
                 </div>
               </div>
             )}
 
-            <div className="pt-3 border-t border-[#F3F4F6]">
-              <p className="text-[13px] font-semibold text-[#111827] mb-3">
+            <div className="pt-3 border-t border-[#F5F5F4]">
+              <p className="text-[13px] font-semibold text-[#1C1917] mb-3">
                 报价汇总（{detailInquiry.supplierDetails?.length || 0} 家供应商）
               </p>
               {detailInquiry.supplierDetails && detailInquiry.supplierDetails.length > 0 ? (
@@ -1431,12 +1431,12 @@ export default function InquiriesPage() {
                     return (
                       <div
                         key={sd.id}
-                        className="p-3 rounded-xl border border-[#E5E7EB] bg-[#FFFFFF]"
+                        className="p-3 rounded-xl border border-[#E7E5E4] bg-[#FFFFFF]"
                       >
                         <div className="flex items-center gap-2 mb-2">
-                          <p className="text-[13px] font-semibold text-[#111827]">{sd.name}</p>
+                          <p className="text-[13px] font-semibold text-[#1C1917]">{sd.name}</p>
                           {sd.contactPerson && (
-                            <span className="text-[11px] text-[#6B7280]">
+                            <span className="text-[11px] text-[#78716C]">
                               {sd.contactPerson} {sd.phone || ""}
                             </span>
                           )}
@@ -1444,34 +1444,34 @@ export default function InquiriesPage() {
                         {quote ? (
                           <div className="grid grid-cols-3 gap-3">
                             <div>
-                              <p className="text-[11px] text-[#6B7280]">报价</p>
-                              <p className="text-[14px] font-bold text-[#111827]">
+                              <p className="text-[11px] text-[#78716C]">报价</p>
+                              <p className="text-[14px] font-bold text-[#1C1917]">
                                 ¥{quote.price?.toLocaleString() || "0"}
                               </p>
                             </div>
                             <div>
-                              <p className="text-[11px] text-[#6B7280]">交货天数</p>
-                              <p className="text-[14px] font-bold text-[#111827]">{quote.deliveryDays || 0} 天</p>
+                              <p className="text-[11px] text-[#78716C]">交货天数</p>
+                              <p className="text-[14px] font-bold text-[#1C1917]">{quote.deliveryDays || 0} 天</p>
                             </div>
                             <div>
-                              <p className="text-[11px] text-[#6B7280]">备注</p>
-                              <p className="text-[13px] text-[#111827]">{quote.remark || "-"}</p>
+                              <p className="text-[11px] text-[#78716C]">备注</p>
+                              <p className="text-[13px] text-[#1C1917]">{quote.remark || "-"}</p>
                             </div>
                           </div>
                         ) : (
-                          <p className="text-[12px] text-[#6B7280]">暂未报价</p>
+                          <p className="text-[12px] text-[#78716C]">暂未报价</p>
                         )}
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-[13px] text-[#6B7280]">暂无供应商信息</p>
+                <p className="text-[13px] text-[#78716C]">暂无供应商信息</p>
               )}
               {detailInquiry.supplierQuotes && detailInquiry.supplierQuotes.length > 0 && (
-                <div className="pt-3 border-t border-[#F3F4F6]">
+                <div className="pt-3 border-t border-[#F5F5F4]">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[13px] font-semibold text-[#111827]">
+                    <p className="text-[13px] font-semibold text-[#1C1917]">
                       比价窗口
                     </p>
                     <div className="flex items-center gap-2">
@@ -1480,8 +1480,8 @@ export default function InquiriesPage() {
                           key={r}
                           className={`px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${
                             viewingRound === r
-                              ? "bg-[#111827] text-white"
-                              : "bg-[#F9FAFB] text-[#6B7280] hover:bg-[#E5E7EB]"
+                              ? "bg-[#1C1917] text-white"
+                              : "bg-[#FAFAF9] text-[#78716C] hover:bg-[#E7E5E4]"
                           }`}
                           onClick={() => setViewingRound(r)}
                         >
@@ -1518,7 +1518,7 @@ export default function InquiriesPage() {
                     const roundQuotes = detailInquiry.supplierQuotes.filter((sq: any) => sq.round === viewingRound);
                     const uniqueSupplierIds = [...new Set(roundQuotes.map((sq: any) => sq.supplierId))];
                     if (uniqueSupplierIds.length === 0) {
-                      return <p className="text-[12px] text-[#6B7280] text-center py-4">本轮暂无报价</p>;
+                      return <p className="text-[12px] text-[#78716C] text-center py-4">本轮暂无报价</p>;
                     }
                     const allPrices = uniqueSupplierIds.map((sid: string) => {
                       const sq = roundQuotes.find((q: any) => q.supplierId === sid);
@@ -1533,11 +1533,11 @@ export default function InquiriesPage() {
                       : [];
 
                     return (
-                      <div className="overflow-x-auto border border-[#E5E7EB] rounded-xl">
+                      <div className="overflow-x-auto border border-[#E7E5E4] rounded-xl">
                         <table className="w-full text-[12px]">
-                          <thead className="bg-[#F9FAFB]">
+                          <thead className="bg-[#FAFAF9]">
                             <tr>
-                              <th className="py-2 px-3 text-left font-semibold text-[#111827] min-w-[80px]">项目</th>
+                              <th className="py-2 px-3 text-left font-semibold text-[#1C1917] min-w-[80px]">项目</th>
                               {uniqueSupplierIds.map((sid: string) => {
                                 const sq = roundQuotes.find((q: any) => q.supplierId === sid);
                                 return (
@@ -1565,10 +1565,10 @@ export default function InquiriesPage() {
                               const minItemPrice = Math.min(...cellItemPrices.filter((p) => p !== Infinity));
 
                               return (
-                                <tr key={itemId} className="border-t border-[#F3F4F6]">
+                                <tr key={itemId} className="border-t border-[#F5F5F4]">
                                   <td className="py-2.5 px-3">
-                                    <p className="font-semibold text-[#111827]">{itemName}</p>
-                                    {itemSpec && <p className="text-[10px] text-[#6B7280]">{itemSpec}</p>}
+                                    <p className="font-semibold text-[#1C1917]">{itemName}</p>
+                                    {itemSpec && <p className="text-[10px] text-[#78716C]">{itemSpec}</p>}
                                   </td>
                                   {uniqueSupplierIds.map((sid: string) => {
                                     const sq = roundQuotes.find((q: any) => q.supplierId === sid);
@@ -1581,21 +1581,21 @@ export default function InquiriesPage() {
                                       <td key={sid} className="py-2.5 px-3">
                                         {unitPrice > 0 ? (
                                           <div>
-                                            <p className={`font-bold ${isMin ? "text-[#6B7280]" : "text-[#111827]"}`}>
+                                            <p className={`font-bold ${isMin ? "text-[#78716C]" : "text-[#1C1917]"}`}>
                                               ¥{unitPrice.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}/单价
                                               {isMin && <span className="ml-1 text-[10px] font-normal">最低</span>}
                                             </p>
                                             {quantity > 0 && (
-                                              <p className="text-[11px] text-[#6B7280]">
+                                              <p className="text-[11px] text-[#78716C]">
                                                 数量: {quantity}
                                               </p>
                                             )}
-                                            <p className="text-[11px] text-[#6B7280]">
+                                            <p className="text-[11px] text-[#78716C]">
                                               小计: ¥{totalPrice.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
                                             </p>
                                           </div>
                                         ) : (
-                                          <span className="text-[#6B7280]">-</span>
+                                          <span className="text-[#78716C]">-</span>
                                         )}
                                       </td>
                                     );
@@ -1604,15 +1604,15 @@ export default function InquiriesPage() {
                                 </tr>
                               );
                             })}
-                            <tr className="border-t border-[#F3F4F6]">
-                              <td className="py-2.5 px-3 font-semibold text-[#111827]">总报价</td>
+                            <tr className="border-t border-[#F5F5F4]">
+                              <td className="py-2.5 px-3 font-semibold text-[#1C1917]">总报价</td>
                               {uniqueSupplierIds.map((sid: string) => {
                                 const sq = roundQuotes.find((q: any) => q.supplierId === sid);
                                 const totalPrice = sq?.totalPrice ? Number(sq.totalPrice) : 0;
                                 const isMin = totalPrice > 0 && totalPrice === minPrice;
                                 const isConfirmed = detailInquiry.confirmedSupplierId === sid;
                                 return (
-                                  <td key={sid} className={`py-2.5 px-3 font-bold ${isConfirmed ? "text-[#111827]" : isMin ? "text-[#6B7280]" : "text-[#111827]"}`}>
+                                  <td key={sid} className={`py-2.5 px-3 font-bold ${isConfirmed ? "text-[#1C1917]" : isMin ? "text-[#78716C]" : "text-[#1C1917]"}`}>
                                     {totalPrice > 0 ? `¥${totalPrice.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
                                     {isMin && !isConfirmed && <span className="ml-1 text-[10px] font-normal">最低</span>}
                                     {isConfirmed && <span className="ml-1 text-[10px] font-normal">已确认</span>}
@@ -1621,24 +1621,24 @@ export default function InquiriesPage() {
                               })}
                               {!detailInquiry.confirmedSupplierId && <td className="py-2.5 px-3 text-center">-</td>}
                             </tr>
-                            <tr className="border-t border-[#F3F4F6]">
-                              <td className="py-2.5 px-3 text-[#6B7280]">交货天数</td>
+                            <tr className="border-t border-[#F5F5F4]">
+                              <td className="py-2.5 px-3 text-[#78716C]">交货天数</td>
                               {uniqueSupplierIds.map((sid: string) => {
                                 const sq = roundQuotes.find((q: any) => q.supplierId === sid);
                                 return <td key={sid} className="py-2.5 px-3">{sq?.deliveryDays ? `${sq.deliveryDays}天` : "-"}</td>;
                               })}
                               {!detailInquiry.confirmedSupplierId && <td className="py-2.5 px-3 text-center">-</td>}
                             </tr>
-                            <tr className="border-t border-[#F3F4F6]">
-                              <td className="py-2.5 px-3 text-[#6B7280]">报价时间</td>
+                            <tr className="border-t border-[#F5F5F4]">
+                              <td className="py-2.5 px-3 text-[#78716C]">报价时间</td>
                               {uniqueSupplierIds.map((sid: string) => {
                                 const sq = roundQuotes.find((q: any) => q.supplierId === sid);
-                                return <td key={sid} className="py-2.5 px-3 text-[#6B7280]">{sq?.quotedAt ? new Date(sq.quotedAt).toLocaleString("zh-CN") : "-"}</td>;
+                                return <td key={sid} className="py-2.5 px-3 text-[#78716C]">{sq?.quotedAt ? new Date(sq.quotedAt).toLocaleString("zh-CN") : "-"}</td>;
                               })}
                               {!detailInquiry.confirmedSupplierId && <td className="py-2.5 px-3 text-center">-</td>}
                             </tr>
-                            <tr className="border-t border-[#F3F4F6]">
-                              <td className="py-2.5 px-3 text-[#6B7280]">备注</td>
+                            <tr className="border-t border-[#F5F5F4]">
+                              <td className="py-2.5 px-3 text-[#78716C]">备注</td>
                               {uniqueSupplierIds.map((sid: string) => {
                                 const sq = roundQuotes.find((q: any) => q.supplierId === sid);
                                 return <td key={sid} className="py-2.5 px-3">{sq?.remark || "-"}</td>;
@@ -1646,7 +1646,7 @@ export default function InquiriesPage() {
                               {!detailInquiry.confirmedSupplierId && <td className="py-2.5 px-3 text-center">-</td>}
                             </tr>
                             {!detailInquiry.confirmedSupplierId && (
-                              <tr className="border-t border-[#F3F4F6] bg-[#FFFFFF]">
+                              <tr className="border-t border-[#F5F5F4] bg-[#FFFFFF]">
                                 <td className="py-2.5 px-3 font-semibold">操作</td>
                                 {uniqueSupplierIds.map((sid: string) => {
                                   const sq = roundQuotes.find((q: any) => q.supplierId === sid);
@@ -1675,7 +1675,7 @@ export default function InquiriesPage() {
                                           确认此供应商
                                         </button>
                                       ) : (
-                                        <span className="text-[#6B7280] text-[11px]">未报价</span>
+                                        <span className="text-[#78716C] text-[11px]">未报价</span>
                                       )}
                                     </td>
                                   );
@@ -1704,15 +1704,15 @@ export default function InquiriesPage() {
             )}
 
             {detailInquiry.inquiryMode === "online" && detailInquiry.onlineToken && (
-              <div className="p-3 rounded-xl bg-[#111827]/5 border border-[#111827]/20 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-[#1C1917]/5 border border-[#1C1917]/20 flex items-center justify-between">
                 <div>
-                  <p className="text-[13px] font-semibold text-[#111827]">供应商报价链接</p>
-                  <p className="text-[12px] text-[#6B7280] truncate max-w-[400px]">
+                  <p className="text-[13px] font-semibold text-[#1C1917]">供应商报价链接</p>
+                  <p className="text-[12px] text-[#78716C] truncate max-w-[400px]">
                     {`${window.location.origin}/inquiry/quote?token=${detailInquiry.onlineToken}`}
                   </p>
                 </div>
                 <button
-                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
+                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
                   onClick={() => {
                     const url = `${window.location.origin}/inquiry/quote?token=${detailInquiry.onlineToken}`;
                     navigator.clipboard.writeText(url);
@@ -1737,21 +1737,21 @@ export default function InquiriesPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要删除此采购单吗？
           </p>
           {deleteConfirm && (
-            <p className="text-[13px] text-[#6B7280] mb-1">
+            <p className="text-[13px] text-[#78716C] mb-1">
               项目名称: {deleteConfirm.projectCode ? `${deleteConfirm.projectCode} - ${deleteConfirm.projectName}` : (deleteConfirm.projectName || deleteConfirm.projectSourceId)} | 计划单号: {deleteConfirm.purchaseRequest?.requestNo}
             </p>
           )}
           {deleteConfirm?.hasContract && !isAdminUser ? (
-            <p className="text-[13px] text-[#6B7280] mb-4">该采购单已生成采购合同，无法删除</p>
+            <p className="text-[13px] text-[#78716C] mb-4">该采购单已生成采购合同，无法删除</p>
           ) : (
-            <p className="text-[13px] text-[#6B7280] mb-6">删除后采购需求将恢复为"已批准"状态</p>
+            <p className="text-[13px] text-[#78716C] mb-6">删除后采购需求将恢复为"已批准"状态</p>
           )}
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>

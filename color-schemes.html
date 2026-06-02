@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>配色方案对比</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f2; padding: 32px; }
+    h1 { text-align: center; font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+    .subtitle { text-align: center; font-size: 13px; color: #666; margin-bottom: 32px; }
+    .container { display: flex; gap: 24px; max-width: 1440px; margin: 0 auto; }
+    .column { flex: 1; background: white; border-radius: 8px; padding: 20px; border: 1px solid #e0e0e0; }
+    .column h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .column .desc { font-size: 12px; color: #888; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
+
+    /* 方案A：当前纯灰 */
+    .a-bg { background: #fff; padding: 16px; border: 1px solid #E5E7EB; border-radius: 4px; }
+    .a-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 4px; padding: 14px; margin-bottom: 10px; }
+    .a-btn { display: inline-flex; padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: 500; background: #111827; color: #fff; border: none; cursor: pointer; margin-right: 6px; }
+    .a-btn-sec { background: #fff; color: #111827; border: 1px solid #E5E7EB; }
+    .a-badge { display: inline-flex; padding: 1px 8px; border-radius: 3px; font-size: 12px; font-weight: 500; background: #F3F4F6; color: #374151; margin-right: 4px; }
+    .a-nav { padding: 6px 10px; border-radius: 4px; font-size: 13px; color: #6B7280; margin-bottom: 2px; }
+    .a-nav-active { padding: 6px 10px; border-radius: 4px; font-size: 13px; color: #fff; background: #111827; margin-bottom: 2px; }
+    .a-kpi-val { font-size: 22px; font-weight: 600; color: #111827; }
+    .a-kpi-label { font-size: 12px; color: #6B7280; }
+    .a-dot { width: 8px; height: 8px; border-radius: 50%; background: #6B7280; display: inline-block; }
+
+    /* 方案B：品牌蓝+状态色 */
+    .b-bg { background: #fff; padding: 16px; border: 1px solid #E5E7EB; border-radius: 6px; }
+    .b-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 6px; padding: 14px; margin-bottom: 10px; }
+    .b-btn { display: inline-flex; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; background: #2563EB; color: #fff; border: none; cursor: pointer; margin-right: 6px; }
+    .b-btn-sec { background: #fff; color: #111827; border: 1px solid #E5E7EB; }
+    .b-btn-danger { background: #DC2626; color: #fff; }
+    .b-badge-green { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background: #DCFCE7; color: #16A34A; margin-right: 4px; }
+    .b-badge-blue { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background: #DBEAFE; color: #2563EB; margin-right: 4px; }
+    .b-badge-orange { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background: #FEF3C7; color: #D97706; margin-right: 4px; }
+    .b-badge-red { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background: #FEE2E2; color: #DC2626; margin-right: 4px; }
+    .b-nav { padding: 6px 10px; border-radius: 4px; font-size: 13px; color: #6B7280; margin-bottom: 2px; }
+    .b-nav-active { padding: 6px 10px; border-radius: 4px; font-size: 13px; color: #fff; background: #2563EB; margin-bottom: 2px; }
+    .b-kpi-val { font-size: 22px; font-weight: 600; color: #111827; }
+    .b-kpi-label { font-size: 12px; color: #6B7280; }
+    .b-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #16A34A; display: inline-block; }
+    .b-dot-blue { width: 8px; height: 8px; border-radius: 50%; background: #2563EB; display: inline-block; }
+    .b-dot-orange { width: 8px; height: 8px; border-radius: 50%; background: #D97706; display: inline-block; }
+    .b-kpi-green { color: #16A34A; }
+    .b-kpi-blue { color: #2563EB; }
+    .b-icon-bg { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .b-icon-blue { background: #EFF6FF; color: #2563EB; }
+    .b-icon-green { background: #F0FDF4; color: #16A34A; }
+    .b-icon-orange { background: #FFFBEB; color: #D97706; }
+    .b-icon-red { background: #FEF2F2; color: #DC2626; }
+
+    /* 方案C：深靛蓝品牌色+暖灰 */
+    .c-bg { background: #FAFAF9; padding: 16px; border: 1px solid #E7E5E4; border-radius: 6px; }
+    .c-card { background: #fff; border: 1px solid #E7E5E4; border-radius: 6px; padding: 14px; margin-bottom: 10px; }
+    .c-btn { display: inline-flex; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; background: #4338CA; color: #fff; border: none; cursor: pointer; margin-right: 6px; }
+    .c-btn-sec { background: #fff; color: #1C1917; border: 1px solid #D6D3D1; }
+    .c-btn-danger { background: #DC2626; color: #fff; }
+    .c-badge-green { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background: #DCFCE7; color: #16A34A; margin-right: 4px; }
+    .c-badge-blue { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background: #E0E7FF; color: #4338CA; margin-right: 4px; }
+    .c-badge-orange { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background: #FEF3C7; color: #D97706; margin-right: 4px; }
+    .c-badge-red { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; background: #FEE2E2; color: #DC2626; margin-right: 4px; }
+    .c-nav { padding: 6px 10px; border-radius: 4px; font-size: 13px; color: #78716C; margin-bottom: 2px; }
+    .c-nav-active { padding: 6px 10px; border-radius: 4px; font-size: 13px; color: #fff; background: #4338CA; margin-bottom: 2px; }
+    .c-kpi-val { font-size: 22px; font-weight: 600; color: #1C1917; }
+    .c-kpi-label { font-size: 12px; color: #78716C; }
+    .c-icon-bg { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .c-icon-indigo { background: #EEF2FF; color: #4338CA; }
+    .c-icon-green { background: #F0FDF4; color: #16A34A; }
+    .c-icon-orange { background: #FFFBEB; color: #D97706; }
+    .c-icon-red { background: #FEF2F2; color: #DC2626; }
+
+    .section-title { font-size: 12px; font-weight: 600; color: #999; margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .label { font-size: 12px; color: #888; }
+    .color-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1); display: inline-block; }
+    .divider { height: 1px; background: #eee; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>华东工程 ERP - 配色方案对比</h1>
+  <p class="subtitle">三种方案在"简洁专业"和"视觉活力"之间的不同平衡</p>
+
+  <div class="container">
+    <!-- 方案A -->
+    <div class="column">
+      <h2>方案 A：当前纯灰</h2>
+      <p class="desc">保持现状，所有元素统一灰黑。专业但单调。</p>
+      <div class="a-bg">
+        <div class="section-title">导航</div>
+        <div class="a-nav-active">📊 总览仪表板</div>
+        <div class="a-nav">📁 商务管理</div>
+        <div class="a-nav">📋 项目管理</div>
+
+        <div class="divider"></div>
+        <div class="section-title">按钮</div>
+        <div class="row">
+          <button class="a-btn">新建项目</button>
+          <button class="a-btn a-btn-sec">取消</button>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">状态标签</div>
+        <div class="row">
+          <span class="a-badge">执行中</span>
+          <span class="a-badge">已完工</span>
+          <span class="a-badge">已暂停</span>
+          <span class="a-badge">已终止</span>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">KPI 卡片</div>
+        <div class="a-card">
+          <div class="a-kpi-label">项目总数</div>
+          <div class="a-kpi-val">42</div>
+          <div class="label">18 名在职员工</div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">图例</div>
+        <div class="row">
+          <span class="a-dot"></span><span class="label">执行中 12</span>
+          <span class="a-dot" style="background:#9CA3AF"></span><span class="label">已完工 8</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案B -->
+    <div class="column">
+      <h2>方案 B：品牌蓝 + 状态色</h2>
+      <p class="desc">保持灰白骨架，加入蓝色品牌色 + 绿/橙/红状态色。最有活力。</p>
+      <div class="b-bg">
+        <div class="section-title">导航</div>
+        <div class="b-nav-active">📊 总览仪表板</div>
+        <div class="b-nav">📁 商务管理</div>
+        <div class="b-nav">📋 项目管理</div>
+
+        <div class="divider"></div>
+        <div class="section-title">按钮</div>
+        <div class="row">
+          <button class="b-btn">新建项目</button>
+          <button class="b-btn b-btn-sec">取消</button>
+          <button class="b-btn b-btn-danger">删除</button>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">状态标签</div>
+        <div class="row">
+          <span class="b-badge-green">执行中</span>
+          <span class="b-badge-blue">已完工</span>
+          <span class="b-badge-orange">已暂停</span>
+          <span class="b-badge-red">已终止</span>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">KPI 卡片</div>
+        <div class="b-card">
+          <div class="row" style="justify-content:space-between">
+            <div>
+              <div class="b-kpi-label">项目总数</div>
+              <div class="b-kpi-val">42</div>
+              <div class="label">18 名在职员工</div>
+            </div>
+            <div class="b-icon-bg b-icon-blue">📊</div>
+          </div>
+        </div>
+        <div class="b-card">
+          <div class="row" style="justify-content:space-between">
+            <div>
+              <div class="b-kpi-label">总收入</div>
+              <div class="b-kpi-val b-kpi-green">¥1,250万</div>
+            </div>
+            <div class="b-icon-bg b-icon-green">💰</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">图例</div>
+        <div class="row">
+          <span class="b-dot-green"></span><span class="label">执行中 12</span>
+          <span class="b-dot-blue"></span><span class="label">已完工 8</span>
+          <span class="b-dot-orange"></span><span class="label">已暂停 3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 方案C -->
+    <div class="column">
+      <h2>方案 C：深靛蓝 + 暖灰</h2>
+      <p class="desc">比蓝色更深沉的靛蓝品牌色，搭配暖灰底色，更温润稳重。</p>
+      <div class="c-bg">
+        <div class="section-title">导航</div>
+        <div class="c-nav-active">📊 总览仪表板</div>
+        <div class="c-nav">📁 商务管理</div>
+        <div class="c-nav">📋 项目管理</div>
+
+        <div class="divider"></div>
+        <div class="section-title">按钮</div>
+        <div class="row">
+          <button class="c-btn">新建项目</button>
+          <button class="c-btn c-btn-sec">取消</button>
+          <button class="c-btn c-btn-danger">删除</button>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">状态标签</div>
+        <div class="row">
+          <span class="c-badge-green">执行中</span>
+          <span class="c-badge-blue">已完工</span>
+          <span class="c-badge-orange">已暂停</span>
+          <span class="c-badge-red">已终止</span>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">KPI 卡片</div>
+        <div class="c-card">
+          <div class="row" style="justify-content:space-between">
+            <div>
+              <div class="c-kpi-label">项目总数</div>
+              <div class="c-kpi-val">42</div>
+              <div class="label">18 名在职员工</div>
+            </div>
+            <div class="c-icon-bg c-icon-indigo">📊</div>
+          </div>
+        </div>
+        <div class="c-card">
+          <div class="row" style="justify-content:space-between">
+            <div>
+              <div class="c-kpi-label">总收入</div>
+              <div class="c-kpi-val" style="color:#16A34A">¥1,250万</div>
+            </div>
+            <div class="c-icon-bg c-icon-green">💰</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">图例</div>
+        <div class="row">
+          <span class="color-swatch" style="background:#16A34A"></span><span class="label">执行中 12</span>
+          <span class="color-swatch" style="background:#4338CA"></span><span class="label">已完工 8</span>
+          <span class="color-swatch" style="background:#D97706"></span><span class="label">已暂停 3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1440px;margin:24px auto 0;padding:0 16px;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:2px solid #ddd;">
+          <th style="padding:8px;text-align:left;color:#666;">对比项</th>
+          <th style="padding:8px;text-align:center;color:#666;">A 纯灰（当前）</th>
+          <th style="padding:8px;text-align:center;color:#2563EB;">B 品牌蓝</th>
+          <th style="padding:8px;text-align:center;color:#4338CA;">C 深靛蓝+暖灰</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;">主按钮</td><td style="padding:8px;text-align:center;">黑色</td><td style="padding:8px;text-align:center;">蓝色 #2563EB</td><td style="padding:8px;text-align:center;">靛蓝 #4338CA</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;">活跃导航</td><td style="padding:8px;text-align:center;">黑底白字</td><td style="padding:8px;text-align:center;">蓝底白字</td><td style="padding:8px;text-align:center;">靛蓝底白字</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;">状态标签</td><td style="padding:8px;text-align:center;">全灰色</td><td style="padding:8px;text-align:center;">绿/蓝/橙/红</td><td style="padding:8px;text-align:center;">绿/靛蓝/橙/红</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;">KPI 数字</td><td style="padding:8px;text-align:center;">全黑</td><td style="padding:8px;text-align:center;">黑+颜色点缀</td><td style="padding:8px;text-align:center;">黑+颜色点缀</td></tr>
+        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;">背景底色</td><td style="padding:8px;text-align:center;">冷白 #FFFFFF</td><td style="padding:8px;text-align:center;">冷白 #FFFFFF</td><td style="padding:8px;text-align:center;">暖白 #FAFAF9</td></tr>
+        <tr><td style="padding:8px;">整体感觉</td><td style="padding:8px;text-align:center;">冷淡单调</td><td style="padding:8px;text-align:center;">清爽专业、有活力</td><td style="padding:8px;text-align:center;">沉稳温润、有质感</td></tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

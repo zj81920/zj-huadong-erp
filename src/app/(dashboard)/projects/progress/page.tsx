@@ -255,9 +255,9 @@ export default function ProjectProgressPage() {
   };
 
   const getProgressColor = (actual: number, planned: number) => {
-    if (actual >= planned) return "#6B7280";
-    if (actual >= planned * 0.5) return "#6B7280";
-    return "#6B7280";
+    if (actual >= planned) return "#78716C";
+    if (actual >= planned * 0.5) return "#78716C";
+    return "#78716C";
   };
 
   const stats = {
@@ -283,30 +283,30 @@ export default function ProjectProgressPage() {
 
       <div className="grid grid-cols-3 gap-5 mb-6">
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-[#111827]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
+            <BarChart3 className="w-5 h-5 text-[#1C1917]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#6B7280]">监控节点数</p>
-            <p className="text-[24px] font-bold text-[#111827] leading-tight">{stats.total}</p>
+            <p className="text-[13px] text-[#78716C]">监控节点数</p>
+            <p className="text-[24px] font-bold text-[#1C1917] leading-tight">{stats.total}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-[#6B7280]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#78716C]/10 flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 text-[#78716C]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#6B7280]">正常</p>
-            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.normal}</p>
+            <p className="text-[13px] text-[#78716C]">正常</p>
+            <p className="text-[24px] font-bold text-[#78716C] leading-tight">{stats.normal}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-[#6B7280]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#78716C]/10 flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5 text-[#78716C]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#6B7280]">滞后</p>
-            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.delayed}</p>
+            <p className="text-[13px] text-[#78716C]">滞后</p>
+            <p className="text-[24px] font-bold text-[#78716C] leading-tight">{stats.delayed}</p>
           </div>
         </div>
       </div>
@@ -314,7 +314,7 @@ export default function ProjectProgressPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -356,20 +356,20 @@ export default function ProjectProgressPage() {
             <option value="滞后">滞后</option>
           </select>
 
-          <div className="ml-auto text-[13px] text-[#6B7280]">
-            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#78716C]">
+            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : records.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <BarChart3 className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <BarChart3 className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>{search || filterProject || filterAlert ? "没有匹配的进度记录" : "暂无进度记录，点击右上角新增"}</p>
           </div>
@@ -404,7 +404,7 @@ export default function ProjectProgressPage() {
                 {records.map((record) => {
                   const progressColor = getProgressColor(record.actualPercentage, record.plannedPercentage);
                   return (
-                    <tr key={record.id} className={isSelected(record.id) ? "bg-[#111827]/5" : ""}>
+                    <tr key={record.id} className={isSelected(record.id) ? "bg-[#1C1917]/5" : ""}>
                       {isAdminUser && (
                         <td className="w-10">
                           <input
@@ -416,7 +416,7 @@ export default function ProjectProgressPage() {
                         </td>
                       )}
                       <td>
-                        <span className="font-mono text-[13px] font-semibold text-[#111827]">
+                        <span className="font-mono text-[13px] font-semibold text-[#1C1917]">
                           {record.projectSourceId}
                         </span>
                       </td>
@@ -429,7 +429,7 @@ export default function ProjectProgressPage() {
                       <td>{record.plannedPercentage}%</td>
                       <td>{record.actualPercentage}%</td>
                       <td>
-                        <div className="w-[100px] h-[6px] bg-[#F3F4F6] rounded-full overflow-hidden">
+                        <div className="w-[100px] h-[6px] bg-[#F5F5F4] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-300"
                             style={{
@@ -440,7 +440,7 @@ export default function ProjectProgressPage() {
                         </div>
                       </td>
                       <td>
-                        <span className={record.delayDays > 0 ? "text-[#6B7280] font-semibold" : "text-[#6B7280]"}>
+                        <span className={record.delayDays > 0 ? "text-[#78716C] font-semibold" : "text-[#78716C]"}>
                           {record.delayDays > 0 ? `+${record.delayDays}` : "0"}
                         </span>
                       </td>
@@ -460,14 +460,14 @@ export default function ProjectProgressPage() {
                             编辑
                           </button>
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                             onClick={() => setDeleteConfirm(record)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
-                      <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
+                      <td className="text-[#78716C] text-[12px] whitespace-nowrap">
                         {record.lastModifiedBy && (
                           <span>{record.lastModifiedBy}</span>
                         )}
@@ -480,7 +480,7 @@ export default function ProjectProgressPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -488,7 +488,7 @@ export default function ProjectProgressPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#6B7280] px-3">
+                <span className="text-[13px] text-[#78716C] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -521,14 +521,14 @@ export default function ProjectProgressPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-              所属项目 <span className="text-[#6B7280]">*</span>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+              所属项目 <span className="text-[#78716C]">*</span>
             </label>
             <select
               className="ios-select"
@@ -546,8 +546,8 @@ export default function ProjectProgressPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-              任务节点 <span className="text-[#6B7280]">*</span>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+              任务节点 <span className="text-[#78716C]">*</span>
             </label>
             <input
               type="text"
@@ -560,8 +560,8 @@ export default function ProjectProgressPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                计划进度 (%) <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                计划进度 (%) <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="number"
@@ -576,7 +576,7 @@ export default function ProjectProgressPage() {
 
             {editingRecord && (
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                   实际进度 (%)
                 </label>
                 <input
@@ -593,7 +593,7 @@ export default function ProjectProgressPage() {
 
             {editingRecord && (
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                   滞后天数
                 </label>
                 <input
@@ -608,7 +608,7 @@ export default function ProjectProgressPage() {
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmit} disabled={saving}>
               {saving ? "保存中..." : editingRecord ? "保存修改" : "创建记录"}
@@ -625,13 +625,13 @@ export default function ProjectProgressPage() {
       >
         {detailRecord && (
           <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F3F4F6]">
-              <div className="w-12 h-12 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
-                <BarChart3 className="w-6 h-6 text-[#111827]" />
+            <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
+              <div className="w-12 h-12 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-[#1C1917]" />
               </div>
               <div>
-                <p className="text-[17px] font-bold text-[#111827]">{detailRecord.taskNode}</p>
-                <p className="text-[13px] text-[#111827] font-mono font-semibold">{detailRecord.projectSourceId}</p>
+                <p className="text-[17px] font-bold text-[#1C1917]">{detailRecord.taskNode}</p>
+                <p className="text-[13px] text-[#1C1917] font-mono font-semibold">{detailRecord.projectSourceId}</p>
               </div>
               <span className={`ios-badge ml-auto ${alertStatusConfig[detailRecord.alertStatus]?.color || "ios-badge-gray"} ${detailRecord.alertStatus === "滞后" ? "breathing-alert" : ""}`}>
                 {detailRecord.alertStatus}
@@ -639,49 +639,49 @@ export default function ProjectProgressPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">所属项目</p>
-                <p className="text-[14px] font-semibold text-[#111827]">{detailRecord.project.name}</p>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">所属项目</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{detailRecord.project.name}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">滞后天数</p>
-                <p className={`text-[14px] font-semibold ${detailRecord.delayDays > 0 ? "text-[#6B7280]" : "text-[#111827]"}`}>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">滞后天数</p>
+                <p className={`text-[14px] font-semibold ${detailRecord.delayDays > 0 ? "text-[#78716C]" : "text-[#1C1917]"}`}>
                   {detailRecord.delayDays > 0 ? `+${detailRecord.delayDays} 天` : "0 天"}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">计划进度</p>
-                <p className="text-[14px] font-semibold text-[#111827]">{detailRecord.plannedPercentage}%</p>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">计划进度</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{detailRecord.plannedPercentage}%</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">实际进度</p>
-                <p className={`text-[14px] font-semibold ${detailRecord.actualPercentage >= detailRecord.plannedPercentage ? "text-[#6B7280]" : "text-[#6B7280]"}`}>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">实际进度</p>
+                <p className={`text-[14px] font-semibold ${detailRecord.actualPercentage >= detailRecord.plannedPercentage ? "text-[#78716C]" : "text-[#78716C]"}`}>
                   {detailRecord.actualPercentage}%
                 </p>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[#F3F4F6]">
-              <p className="text-[13px] font-semibold text-[#111827] mb-3">进度对比</p>
+            <div className="pt-3 border-t border-[#F5F5F4]">
+              <p className="text-[13px] font-semibold text-[#1C1917] mb-3">进度对比</p>
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-[12px] mb-1">
-                    <span className="text-[#6B7280]">计划</span>
+                    <span className="text-[#78716C]">计划</span>
                     <span className="font-semibold">{detailRecord.plannedPercentage}%</span>
                   </div>
-                  <div className="w-full h-[8px] bg-[#E5E7EB] rounded-full overflow-hidden">
+                  <div className="w-full h-[8px] bg-[#E7E5E4] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#111827] rounded-full"
+                      className="h-full bg-[#1C1917] rounded-full"
                       style={{ width: `${detailRecord.plannedPercentage}%` }}
                     />
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-[12px] mb-1">
-                    <span className="text-[#6B7280]">实际</span>
+                    <span className="text-[#78716C]">实际</span>
                     <span className="font-semibold">{detailRecord.actualPercentage}%</span>
                   </div>
-                  <div className="w-full h-[8px] bg-[#E5E7EB] rounded-full overflow-hidden">
+                  <div className="w-full h-[8px] bg-[#E7E5E4] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full"
                       style={{
@@ -694,14 +694,14 @@ export default function ProjectProgressPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#F3F4F6]">
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">创建时间</p>
-                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailRecord.createdAt)}</p>
+            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#F5F5F4]">
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">创建时间</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailRecord.createdAt)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">更新时间</p>
-                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailRecord.updatedAt)}</p>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">更新时间</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailRecord.updatedAt)}</p>
               </div>
             </div>
           </div>
@@ -715,13 +715,13 @@ export default function ProjectProgressPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要删除进度节点 <span className="font-semibold">{deleteConfirm?.taskNode}</span> 吗？
           </p>
-          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#78716C] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
             <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>

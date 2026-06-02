@@ -332,7 +332,7 @@ export default function ApprovalFlowPage() {
     <>
       <div className="page-header">
         <div className="flex items-center gap-3">
-          <Settings2 className="w-7 h-7 text-[#111827]" />
+          <Settings2 className="w-7 h-7 text-[#1C1917]" />
           <div>
             <h1>流程设置</h1>
             <p>配置各业务模块的审批流程，支持多级审批和批量应用</p>
@@ -344,14 +344,14 @@ export default function ApprovalFlowPage() {
         {/* 左侧 - 业务模块列表 */}
         <div className="w-[220px] flex-shrink-0">
           <div className="bento-card-static !p-0 overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#F3F4F6]">
-              <h3 className="text-[14px] font-bold text-[#111827]">业务模块</h3>
+            <div className="px-5 py-4 border-b border-[#F5F5F4]">
+              <h3 className="text-[14px] font-bold text-[#1C1917]">业务模块</h3>
             </div>
             <div className="py-2 custom-scrollbar" style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto" }}>
               {BUSINESS_MODULE_GROUPS.map((group) => (
                 <div key={group.label}>
                   <div className="px-5 py-2">
-                    <span className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider">{group.label}</span>
+                    <span className="text-[11px] font-semibold text-[#78716C] uppercase tracking-wider">{group.label}</span>
                   </div>
                   {group.modules.map((mod) => (
                     <button
@@ -359,13 +359,13 @@ export default function ApprovalFlowPage() {
                       onClick={() => handleModuleSelect(mod.type)}
                       className={`w-full flex items-center gap-2.5 px-5 py-2.5 text-left transition-all duration-150 cursor-pointer ${
                         selectedModule === mod.type
-                          ? "bg-[#111827]/8 text-[#111827]"
-                          : "text-[#111827] hover:bg-[#F9FAFB]"
+                          ? "bg-[#1C1917]/8 text-[#1C1917]"
+                          : "text-[#1C1917] hover:bg-[#FAFAF9]"
                       }`}
                     >
                       <div
                         className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                          selectedModule === mod.type ? "bg-[#111827]" : "bg-[#9CA3AF]"
+                          selectedModule === mod.type ? "bg-[#1C1917]" : "bg-[#A8A29E]"
                         }`}
                       />
                       <span className="text-[13px] font-medium">{mod.name}</span>
@@ -383,9 +383,9 @@ export default function ApprovalFlowPage() {
             {/* 标题 + 级别切换 */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <h2 className="text-[17px] font-bold text-[#111827]">{currentModule.name} · 审批流程</h2>
+                <h2 className="text-[17px] font-bold text-[#1C1917]">{currentModule.name} · 审批流程</h2>
               </div>
-              <span className="text-[13px] text-[#6B7280]">
+              <span className="text-[13px] text-[#78716C]">
                 共 {nodes.length} 个节点
               </span>
             </div>
@@ -394,7 +394,7 @@ export default function ApprovalFlowPage() {
             <div className="flex flex-col items-center pb-6">
               {/* 开始节点 */}
               <div className="flex flex-col items-center mb-0">
-                <div className="px-5 py-2 rounded-full bg-[#6B7280]/10 text-[#6B7280] text-[13px] font-semibold">
+                <div className="px-5 py-2 rounded-full bg-[#78716C]/10 text-[#78716C] text-[13px] font-semibold">
                   发起申请
                 </div>
                 <div className="w-px h-6 bg-[#D1D5DB]" />
@@ -403,10 +403,10 @@ export default function ApprovalFlowPage() {
               {/* 审批节点 */}
               {nodes.map((node, index) => (
                 <div key={index} className="flex flex-col items-center">
-                  <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#E5E7EB] shadow-sm px-5 py-4 w-[480px] transition-all duration-200 hover:shadow-md hover:border-[#111827]/30">
+                  <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#E7E5E4] shadow-sm px-5 py-4 w-[480px] transition-all duration-200 hover:shadow-md hover:border-[#1C1917]/30">
                     <div className="flex items-center gap-4">
-                      <div className="w-9 h-9 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-[15px] text-[#111827] font-bold">
+                      <div className="w-9 h-9 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[15px] text-[#1C1917] font-bold">
                           {CIRCLE_NUMBERS[index] || index + 1}
                         </span>
                       </div>
@@ -432,19 +432,19 @@ export default function ApprovalFlowPage() {
 
                       <button
                         onClick={() => handleDeleteNode(index)}
-                        className="w-7 h-7 rounded-full bg-[#6B7280]/8 hover:bg-[#6B7280]/15 flex items-center justify-center transition-colors duration-150 cursor-pointer flex-shrink-0"
+                        className="w-7 h-7 rounded-full bg-[#78716C]/8 hover:bg-[#78716C]/15 flex items-center justify-center transition-colors duration-150 cursor-pointer flex-shrink-0"
                         title="删除节点"
                       >
-                        <X className="w-3.5 h-3.5 text-[#6B7280]" />
+                        <X className="w-3.5 h-3.5 text-[#78716C]" />
                       </button>
                     </div>
 
-                    <div className="mt-3 pt-3 border-t border-[#F3F4F6]">
+                    <div className="mt-3 pt-3 border-t border-[#F5F5F4]">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[12px] font-semibold text-[#6B7280]">
+                        <span className="text-[12px] font-semibold text-[#78716C]">
                           {index === 0 ? "发起角色（有权限发起此流程的角色）" : "审批角色（会签：同角色所有用户都需审批）"}
                         </span>
-                        <span className="text-[11px] text-[#6B7280]">
+                        <span className="text-[11px] text-[#78716C]">
                           已选 {parseRoles(node.approverRole).length} 个
                         </span>
                       </div>
@@ -456,13 +456,13 @@ export default function ApprovalFlowPage() {
                               key={role.value}
                               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-pointer transition-all duration-150 text-[12px] font-medium ${
                                 selected
-                                  ? "bg-[#111827]/10 text-[#111827]"
-                                  : "bg-[#F9FAFB] text-[#6E6E73] hover:bg-[#E5E7EB]"
+                                  ? "bg-[#1C1917]/10 text-[#1C1917]"
+                                  : "bg-[#FAFAF9] text-[#6E6E73] hover:bg-[#E7E5E4]"
                               }`}
                             >
                               <span
                                 className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                                  selected ? "border-[#111827] bg-[#111827]" : "border-[#D1D5DB] bg-white"
+                                  selected ? "border-[#1C1917] bg-[#1C1917]" : "border-[#D1D5DB] bg-white"
                                 }`}
                               >
                                 {selected && <span className="w-1 h-1 rounded-full bg-white" />}
@@ -485,7 +485,7 @@ export default function ApprovalFlowPage() {
                   {index < nodes.length - 1 && (
                     <div className="flex flex-col items-center">
                       <div className="w-px h-5 bg-[#D1D5DB]" />
-                      <ChevronDown className="w-4 h-4 text-[#9CA3AF] -mt-1" />
+                      <ChevronDown className="w-4 h-4 text-[#A8A29E] -mt-1" />
                       <div className="w-px h-2 bg-[#D1D5DB]" />
                     </div>
                   )}
@@ -500,7 +500,7 @@ export default function ApprovalFlowPage() {
               )}
 
               {/* 结束节点 */}
-              <div className="px-5 py-2 rounded-full bg-[#6B7280]/10 text-[#6B7280] text-[13px] font-semibold">
+              <div className="px-5 py-2 rounded-full bg-[#78716C]/10 text-[#78716C] text-[13px] font-semibold">
                 流程结束
               </div>
             </div>
@@ -521,8 +521,8 @@ export default function ApprovalFlowPage() {
               <div
                 className={`mb-4 p-3 rounded-xl text-[13px] font-medium flex items-center gap-2 ${
                   saveMsg.type === "success"
-                    ? "bg-[#6B7280]/8 text-[#6B7280]"
-                    : "bg-[#6B7280]/8 text-[#6B7280]"
+                    ? "bg-[#78716C]/8 text-[#78716C]"
+                    : "bg-[#78716C]/8 text-[#78716C]"
                 }`}
               >
                 {saveMsg.type === "success" ? (
@@ -535,7 +535,7 @@ export default function ApprovalFlowPage() {
             )}
 
             {/* 操作按钮 */}
-            <div className="flex items-center gap-3 pt-4 border-t border-[#F3F4F6]">
+            <div className="flex items-center gap-3 pt-4 border-t border-[#F5F5F4]">
               <button
                 onClick={handleSave}
                 disabled={saving}
@@ -572,7 +572,7 @@ export default function ApprovalFlowPage() {
         maxWidth="520px"
       >
         <div className="space-y-4">
-          <div className="p-3 rounded-xl bg-[#111827]/6 text-[13px] text-[#111827] font-medium">
+          <div className="p-3 rounded-xl bg-[#1C1917]/6 text-[13px] text-[#1C1917] font-medium">
             将「{currentModule.name}」的审批流程应用到以下模块
           </div>
 
@@ -595,7 +595,7 @@ export default function ApprovalFlowPage() {
               return (
                 <div
                   key={mod.type}
-                  className="p-3 rounded-xl hover:bg-[#F9FAFB] transition-colors duration-150"
+                  className="p-3 rounded-xl hover:bg-[#FAFAF9] transition-colors duration-150"
                 >
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
@@ -604,7 +604,7 @@ export default function ApprovalFlowPage() {
                       checked={isSelected}
                       onChange={() => toggleBatchTarget(mod.type)}
                     />
-                    <span className="text-[14px] font-medium text-[#111827]">
+                    <span className="text-[14px] font-medium text-[#1C1917]">
                       {mod.name}
                     </span>
                   </label>
@@ -613,7 +613,7 @@ export default function ApprovalFlowPage() {
             })}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button
               onClick={() => setBatchModalOpen(false)}
               className="ios-btn ios-btn-secondary"

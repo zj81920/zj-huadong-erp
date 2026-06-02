@@ -261,7 +261,7 @@ export default function SealsPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -302,20 +302,20 @@ export default function SealsPage() {
             ))}
           </select>
 
-          <div className="ml-auto text-[13px] text-[#6B7280]">
-            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#78716C]">
+            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : seals.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <Stamp className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <Stamp className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>{search || filterSealType || filterStatus ? "没有匹配的印章记录" : "暂无印章，点击右上角新增"}</p>
           </div>
@@ -338,8 +338,8 @@ export default function SealsPage() {
                   <tr key={item.id}>
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                          <Stamp className="w-4 h-4 text-[#111827]" />
+                        <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                          <Stamp className="w-4 h-4 text-[#1C1917]" />
                         </div>
                         <span className="font-semibold">{item.name}</span>
                       </div>
@@ -352,21 +352,21 @@ export default function SealsPage() {
                     <td>
                       {item.custodian ? (
                         <div className="flex items-center gap-1.5">
-                          <User className="w-3.5 h-3.5 text-[#6B7280]" />
+                          <User className="w-3.5 h-3.5 text-[#78716C]" />
                           <span>{users.find(u => u.id === item.custodian)?.realName || item.custodian}</span>
                         </div>
                       ) : (
-                        <span className="text-[#6B7280]">-</span>
+                        <span className="text-[#78716C]">-</span>
                       )}
                     </td>
                     <td>
                       {item.location ? (
                         <div className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-[#6B7280]" />
+                          <MapPin className="w-3.5 h-3.5 text-[#78716C]" />
                           <span>{item.location}</span>
                         </div>
                       ) : (
-                        <span className="text-[#6B7280]">-</span>
+                        <span className="text-[#78716C]">-</span>
                       )}
                     </td>
                     <td>
@@ -391,7 +391,7 @@ export default function SealsPage() {
                           编辑
                         </button>
                         <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                           onClick={() => setDeleteConfirm(item)}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -399,7 +399,7 @@ export default function SealsPage() {
                         </button>
                       </div>
                     </td>
-                    <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
+                    <td className="text-[#78716C] text-[12px] whitespace-nowrap">
                       {item.lastModifiedBy && (
                         <span>{item.lastModifiedBy}</span>
                       )}
@@ -411,7 +411,7 @@ export default function SealsPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -419,7 +419,7 @@ export default function SealsPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#6B7280] px-3">
+                <span className="text-[13px] text-[#78716C] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -443,15 +443,15 @@ export default function SealsPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                印章名称 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                印章名称 <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="text"
@@ -463,8 +463,8 @@ export default function SealsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                印章类型 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                印章类型 <span className="text-[#78716C]">*</span>
               </label>
               <select
                 className="ios-select"
@@ -479,7 +479,7 @@ export default function SealsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">状态</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">状态</label>
               <select
                 className="ios-select"
                 value={form.status}
@@ -492,7 +492,7 @@ export default function SealsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">保管人</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">保管人</label>
               <select
                 className="ios-select"
                 value={form.custodian}
@@ -504,9 +504,9 @@ export default function SealsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">存放位置</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">存放位置</label>
               <div className="relative">
-                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -518,9 +518,9 @@ export default function SealsPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
               <div className="relative">
-                <FileText className="absolute left-3.5 top-3 w-4 h-4 text-[#6B7280]" />
+                <FileText className="absolute left-3.5 top-3 w-4 h-4 text-[#78716C]" />
                 <textarea
                   className="ios-input pl-10 min-h-[80px] resize-none"
                   placeholder="备注信息"
@@ -531,7 +531,7 @@ export default function SealsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -559,11 +559,11 @@ export default function SealsPage() {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">印章名称</p>
-                <p className="text-[14px] font-semibold text-[#111827]">{detailItem.name}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">印章名称</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{detailItem.name}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">类型</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">类型</p>
                 <p>
                   <span className={`ios-badge ${sealTypeColorMap[detailItem.sealType] || "ios-badge-gray"}`}>
                     {detailItem.sealType}
@@ -571,15 +571,15 @@ export default function SealsPage() {
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">保管人</p>
-                <p className="text-[14px] text-[#111827]">{users.find(u => u.id === detailItem.custodian)?.realName || detailItem.custodian || "-"}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">保管人</p>
+                <p className="text-[14px] text-[#1C1917]">{users.find(u => u.id === detailItem.custodian)?.realName || detailItem.custodian || "-"}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">存放位置</p>
-                <p className="text-[14px] text-[#111827]">{detailItem.location || "-"}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">存放位置</p>
+                <p className="text-[14px] text-[#1C1917]">{detailItem.location || "-"}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">状态</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">状态</p>
                 <p>
                   <span className={`ios-badge ${statusColorMap[detailItem.status] || "ios-badge-gray"}`}>
                     {detailItem.status}
@@ -587,16 +587,16 @@ export default function SealsPage() {
                 </p>
               </div>
               <div className="col-span-2">
-                <p className="text-[12px] text-[#6B7280] mb-0.5">备注</p>
-                <p className="text-[14px] text-[#111827]">{detailItem.remark || "-"}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">备注</p>
+                <p className="text-[14px] text-[#1C1917]">{detailItem.remark || "-"}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#111827]">{formatDate(detailItem.createdAt)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
+                <p className="text-[14px] text-[#1C1917]">{formatDate(detailItem.createdAt)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#6B7280] mb-0.5">更新时间</p>
-                <p className="text-[14px] text-[#111827]">{formatDate(detailItem.updatedAt)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">更新时间</p>
+                <p className="text-[14px] text-[#1C1917]">{formatDate(detailItem.updatedAt)}</p>
               </div>
             </div>
           </div>
@@ -610,13 +610,13 @@ export default function SealsPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要删除印章 <span className="font-semibold">{deleteConfirm?.name}</span> 吗？
           </p>
-          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#78716C] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"

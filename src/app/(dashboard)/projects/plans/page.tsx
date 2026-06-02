@@ -85,10 +85,10 @@ const planTypeConfig: Record<string, string> = {
 };
 
 const progressColor = (value: number) => {
-  if (value >= 80) return "bg-[#6B7280]";
-  if (value >= 50) return "bg-[#111827]";
-  if (value >= 20) return "bg-[#6B7280]";
-  return "bg-[#6B7280]";
+  if (value >= 80) return "bg-[#78716C]";
+  if (value >= 50) return "bg-[#1C1917]";
+  if (value >= 20) return "bg-[#78716C]";
+  return "bg-[#78716C]";
 };
 
 export default function ProjectPlansPage() {
@@ -322,30 +322,30 @@ export default function ProjectPlansPage() {
 
       <div className="grid grid-cols-3 gap-5 mb-6">
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-[#111827]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
+            <Briefcase className="w-5 h-5 text-[#1C1917]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#6B7280]">计划总数</p>
-            <p className="text-[24px] font-bold text-[#111827] leading-tight">{stats.total}</p>
+            <p className="text-[13px] text-[#78716C]">计划总数</p>
+            <p className="text-[24px] font-bold text-[#1C1917] leading-tight">{stats.total}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
-            <Play className="w-5 h-5 text-[#6B7280]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#78716C]/10 flex items-center justify-center">
+            <Play className="w-5 h-5 text-[#78716C]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#6B7280]">进行中</p>
-            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.inProgress}</p>
+            <p className="text-[13px] text-[#78716C]">进行中</p>
+            <p className="text-[24px] font-bold text-[#78716C] leading-tight">{stats.inProgress}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-[#6B7280]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#78716C]/10 flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 text-[#78716C]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#6B7280]">已完成</p>
-            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.completed}</p>
+            <p className="text-[13px] text-[#78716C]">已完成</p>
+            <p className="text-[24px] font-bold text-[#78716C] leading-tight">{stats.completed}</p>
           </div>
         </div>
       </div>
@@ -353,7 +353,7 @@ export default function ProjectPlansPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -411,20 +411,20 @@ export default function ProjectPlansPage() {
             <option value="已取消">已取消</option>
           </select>
 
-          <div className="ml-auto text-[13px] text-[#6B7280]">
-            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条计划
+          <div className="ml-auto text-[13px] text-[#78716C]">
+            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条计划
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : plans.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <Calendar className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <Calendar className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>{search || filterProject || filterPlanType || filterStatus ? "没有匹配的项目计划" : "暂无计划，点击右上角新建"}</p>
           </div>
@@ -460,7 +460,7 @@ export default function ProjectPlansPage() {
                   const sc = statusConfig[plan.status] || statusConfig["未开始"];
                   const tc = planTypeConfig[plan.planType] || "ios-badge-gray";
                   return (
-                    <tr key={plan.id} className={isSelected(plan.id) ? "bg-[#111827]/5" : ""}>
+                    <tr key={plan.id} className={isSelected(plan.id) ? "bg-[#1C1917]/5" : ""}>
                       {isAdminUser && (
                         <td className="w-10">
                           <input
@@ -472,7 +472,7 @@ export default function ProjectPlansPage() {
                         </td>
                       )}
                       <td>
-                        <span className="font-mono text-[13px] font-semibold text-[#111827]">
+                        <span className="font-mono text-[13px] font-semibold text-[#1C1917]">
                           {plan.projectSourceId}
                         </span>
                       </td>
@@ -489,18 +489,18 @@ export default function ProjectPlansPage() {
                             : plan.planContent}
                         </span>
                       </td>
-                      <td className="text-[#6B7280]">{formatDate(plan.startDate)}</td>
-                      <td className="text-[#6B7280]">{formatDate(plan.endDate)}</td>
+                      <td className="text-[#78716C]">{formatDate(plan.startDate)}</td>
+                      <td className="text-[#78716C]">{formatDate(plan.endDate)}</td>
                       <td>{plan.responsiblePerson?.realName || "-"}</td>
                       <td>
                         <div className="flex items-center gap-2 min-w-[80px]">
-                          <div className="flex-1 h-2 rounded-full bg-[#F3F4F6] overflow-hidden">
+                          <div className="flex-1 h-2 rounded-full bg-[#F5F5F4] overflow-hidden">
                             <div
                               className={`h-full rounded-full ${progressColor(plan.actualProgress)}`}
                               style={{ width: `${Math.min(100, Math.max(0, plan.actualProgress))}%` }}
                             />
                           </div>
-                          <span className="text-[12px] text-[#6B7280] w-8 text-right">{plan.actualProgress}%</span>
+                          <span className="text-[12px] text-[#78716C] w-8 text-right">{plan.actualProgress}%</span>
                         </div>
                       </td>
                       <td>
@@ -517,7 +517,7 @@ export default function ProjectPlansPage() {
                             编辑
                           </button>
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                             onClick={() => setDeleteConfirm(plan)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -531,7 +531,7 @@ export default function ProjectPlansPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -539,7 +539,7 @@ export default function ProjectPlansPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#6B7280] px-3">
+                <span className="text-[13px] text-[#78716C] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -572,7 +572,7 @@ export default function ProjectPlansPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {formError}
             </div>
           )}
@@ -591,8 +591,8 @@ export default function ProjectPlansPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                计划类型 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                计划类型 <span className="text-[#78716C]">*</span>
               </label>
               <select
                 className="ios-select"
@@ -607,8 +607,8 @@ export default function ProjectPlansPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                计划内容 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                计划内容 <span className="text-[#78716C]">*</span>
               </label>
               <textarea
                 className="ios-input min-h-[80px] resize-y"
@@ -619,11 +619,11 @@ export default function ProjectPlansPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                开始日期 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                开始日期 <span className="text-[#78716C]">*</span>
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                 <input
                   type="date"
                   className="ios-input pl-10"
@@ -634,11 +634,11 @@ export default function ProjectPlansPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                结束日期 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                结束日期 <span className="text-[#78716C]">*</span>
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                 <input
                   type="date"
                   className="ios-input pl-10"
@@ -649,7 +649,7 @@ export default function ProjectPlansPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">负责人</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">负责人</label>
               <select
                 className="ios-select"
                 value={form.responsibleId}
@@ -662,7 +662,7 @@ export default function ProjectPlansPage() {
 
             {editingPlan && (
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">进度 (%)</label>
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">进度 (%)</label>
                 <input
                   type="number"
                   className="ios-input"
@@ -676,7 +676,7 @@ export default function ProjectPlansPage() {
             )}
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">状态</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">状态</label>
               <select
                 className="ios-select"
                 value={form.status}
@@ -690,7 +690,7 @@ export default function ProjectPlansPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmit} disabled={saving}>
               {saving ? "保存中..." : editingPlan ? "保存修改" : "创建计划"}
@@ -707,13 +707,13 @@ export default function ProjectPlansPage() {
       >
         {detailPlan && (
           <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F3F4F6]">
-              <div className="w-12 h-12 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-[#111827]" />
+            <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
+              <div className="w-12 h-12 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-[#1C1917]" />
               </div>
               <div>
-                <p className="text-[17px] font-bold text-[#111827]">{detailPlan.project?.name || "-"}</p>
-                <p className="text-[13px] text-[#111827] font-mono font-semibold">{detailPlan.projectSourceId}</p>
+                <p className="text-[17px] font-bold text-[#1C1917]">{detailPlan.project?.name || "-"}</p>
+                <p className="text-[13px] text-[#1C1917] font-mono font-semibold">{detailPlan.projectSourceId}</p>
               </div>
               <div className="ml-auto flex items-center gap-2">
                 <span className={`ios-badge ${planTypeConfig[detailPlan.planType] || "ios-badge-gray"}`}>
@@ -726,43 +726,43 @@ export default function ProjectPlansPage() {
             </div>
 
             <div>
-              <p className="text-[12px] text-[#6B7280] mb-1">计划内容</p>
-              <p className="text-[14px] text-[#111827] leading-relaxed">{detailPlan.planContent}</p>
+              <p className="text-[12px] text-[#78716C] mb-1">计划内容</p>
+              <p className="text-[14px] text-[#1C1917] leading-relaxed">{detailPlan.planContent}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">开始日期</p>
-                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailPlan.startDate)}</p>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">开始日期</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailPlan.startDate)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">结束日期</p>
-                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailPlan.endDate)}</p>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">结束日期</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailPlan.endDate)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">负责人</p>
-                <p className="text-[14px] font-semibold text-[#111827]">{detailPlan.responsiblePerson?.realName || "-"}</p>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">负责人</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{detailPlan.responsiblePerson?.realName || "-"}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">版本</p>
-                <p className="text-[14px] font-semibold text-[#111827]">v{detailPlan.version}</p>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">版本</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">v{detailPlan.version}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">创建时间</p>
-                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailPlan.createdAt)}</p>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">创建时间</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailPlan.createdAt)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F9FAFB]">
-                <p className="text-[12px] text-[#6B7280] mb-1">更新时间</p>
-                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailPlan.updatedAt)}</p>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <p className="text-[12px] text-[#78716C] mb-1">更新时间</p>
+                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailPlan.updatedAt)}</p>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-[#F9FAFB]">
+            <div className="p-4 rounded-xl bg-[#FAFAF9]">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[12px] text-[#6B7280]">实际进度</p>
-                <p className="text-[14px] font-bold text-[#111827]">{detailPlan.actualProgress}%</p>
+                <p className="text-[12px] text-[#78716C]">实际进度</p>
+                <p className="text-[14px] font-bold text-[#1C1917]">{detailPlan.actualProgress}%</p>
               </div>
-              <div className="h-3 rounded-full bg-[#E5E7EB] overflow-hidden">
+              <div className="h-3 rounded-full bg-[#E7E5E4] overflow-hidden">
                 <div
                   className={`h-full rounded-full ${progressColor(detailPlan.actualProgress)}`}
                   style={{ width: `${Math.min(100, Math.max(0, detailPlan.actualProgress))}%` }}
@@ -780,13 +780,13 @@ export default function ProjectPlansPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要删除计划 <span className="font-semibold">{deleteConfirm?.projectSourceId}</span> 吗？
           </p>
-          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#78716C] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
             <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>

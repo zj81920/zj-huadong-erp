@@ -624,7 +624,7 @@ export default function DeliveryReceiptsPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -651,20 +651,20 @@ export default function DeliveryReceiptsPage() {
             <option value="不合格">不合格</option>
           </select>
 
-          <div className="ml-auto text-[13px] text-[#6B7280]">
-            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#78716C]">
+            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : receipts.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <Truck className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <Truck className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>
               {search || filterInspection
@@ -692,7 +692,7 @@ export default function DeliveryReceiptsPage() {
               </thead>
               <tbody>
                 {receipts.map((receipt) => (
-                  <tr key={receipt.id} className={isSelected(receipt.id) ? "bg-[#111827]/5" : ""}>
+                  <tr key={receipt.id} className={isSelected(receipt.id) ? "bg-[#1C1917]/5" : ""}>
                     {isAdminUser && (
                       <td className="w-10">
                         <input type="checkbox" className="ios-checkbox" checked={isSelected(receipt.id)} onChange={() => toggleSelect(receipt.id)} />
@@ -700,8 +700,8 @@ export default function DeliveryReceiptsPage() {
                     )}
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                          <FileCheck className="w-4 h-4 text-[#111827]" />
+                        <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                          <FileCheck className="w-4 h-4 text-[#1C1917]" />
                         </div>
                         <span className="font-semibold">
                           {receipt.expenseContract?.contractNo || "-"}
@@ -711,7 +711,7 @@ export default function DeliveryReceiptsPage() {
                     <td>
                       {receipt.expenseContract?.supplier?.name || "-"}
                     </td>
-                    <td className="text-[#6B7280]">
+                    <td className="text-[#78716C]">
                       {formatDate(receipt.deliveryDate)}
                     </td>
                     <td>
@@ -758,7 +758,7 @@ export default function DeliveryReceiptsPage() {
                             {atts.length} 个附件
                           </button>
                         ) : (
-                          <span className="text-[#6B7280] text-[12px]">-</span>
+                          <span className="text-[#78716C] text-[12px]">-</span>
                         );
                       })()}
                     </td>
@@ -788,7 +788,7 @@ export default function DeliveryReceiptsPage() {
                           编辑
                         </button>
                         <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]"
+                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]"
                           onClick={() => handleOpenInvoice(receipt)}
                         >
                           <FileText className="w-3.5 h-3.5" />
@@ -796,7 +796,7 @@ export default function DeliveryReceiptsPage() {
                         </button>
                         {isAdminUser && (
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]"
                             onClick={() => handleDelete(receipt)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -805,7 +805,7 @@ export default function DeliveryReceiptsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
+                    <td className="text-[#78716C] text-[12px] whitespace-nowrap">
                       {receipt.lastModifiedBy && (
                         <span>{receipt.lastModifiedBy}</span>
                       )}
@@ -817,7 +817,7 @@ export default function DeliveryReceiptsPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -827,7 +827,7 @@ export default function DeliveryReceiptsPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#6B7280] px-3">
+                <span className="text-[13px] text-[#78716C] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -862,15 +862,15 @@ export default function DeliveryReceiptsPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                支出合同（采购类） <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                支出合同（采购类） <span className="text-[#78716C]">*</span>
               </label>
               <select
                 className="ios-select"
@@ -890,7 +890,7 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 到货日期
               </label>
               <input
@@ -904,7 +904,7 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 到货金额
               </label>
               <input
@@ -920,7 +920,7 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 验收合格金额
               </label>
               <input
@@ -936,7 +936,7 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 检验结果
               </label>
               <select
@@ -955,10 +955,10 @@ export default function DeliveryReceiptsPage() {
 
           {form.items.length > 0 && (
             <div>
-              <h3 className="text-[13px] font-semibold text-[#111827] mb-2">
+              <h3 className="text-[13px] font-semibold text-[#1C1917] mb-2">
                 物资明细
               </h3>
-              <div className="overflow-x-auto rounded-xl border border-[#E5E7EB]">
+              <div className="overflow-x-auto rounded-xl border border-[#E7E5E4]">
                 <table className="ios-table text-[12px]">
                   <thead>
                     <tr>
@@ -981,7 +981,7 @@ export default function DeliveryReceiptsPage() {
                         <td className="font-medium whitespace-nowrap">
                           {item.materialName}
                         </td>
-                        <td className="text-[#6B7280]">{item.spec || "-"}</td>
+                        <td className="text-[#78716C]">{item.spec || "-"}</td>
                         <td>{item.unit || "-"}</td>
                         <td className="text-center">{item.orderedQuantity}</td>
                         <td className="text-right">{Number(item.unitPrice || 0).toFixed(2)}</td>
@@ -1038,28 +1038,28 @@ export default function DeliveryReceiptsPage() {
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#111827] mb-2">
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-2">
               附件上传
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
               {form.attachments.map((url, idx) => (
-                <div key={idx} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#6B7280]/10 text-[#6B7280] text-[12px] font-medium">
+                <div key={idx} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#78716C]/10 text-[#78716C] text-[12px] font-medium">
                   <a href={url} target="_blank" rel="noopener noreferrer" className="hover:underline max-w-[150px] truncate">
                     {url.split('/').pop()?.split('?')[0] || `附件${idx + 1}`}
                   </a>
                   <button
                     type="button"
                     onClick={() => setForm(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== idx) }))}
-                    className="ml-1 text-[#6B7280] hover:text-[#6B7280]/70"
+                    className="ml-1 text-[#78716C] hover:text-[#78716C]/70"
                   >
                     ×
                   </button>
                 </div>
               ))}
             </div>
-            <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#E5E7EB] cursor-pointer hover:border-[#111827] hover:bg-[#111827]/5 transition-all text-[13px] text-[#6B7280]">
+            <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#E7E5E4] cursor-pointer hover:border-[#1C1917] hover:bg-[#1C1917]/5 transition-all text-[13px] text-[#78716C]">
               {uploading ? (
-                <><span className="w-4 h-4 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" /> 上传中...</>
+                <><span className="w-4 h-4 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" /> 上传中...</>
               ) : (
                 <>📎 点击上传验收资料/照片</>
               )}
@@ -1090,7 +1090,7 @@ export default function DeliveryReceiptsPage() {
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -1121,30 +1121,30 @@ export default function DeliveryReceiptsPage() {
         {detailReceipt && (
           <div className="space-y-5">
             <div>
-              <h3 className="text-[13px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">
+              <h3 className="text-[13px] font-semibold text-[#78716C] uppercase tracking-wider mb-3">
                 合同信息
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">支出合同编号</span>
-                  <p className="text-[14px] font-semibold text-[#111827]">
+                  <span className="text-[12px] text-[#78716C]">支出合同编号</span>
+                  <p className="text-[14px] font-semibold text-[#1C1917]">
                     {detailReceipt.expenseContract?.contractNo || "-"}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">供应商</span>
-                  <p className="text-[14px] font-semibold text-[#111827]">
+                  <span className="text-[12px] text-[#78716C]">供应商</span>
+                  <p className="text-[14px] font-semibold text-[#1C1917]">
                     {detailReceipt.expenseContract?.supplier?.name || "-"}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">合同金额</span>
-                  <p className="text-[14px] font-semibold text-[#111827]">
+                  <span className="text-[12px] text-[#78716C]">合同金额</span>
+                  <p className="text-[14px] font-semibold text-[#1C1917]">
                     ¥{Number(detailReceipt.expenseContract?.totalAmount || 0).toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">合同状态</span>
+                  <span className="text-[12px] text-[#78716C]">合同状态</span>
                   <p className="text-[14px]">
                     <span className="ios-badge ios-badge-green">
                       {detailReceipt.expenseContract?.status || "-"}
@@ -1154,20 +1154,20 @@ export default function DeliveryReceiptsPage() {
               </div>
             </div>
 
-            <div className="border-t border-[#F3F4F6] pt-4">
-              <h3 className="text-[13px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">
+            <div className="border-t border-[#F5F5F4] pt-4">
+              <h3 className="text-[13px] font-semibold text-[#78716C] uppercase tracking-wider mb-3">
                 验收信息
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">到货日期</span>
-                  <p className="text-[14px] font-semibold text-[#111827]">
+                  <span className="text-[12px] text-[#78716C]">到货日期</span>
+                  <p className="text-[14px] font-semibold text-[#1C1917]">
                     {formatDate(detailReceipt.deliveryDate)}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">实收数量</span>
-                  <p className="text-[14px] font-semibold text-[#111827]">
+                  <span className="text-[12px] text-[#78716C]">实收数量</span>
+                  <p className="text-[14px] font-semibold text-[#1C1917]">
                     {detailReceipt.items && detailReceipt.items.length > 0
                       ? detailReceipt.items.reduce(
                           (sum, item) => sum + (item.receivedQuantity || 0),
@@ -1177,15 +1177,15 @@ export default function DeliveryReceiptsPage() {
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">到货金额</span>
-                  <p className="text-[14px] font-semibold text-[#111827]">
+                  <span className="text-[12px] text-[#78716C]">到货金额</span>
+                  <p className="text-[14px] font-semibold text-[#1C1917]">
                     {detailReceipt.deliveryAmount
                       ? `¥${Number(detailReceipt.deliveryAmount).toLocaleString()}`
                       : "-"}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">检验结果</span>
+                  <span className="text-[12px] text-[#78716C]">检验结果</span>
                   <p className="text-[14px]">
                     <span
                       className={`ios-badge ${inspectionColorMap[detailReceipt.inspectionResult] || "ios-badge-gray"}`}
@@ -1195,8 +1195,8 @@ export default function DeliveryReceiptsPage() {
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">创建时间</span>
-                  <p className="text-[14px] font-semibold text-[#111827]">
+                  <span className="text-[12px] text-[#78716C]">创建时间</span>
+                  <p className="text-[14px] font-semibold text-[#1C1917]">
                     {formatDate(detailReceipt.createdAt)}
                   </p>
                 </div>
@@ -1204,11 +1204,11 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             {detailReceipt.items && detailReceipt.items.length > 0 && (
-              <div className="border-t border-[#F3F4F6] pt-4">
-                <h3 className="text-[13px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">
+              <div className="border-t border-[#F5F5F4] pt-4">
+                <h3 className="text-[13px] font-semibold text-[#78716C] uppercase tracking-wider mb-3">
                   物资明细
                 </h3>
-                <div className="overflow-x-auto rounded-xl border border-[#E5E7EB]">
+                <div className="overflow-x-auto rounded-xl border border-[#E7E5E4]">
                   <table className="ios-table text-[12px]">
                     <thead>
                       <tr>
@@ -1250,38 +1250,38 @@ export default function DeliveryReceiptsPage() {
             )}
 
             {receiptInvoices[detailReceipt.id] && receiptInvoices[detailReceipt.id].length > 0 && (
-              <div className="border-t border-[#F3F4F6] pt-4">
-                <h3 className="text-[13px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">
+              <div className="border-t border-[#F5F5F4] pt-4">
+                <h3 className="text-[13px] font-semibold text-[#78716C] uppercase tracking-wider mb-3">
                   已关联发票
                 </h3>
                 <div className="space-y-2">
                   {receiptInvoices[detailReceipt.id].map((inv) => (
                     <div
                       key={inv.id}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-[#F9FAFB]"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-[#FAFAF9]"
                     >
-                      <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-4 h-4 text-[#111827]" />
+                      <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-4 h-4 text-[#1C1917]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-semibold text-[#111827]">
+                          <span className="text-[13px] font-semibold text-[#1C1917]">
                             {inv.invoiceNo}
                           </span>
                           <span className="ios-badge ios-badge-blue text-[11px]">
                             {inv.invoiceType}
                           </span>
                         </div>
-                        <div className="text-[12px] text-[#6B7280] mt-0.5">
+                        <div className="text-[12px] text-[#78716C] mt-0.5">
                           {inv.invoiceDate ? formatDate(inv.invoiceDate) : "-"}
                           {inv.sellerName ? ` · ${inv.sellerName}` : ""}
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <div className="text-[14px] font-semibold text-[#111827]">
+                        <div className="text-[14px] font-semibold text-[#1C1917]">
                           ¥{Number(inv.totalAmount).toLocaleString()}
                         </div>
-                        <div className="text-[11px] text-[#6B7280]">
+                        <div className="text-[11px] text-[#78716C]">
                           不含税 ¥{Number(inv.amount).toLocaleString()} · 税额 ¥{Number(inv.taxAmount).toLocaleString()}
                         </div>
                       </div>
@@ -1293,8 +1293,8 @@ export default function DeliveryReceiptsPage() {
 
             {detailReceipt.inspectionResult === "合格" &&
               detailReceipt.receiptStatus === "已验收" && (
-                <div className="border-t border-[#F3F4F6] pt-4">
-                  <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium flex items-center gap-2">
+                <div className="border-t border-[#F5F5F4] pt-4">
+                  <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                     检验合格且已验收通过，可通知财务安排付款
                   </div>
@@ -1304,8 +1304,8 @@ export default function DeliveryReceiptsPage() {
             {(() => {
               const detailAtts: string[] = typeof detailReceipt.attachments === 'string' ? JSON.parse(detailReceipt.attachments || '[]') : ((detailReceipt as any).attachments || []);
               return detailAtts.length > 0 ? (
-                <div className="border-t border-[#F3F4F6] pt-4">
-                  <h3 className="text-[13px] font-semibold text-[#6B7280] uppercase tracking-wider mb-3">
+                <div className="border-t border-[#F5F5F4] pt-4">
+                  <h3 className="text-[13px] font-semibold text-[#78716C] uppercase tracking-wider mb-3">
                     附件
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -1315,9 +1315,9 @@ export default function DeliveryReceiptsPage() {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F9FAFB] hover:bg-[#111827]/10 transition-colors text-[13px] text-[#111827]"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#FAFAF9] hover:bg-[#1C1917]/10 transition-colors text-[13px] text-[#1C1917]"
                       >
-                        <FileText className="w-3.5 h-3.5 text-[#111827] flex-shrink-0" />
+                        <FileText className="w-3.5 h-3.5 text-[#1C1917] flex-shrink-0" />
                         <span className="max-w-[200px] truncate">
                           {url.split('/').pop()?.split('?')[0] || `附件${idx + 1}`}
                         </span>
@@ -1360,19 +1360,19 @@ export default function DeliveryReceiptsPage() {
       >
         <div className="space-y-4">
           {invoiceError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {invoiceError}
             </div>
           )}
 
           {invoiceModalReceipt && (
-            <div className="p-3 rounded-xl bg-[#F9FAFB] text-[13px]">
-              <span className="text-[#6B7280]">关联合同：</span>
-              <span className="font-semibold text-[#111827]">
+            <div className="p-3 rounded-xl bg-[#FAFAF9] text-[13px]">
+              <span className="text-[#78716C]">关联合同：</span>
+              <span className="font-semibold text-[#1C1917]">
                 {invoiceModalReceipt.expenseContract?.contractNo || "-"}
               </span>
-              <span className="text-[#6B7280] ml-4">供应商：</span>
-              <span className="font-semibold text-[#111827]">
+              <span className="text-[#78716C] ml-4">供应商：</span>
+              <span className="font-semibold text-[#1C1917]">
                 {invoiceModalReceipt.expenseContract?.supplier?.name || "-"}
               </span>
             </div>
@@ -1380,8 +1380,8 @@ export default function DeliveryReceiptsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                发票号码 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                发票号码 <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="text"
@@ -1395,7 +1395,7 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 发票代码
               </label>
               <input
@@ -1410,7 +1410,7 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 发票类型
               </label>
               <select
@@ -1428,7 +1428,7 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 开票日期
               </label>
               <input
@@ -1442,7 +1442,7 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 不含税金额
               </label>
               <input
@@ -1458,7 +1458,7 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 税率
               </label>
               <select
@@ -1476,31 +1476,31 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 税额（自动计算）
               </label>
               <input
                 type="text"
-                className="ios-input bg-[#F9FAFB]"
+                className="ios-input bg-[#FAFAF9]"
                 value={invoiceForm.taxAmount}
                 readOnly
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 价税合计（自动计算）
               </label>
               <input
                 type="text"
-                className="ios-input bg-[#F9FAFB] font-semibold text-[#111827]"
+                className="ios-input bg-[#FAFAF9] font-semibold text-[#1C1917]"
                 value={`¥${invoiceForm.totalAmount}`}
                 readOnly
               />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 销方名称
               </label>
               <input
@@ -1515,7 +1515,7 @@ export default function DeliveryReceiptsPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 备注
               </label>
               <textarea
@@ -1529,7 +1529,7 @@ export default function DeliveryReceiptsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowInvoiceModal(false)}

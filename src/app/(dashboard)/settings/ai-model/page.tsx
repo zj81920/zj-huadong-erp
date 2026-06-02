@@ -121,7 +121,7 @@ export default function AiModelSettingsPage() {
       <>
         <div className="page-header">
           <div className="flex items-center gap-3">
-            <Bot className="w-7 h-7 text-[#111827]" />
+            <Bot className="w-7 h-7 text-[#1C1917]" />
             <div>
               <h1>AI模型配置</h1>
               <p>配置AI对话模型参数</p>
@@ -130,8 +130,8 @@ export default function AiModelSettingsPage() {
         </div>
         <div className="bento-card-static">
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#6B7280]/10 flex items-center justify-center">
-              <AlertCircle className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#78716C]/10 flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>无权访问此页面，仅管理员可配置AI模型</p>
           </div>
@@ -145,7 +145,7 @@ export default function AiModelSettingsPage() {
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Bot className="w-7 h-7 text-[#111827]" />
+            <Bot className="w-7 h-7 text-[#1C1917]" />
             <div>
               <h1>AI模型配置</h1>
               <p>配置AI对话模型的连接参数</p>
@@ -164,28 +164,28 @@ export default function AiModelSettingsPage() {
       <div className="bento-card-static">
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : (
           <div className="space-y-5">
             {error && (
-              <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium flex items-center gap-2">
+              <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium flex items-center gap-2">
+              <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium flex items-center gap-2">
                 <Check className="w-4 h-4 flex-shrink-0" />
                 配置保存成功
               </div>
             )}
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                模型ID <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                模型ID <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="text"
@@ -194,13 +194,13 @@ export default function AiModelSettingsPage() {
                 value={settings.ai_model_id}
                 onChange={(e) => updateField("ai_model_id", e.target.value)}
               />
-              <p className="mt-1 text-[12px] text-[#6B7280]">
+              <p className="mt-1 text-[12px] text-[#78716C]">
                 填写阿里云百炼平台的模型名称
               </p>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 API Key
               </label>
               <div className="relative">
@@ -225,7 +225,7 @@ export default function AiModelSettingsPage() {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#111827] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#78716C] hover:text-[#1C1917] transition-colors"
                   onClick={() => setShowApiKey(!showApiKey)}
                 >
                   {showApiKey ? (
@@ -235,14 +235,14 @@ export default function AiModelSettingsPage() {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-[12px] text-[#6B7280]">
+              <p className="mt-1 text-[12px] text-[#78716C]">
                 阿里云百炼平台API Key，输入后仅显示后4位
               </p>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                API Base URL <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                API Base URL <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="text"
@@ -251,12 +251,12 @@ export default function AiModelSettingsPage() {
                 value={settings.ai_base_url}
                 onChange={(e) => updateField("ai_base_url", e.target.value)}
               />
-              <p className="mt-1 text-[12px] text-[#6B7280]">
+              <p className="mt-1 text-[12px] text-[#78716C]">
                 模型服务的接口地址
               </p>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+            <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
               <button
                 className="ios-btn ios-btn-primary gap-1.5"
                 onClick={handleSave}

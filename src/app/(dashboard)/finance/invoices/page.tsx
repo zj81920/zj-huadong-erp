@@ -437,7 +437,7 @@ export default function FinanceInvoicesPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -451,7 +451,7 @@ export default function FinanceInvoicesPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6B7280]">方向</span>
+            <span className="text-[13px] text-[#78716C]">方向</span>
             {categoryFilters.map((f) => (
               <button
                 key={f.value}
@@ -471,7 +471,7 @@ export default function FinanceInvoicesPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6B7280]">状态</span>
+            <span className="text-[13px] text-[#78716C]">状态</span>
             {statusFilters.map((f) => (
               <button
                 key={f.value}
@@ -490,38 +490,38 @@ export default function FinanceInvoicesPage() {
             ))}
           </div>
 
-          <div className="ml-auto text-[13px] text-[#6B7280]">
-            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#78716C]">
+            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
           </div>
         </div>
 
         <div className="grid grid-cols-4 gap-4 px-4 pt-4">
-          <div className="bg-white rounded-xl p-3 border border-[#E5E7EB]">
-            <p className="text-[12px] text-[#6B7280] mb-1">开票总额</p>
-            <p className="text-[18px] font-bold font-mono text-[#6B7280]">
+          <div className="bg-white rounded-xl p-3 border border-[#E7E5E4]">
+            <p className="text-[12px] text-[#78716C] mb-1">开票总额</p>
+            <p className="text-[18px] font-bold font-mono text-[#78716C]">
               ¥{invoices.filter(i => i.invoiceCategory === "开票").reduce((s, i) => s + (parseFloat(String(i.totalAmount)) || 0), 0).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-[11px] text-[#6B7280] mt-1">
+            <p className="text-[11px] text-[#78716C] mt-1">
               {invoices.filter(i => i.invoiceCategory === "开票").length} 张
             </p>
           </div>
-          <div className="bg-white rounded-xl p-3 border border-[#E5E7EB]">
-            <p className="text-[12px] text-[#6B7280] mb-1">收票总额</p>
-            <p className="text-[18px] font-bold font-mono text-[#111827]">
+          <div className="bg-white rounded-xl p-3 border border-[#E7E5E4]">
+            <p className="text-[12px] text-[#78716C] mb-1">收票总额</p>
+            <p className="text-[18px] font-bold font-mono text-[#1C1917]">
               ¥{invoices.filter(i => i.invoiceCategory === "收票").reduce((s, i) => s + (parseFloat(String(i.totalAmount)) || 0), 0).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-[11px] text-[#6B7280] mt-1">
+            <p className="text-[11px] text-[#78716C] mt-1">
               {invoices.filter(i => i.invoiceCategory === "收票").length} 张
             </p>
           </div>
-          <div className="bg-white rounded-xl p-3 border border-[#E5E7EB]">
-            <p className="text-[12px] text-[#6B7280] mb-1">销项税额</p>
-            <p className="text-[18px] font-bold font-mono text-[#6B7280]">
+          <div className="bg-white rounded-xl p-3 border border-[#E7E5E4]">
+            <p className="text-[12px] text-[#78716C] mb-1">销项税额</p>
+            <p className="text-[18px] font-bold font-mono text-[#78716C]">
               ¥{invoices.filter(i => i.invoiceCategory === "开票").reduce((s, i) => s + (parseFloat(String(i.taxAmount)) || 0), 0).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="bg-white rounded-xl p-3 border border-[#E5E7EB]">
-            <p className="text-[12px] text-[#6B7280] mb-1">进项税额</p>
+          <div className="bg-white rounded-xl p-3 border border-[#E7E5E4]">
+            <p className="text-[12px] text-[#78716C] mb-1">进项税额</p>
             <p className="text-[18px] font-bold font-mono text-[#5856D6]">
               ¥{invoices.filter(i => i.invoiceCategory === "收票").reduce((s, i) => s + (parseFloat(String(i.taxAmount)) || 0), 0).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
             </p>
@@ -530,13 +530,13 @@ export default function FinanceInvoicesPage() {
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : invoices.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <FileText className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <FileText className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>
               {search || filterCategory || filterStatus
@@ -551,7 +551,7 @@ export default function FinanceInvoicesPage() {
               return (
                 <div
                   key={inv.id}
-                  className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] overflow-hidden transition-all duration-200"
+                  className="bg-white rounded-2xl shadow-sm border border-[#E7E5E4] overflow-hidden transition-all duration-200"
                 >
                   <div
                     className="p-4 cursor-pointer hover:bg-[#FFFFFF] transition-colors duration-150"
@@ -559,10 +559,10 @@ export default function FinanceInvoicesPage() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-4 h-4 text-[#111827]" />
+                        <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-4 h-4 text-[#1C1917]" />
                         </div>
-                        <span className="font-semibold text-[15px] text-[#111827] font-mono">
+                        <span className="font-semibold text-[15px] text-[#1C1917] font-mono">
                           {inv.invoiceNo}
                         </span>
                       </div>
@@ -574,9 +574,9 @@ export default function FinanceInvoicesPage() {
                           {statusConfig[inv.status]?.label || inv.status}
                         </span>
                         {isExpanded ? (
-                          <ChevronUp className="w-4 h-4 text-[#6B7280]" />
+                          <ChevronUp className="w-4 h-4 text-[#78716C]" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-[#6B7280]" />
+                          <ChevronDown className="w-4 h-4 text-[#78716C]" />
                         )}
                       </div>
                     </div>
@@ -585,8 +585,8 @@ export default function FinanceInvoicesPage() {
                       <span
                         className={`inline-flex items-center gap-1 font-medium ${
                           inv.invoiceCategory === "收票"
-                            ? "text-[#111827]"
-                            : "text-[#6B7280]"
+                            ? "text-[#1C1917]"
+                            : "text-[#78716C]"
                         }`}
                       >
                         {inv.invoiceCategory === "收票" ? (
@@ -596,29 +596,29 @@ export default function FinanceInvoicesPage() {
                         )}
                         {inv.invoiceCategory}
                       </span>
-                      <span className="text-[#E5E7EB]">|</span>
-                      <span className="font-mono font-semibold text-[#111827]">
+                      <span className="text-[#E7E5E4]">|</span>
+                      <span className="font-mono font-semibold text-[#1C1917]">
                         ¥{formatAmount(inv.totalAmount)}
                       </span>
-                      <span className="text-[#E5E7EB]">|</span>
-                      <span className="text-[#6B7280]">{formatDate(inv.invoiceDate)}</span>
+                      <span className="text-[#E7E5E4]">|</span>
+                      <span className="text-[#78716C]">{formatDate(inv.invoiceDate)}</span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-[13px] text-[#6B7280] mb-1">
+                    <div className="flex items-center gap-3 text-[13px] text-[#78716C] mb-1">
                       {inv.project && (
                         <>
                           <span>{inv.project.name}</span>
-                          <span className="text-[#E5E7EB]">|</span>
+                          <span className="text-[#E7E5E4]">|</span>
                         </>
                       )}
                       <span>{sourceTypeMap[inv.sourceType] || inv.sourceType}</span>
                     </div>
 
-                    <div className="text-[13px] text-[#6B7280]">
+                    <div className="text-[13px] text-[#78716C]">
                       {inv.sellerName && (
                         <>
                           <span>{inv.sellerName}</span>
-                          <span className="mx-1.5 text-[#9CA3AF]">→</span>
+                          <span className="mx-1.5 text-[#A8A29E]">→</span>
                         </>
                       )}
                       {inv.buyerName && <span>{inv.buyerName}</span>}
@@ -626,59 +626,59 @@ export default function FinanceInvoicesPage() {
                   </div>
 
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-[#F3F4F6]">
+                    <div className="px-4 pb-4 border-t border-[#F5F5F4]">
                       <div className="grid grid-cols-2 gap-x-6 gap-y-3 py-4">
                         <div>
-                          <span className="text-[12px] text-[#6B7280]">发票代码</span>
-                          <p className="text-[13px] text-[#111827] font-mono mt-0.5">
+                          <span className="text-[12px] text-[#78716C]">发票代码</span>
+                          <p className="text-[13px] text-[#1C1917] font-mono mt-0.5">
                             {inv.invoiceCode || "-"}
                           </p>
                         </div>
                         <div>
-                          <span className="text-[12px] text-[#6B7280]">不含税金额</span>
-                          <p className="text-[13px] text-[#111827] font-mono mt-0.5">
+                          <span className="text-[12px] text-[#78716C]">不含税金额</span>
+                          <p className="text-[13px] text-[#1C1917] font-mono mt-0.5">
                             ¥{formatAmount(inv.amount)}
                           </p>
                         </div>
                         <div>
-                          <span className="text-[12px] text-[#6B7280]">税率</span>
-                          <p className="text-[13px] text-[#111827] mt-0.5">
+                          <span className="text-[12px] text-[#78716C]">税率</span>
+                          <p className="text-[13px] text-[#1C1917] mt-0.5">
                             {(inv.taxRate * 100).toFixed(0)}%
                           </p>
                         </div>
                         <div>
-                          <span className="text-[12px] text-[#6B7280]">税额</span>
-                          <p className="text-[13px] text-[#111827] font-mono mt-0.5">
+                          <span className="text-[12px] text-[#78716C]">税额</span>
+                          <p className="text-[13px] text-[#1C1917] font-mono mt-0.5">
                             ¥{formatAmount(inv.taxAmount)}
                           </p>
                         </div>
                       </div>
 
-                      <div className="rounded-xl bg-[#F9FAFB] p-3 space-y-2 mb-3">
+                      <div className="rounded-xl bg-[#FAFAF9] p-3 space-y-2 mb-3">
                         <div className="flex items-start gap-4">
                           <div className="flex-1">
-                            <span className="text-[12px] text-[#6B7280]">销方名称</span>
-                            <p className="text-[13px] text-[#111827] mt-0.5">
+                            <span className="text-[12px] text-[#78716C]">销方名称</span>
+                            <p className="text-[13px] text-[#1C1917] mt-0.5">
                               {inv.sellerName || "-"}
                             </p>
                           </div>
                           <div className="flex-1">
-                            <span className="text-[12px] text-[#6B7280]">销方税号</span>
-                            <p className="text-[13px] text-[#111827] font-mono mt-0.5">
+                            <span className="text-[12px] text-[#78716C]">销方税号</span>
+                            <p className="text-[13px] text-[#1C1917] font-mono mt-0.5">
                               {inv.sellerTaxNo || "-"}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start gap-4">
                           <div className="flex-1">
-                            <span className="text-[12px] text-[#6B7280]">购方名称</span>
-                            <p className="text-[13px] text-[#111827] mt-0.5">
+                            <span className="text-[12px] text-[#78716C]">购方名称</span>
+                            <p className="text-[13px] text-[#1C1917] mt-0.5">
                               {inv.buyerName || "-"}
                             </p>
                           </div>
                           <div className="flex-1">
-                            <span className="text-[12px] text-[#6B7280]">购方税号</span>
-                            <p className="text-[13px] text-[#111827] font-mono mt-0.5">
+                            <span className="text-[12px] text-[#78716C]">购方税号</span>
+                            <p className="text-[13px] text-[#1C1917] font-mono mt-0.5">
                               {inv.buyerTaxNo || "-"}
                             </p>
                           </div>
@@ -687,14 +687,14 @@ export default function FinanceInvoicesPage() {
 
                       {inv.remark && (
                         <div className="mb-3">
-                          <span className="text-[12px] text-[#6B7280]">备注</span>
-                          <p className="text-[13px] text-[#111827] mt-0.5">{inv.remark}</p>
+                          <span className="text-[12px] text-[#78716C]">备注</span>
+                          <p className="text-[13px] text-[#1C1917] mt-0.5">{inv.remark}</p>
                         </div>
                       )}
 
                       {inv.attachments && inv.attachments.length > 0 && (
                         <div className="mb-3">
-                          <span className="text-[12px] text-[#6B7280] block mb-2">
+                          <span className="text-[12px] text-[#78716C] block mb-2">
                             发票扫描件
                           </span>
                           <div className="flex flex-wrap gap-2">
@@ -704,7 +704,7 @@ export default function FinanceInvoicesPage() {
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-16 h-16 rounded-lg border border-[#E5E7EB] overflow-hidden hover:shadow-md transition-shadow"
+                                className="w-16 h-16 rounded-lg border border-[#E7E5E4] overflow-hidden hover:shadow-md transition-shadow"
                               >
                                 <img
                                   src={url}
@@ -717,7 +717,7 @@ export default function FinanceInvoicesPage() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 pt-3 border-t border-[#F3F4F6]">
+                      <div className="flex items-center gap-2 pt-3 border-t border-[#F5F5F4]">
                         <button
                           className="ios-btn ios-btn-ghost ios-btn-sm"
                           onClick={(e) => {
@@ -740,7 +740,7 @@ export default function FinanceInvoicesPage() {
                         </button>
                         {isAdminUser && (
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDeleteConfirm(inv);
@@ -758,7 +758,7 @@ export default function FinanceInvoicesPage() {
             })}
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -768,7 +768,7 @@ export default function FinanceInvoicesPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#6B7280] px-3">
+                <span className="text-[13px] text-[#78716C] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -795,15 +795,15 @@ export default function FinanceInvoicesPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                发票号码 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                发票号码 <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="text"
@@ -815,7 +815,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 发票代码
               </label>
               <input
@@ -828,7 +828,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 发票类型
               </label>
               <select
@@ -845,7 +845,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 发票方向
               </label>
               <select
@@ -859,8 +859,8 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
-                开票日期 <span className="text-[#6B7280]">*</span>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                开票日期 <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="date"
@@ -871,7 +871,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 不含税金额
               </label>
               <input
@@ -884,7 +884,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 税率
               </label>
               <select
@@ -901,7 +901,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 税额
               </label>
               <input
@@ -914,7 +914,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 价税合计
               </label>
               <input
@@ -926,10 +926,10 @@ export default function FinanceInvoicesPage() {
               />
             </div>
 
-            <div className="col-span-2 h-px bg-[#F3F4F6]" />
+            <div className="col-span-2 h-px bg-[#F5F5F4]" />
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 销方名称
               </label>
               <input
@@ -942,7 +942,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 销方税号
               </label>
               <input
@@ -955,7 +955,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 购方名称
               </label>
               <input
@@ -968,7 +968,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 购方税号
               </label>
               <input
@@ -980,7 +980,7 @@ export default function FinanceInvoicesPage() {
               />
             </div>
 
-            <div className="col-span-2 h-px bg-[#F3F4F6]" />
+            <div className="col-span-2 h-px bg-[#F5F5F4]" />
 
             <div>
               <ProjectPicker
@@ -992,7 +992,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 来源类型
               </label>
               <select
@@ -1009,7 +1009,7 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 备注
               </label>
               <textarea
@@ -1021,14 +1021,14 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 发票扫描件
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {form.attachments.map((url, idx) => (
                   <div
                     key={idx}
-                    className="relative w-20 h-20 rounded-lg border border-[#E5E7EB] overflow-hidden group"
+                    className="relative w-20 h-20 rounded-lg border border-[#E7E5E4] overflow-hidden group"
                   >
                     <img
                       src={url}
@@ -1044,9 +1044,9 @@ export default function FinanceInvoicesPage() {
                     </button>
                   </div>
                 ))}
-                <label className="w-20 h-20 rounded-lg border-2 border-dashed border-[#E5E7EB] flex flex-col items-center justify-center cursor-pointer hover:border-[#111827] hover:bg-[#111827]/5 transition-colors">
-                  <Upload className="w-5 h-5 text-[#6B7280] mb-1" />
-                  <span className="text-[10px] text-[#6B7280]">
+                <label className="w-20 h-20 rounded-lg border-2 border-dashed border-[#E7E5E4] flex flex-col items-center justify-center cursor-pointer hover:border-[#1C1917] hover:bg-[#1C1917]/5 transition-colors">
+                  <Upload className="w-5 h-5 text-[#78716C] mb-1" />
+                  <span className="text-[10px] text-[#78716C]">
                     {uploading ? "上传中..." : "上传"}
                   </span>
                   <input
@@ -1062,7 +1062,7 @@ export default function FinanceInvoicesPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowFormModal(false)}
@@ -1091,7 +1091,7 @@ export default function FinanceInvoicesPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-[17px] text-[#111827] font-mono">
+                <span className="font-semibold text-[17px] text-[#1C1917] font-mono">
                   {detailItem.invoiceNo}
                 </span>
               </div>
@@ -1109,35 +1109,35 @@ export default function FinanceInvoicesPage() {
               </div>
             </div>
 
-            <div className="rounded-xl bg-[#F9FAFB] p-4 space-y-3">
+            <div className="rounded-xl bg-[#FAFAF9] p-4 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">发票代码</span>
-                  <p className="text-[13px] text-[#111827] font-mono mt-0.5">
+                  <span className="text-[12px] text-[#78716C]">发票代码</span>
+                  <p className="text-[13px] text-[#1C1917] font-mono mt-0.5">
                     {detailItem.invoiceCode || "-"}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">发票方向</span>
+                  <span className="text-[12px] text-[#78716C]">发票方向</span>
                   <p
                     className={`text-[13px] font-medium mt-0.5 ${
                       detailItem.invoiceCategory === "收票"
-                        ? "text-[#111827]"
-                        : "text-[#6B7280]"
+                        ? "text-[#1C1917]"
+                        : "text-[#78716C]"
                     }`}
                   >
                     {detailItem.invoiceCategory}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">开票日期</span>
-                  <p className="text-[13px] text-[#111827] mt-0.5">
+                  <span className="text-[12px] text-[#78716C]">开票日期</span>
+                  <p className="text-[13px] text-[#1C1917] mt-0.5">
                     {formatDate(detailItem.invoiceDate)}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#6B7280]">来源类型</span>
-                  <p className="text-[13px] text-[#111827] mt-0.5">
+                  <span className="text-[12px] text-[#78716C]">来源类型</span>
+                  <p className="text-[13px] text-[#1C1917] mt-0.5">
                     {sourceTypeMap[detailItem.sourceType] || detailItem.sourceType}
                   </p>
                 </div>
@@ -1145,45 +1145,45 @@ export default function FinanceInvoicesPage() {
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl bg-[#F9FAFB] p-3 text-center">
-                <span className="text-[11px] text-[#6B7280] block">不含税金额</span>
-                <p className="text-[15px] font-semibold text-[#111827] font-mono mt-1">
+              <div className="rounded-xl bg-[#FAFAF9] p-3 text-center">
+                <span className="text-[11px] text-[#78716C] block">不含税金额</span>
+                <p className="text-[15px] font-semibold text-[#1C1917] font-mono mt-1">
                   ¥{formatAmount(detailItem.amount)}
                 </p>
               </div>
-              <div className="rounded-xl bg-[#F9FAFB] p-3 text-center">
-                <span className="text-[11px] text-[#6B7280] block">
+              <div className="rounded-xl bg-[#FAFAF9] p-3 text-center">
+                <span className="text-[11px] text-[#78716C] block">
                   税额 ({(detailItem.taxRate * 100).toFixed(0)}%)
                 </span>
-                <p className="text-[15px] font-semibold text-[#6B7280] font-mono mt-1">
+                <p className="text-[15px] font-semibold text-[#78716C] font-mono mt-1">
                   ¥{formatAmount(detailItem.taxAmount)}
                 </p>
               </div>
-              <div className="rounded-xl bg-[#F9FAFB] p-3 text-center">
-                <span className="text-[11px] text-[#6B7280] block">价税合计</span>
-                <p className="text-[15px] font-semibold text-[#111827] font-mono mt-1">
+              <div className="rounded-xl bg-[#FAFAF9] p-3 text-center">
+                <span className="text-[11px] text-[#78716C] block">价税合计</span>
+                <p className="text-[15px] font-semibold text-[#1C1917] font-mono mt-1">
                   ¥{formatAmount(detailItem.totalAmount)}
                 </p>
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#E5E7EB] p-4 space-y-3">
+            <div className="rounded-xl border border-[#E7E5E4] p-4 space-y-3">
               <div>
-                <span className="text-[12px] text-[#6B7280]">销方信息</span>
-                <p className="text-[13px] text-[#111827] mt-0.5">
+                <span className="text-[12px] text-[#78716C]">销方信息</span>
+                <p className="text-[13px] text-[#1C1917] mt-0.5">
                   {detailItem.sellerName || "-"}
                 </p>
-                <p className="text-[12px] text-[#6B7280] font-mono mt-0.5">
+                <p className="text-[12px] text-[#78716C] font-mono mt-0.5">
                   {detailItem.sellerTaxNo || "-"}
                 </p>
               </div>
-              <div className="h-px bg-[#F3F4F6]" />
+              <div className="h-px bg-[#F5F5F4]" />
               <div>
-                <span className="text-[12px] text-[#6B7280]">购方信息</span>
-                <p className="text-[13px] text-[#111827] mt-0.5">
+                <span className="text-[12px] text-[#78716C]">购方信息</span>
+                <p className="text-[13px] text-[#1C1917] mt-0.5">
                   {detailItem.buyerName || "-"}
                 </p>
-                <p className="text-[12px] text-[#6B7280] font-mono mt-0.5">
+                <p className="text-[12px] text-[#78716C] font-mono mt-0.5">
                   {detailItem.buyerTaxNo || "-"}
                 </p>
               </div>
@@ -1191,8 +1191,8 @@ export default function FinanceInvoicesPage() {
 
             {detailItem.project && (
               <div>
-                <span className="text-[12px] text-[#6B7280]">关联项目</span>
-                <p className="text-[13px] text-[#111827] mt-0.5">
+                <span className="text-[12px] text-[#78716C]">关联项目</span>
+                <p className="text-[13px] text-[#1C1917] mt-0.5">
                   {detailItem.project.name} ({detailItem.project.projectCode})
                 </p>
               </div>
@@ -1200,8 +1200,8 @@ export default function FinanceInvoicesPage() {
 
             {detailItem.remark && (
               <div>
-                <span className="text-[12px] text-[#6B7280]">备注</span>
-                <p className="text-[13px] text-[#111827] mt-0.5">
+                <span className="text-[12px] text-[#78716C]">备注</span>
+                <p className="text-[13px] text-[#1C1917] mt-0.5">
                   {detailItem.remark}
                 </p>
               </div>
@@ -1209,7 +1209,7 @@ export default function FinanceInvoicesPage() {
 
             {detailItem.attachments && detailItem.attachments.length > 0 && (
               <div>
-                <span className="text-[12px] text-[#6B7280] block mb-2">
+                <span className="text-[12px] text-[#78716C] block mb-2">
                   发票扫描件
                 </span>
                 <div className="grid grid-cols-3 gap-2">
@@ -1219,7 +1219,7 @@ export default function FinanceInvoicesPage() {
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="aspect-square rounded-xl border border-[#E5E7EB] overflow-hidden hover:shadow-lg transition-shadow"
+                      className="aspect-square rounded-xl border border-[#E7E5E4] overflow-hidden hover:shadow-lg transition-shadow"
                     >
                       <img
                         src={url}
@@ -1232,7 +1232,7 @@ export default function FinanceInvoicesPage() {
               </div>
             )}
 
-            <div className="text-[11px] text-[#9CA3AF] pt-2 border-t border-[#F3F4F6]">
+            <div className="text-[11px] text-[#A8A29E] pt-2 border-t border-[#F5F5F4]">
               创建时间: {new Date(detailItem.createdAt).toLocaleString("zh-CN")} ·
               更新时间: {new Date(detailItem.updatedAt).toLocaleString("zh-CN")}
             </div>
@@ -1248,15 +1248,15 @@ export default function FinanceInvoicesPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要删除发票{" "}
             <span className="font-mono font-semibold">{deleteConfirm?.invoiceNo}</span>{" "}
             吗？
           </p>
-          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#78716C] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"

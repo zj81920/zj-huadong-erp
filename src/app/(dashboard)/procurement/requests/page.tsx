@@ -543,7 +543,7 @@ export default function PurchaseRequestsPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -588,20 +588,20 @@ export default function PurchaseRequestsPage() {
             ))}
           </select>
 
-          <div className="ml-auto text-[13px] text-[#6B7280]">
-            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#78716C]">
+            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : records.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
-              <ShoppingCart className="w-8 h-8 text-[#6B7280]" />
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
+              <ShoppingCart className="w-8 h-8 text-[#78716C]" />
             </div>
             <p>{search || filterStatus || filterProject ? "没有匹配的采购需求" : "暂无采购需求，点击右上角新增"}</p>
           </div>
@@ -626,7 +626,7 @@ export default function PurchaseRequestsPage() {
                   const isExpanded = expandedRows.has(record.id);
                   return (
                     <Fragment key={record.id}>
-                      <tr className={`${isExpanded ? "bg-[#F9FAFB]/60" : ""} ${isSelected(record.id) ? "bg-[#111827]/5" : ""}`}>
+                      <tr className={`${isExpanded ? "bg-[#FAFAF9]/60" : ""} ${isSelected(record.id) ? "bg-[#1C1917]/5" : ""}`}>
                         {isAdminUser && (
                           <td className="w-10">
                             <input type="checkbox" className="ios-checkbox" checked={isSelected(record.id)} onChange={() => toggleSelect(record.id)} />
@@ -635,17 +635,17 @@ export default function PurchaseRequestsPage() {
                         <td>
                           <div className="flex items-center gap-1.5">
                             <button
-                              className="w-6 h-6 rounded-md hover:bg-[#E5E7EB] flex items-center justify-center transition-colors"
+                              className="w-6 h-6 rounded-md hover:bg-[#E7E5E4] flex items-center justify-center transition-colors"
                               onClick={() => toggleRowExpand(record.id)}
                               title={isExpanded ? "收起明细" : "展开明细"}
                             >
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-[#111827]" />
+                                <ChevronDown className="w-4 h-4 text-[#1C1917]" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-[#6B7280]" />
+                                <ChevronRight className="w-4 h-4 text-[#78716C]" />
                               )}
                             </button>
-                            <span className="font-mono text-[13px] font-semibold text-[#111827]">
+                            <span className="font-mono text-[13px] font-semibold text-[#1C1917]">
                               {record.requestNo}
                             </span>
                           </div>
@@ -656,11 +656,11 @@ export default function PurchaseRequestsPage() {
                         </td>
                         <td>
                           <span className="inline-flex items-center gap-1">
-                            <Package className="w-3.5 h-3.5 text-[#6B7280]" />
+                            <Package className="w-3.5 h-3.5 text-[#78716C]" />
                             <span className="ios-badge ios-badge-gray">{record.items?.length || 0}</span>
                           </span>
                         </td>
-                        <td className="text-[#6B7280]">
+                        <td className="text-[#78716C]">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5" />
                             {formatDate(record.requiredDate)}
@@ -687,7 +687,7 @@ export default function PurchaseRequestsPage() {
                             </button>
                             {record.status === "已批准" && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
                                 onClick={() => {
                                   window.location.href = "/procurement/inquiries?prId=" + record.id;
                                 }}
@@ -706,7 +706,7 @@ export default function PurchaseRequestsPage() {
                                   编辑
                                 </button>
                                 <button
-                                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
+                                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                   onClick={() => setDeleteConfirm(record)}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -716,7 +716,7 @@ export default function PurchaseRequestsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
+                        <td className="text-[#78716C] text-[12px] whitespace-nowrap">
                           {record.lastModifiedBy && (
                             <span>{record.lastModifiedBy}</span>
                           )}
@@ -726,35 +726,35 @@ export default function PurchaseRequestsPage() {
                       {isExpanded && (
                         <tr>
                           <td colSpan={9} className="p-0">
-                            <div className="px-10 py-4 bg-[#FFFFFF] border-t border-b border-[#E5E7EB]">
+                            <div className="px-10 py-4 bg-[#FFFFFF] border-t border-b border-[#E7E5E4]">
                               <div className="flex items-center gap-2 mb-3">
-                                <Package className="w-4 h-4 text-[#111827]" />
-                                <span className="text-[13px] font-semibold text-[#111827]">
+                                <Package className="w-4 h-4 text-[#1C1917]" />
+                                <span className="text-[13px] font-semibold text-[#1C1917]">
                                   物资明细（{record.items?.length || 0} 项）
                                 </span>
                               </div>
                               {record.items && record.items.length > 0 ? (
-                                <div className="overflow-x-auto border border-[#E5E7EB] rounded-xl bg-white">
+                                <div className="overflow-x-auto border border-[#E7E5E4] rounded-xl bg-white">
                                   <table className="w-full text-[13px]">
-                                    <thead className="bg-[#F9FAFB]">
+                                    <thead className="bg-[#FAFAF9]">
                                       <tr>
-                                        <th className="py-2 px-3 text-center font-semibold text-[#6B7280] w-[44px]">序号</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">物资名称</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">规格型号</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">材质</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">品牌</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">适用标准号</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">单位</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">数量</th>
-                                        <th className="py-2 px-3 text-left font-semibold text-[#111827]">备注</th>
+                                        <th className="py-2 px-3 text-center font-semibold text-[#78716C] w-[44px]">序号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">物资名称</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">规格型号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">材质</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">品牌</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">适用标准号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">单位</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">数量</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">备注</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {record.items
                                         .sort((a, b) => a.sortOrder - b.sortOrder)
                                         .map((item, index) => (
-                                          <tr key={item.id} className="border-t border-[#F3F4F6]">
-                                            <td className="py-2 px-3 text-center text-[#6B7280]">{index + 1}</td>
+                                          <tr key={item.id} className="border-t border-[#F5F5F4]">
+                                            <td className="py-2 px-3 text-center text-[#78716C]">{index + 1}</td>
                                             <td className="py-2 px-3 font-semibold">{item.materialName}</td>
                                             <td className="py-2 px-3">{item.spec || "-"}</td>
                                             <td className="py-2 px-3">{item.material || "-"}</td>
@@ -762,14 +762,14 @@ export default function PurchaseRequestsPage() {
                                             <td className="py-2 px-3">{item.standardNo || "-"}</td>
                                             <td className="py-2 px-3">{item.unit || "-"}</td>
                                             <td className="py-2 px-3 font-mono">{item.quantity || "-"}</td>
-                                            <td className="py-2 px-3 text-[#6B7280]">{item.remark || "-"}</td>
+                                            <td className="py-2 px-3 text-[#78716C]">{item.remark || "-"}</td>
                                           </tr>
                                         ))}
                                     </tbody>
                                   </table>
                                 </div>
                               ) : (
-                                <p className="text-[13px] text-[#6B7280] text-center py-4">暂无物资明细</p>
+                                <p className="text-[13px] text-[#78716C] text-center py-4">暂无物资明细</p>
                               )}
                             </div>
                           </td>
@@ -782,7 +782,7 @@ export default function PurchaseRequestsPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -790,7 +790,7 @@ export default function PurchaseRequestsPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#6B7280] px-3">
+                <span className="text-[13px] text-[#78716C] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -823,7 +823,7 @@ export default function PurchaseRequestsPage() {
       >
         <div className="space-y-5">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
               {formError}
             </div>
           )}
@@ -841,9 +841,9 @@ export default function PurchaseRequestsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">需求日期</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">需求日期</label>
               <div className="relative">
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                 <input
                   type="date"
                   className="ios-input pl-10"
@@ -856,9 +856,9 @@ export default function PurchaseRequestsPage() {
 
           <div className="pt-2">
             <div className="flex items-center justify-between mb-3">
-              <label className="block text-[13px] font-semibold text-[#111827]">
+              <label className="block text-[13px] font-semibold text-[#1C1917]">
                 <FileSpreadsheet className="w-4 h-4 inline mr-1.5 -mt-0.5" />
-                物资明细 <span className="text-[#6B7280]">*</span>
+                物资明细 <span className="text-[#78716C]">*</span>
               </label>
               <div className="flex items-center gap-2">
                 <button
@@ -885,26 +885,26 @@ export default function PurchaseRequestsPage() {
               </div>
             </div>
 
-            <div className="overflow-x-auto border border-[#E5E7EB] rounded-xl">
+            <div className="overflow-x-auto border border-[#E7E5E4] rounded-xl">
               <table className="w-full text-[13px]">
-                <thead className="bg-[#F9FAFB]">
+                <thead className="bg-[#FAFAF9]">
                   <tr>
-                    <th className="py-2 px-2 text-center font-semibold text-[#6B7280] w-[44px]">序号</th>
-                    <th className="py-2 px-2 text-left font-semibold text-[#111827] min-w-[120px]">物资名称<span className="text-[#6B7280] ml-0.5">*</span></th>
-                    <th className="py-2 px-2 text-left font-semibold text-[#111827] min-w-[100px]">规格型号</th>
-                    <th className="py-2 px-2 text-left font-semibold text-[#111827] min-w-[60px]">材质</th>
-                    <th className="py-2 px-2 text-left font-semibold text-[#111827] min-w-[80px]">品牌</th>
-                    <th className="py-2 px-2 text-left font-semibold text-[#111827] min-w-[90px]">适用标准号</th>
-                    <th className="py-2 px-2 text-left font-semibold text-[#111827] min-w-[60px]">单位</th>
-                    <th className="py-2 px-2 text-left font-semibold text-[#111827] min-w-[70px]">数量</th>
-                    <th className="py-2 px-2 text-left font-semibold text-[#111827] min-w-[80px]">备注</th>
-                    <th className="py-2 px-2 text-center font-semibold text-[#6B7280] w-[44px]">操作</th>
+                    <th className="py-2 px-2 text-center font-semibold text-[#78716C] w-[44px]">序号</th>
+                    <th className="py-2 px-2 text-left font-semibold text-[#1C1917] min-w-[120px]">物资名称<span className="text-[#78716C] ml-0.5">*</span></th>
+                    <th className="py-2 px-2 text-left font-semibold text-[#1C1917] min-w-[100px]">规格型号</th>
+                    <th className="py-2 px-2 text-left font-semibold text-[#1C1917] min-w-[60px]">材质</th>
+                    <th className="py-2 px-2 text-left font-semibold text-[#1C1917] min-w-[80px]">品牌</th>
+                    <th className="py-2 px-2 text-left font-semibold text-[#1C1917] min-w-[90px]">适用标准号</th>
+                    <th className="py-2 px-2 text-left font-semibold text-[#1C1917] min-w-[60px]">单位</th>
+                    <th className="py-2 px-2 text-left font-semibold text-[#1C1917] min-w-[70px]">数量</th>
+                    <th className="py-2 px-2 text-left font-semibold text-[#1C1917] min-w-[80px]">备注</th>
+                    <th className="py-2 px-2 text-center font-semibold text-[#78716C] w-[44px]">操作</th>
                   </tr>
                 </thead>
                 <tbody>
                   {form.items.map((item, index) => (
-                    <tr key={index} className="border-t border-[#F3F4F6] hover:bg-[#FFFFFF]">
-                      <td className="py-1.5 px-2 text-center text-[#6B7280]">{index + 1}</td>
+                    <tr key={index} className="border-t border-[#F5F5F4] hover:bg-[#FFFFFF]">
+                      <td className="py-1.5 px-2 text-center text-[#78716C]">{index + 1}</td>
                       <td className="py-1.5 px-2">
                         <input
                           type="text"
@@ -980,11 +980,11 @@ export default function PurchaseRequestsPage() {
                       </td>
                       <td className="py-1.5 px-2 text-center">
                         <button
-                          className="w-6 h-6 rounded-full bg-[#6B7280]/10 hover:bg-[#6B7280]/20 flex items-center justify-center transition-colors mx-auto"
+                          className="w-6 h-6 rounded-full bg-[#78716C]/10 hover:bg-[#78716C]/20 flex items-center justify-center transition-colors mx-auto"
                           onClick={() => removeLineItem(index)}
                           disabled={form.items.length <= 1}
                         >
-                          <X className="w-3 h-3 text-[#6B7280]" />
+                          <X className="w-3 h-3 text-[#78716C]" />
                         </button>
                       </td>
                     </tr>
@@ -996,7 +996,7 @@ export default function PurchaseRequestsPage() {
 
           <div className="pt-2">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-[13px] font-semibold text-[#111827]">
+              <label className="text-[13px] font-semibold text-[#1C1917]">
                 <Paperclip className="w-4 h-4 inline mr-1.5 -mt-0.5" />
                 附件
               </label>
@@ -1019,23 +1019,23 @@ export default function PurchaseRequestsPage() {
             {form.attachments.length > 0 ? (
               <div className="space-y-1.5">
                 {form.attachments.map((att, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#F9FAFB]">
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#FAFAF9]">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <File className="w-3.5 h-3.5 text-[#6B7280] flex-shrink-0" />
-                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#111827] truncate hover:underline">{att.name}</a>
+                      <File className="w-3.5 h-3.5 text-[#78716C] flex-shrink-0" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#1C1917] truncate hover:underline">{att.name}</a>
                     </div>
-                    <button className="w-6 h-6 rounded-full hover:bg-[#E5E7EB] flex items-center justify-center flex-shrink-0" onClick={() => handleRemoveAttachment(idx)}>
-                      <X className="w-3 h-3 text-[#6B7280]" />
+                    <button className="w-6 h-6 rounded-full hover:bg-[#E7E5E4] flex items-center justify-center flex-shrink-0" onClick={() => handleRemoveAttachment(idx)}>
+                      <X className="w-3 h-3 text-[#78716C]" />
                     </button>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-[12px] text-[#6B7280] text-center py-3">暂无附件</p>
+              <p className="text-[12px] text-[#78716C] text-center py-3">暂无附件</p>
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -1060,13 +1060,13 @@ export default function PurchaseRequestsPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#6B7280]" />
+          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
-          <p className="text-[15px] text-[#111827] mb-1">
+          <p className="text-[15px] text-[#1C1917] mb-1">
             确定要删除采购需求 <span className="font-semibold">{deleteConfirm?.requestNo}</span> 吗？
           </p>
-          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#78716C] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"
@@ -1095,23 +1095,23 @@ export default function PurchaseRequestsPage() {
           <div className="space-y-5">
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-[12px] text-[#6B7280] mb-1">计划单号</label>
-                <p className="text-[15px] font-mono font-semibold text-[#111827]">{detailRecord.requestNo}</p>
+                <label className="block text-[12px] text-[#78716C] mb-1">计划单号</label>
+                <p className="text-[15px] font-mono font-semibold text-[#1C1917]">{detailRecord.requestNo}</p>
               </div>
               <div>
-                <label className="block text-[12px] text-[#6B7280] mb-1">项目源ID</label>
+                <label className="block text-[12px] text-[#78716C] mb-1">项目源ID</label>
                 <p className="text-[15px] font-mono">{detailRecord.projectSourceId}</p>
               </div>
               <div>
-                <label className="block text-[12px] text-[#6B7280] mb-1">项目名称</label>
+                <label className="block text-[12px] text-[#78716C] mb-1">项目名称</label>
                 <p className="text-[15px] font-semibold">{detailRecord.project?.name || "-"}</p>
               </div>
               <div>
-                <label className="block text-[12px] text-[#6B7280] mb-1">需求日期</label>
+                <label className="block text-[12px] text-[#78716C] mb-1">需求日期</label>
                 <p className="text-[15px]">{formatDate(detailRecord.requiredDate)}</p>
               </div>
               <div>
-                <label className="block text-[12px] text-[#6B7280] mb-1">状态</label>
+                <label className="block text-[12px] text-[#78716C] mb-1">状态</label>
                 <span className={`ios-badge ${statusColorMap[detailRecord.status] || "ios-badge-gray"}`}>
                   {detailRecord.status}
                 </span>
@@ -1119,31 +1119,31 @@ export default function PurchaseRequestsPage() {
             </div>
 
             <div className="pt-2">
-              <label className="block text-[13px] font-semibold text-[#111827] mb-3">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-3">
                 <Package className="w-4 h-4 inline mr-1.5 -mt-0.5" />
                 物资明细（{detailRecord.items?.length || 0} 项）
               </label>
-              <div className="overflow-x-auto border border-[#E5E7EB] rounded-xl">
+              <div className="overflow-x-auto border border-[#E7E5E4] rounded-xl">
                 <table className="w-full text-[13px]">
-                  <thead className="bg-[#F9FAFB]">
+                  <thead className="bg-[#FAFAF9]">
                     <tr>
-                      <th className="py-2 px-3 text-center font-semibold text-[#6B7280] w-[44px]">序号</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#111827]">物资名称</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#111827]">规格型号</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#111827]">材质</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#111827]">品牌</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#111827]">适用标准号</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#111827]">单位</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#111827]">数量</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#111827]">备注</th>
+                      <th className="py-2 px-3 text-center font-semibold text-[#78716C] w-[44px]">序号</th>
+                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">物资名称</th>
+                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">规格型号</th>
+                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">材质</th>
+                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">品牌</th>
+                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">适用标准号</th>
+                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">单位</th>
+                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">数量</th>
+                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">备注</th>
                     </tr>
                   </thead>
                   <tbody>
                     {(detailRecord.items || [])
                       .sort((a, b) => a.sortOrder - b.sortOrder)
                       .map((item, index) => (
-                        <tr key={item.id} className="border-t border-[#F3F4F6]">
-                          <td className="py-2 px-3 text-center text-[#6B7280]">{index + 1}</td>
+                        <tr key={item.id} className="border-t border-[#F5F5F4]">
+                          <td className="py-2 px-3 text-center text-[#78716C]">{index + 1}</td>
                           <td className="py-2 px-3 font-semibold">{item.materialName}</td>
                           <td className="py-2 px-3">{item.spec || "-"}</td>
                           <td className="py-2 px-3">{item.material || "-"}</td>
@@ -1151,12 +1151,12 @@ export default function PurchaseRequestsPage() {
                           <td className="py-2 px-3">{item.standardNo || "-"}</td>
                           <td className="py-2 px-3">{item.unit || "-"}</td>
                           <td className="py-2 px-3 font-mono">{item.quantity || "-"}</td>
-                          <td className="py-2 px-3 text-[#6B7280]">{item.remark || "-"}</td>
+                          <td className="py-2 px-3 text-[#78716C]">{item.remark || "-"}</td>
                         </tr>
                       ))}
                     {(!detailRecord.items || detailRecord.items.length === 0) && (
                       <tr>
-                        <td colSpan={9} className="py-6 text-center text-[#6B7280]">
+                        <td colSpan={9} className="py-6 text-center text-[#78716C]">
                           暂无物资明细
                         </td>
                       </tr>
@@ -1167,9 +1167,9 @@ export default function PurchaseRequestsPage() {
             </div>
 
             {detailRecord.inquiry && (
-              <div className="p-4 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
-                <p className="text-[13px] font-semibold text-[#111827] mb-2">已关联询价单</p>
-                <a href="/procurement/inquiries" className="text-[13px] text-[#111827] hover:underline">
+              <div className="p-4 rounded-xl bg-[#FAFAF9] border border-[#E7E5E4]">
+                <p className="text-[13px] font-semibold text-[#1C1917] mb-2">已关联询价单</p>
+                <a href="/procurement/inquiries" className="text-[13px] text-[#1C1917] hover:underline">
                   点击查看询价详情 →
                 </a>
               </div>
@@ -1177,15 +1177,15 @@ export default function PurchaseRequestsPage() {
 
             {detailRecord.attachments && Array.isArray(detailRecord.attachments) && detailRecord.attachments.length > 0 && (
               <div>
-                <label className="block text-[13px] font-semibold text-[#111827] mb-2">
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-2">
                   <Paperclip className="w-4 h-4 inline mr-1.5 -mt-0.5" />
                   附件 ({detailRecord.attachments.length})
                 </label>
                 <div className="space-y-1.5">
                   {detailRecord.attachments.map((att: { name: string; url: string }, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-[#F9FAFB]">
-                      <File className="w-3.5 h-3.5 text-[#6B7280]" />
-                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#111827] hover:underline">{att.name}</a>
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-[#FAFAF9]">
+                      <File className="w-3.5 h-3.5 text-[#78716C]" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#1C1917] hover:underline">{att.name}</a>
                     </div>
                   ))}
                 </div>
@@ -1194,7 +1194,7 @@ export default function PurchaseRequestsPage() {
 
             <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+            <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
               <button
                 className="ios-btn ios-btn-secondary"
                 onClick={() => { setDetailRecord(null); setApprovalInstance(null); }}
