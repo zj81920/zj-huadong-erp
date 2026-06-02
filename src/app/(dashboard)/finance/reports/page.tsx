@@ -287,7 +287,7 @@ export default function FinanceReportsPage() {
         </div>
         <div className="bento-card-static">
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
             <p>加载数据中...</p>
           </div>
         </div>
@@ -319,35 +319,35 @@ export default function FinanceReportsPage() {
           <div className="grid grid-cols-3 gap-5">
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#34C759]/10 flex items-center justify-center">
-                  <ArrowUpCircle className="w-5 h-5 text-[#34C759]" />
+                <div className="w-10 h-10 rounded-xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <ArrowUpCircle className="w-5 h-5 text-[#6B7280]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">总收入</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">总收入</span>
               </div>
-              <p className="stat-number text-[#34C759]!">{formatAmount(totalIncome)}</p>
-              <p className="text-[12px] text-[#86868B] mt-1">应收总额 {formatAmount(totalReceivableAmount)}</p>
+              <p className="stat-number text-[#6B7280]!">{formatAmount(totalIncome)}</p>
+              <p className="text-[12px] text-[#6B7280] mt-1">应收总额 {formatAmount(totalReceivableAmount)}</p>
             </div>
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#FF3B30]/10 flex items-center justify-center">
-                  <ArrowDownCircle className="w-5 h-5 text-[#FF3B30]" />
+                <div className="w-10 h-10 rounded-xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <ArrowDownCircle className="w-5 h-5 text-[#6B7280]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">总支出</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">总支出</span>
               </div>
-              <p className="stat-number text-[#FF3B30]!">{formatAmount(totalExpense)}</p>
-              <p className="text-[12px] text-[#86868B] mt-1">应付总额 {formatAmount(totalPayableAmount)}</p>
+              <p className="stat-number text-[#6B7280]!">{formatAmount(totalExpense)}</p>
+              <p className="text-[12px] text-[#6B7280] mt-1">应付总额 {formatAmount(totalPayableAmount)}</p>
             </div>
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#007AFF]/10 flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-[#007AFF]" />
+                <div className="w-10 h-10 rounded-xl bg-[#111827]/10 flex items-center justify-center">
+                  <BarChart3 className="w-5 h-5 text-[#111827]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">净利润</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">净利润</span>
               </div>
-              <p className={`stat-number ${netProfit >= 0 ? "text-[#007AFF]!" : "text-[#FF3B30]!"}`}>
+              <p className={`stat-number ${netProfit >= 0 ? "text-[#111827]!" : "text-[#6B7280]!"}`}>
                 {netProfit >= 0 ? "" : "-"}{formatAmount(Math.abs(netProfit))}
               </p>
-              <p className="text-[12px] text-[#86868B] mt-1">总收入 - 总支出</p>
+              <p className="text-[12px] text-[#6B7280] mt-1">总收入 - 总支出</p>
             </div>
           </div>
 
@@ -357,92 +357,92 @@ export default function FinanceReportsPage() {
                 <div className="w-10 h-10 rounded-xl bg-[#5856D6]/10 flex items-center justify-center">
                   <Receipt className="w-5 h-5 text-[#5856D6]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">合同收入（已收）</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">合同收入（已收）</span>
               </div>
               <p className="stat-number text-[#5856D6]!">{formatAmount(totalReceivablePaid)}</p>
             </div>
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#34C759]/10 flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-[#34C759]" />
+                <div className="w-10 h-10 rounded-xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-[#6B7280]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">其他收入</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">其他收入</span>
               </div>
-              <p className="stat-number text-[#34C759]!">{formatAmount(totalNonContractIncome)}</p>
+              <p className="stat-number text-[#6B7280]!">{formatAmount(totalNonContractIncome)}</p>
             </div>
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#FF9500]/10 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-[#FF9500]" />
+                <div className="w-10 h-10 rounded-xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-[#6B7280]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">股东出资</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">股东出资</span>
               </div>
-              <p className="stat-number text-[#FF9500]!">{formatAmount(totalContribution)}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-5">
-            <div className="bento-card-static">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#007AFF]/10 flex items-center justify-center">
-                  <Landmark className="w-5 h-5 text-[#007AFF]" />
-                </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">借入款</span>
-              </div>
-              <p className="stat-number text-[#007AFF]!">{formatAmount(totalBorrowing)}</p>
-            </div>
-            <div className="bento-card-static">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#FF3B30]/10 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-[#FF3B30]" />
-                </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">合同支出（已付）</span>
-              </div>
-              <p className="stat-number text-[#FF3B30]!">{formatAmount(totalPayablePaid)}</p>
-            </div>
-            <div className="bento-card-static">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#AF52DE]/10 flex items-center justify-center">
-                  <HandCoins className="w-5 h-5 text-[#AF52DE]" />
-                </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">其他支出</span>
-              </div>
-              <p className="stat-number text-[#AF52DE]!">{formatAmount(totalNonContractExpense)}</p>
+              <p className="stat-number text-[#6B7280]!">{formatAmount(totalContribution)}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-5">
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#FF9500]/10 flex items-center justify-center">
-                  <Briefcase className="w-5 h-5 text-[#FF9500]" />
+                <div className="w-10 h-10 rounded-xl bg-[#111827]/10 flex items-center justify-center">
+                  <Landmark className="w-5 h-5 text-[#111827]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">借出款</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">借入款</span>
               </div>
-              <p className="stat-number text-[#FF9500]!">{formatAmount(totalLending)}</p>
+              <p className="stat-number text-[#111827]!">{formatAmount(totalBorrowing)}</p>
             </div>
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#FF3B30]/10 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-[#FF3B30]" />
+                <div className="w-10 h-10 rounded-xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-[#6B7280]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">工资发放</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">合同支出（已付）</span>
               </div>
-              <p className="stat-number text-[#FF3B30]!">{formatAmount(totalSalaryPaid)}</p>
+              <p className="stat-number text-[#6B7280]!">{formatAmount(totalPayablePaid)}</p>
+            </div>
+            <div className="bento-card-static">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <HandCoins className="w-5 h-5 text-[#6B7280]" />
+                </div>
+                <span className="text-[13px] font-semibold text-[#6B7280]">其他支出</span>
+              </div>
+              <p className="stat-number text-[#6B7280]!">{formatAmount(totalNonContractExpense)}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-5">
+            <div className="bento-card-static">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <Briefcase className="w-5 h-5 text-[#6B7280]" />
+                </div>
+                <span className="text-[13px] font-semibold text-[#6B7280]">借出款</span>
+              </div>
+              <p className="stat-number text-[#6B7280]!">{formatAmount(totalLending)}</p>
+            </div>
+            <div className="bento-card-static">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-[#6B7280]" />
+                </div>
+                <span className="text-[13px] font-semibold text-[#6B7280]">工资发放</span>
+              </div>
+              <p className="stat-number text-[#6B7280]!">{formatAmount(totalSalaryPaid)}</p>
             </div>
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-[#5856D6]/10 flex items-center justify-center">
                   <Receipt className="w-5 h-5 text-[#5856D6]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">费用报销</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">费用报销</span>
               </div>
               <p className="stat-number text-[#5856D6]!">{formatAmount(totalExpenseReport)}</p>
             </div>
           </div>
 
           <div className="bento-card-static">
-            <h3 className="text-[15px] font-bold text-[#1D1D1F] mb-4">月度收支明细</h3>
+            <h3 className="text-[15px] font-bold text-[#111827] mb-4">月度收支明细</h3>
             {getMonthlyData().length === 0 ? (
               <div className="empty-state py-8"><p>暂无月度数据</p></div>
             ) : (
@@ -455,9 +455,9 @@ export default function FinanceReportsPage() {
                     {getMonthlyData().map((row) => (
                       <tr key={row.month}>
                         <td className="font-semibold">{row.month}</td>
-                        <td className="text-[#34C759] font-semibold">{formatAmount(row.income)}</td>
-                        <td className="text-[#FF3B30] font-semibold">{formatAmount(row.expense)}</td>
-                        <td className={row.income - row.expense >= 0 ? "text-[#007AFF] font-semibold" : "text-[#FF3B30] font-semibold"}>
+                        <td className="text-[#6B7280] font-semibold">{formatAmount(row.income)}</td>
+                        <td className="text-[#6B7280] font-semibold">{formatAmount(row.expense)}</td>
+                        <td className={row.income - row.expense >= 0 ? "text-[#111827] font-semibold" : "text-[#6B7280] font-semibold"}>
                           {formatAmount(row.income - row.expense)}
                         </td>
                       </tr>
@@ -472,7 +472,7 @@ export default function FinanceReportsPage() {
 
       {activeTab === "projectCost" && (
         <div className="bento-card-static">
-          <h3 className="text-[15px] font-bold text-[#1D1D1F] mb-4">项目成本汇总</h3>
+          <h3 className="text-[15px] font-bold text-[#111827] mb-4">项目成本汇总</h3>
           {getProjectCostMap().length === 0 ? (
             <div className="empty-state py-8"><p>暂无项目成本数据</p></div>
           ) : (
@@ -484,13 +484,13 @@ export default function FinanceReportsPage() {
                 <tbody>
                   {getProjectCostMap().map((row) => (
                     <tr key={row.id}>
-                      <td className="font-mono text-[13px] text-[#007AFF] font-semibold">{row.id}</td>
+                      <td className="font-mono text-[13px] text-[#111827] font-semibold">{row.id}</td>
                       <td className="font-semibold">{row.name}</td>
                       <td>{formatAmount(row.totalAmount)}</td>
-                      <td className="text-[#34C759]">{formatAmount(row.paidAmount)}</td>
+                      <td className="text-[#6B7280]">{formatAmount(row.paidAmount)}</td>
                       <td className="text-[#5856D6]">{formatAmount(row.expenseReportAmount)}</td>
                       <td className="font-semibold">{formatAmount(row.totalAmount + row.expenseReportAmount)}</td>
-                      <td className="text-[#FF9500]">{formatAmount(row.totalAmount - row.paidAmount)}</td>
+                      <td className="text-[#6B7280]">{formatAmount(row.totalAmount - row.paidAmount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -507,14 +507,14 @@ export default function FinanceReportsPage() {
               <div key={bucket.range} className="bento-card-static">
                 <div className="flex items-center justify-between mb-2">
                   <span className={`ios-badge ${bucket.color}`}>{bucket.label}</span>
-                  <span className="text-[12px] text-[#86868B]">{bucket.count} 笔</span>
+                  <span className="text-[12px] text-[#6B7280]">{bucket.count} 笔</span>
                 </div>
-                <p className="text-[20px] font-bold text-[#1D1D1F]">{formatAmount(bucket.amount)}</p>
+                <p className="text-[20px] font-bold text-[#111827]">{formatAmount(bucket.amount)}</p>
               </div>
             ))}
           </div>
           <div className="bento-card-static">
-            <h3 className="text-[15px] font-bold text-[#1D1D1F] mb-4">应收账款明细</h3>
+            <h3 className="text-[15px] font-bold text-[#111827] mb-4">应收账款明细</h3>
             {receivables.filter((r) => r.status !== "已收" && Number(r.amount) - Number(r.paidAmount) > 0).length === 0 ? (
               <div className="empty-state py-8"><p>暂无未收款记录</p></div>
             ) : (
@@ -527,11 +527,11 @@ export default function FinanceReportsPage() {
                       return (
                         <tr key={r.id}>
                           <td><span className="ios-badge ios-badge-blue">{r.sourceType}</span></td>
-                          <td className="text-[#86868B]">{r.project?.name || r.projectSourceId || "公司级"}</td>
+                          <td className="text-[#6B7280]">{r.project?.name || r.projectSourceId || "公司级"}</td>
                           <td>{formatAmount(Number(r.amount))}</td>
-                          <td className="text-[#34C759]">{formatAmount(Number(r.paidAmount))}</td>
-                          <td className="text-[#FF3B30] font-semibold">{formatAmount(Number(r.amount) - Number(r.paidAmount))}</td>
-                          <td className="text-[#86868B]">{new Date(r.dueDate).toLocaleDateString("zh-CN")}</td>
+                          <td className="text-[#6B7280]">{formatAmount(Number(r.paidAmount))}</td>
+                          <td className="text-[#6B7280] font-semibold">{formatAmount(Number(r.amount) - Number(r.paidAmount))}</td>
+                          <td className="text-[#6B7280]">{new Date(r.dueDate).toLocaleDateString("zh-CN")}</td>
                           <td>
                             <span className={`ios-badge ${diffDays > 90 ? "ios-badge-red" : diffDays > 60 ? "ios-badge-orange" : diffDays > 30 ? "ios-badge-orange" : "ios-badge-green"}`}>
                               {diffDays > 0 ? `${diffDays}天` : "未到期"}
@@ -555,14 +555,14 @@ export default function FinanceReportsPage() {
               <div key={bucket.range} className="bento-card-static">
                 <div className="flex items-center justify-between mb-2">
                   <span className={`ios-badge ${bucket.color}`}>{bucket.label}</span>
-                  <span className="text-[12px] text-[#86868B]">{bucket.count} 笔</span>
+                  <span className="text-[12px] text-[#6B7280]">{bucket.count} 笔</span>
                 </div>
-                <p className="text-[20px] font-bold text-[#1D1D1F]">{formatAmount(bucket.amount)}</p>
+                <p className="text-[20px] font-bold text-[#111827]">{formatAmount(bucket.amount)}</p>
               </div>
             ))}
           </div>
           <div className="bento-card-static">
-            <h3 className="text-[15px] font-bold text-[#1D1D1F] mb-4">应付账款明细</h3>
+            <h3 className="text-[15px] font-bold text-[#111827] mb-4">应付账款明细</h3>
             {payables.filter((p) => p.status !== "已付" && Number(p.amount) - Number(p.paidAmount) > 0).length === 0 ? (
               <div className="empty-state py-8"><p>暂无未付款记录</p></div>
             ) : (
@@ -575,11 +575,11 @@ export default function FinanceReportsPage() {
                       return (
                         <tr key={p.id}>
                           <td><span className="ios-badge ios-badge-blue">{p.sourceType}</span></td>
-                          <td className="text-[#86868B]">{p.project?.name || p.projectSourceId || "公司级"}</td>
+                          <td className="text-[#6B7280]">{p.project?.name || p.projectSourceId || "公司级"}</td>
                           <td>{formatAmount(Number(p.amount))}</td>
-                          <td className="text-[#34C759]">{formatAmount(Number(p.paidAmount))}</td>
-                          <td className="text-[#FF3B30] font-semibold">{formatAmount(Number(p.amount) - Number(p.paidAmount))}</td>
-                          <td className="text-[#86868B]">{new Date(p.dueDate).toLocaleDateString("zh-CN")}</td>
+                          <td className="text-[#6B7280]">{formatAmount(Number(p.paidAmount))}</td>
+                          <td className="text-[#6B7280] font-semibold">{formatAmount(Number(p.amount) - Number(p.paidAmount))}</td>
+                          <td className="text-[#6B7280]">{new Date(p.dueDate).toLocaleDateString("zh-CN")}</td>
                           <td>
                             <span className={`ios-badge ${diffDays > 90 ? "ios-badge-red" : diffDays > 30 ? "ios-badge-orange" : "ios-badge-green"}`}>
                               {diffDays > 0 ? `${diffDays}天` : "未到期"}
@@ -601,37 +601,37 @@ export default function FinanceReportsPage() {
           <div className="grid grid-cols-3 gap-5">
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#34C759]/10 flex items-center justify-center">
-                  <ArrowUpCircle className="w-5 h-5 text-[#34C759]" />
+                <div className="w-10 h-10 rounded-xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <ArrowUpCircle className="w-5 h-5 text-[#6B7280]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">总流入</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">总流入</span>
               </div>
-              <p className="stat-number text-[#34C759]!">{formatAmount(totalReceivablePaid + totalNonContractIncome + totalContribution + totalBorrowing)}</p>
+              <p className="stat-number text-[#6B7280]!">{formatAmount(totalReceivablePaid + totalNonContractIncome + totalContribution + totalBorrowing)}</p>
             </div>
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#FF3B30]/10 flex items-center justify-center">
-                  <ArrowDownCircle className="w-5 h-5 text-[#FF3B30]" />
+                <div className="w-10 h-10 rounded-xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <ArrowDownCircle className="w-5 h-5 text-[#6B7280]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">总流出</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">总流出</span>
               </div>
-              <p className="stat-number text-[#FF3B30]!">{formatAmount(totalPayablePaid + totalNonContractExpense + totalLending + totalSalaryPaid + totalExpenseReport)}</p>
+              <p className="stat-number text-[#6B7280]!">{formatAmount(totalPayablePaid + totalNonContractExpense + totalLending + totalSalaryPaid + totalExpenseReport)}</p>
             </div>
             <div className="bento-card-static">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#007AFF]/10 flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-[#007AFF]" />
+                <div className="w-10 h-10 rounded-xl bg-[#111827]/10 flex items-center justify-center">
+                  <BarChart3 className="w-5 h-5 text-[#111827]" />
                 </div>
-                <span className="text-[13px] font-semibold text-[#86868B]">净现金流</span>
+                <span className="text-[13px] font-semibold text-[#6B7280]">净现金流</span>
               </div>
-              <p className={`stat-number ${(totalReceivablePaid + totalNonContractIncome + totalContribution + totalBorrowing) - (totalPayablePaid + totalNonContractExpense + totalLending + totalSalaryPaid + totalExpenseReport) >= 0 ? "text-[#007AFF]!" : "text-[#FF3B30]!"}`}>
+              <p className={`stat-number ${(totalReceivablePaid + totalNonContractIncome + totalContribution + totalBorrowing) - (totalPayablePaid + totalNonContractExpense + totalLending + totalSalaryPaid + totalExpenseReport) >= 0 ? "text-[#111827]!" : "text-[#6B7280]!"}`}>
                 {(totalReceivablePaid + totalNonContractIncome + totalContribution + totalBorrowing) - (totalPayablePaid + totalNonContractExpense + totalLending + totalSalaryPaid + totalExpenseReport) >= 0 ? "" : "-"}{formatAmount(Math.abs((totalReceivablePaid + totalNonContractIncome + totalContribution + totalBorrowing) - (totalPayablePaid + totalNonContractExpense + totalLending + totalSalaryPaid + totalExpenseReport)))}
               </p>
             </div>
           </div>
 
           <div className="bento-card-static">
-            <h3 className="text-[15px] font-bold text-[#1D1D1F] mb-4">流入明细</h3>
+            <h3 className="text-[15px] font-bold text-[#111827] mb-4">流入明细</h3>
             <div className="overflow-x-auto">
               <table className="ios-table">
                 <thead>
@@ -640,19 +640,19 @@ export default function FinanceReportsPage() {
                 <tbody>
                   <tr>
                     <td className="font-semibold">合同收入（已收）</td>
-                    <td className="text-[#34C759] font-semibold">{formatAmount(totalReceivablePaid)}</td>
+                    <td className="text-[#6B7280] font-semibold">{formatAmount(totalReceivablePaid)}</td>
                   </tr>
                   <tr>
                     <td className="font-semibold">其他收入</td>
-                    <td className="text-[#34C759] font-semibold">{formatAmount(totalNonContractIncome)}</td>
+                    <td className="text-[#6B7280] font-semibold">{formatAmount(totalNonContractIncome)}</td>
                   </tr>
                   <tr>
                     <td className="font-semibold">股东出资</td>
-                    <td className="text-[#34C759] font-semibold">{formatAmount(totalContribution)}</td>
+                    <td className="text-[#6B7280] font-semibold">{formatAmount(totalContribution)}</td>
                   </tr>
                   <tr>
                     <td className="font-semibold">借入款</td>
-                    <td className="text-[#34C759] font-semibold">{formatAmount(totalBorrowing)}</td>
+                    <td className="text-[#6B7280] font-semibold">{formatAmount(totalBorrowing)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -660,7 +660,7 @@ export default function FinanceReportsPage() {
           </div>
 
           <div className="bento-card-static">
-            <h3 className="text-[15px] font-bold text-[#1D1D1F] mb-4">流出明细</h3>
+            <h3 className="text-[15px] font-bold text-[#111827] mb-4">流出明细</h3>
             <div className="overflow-x-auto">
               <table className="ios-table">
                 <thead>
@@ -669,23 +669,23 @@ export default function FinanceReportsPage() {
                 <tbody>
                   <tr>
                     <td className="font-semibold">合同支出（已付）</td>
-                    <td className="text-[#FF3B30] font-semibold">{formatAmount(totalPayablePaid)}</td>
+                    <td className="text-[#6B7280] font-semibold">{formatAmount(totalPayablePaid)}</td>
                   </tr>
                   <tr>
                     <td className="font-semibold">其他支出</td>
-                    <td className="text-[#FF3B30] font-semibold">{formatAmount(totalNonContractExpense)}</td>
+                    <td className="text-[#6B7280] font-semibold">{formatAmount(totalNonContractExpense)}</td>
                   </tr>
                   <tr>
                     <td className="font-semibold">借出款</td>
-                    <td className="text-[#FF3B30] font-semibold">{formatAmount(totalLending)}</td>
+                    <td className="text-[#6B7280] font-semibold">{formatAmount(totalLending)}</td>
                   </tr>
                   <tr>
                     <td className="font-semibold">工资发放</td>
-                    <td className="text-[#FF3B30] font-semibold">{formatAmount(totalSalaryPaid)}</td>
+                    <td className="text-[#6B7280] font-semibold">{formatAmount(totalSalaryPaid)}</td>
                   </tr>
                   <tr>
                     <td className="font-semibold">费用报销</td>
-                    <td className="text-[#FF3B30] font-semibold">{formatAmount(totalExpenseReport)}</td>
+                    <td className="text-[#6B7280] font-semibold">{formatAmount(totalExpenseReport)}</td>
                   </tr>
                 </tbody>
               </table>

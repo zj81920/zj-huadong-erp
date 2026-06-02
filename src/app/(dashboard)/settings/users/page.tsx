@@ -323,7 +323,7 @@ export default function UsersSettingsPage() {
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Users className="w-7 h-7 text-[#007AFF]" />
+            <Users className="w-7 h-7 text-[#111827]" />
             <div>
               <h1>用户设置</h1>
               <p>管理系统用户、分配角色、上传电子签名</p>
@@ -339,7 +339,7 @@ export default function UsersSettingsPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -348,20 +348,20 @@ export default function UsersSettingsPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="ml-auto text-[13px] text-[#86868B]">
-            共 <span className="font-semibold text-[#1D1D1F]">{filteredUsers.length}</span> 位用户
+          <div className="ml-auto text-[13px] text-[#6B7280]">
+            共 <span className="font-semibold text-[#111827]">{filteredUsers.length}</span> 位用户
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-              <Users className="w-8 h-8 text-[#86868B]" />
+            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+              <Users className="w-8 h-8 text-[#6B7280]" />
             </div>
             <p>{search ? "没有匹配的用户" : "暂无用户，点击右上角新增"}</p>
           </div>
@@ -384,8 +384,8 @@ export default function UsersSettingsPage() {
                   <tr key={item.id}>
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[13px] font-bold text-[#007AFF]">
+                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-[13px] font-bold text-[#111827]">
                             {item.realName.charAt(0)}
                           </span>
                         </div>
@@ -405,7 +405,7 @@ export default function UsersSettingsPage() {
                             </span>
                           ))
                         ) : (
-                          <span className="text-[#86868B]">-</span>
+                          <span className="text-[#6B7280]">-</span>
                         )}
                       </div>
                     </td>
@@ -440,7 +440,7 @@ export default function UsersSettingsPage() {
                           <span className="ios-badge ios-badge-gray text-[11px]">系统管理员</span>
                         ) : (
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                             onClick={() => setDeleteConfirm(item)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -449,7 +449,7 @@ export default function UsersSettingsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                    <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
                       {item.lastModifiedBy && (
                         <span>{item.lastModifiedBy}</span>
                       )}
@@ -471,7 +471,7 @@ export default function UsersSettingsPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {formError}
             </div>
@@ -479,8 +479,8 @@ export default function UsersSettingsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                登录账号 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                登录账号 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -492,8 +492,8 @@ export default function UsersSettingsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                用户名 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                用户名 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -505,12 +505,12 @@ export default function UsersSettingsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 登录密码{" "}
                 {editingItem && (
-                  <span className="text-[#86868B] font-normal">(留空则不修改)</span>
+                  <span className="text-[#6B7280] font-normal">(留空则不修改)</span>
                 )}
-                {!editingItem && <span className="text-[#FF3B30]">*</span>}
+                {!editingItem && <span className="text-[#6B7280]">*</span>}
               </label>
               <input
                 type="password"
@@ -522,7 +522,7 @@ export default function UsersSettingsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 手机号
               </label>
               <input
@@ -535,7 +535,7 @@ export default function UsersSettingsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 邮箱
               </label>
               <input
@@ -548,7 +548,7 @@ export default function UsersSettingsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 部门
               </label>
               <input
@@ -562,7 +562,7 @@ export default function UsersSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-2">
+            <label className="block text-[13px] font-semibold text-[#111827] mb-2">
               <Shield className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
               分配角色
             </label>
@@ -574,17 +574,17 @@ export default function UsersSettingsPage() {
                     <label
                       key={role.id}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-150 ${
-                        checked ? "bg-[#007AFF]/6" : "bg-white hover:bg-[#FAFAFA]"
+                        checked ? "bg-[#111827]/6" : "bg-white hover:bg-[#FFFFFF]"
                       }`}
                     >
                       <span
                         className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                          checked ? "border-[#007AFF] bg-[#007AFF]" : "border-[#D1D1D6] bg-white"
+                          checked ? "border-[#111827] bg-[#111827]" : "border-[#D1D5DB] bg-white"
                         }`}
                       >
                         {checked && <span className="w-2 h-2 rounded-full bg-white" />}
                       </span>
-                      <span className={`text-[14px] font-semibold flex-1 ${checked ? "text-[#007AFF]" : "text-[#1D1D1F]"}`}>
+                      <span className={`text-[14px] font-semibold flex-1 ${checked ? "text-[#111827]" : "text-[#111827]"}`}>
                         {role.name}
                       </span>
                       {role.isProjectRole && (
@@ -603,12 +603,12 @@ export default function UsersSettingsPage() {
                 })}
               </div>
             ) : (
-              <div className="text-[13px] text-[#86868B] py-3">加载角色中...</div>
+              <div className="text-[13px] text-[#6B7280] py-3">加载角色中...</div>
             )}
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-2">
+            <label className="block text-[13px] font-semibold text-[#111827] mb-2">
               <Image className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
               电子签名
             </label>
@@ -621,7 +621,7 @@ export default function UsersSettingsPage() {
             />
             {signaturePreview ? (
               <div className="space-y-2">
-                <div className="p-3 rounded-xl bg-[#F5F5F7] border border-[#E5E5EA]">
+                <div className="p-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
                   <img
                     src={signaturePreview}
                     alt="电子签名预览"
@@ -640,7 +640,7 @@ export default function UsersSettingsPage() {
                   </button>
                   <button
                     type="button"
-                    className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                    className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                     onClick={handleRemoveSignature}
                   >
                     <X className="w-3.5 h-3.5" />
@@ -651,19 +651,19 @@ export default function UsersSettingsPage() {
             ) : (
               <button
                 type="button"
-                className="w-full py-8 rounded-xl border-2 border-dashed border-[#D1D1D6] bg-[#FAFAFA] hover:bg-[#F5F5F7] hover:border-[#007AFF]/40 transition-all duration-150 flex flex-col items-center gap-2 cursor-pointer"
+                className="w-full py-8 rounded-xl border-2 border-dashed border-[#D1D5DB] bg-[#FFFFFF] hover:bg-[#F9FAFB] hover:border-[#111827]/40 transition-all duration-150 flex flex-col items-center gap-2 cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
               >
                 {uploading ? (
                   <>
-                    <Loader2 className="w-6 h-6 text-[#007AFF] animate-spin" />
-                    <span className="text-[13px] text-[#86868B]">上传中...</span>
+                    <Loader2 className="w-6 h-6 text-[#111827] animate-spin" />
+                    <span className="text-[13px] text-[#6B7280]">上传中...</span>
                   </>
                 ) : (
                   <>
-                    <Upload className="w-6 h-6 text-[#86868B]" />
-                    <span className="text-[13px] text-[#86868B]">
+                    <Upload className="w-6 h-6 text-[#6B7280]" />
+                    <span className="text-[13px] text-[#6B7280]">
                       点击上传电子签名（png、jpg、jpeg）
                     </span>
                   </>
@@ -672,7 +672,7 @@ export default function UsersSettingsPage() {
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -702,15 +702,15 @@ export default function UsersSettingsPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#6B7280]" />
           </div>
-          <p className="text-[15px] text-[#1D1D1F] mb-1">
+          <p className="text-[15px] text-[#111827] mb-1">
             确定要删除用户{" "}
             <span className="font-semibold">{deleteConfirm?.realName}</span>{" "}
             吗？
           </p>
-          <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"

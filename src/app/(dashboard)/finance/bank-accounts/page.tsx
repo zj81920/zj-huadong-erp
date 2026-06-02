@@ -255,7 +255,7 @@ export default function BankAccountsPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -282,20 +282,20 @@ export default function BankAccountsPage() {
             ))}
           </select>
 
-          <div className="ml-auto text-[13px] text-[#86868B]">
-            共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#6B7280]">
+            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : bankAccounts.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-              <Landmark className="w-8 h-8 text-[#86868B]" />
+            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+              <Landmark className="w-8 h-8 text-[#6B7280]" />
             </div>
             <p>{search || filterAccountType ? "没有匹配的银行账户" : "暂无银行账户，点击右上角新增"}</p>
           </div>
@@ -318,19 +318,19 @@ export default function BankAccountsPage() {
                   <tr key={item.id}>
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
-                          <Landmark className="w-4 h-4 text-[#007AFF]" />
+                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
+                          <Landmark className="w-4 h-4 text-[#111827]" />
                         </div>
                         <span className="font-semibold">{item.accountName}</span>
                       </div>
                     </td>
                     <td>
                       <div className="flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5 text-[#86868B]" />
+                        <Building2 className="w-3.5 h-3.5 text-[#6B7280]" />
                         {item.bankName}
                       </div>
                     </td>
-                    <td className="font-mono text-[13px] text-[#86868B]">
+                    <td className="font-mono text-[13px] text-[#6B7280]">
                       {maskAccountNo(item.accountNo)}
                     </td>
                     <td>
@@ -359,7 +359,7 @@ export default function BankAccountsPage() {
                           编辑
                         </button>
                         <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                           onClick={() => setDeleteConfirm(item)}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -367,7 +367,7 @@ export default function BankAccountsPage() {
                         </button>
                       </div>
                     </td>
-                    <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                    <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
                       {item.lastModifiedBy && (
                         <span>{item.lastModifiedBy}</span>
                       )}
@@ -379,7 +379,7 @@ export default function BankAccountsPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F0F0F0]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -387,7 +387,7 @@ export default function BankAccountsPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#86868B] px-3">
+                <span className="text-[13px] text-[#6B7280] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -411,15 +411,15 @@ export default function BankAccountsPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                账户名称 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                账户名称 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -431,8 +431,8 @@ export default function BankAccountsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                开户银行 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                开户银行 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -444,8 +444,8 @@ export default function BankAccountsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                银行账号 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                银行账号 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -457,7 +457,7 @@ export default function BankAccountsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 账户类型
               </label>
               <select
@@ -472,7 +472,7 @@ export default function BankAccountsPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
               <textarea
                 className="ios-textarea"
                 placeholder="备注信息（选填）"
@@ -482,7 +482,7 @@ export default function BankAccountsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -507,13 +507,13 @@ export default function BankAccountsPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#6B7280]" />
           </div>
-          <p className="text-[15px] text-[#1D1D1F] mb-1">
+          <p className="text-[15px] text-[#111827] mb-1">
             确定要删除银行账户 <span className="font-semibold">{deleteConfirm?.accountName}</span> 吗？
           </p>
-          <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"

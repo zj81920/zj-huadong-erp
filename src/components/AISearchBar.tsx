@@ -20,22 +20,22 @@ function formatFileSize(bytes: number): string {
 function getFileIcon(name: string) {
   const ext = name.split(".").pop()?.toLowerCase() || "";
   if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext)) {
-    return <Image className="w-4 h-4 text-[#34C759]" />;
+    return <Image className="w-4 h-4 text-[#6B7280]" />;
   }
   if (["pdf"].includes(ext)) {
-    return <FileText className="w-4 h-4 text-[#FF3B30]" />;
+    return <FileText className="w-4 h-4 text-[#6B7280]" />;
   }
   if (["doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(ext)) {
-    return <FileText className="w-4 h-4 text-[#007AFF]" />;
+    return <FileText className="w-4 h-4 text-[#111827]" />;
   }
-  return <File className="w-4 h-4 text-[#86868B]" />;
+  return <File className="w-4 h-4 text-[#6B7280]" />;
 }
 
 function getScoreColor(score?: number): string {
-  if (!score) return "bg-[#86868B]";
-  if (score >= 0.8) return "bg-[#34C759]";
-  if (score >= 0.5) return "bg-[#FF9500]";
-  return "bg-[#FF3B30]";
+  if (!score) return "bg-[#6B7280]";
+  if (score >= 0.8) return "bg-[#6B7280]";
+  if (score >= 0.5) return "bg-[#6B7280]";
+  return "bg-[#6B7280]";
 }
 
 export default function AISearchBar() {
@@ -138,11 +138,11 @@ export default function AISearchBar() {
       <div
         className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border transition-all duration-200 ${
           isOpen
-            ? "border-[#007AFF]/30 bg-white shadow-[0_0_0_3px_rgba(0,122,255,0.1)]"
-            : "border-[#E5E5EA] bg-[#F5F5F7] hover:bg-[#EDEDF0] hover:border-[#D1D1D6]"
+            ? "border-[#111827]/30 bg-white shadow-[0_0_0_3px_rgba(0,122,255,0.1)]"
+            : "border-[#E5E7EB] bg-[#F9FAFB] hover:bg-[#EDEDF0] hover:border-[#D1D5DB]"
         }`}
       >
-        <Sparkles className="w-4 h-4 text-[#AF52DE] flex-shrink-0" />
+        <Sparkles className="w-4 h-4 text-[#6B7280] flex-shrink-0" />
         <input
           ref={inputRef}
           type="text"
@@ -153,26 +153,26 @@ export default function AISearchBar() {
           }}
           onKeyDown={handleKeyDown}
           placeholder="AI 智能检索文件..."
-          className="flex-1 bg-transparent text-sm text-[#1D1D1F] placeholder-[#86868B] outline-none"
+          className="flex-1 bg-transparent text-sm text-[#111827] placeholder-[#6B7280] outline-none"
         />
-        {loading && <Loader2 className="w-4 h-4 text-[#007AFF] animate-spin flex-shrink-0" />}
+        {loading && <Loader2 className="w-4 h-4 text-[#111827] animate-spin flex-shrink-0" />}
         {query && !loading && (
-          <button onClick={handleClear} className="p-0.5 rounded-full hover:bg-[#E5E5EA] transition-colors">
-            <X className="w-3.5 h-3.5 text-[#86868B]" />
+          <button onClick={handleClear} className="p-0.5 rounded-full hover:bg-[#E5E7EB] transition-colors">
+            <X className="w-3.5 h-3.5 text-[#6B7280]" />
           </button>
         )}
-        <kbd className="hidden sm:flex items-center gap-0.5 text-[10px] text-[#86868B] bg-[#E5E5EA] rounded-md px-1.5 py-0.5 flex-shrink-0">
+        <kbd className="hidden sm:flex items-center gap-0.5 text-[10px] text-[#6B7280] bg-[#E5E7EB] rounded-md px-1.5 py-0.5 flex-shrink-0">
           ⌘K
         </kbd>
       </div>
 
       {/* 搜索结果下拉 */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-[#E5E5EA] shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden z-[100]">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-[#E5E7EB] shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden z-[100]">
           {/* 结果头部 */}
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#F2F2F7]">
-            <Sparkles className="w-3.5 h-3.5 text-[#AF52DE]" />
-            <span className="text-xs text-[#86868B]">
+            <Sparkles className="w-3.5 h-3.5 text-[#6B7280]" />
+            <span className="text-xs text-[#6B7280]">
               {loading
                 ? "AI 正在检索..."
                 : error
@@ -186,7 +186,7 @@ export default function AISearchBar() {
           {/* 结果列表 */}
           {error ? (
             <div className="px-4 py-8 text-center">
-              <p className="text-sm text-[#FF3B30]">{error}</p>
+              <p className="text-sm text-[#6B7280]">{error}</p>
             </div>
           ) : results.length > 0 ? (
             <div className="max-h-[360px] overflow-y-auto">
@@ -194,23 +194,23 @@ export default function AISearchBar() {
                 <button
                   key={item.key}
                   onClick={() => handlePreview(item.key)}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F5F5F7] transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F9FAFB] transition-colors text-left"
                 >
                   <div className="w-8 h-8 rounded-lg bg-[#F2F2F7] flex items-center justify-center flex-shrink-0">
                     {getFileIcon(item.name)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[#1D1D1F] truncate font-medium">
+                    <p className="text-sm text-[#111827] truncate font-medium">
                       {item.name}
                     </p>
-                    <p className="text-[11px] text-[#86868B] mt-0.5">
+                    <p className="text-[11px] text-[#6B7280] mt-0.5">
                       {formatFileSize(item.size)} · {new Date(item.lastModified).toLocaleDateString("zh-CN")}
                     </p>
                   </div>
                   {item.score !== undefined && (
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <div className={`w-1.5 h-1.5 rounded-full ${getScoreColor(item.score)}`} />
-                      <span className="text-[11px] text-[#86868B]">
+                      <span className="text-[11px] text-[#6B7280]">
                         {Math.round(item.score * 100)}%
                       </span>
                     </div>
@@ -221,9 +221,9 @@ export default function AISearchBar() {
           ) : (
             !loading && (
               <div className="px-4 py-8 text-center">
-                <Search className="w-8 h-8 text-[#D1D1D6] mx-auto mb-2" />
-                <p className="text-sm text-[#86868B]">输入关键词搜索文件</p>
-                <p className="text-[11px] text-[#C7C7CC] mt-1">
+                <Search className="w-8 h-8 text-[#D1D5DB] mx-auto mb-2" />
+                <p className="text-sm text-[#6B7280]">输入关键词搜索文件</p>
+                <p className="text-[11px] text-[#9CA3AF] mt-1">
                   支持按文件内容语义搜索
                 </p>
               </div>
@@ -231,11 +231,11 @@ export default function AISearchBar() {
           )}
 
           {/* 底部提示 */}
-          <div className="flex items-center justify-between px-4 py-2 border-t border-[#F2F2F7] bg-[#FAFAFA]">
-            <span className="text-[10px] text-[#C7C7CC]">
+          <div className="flex items-center justify-between px-4 py-2 border-t border-[#F2F2F7] bg-[#FFFFFF]">
+            <span className="text-[10px] text-[#9CA3AF]">
               基于 OSS 语义检索
             </span>
-            <span className="text-[10px] text-[#C7C7CC]">
+            <span className="text-[10px] text-[#9CA3AF]">
               点击文件可预览
             </span>
           </div>

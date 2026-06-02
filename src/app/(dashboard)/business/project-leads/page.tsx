@@ -386,30 +386,30 @@ export default function ProjectLeadsPage() {
 
       <div className="grid grid-cols-3 gap-5 mb-6">
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#007AFF]/10 flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-[#007AFF]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
+            <Briefcase className="w-5 h-5 text-[#111827]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">线索总数</p>
-            <p className="text-[24px] font-bold text-[#1D1D1F] leading-tight">{stats.total}</p>
+            <p className="text-[13px] text-[#6B7280]">线索总数</p>
+            <p className="text-[24px] font-bold text-[#111827] leading-tight">{stats.total}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#FF9500]/10 flex items-center justify-center">
-            <Info className="w-5 h-5 text-[#FF9500]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
+            <Info className="w-5 h-5 text-[#6B7280]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">投标中</p>
-            <p className="text-[24px] font-bold text-[#FF9500] leading-tight">{stats.bidding}</p>
+            <p className="text-[13px] text-[#6B7280]">投标中</p>
+            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.bidding}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#AF52DE]/10 flex items-center justify-center">
-            <Phone className="w-5 h-5 text-[#AF52DE]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
+            <Phone className="w-5 h-5 text-[#6B7280]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">报价中</p>
-            <p className="text-[24px] font-bold text-[#AF52DE] leading-tight">{stats.quotation}</p>
+            <p className="text-[13px] text-[#6B7280]">报价中</p>
+            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.quotation}</p>
           </div>
         </div>
       </div>
@@ -417,7 +417,7 @@ export default function ProjectLeadsPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -448,20 +448,20 @@ export default function ProjectLeadsPage() {
             <option value="已立项">已立项</option>
           </select>
 
-          <div className="ml-auto text-[13px] text-[#86868B]">
-            共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 条线索
+          <div className="ml-auto text-[13px] text-[#6B7280]">
+            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条线索
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : leads.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-              <Briefcase className="w-8 h-8 text-[#86868B]" />
+            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+              <Briefcase className="w-8 h-8 text-[#6B7280]" />
             </div>
             <p>{search || filterStatus ? "没有匹配的项目线索" : "暂无线索，点击右上角登记"}</p>
           </div>
@@ -507,7 +507,7 @@ export default function ProjectLeadsPage() {
                   const sc = statusConfig[lead.currentStatus] || statusConfig["跟踪中"];
                   const isEstablished = lead.currentStatus === "已立项";
                   return (
-                    <tr key={lead.id} className={isSelected(lead.id) ? "bg-[#007AFF]/5" : ""}>
+                    <tr key={lead.id} className={isSelected(lead.id) ? "bg-[#111827]/5" : ""}>
                       {isAdminUser && (
                         <td className="w-10">
                           <input
@@ -519,7 +519,7 @@ export default function ProjectLeadsPage() {
                         </td>
                       )}
                       <td className="whitespace-nowrap">
-                        <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
+                        <span className="font-mono text-[13px] font-semibold text-[#111827]">
                           {lead.projectSourceId}
                         </span>
                       </td>
@@ -562,7 +562,7 @@ export default function ProjectLeadsPage() {
                                 编辑
                               </button>
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                                 onClick={() => setDeleteConfirm(lead)}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -571,7 +571,7 @@ export default function ProjectLeadsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                      <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
                         {lead.lastModifiedBy && (
                           <span>{lead.lastModifiedBy}</span>
                         )}
@@ -584,7 +584,7 @@ export default function ProjectLeadsPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F0F0F0]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -592,7 +592,7 @@ export default function ProjectLeadsPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#86868B] px-3">
+                <span className="text-[13px] text-[#6B7280] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -625,15 +625,15 @@ export default function ProjectLeadsPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                客户 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                客户 <span className="text-[#6B7280]">*</span>
               </label>
               <select
                 className="ios-select"
@@ -647,7 +647,7 @@ export default function ProjectLeadsPage() {
               </select>
               <button
                 type="button"
-                className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF] mt-1"
+                className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827] mt-1"
                 onClick={() => {
                   setCustomerError("");
                   setShowCustomerModal(true);
@@ -659,8 +659,8 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                项目名称 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                项目名称 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -672,9 +672,9 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目地点</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">项目地点</label>
               <div className="relative">
-                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -686,9 +686,9 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目联系人</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">项目联系人</label>
               <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -700,9 +700,9 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系电话</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">联系电话</label>
               <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -714,9 +714,9 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系邮箱</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">联系邮箱</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="email"
                   className="ios-input pl-10"
@@ -728,10 +728,10 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                项目性质 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                项目性质 <span className="text-[#6B7280]">*</span>
               </label>
-              <div className="flex flex-wrap gap-2 p-2.5 border border-[#E5E5EA] rounded-xl bg-white min-h-[42px]">
+              <div className="flex flex-wrap gap-2 p-2.5 border border-[#E5E7EB] rounded-xl bg-white min-h-[42px]">
                 {projectNatureOptions.map((opt) => {
                   const selected = form.projectNature.includes(opt);
                   return (
@@ -740,8 +740,8 @@ export default function ProjectLeadsPage() {
                       type="button"
                       className={`px-2.5 py-1 rounded-lg text-[12px] font-medium transition-all ${
                         selected
-                          ? "bg-[#007AFF] text-white"
-                          : "bg-[#F5F5F7] text-[#86868B] hover:bg-[#E8E8ED]"
+                          ? "bg-[#111827] text-white"
+                          : "bg-[#F9FAFB] text-[#6B7280] hover:bg-[#E8E8ED]"
                       }`}
                       onClick={() => {
                         const updated = selected
@@ -759,8 +759,8 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                实施主体 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                实施主体 <span className="text-[#6B7280]">*</span>
               </label>
               <select
                 className="ios-select"
@@ -775,7 +775,7 @@ export default function ProjectLeadsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmit} disabled={saving}>
               {saving ? "保存中..." : editingLead ? "保存修改" : "创建线索"}
@@ -791,13 +791,13 @@ export default function ProjectLeadsPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#6B7280]" />
           </div>
-          <p className="text-[15px] text-[#1D1D1F] mb-1">
+          <p className="text-[15px] text-[#111827] mb-1">
             确定要删除线索 <span className="font-semibold">{deleteConfirm?.projectSourceId}</span> 吗？
           </p>
-          <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
             <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>
@@ -815,15 +815,15 @@ export default function ProjectLeadsPage() {
       >
         <div className="space-y-4">
           {customerError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {customerError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                客户名称 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                客户名称 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -838,7 +838,7 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">行业类型</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">行业类型</label>
               <select
                 className="ios-select"
                 value={customerForm.industryType}
@@ -851,7 +851,7 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">客户等级</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">客户等级</label>
               <select
                 className="ios-select"
                 value={customerForm.customerGrade}
@@ -864,9 +864,9 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">联系人</label>
               <div className="relative">
-                <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -878,9 +878,9 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">电话</label>
               <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -892,9 +892,9 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">邮箱</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">邮箱</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="email"
                   className="ios-input pl-10"
@@ -906,7 +906,7 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">商务责任人</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">商务责任人</label>
               <input
                 type="text"
                 className="ios-input"
@@ -917,9 +917,9 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">地址</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">地址</label>
               <div className="relative">
-                <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-[#86868B]" />
+                <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -931,7 +931,7 @@ export default function ProjectLeadsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowCustomerModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleCreateCustomer} disabled={customerSaving}>
               {customerSaving ? "保存中..." : "创建客户"}

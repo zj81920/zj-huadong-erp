@@ -107,29 +107,29 @@ export default function FileUpload({
 
   return (
     <div className="space-y-1.5">
-      <label className="block text-[13px] font-medium text-[#1D1D1F]">
+      <label className="block text-[13px] font-medium text-[#111827]">
         {label}
       </label>
 
       {value ? (
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F5F5F7] border border-[#E5E5EA]">
-          <div className="w-9 h-9 rounded-lg bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
-            <FileText className="w-4.5 h-4.5 text-[#007AFF]" />
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
+          <div className="w-9 h-9 rounded-lg bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
+            <FileText className="w-4.5 h-4.5 text-[#111827]" />
           </div>
           <a
             href={value}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 min-w-0 text-sm text-[#007AFF] hover:underline truncate"
+            className="flex-1 min-w-0 text-sm text-[#111827] hover:underline truncate"
           >
             {extractFilename(value)}
           </a>
           <button
             type="button"
             onClick={handleRemove}
-            className="w-7 h-7 rounded-full bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20 flex items-center justify-center transition-colors duration-150 flex-shrink-0"
+            className="w-7 h-7 rounded-full bg-[#6B7280]/10 hover:bg-[#6B7280]/20 flex items-center justify-center transition-colors duration-150 flex-shrink-0"
           >
-            <X className="w-3.5 h-3.5 text-[#FF3B30]" />
+            <X className="w-3.5 h-3.5 text-[#6B7280]" />
           </button>
         </div>
       ) : (
@@ -141,10 +141,10 @@ export default function FileUpload({
           className={`
             relative flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200
             ${uploading
-              ? "border-[#007AFF]/40 bg-[#007AFF]/5 pointer-events-none"
+              ? "border-[#111827]/40 bg-[#111827]/5 pointer-events-none"
               : dragOver
-                ? "border-[#007AFF] bg-[#007AFF]/5"
-                : "border-[#E5E5EA] bg-[#F5F5F7] hover:border-[#007AFF]/40 hover:bg-[#007AFF]/5"
+                ? "border-[#111827] bg-[#111827]/5"
+                : "border-[#E5E7EB] bg-[#F9FAFB] hover:border-[#111827]/40 hover:bg-[#111827]/5"
             }
           `}
         >
@@ -158,20 +158,20 @@ export default function FileUpload({
 
           {uploading ? (
             <>
-              <Loader2 className="w-6 h-6 text-[#007AFF] animate-spin" />
-              <div className="text-sm text-[#86868B]">上传中...</div>
-              <div className="w-full max-w-[200px] h-1.5 bg-[#E5E5EA] rounded-full overflow-hidden">
+              <Loader2 className="w-6 h-6 text-[#111827] animate-spin" />
+              <div className="text-sm text-[#6B7280]">上传中...</div>
+              <div className="w-full max-w-[200px] h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#007AFF] rounded-full transition-all duration-300 ease-out"
+                  className="h-full bg-[#111827] rounded-full transition-all duration-300 ease-out"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <div className="text-xs text-[#86868B]">{progress}%</div>
+              <div className="text-xs text-[#6B7280]">{progress}%</div>
             </>
           ) : (
             <>
-              <Upload className="w-6 h-6 text-[#86868B]" />
-              <div className="text-sm text-[#86868B]">
+              <Upload className="w-6 h-6 text-[#6B7280]" />
+              <div className="text-sm text-[#6B7280]">
                 点击或拖拽文件到此处上传
               </div>
             </>

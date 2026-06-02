@@ -488,30 +488,30 @@ export default function OutsourcingPage() {
 
       <div className="grid grid-cols-3 gap-5 mb-6">
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#007AFF]/10 flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-[#007AFF]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
+            <Briefcase className="w-5 h-5 text-[#111827]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">外包任务数</p>
-            <p className="text-[24px] font-bold text-[#1D1D1F] leading-tight">{stats.total}</p>
+            <p className="text-[13px] text-[#6B7280]">外包任务数</p>
+            <p className="text-[24px] font-bold text-[#111827] leading-tight">{stats.total}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#FF9500]/10 flex items-center justify-center">
-            <Clock className="w-5 h-5 text-[#FF9500]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
+            <Clock className="w-5 h-5 text-[#6B7280]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">待验收</p>
-            <p className="text-[24px] font-bold text-[#FF9500] leading-tight">{stats.pendingAcceptance}</p>
+            <p className="text-[13px] text-[#6B7280]">待验收</p>
+            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.pendingAcceptance}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#34C759]/10 flex items-center justify-center">
-            <DollarSign className="w-5 h-5 text-[#34C759]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
+            <DollarSign className="w-5 h-5 text-[#6B7280]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">外包总额</p>
-            <p className="text-[24px] font-bold text-[#34C759] leading-tight">{formatMoney(stats.totalAmount)}</p>
+            <p className="text-[13px] text-[#6B7280]">外包总额</p>
+            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{formatMoney(stats.totalAmount)}</p>
           </div>
         </div>
       </div>
@@ -519,7 +519,7 @@ export default function OutsourcingPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -588,20 +588,20 @@ export default function OutsourcingPage() {
             <option value="已驳回">已驳回</option>
           </select>
 
-          <div className="ml-auto text-[13px] text-[#86868B]">
-            共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#6B7280]">
+            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : tasks.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-              <Briefcase className="w-8 h-8 text-[#86868B]" />
+            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+              <Briefcase className="w-8 h-8 text-[#6B7280]" />
             </div>
             <p>{search || filterProject || filterType || filterAcceptance || filterApproval ? "没有匹配的外包任务" : "暂无外包任务，点击右上角新增"}</p>
           </div>
@@ -642,7 +642,7 @@ export default function OutsourcingPage() {
                   const isCompany = task.type === "to_company";
                   const supplier = task.supplier;
                   return (
-                    <tr key={task.id} className={isSelected(task.id) ? "bg-[#007AFF]/5" : ""}>
+                    <tr key={task.id} className={isSelected(task.id) ? "bg-[#111827]/5" : ""}>
                       {isAdmin && (
                         <td className="w-10">
                           <input
@@ -654,7 +654,7 @@ export default function OutsourcingPage() {
                         </td>
                       )}
                       <td>
-                        <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
+                        <span className="font-mono text-[13px] font-semibold text-[#111827]">
                           {task.projectSourceId}
                         </span>
                       </td>
@@ -667,9 +667,9 @@ export default function OutsourcingPage() {
                       <td>
                         <div className="flex items-center gap-1.5">
                           {isCompany ? (
-                            <Building2 className="w-3.5 h-3.5 text-[#86868B]" />
+                            <Building2 className="w-3.5 h-3.5 text-[#6B7280]" />
                           ) : (
-                            <UserCircle className="w-3.5 h-3.5 text-[#86868B]" />
+                            <UserCircle className="w-3.5 h-3.5 text-[#6B7280]" />
                           )}
                           <span className="font-semibold">{task.targetName}</span>
                           {supplier?.supplierType && (
@@ -684,9 +684,9 @@ export default function OutsourcingPage() {
                             : task.taskDescription}
                         </span>
                       </td>
-                      <td className="text-[#86868B]">{task.workload || "-"}</td>
+                      <td className="text-[#6B7280]">{task.workload || "-"}</td>
                       <td>
-                        <span className={pastDue ? "text-[#FF3B30] font-semibold" : "text-[#86868B]"}>
+                        <span className={pastDue ? "text-[#6B7280] font-semibold" : "text-[#6B7280]"}>
                           {formatDate(task.deliveryDeadline)}
                         </span>
                       </td>
@@ -720,7 +720,7 @@ export default function OutsourcingPage() {
                           </button>
                           {(task.approvalStatus === "草稿" || task.approvalStatus === "已驳回" || isAdmin) && (
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                               onClick={() => setDeleteConfirm(task)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -735,7 +735,7 @@ export default function OutsourcingPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F0F0F0]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -743,7 +743,7 @@ export default function OutsourcingPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#86868B] px-3">
+                <span className="text-[13px] text-[#6B7280] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -776,7 +776,7 @@ export default function OutsourcingPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {formError}
             </div>
           )}
@@ -795,8 +795,8 @@ export default function OutsourcingPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                类型 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                类型 <span className="text-[#6B7280]">*</span>
               </label>
               <select
                 className="ios-select"
@@ -810,8 +810,8 @@ export default function OutsourcingPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                外包对象 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                外包对象 <span className="text-[#6B7280]">*</span>
               </label>
               <div className="flex items-center gap-2">
                 <select
@@ -832,7 +832,7 @@ export default function OutsourcingPage() {
                 </select>
                 <button
                   type="button"
-                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF] whitespace-nowrap"
+                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827] whitespace-nowrap"
                   onClick={() => {
                     setSupplierError("");
                     setSupplierForm(emptySupplierForm);
@@ -848,8 +848,8 @@ export default function OutsourcingPage() {
             </div>
 
             <div className={form.type === "to_company" ? "col-span-2" : ""}>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                任务描述 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                任务描述 <span className="text-[#6B7280]">*</span>
               </label>
               <textarea
                 className="ios-input min-h-[80px] resize-y"
@@ -860,7 +860,7 @@ export default function OutsourcingPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">工作量</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">工作量</label>
               <input
                 type="text"
                 className="ios-input"
@@ -871,8 +871,8 @@ export default function OutsourcingPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                交付截止日 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                交付截止日 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="date"
@@ -883,11 +883,11 @@ export default function OutsourcingPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                金额 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                金额 <span className="text-[#6B7280]">*</span>
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="number"
                   className="ios-input pl-10"
@@ -901,7 +901,7 @@ export default function OutsourcingPage() {
             {editingTask && (
               <>
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">验收状态</label>
+                  <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">验收状态</label>
                   <select
                     className="ios-select"
                     value={form.acceptanceStatus}
@@ -914,7 +914,7 @@ export default function OutsourcingPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">审批状态</label>
+                  <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">审批状态</label>
                   <select
                     className="ios-select"
                     value={form.approvalStatus}
@@ -930,7 +930,7 @@ export default function OutsourcingPage() {
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmit} disabled={saving}>
               {saving ? "保存中..." : editingTask ? "保存修改" : "创建任务"}
@@ -947,15 +947,15 @@ export default function OutsourcingPage() {
       >
         <div className="space-y-4">
           {supplierError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {supplierError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                供应商名称 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                供应商名称 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -966,7 +966,7 @@ export default function OutsourcingPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">供应商性质</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">供应商性质</label>
               <select
                 className="ios-select"
                 value={supplierForm.supplierType}
@@ -981,7 +981,7 @@ export default function OutsourcingPage() {
               </select>
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">联系人</label>
               <input
                 type="text"
                 className="ios-input"
@@ -991,7 +991,7 @@ export default function OutsourcingPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">电话</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1001,7 +1001,7 @@ export default function OutsourcingPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">邮箱</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">邮箱</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1011,7 +1011,7 @@ export default function OutsourcingPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">地址</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">地址</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1021,7 +1021,7 @@ export default function OutsourcingPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">开户行</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">开户行</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1031,7 +1031,7 @@ export default function OutsourcingPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">银行账号</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">银行账号</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1041,7 +1041,7 @@ export default function OutsourcingPage() {
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
               <textarea
                 className="ios-input min-h-[60px] resize-y"
                 placeholder="请输入备注"
@@ -1050,7 +1050,7 @@ export default function OutsourcingPage() {
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">供应商资料</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">供应商资料</label>
               <div className="flex items-center gap-3">
                 <input
                   ref={supplierFileRef}
@@ -1069,13 +1069,13 @@ export default function OutsourcingPage() {
                   {supplierUploading ? "上传中..." : "选择文件"}
                 </button>
                 {supplierUploadName && (
-                  <span className="text-[12px] text-[#34C759]">{supplierUploadName}</span>
+                  <span className="text-[12px] text-[#6B7280]">{supplierUploadName}</span>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowSupplierModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleCreateSupplier} disabled={supplierSaving}>
               {supplierSaving ? "创建中..." : "确认创建"}
@@ -1092,13 +1092,13 @@ export default function OutsourcingPage() {
       >
         {detailTask && (
           <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F0F0F0]">
-              <div className="w-12 h-12 rounded-2xl bg-[#007AFF]/10 flex items-center justify-center">
-                <Briefcase className="w-6 h-6 text-[#007AFF]" />
+            <div className="flex items-center gap-3 pb-4 border-b border-[#F3F4F6]">
+              <div className="w-12 h-12 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
+                <Briefcase className="w-6 h-6 text-[#111827]" />
               </div>
               <div>
-                <p className="text-[17px] font-bold text-[#1D1D1F]">{detailTask.targetName}</p>
-                <p className="text-[13px] text-[#007AFF] font-mono font-semibold">{detailTask.projectSourceId}</p>
+                <p className="text-[17px] font-bold text-[#111827]">{detailTask.targetName}</p>
+                <p className="text-[13px] text-[#111827] font-mono font-semibold">{detailTask.projectSourceId}</p>
               </div>
               <span className={`ios-badge ml-auto ${typeConfig[detailTask.type]?.color || "ios-badge-gray"}`}>
                 {typeConfig[detailTask.type]?.label || detailTask.type}
@@ -1106,71 +1106,71 @@ export default function OutsourcingPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">项目名称</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailTask.project.name}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">项目名称</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{detailTask.project.name}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">类型</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">类型</p>
+                <p className="text-[14px] font-semibold text-[#111827]">
                   {typeConfig[detailTask.type]?.label || detailTask.type}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">外包对象</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">外包对象</p>
                 <div className="flex items-center gap-1.5">
-                  <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailTask.targetName}</p>
+                  <p className="text-[14px] font-semibold text-[#111827]">{detailTask.targetName}</p>
                   {detailTask.supplier?.supplierType && (
                     <span className="ios-badge ios-badge-gray text-[10px]!">{detailTask.supplier.supplierType}</span>
                   )}
                 </div>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">
                   {detailTask.type === "to_company" ? "关联合同" : "付款来源"}
                 </p>
                 {detailTask.type === "to_company" && detailTask.contractId ? (
-                  <p className="text-[14px] font-semibold text-[#007AFF]">
+                  <p className="text-[14px] font-semibold text-[#111827]">
                     已自动生成支出合同（审批通过后自动创建）
                   </p>
                 ) : detailTask.type === "to_company" ? (
-                  <p className="text-[14px] text-[#86868B]">
+                  <p className="text-[14px] text-[#6B7280]">
                     审批通过后将自动生成支出合同
                   </p>
                 ) : detailTask.acceptanceStatus === "已验收" ? (
-                  <p className="text-[14px] font-semibold text-[#34C759]">
+                  <p className="text-[14px] font-semibold text-[#6B7280]">
                     已自动创建应付记录（验收通过后自动创建）
                   </p>
                 ) : (
-                  <p className="text-[14px] text-[#86868B]">
+                  <p className="text-[14px] text-[#6B7280]">
                     验收通过后将自动创建应付记录
                   </p>
                 )}
               </div>
-              <div className="col-span-2 p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">任务描述</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailTask.taskDescription}</p>
+              <div className="col-span-2 p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">任务描述</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{detailTask.taskDescription}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">工作量</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailTask.workload || "-"}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">工作量</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{detailTask.workload || "-"}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">交付截止日</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailTask.deliveryDeadline)}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">交付截止日</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailTask.deliveryDeadline)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">金额</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatMoney(detailTask.amount)}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">金额</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{formatMoney(detailTask.amount)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">验收状态</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">验收状态</p>
                 <span className={`ios-badge ${acceptanceStatusConfig[detailTask.acceptanceStatus]?.color || "ios-badge-gray"}`}>
                   {detailTask.acceptanceStatus}
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">审批状态</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">审批状态</p>
                 <AdminStatusOverride
                   businessType="outsourcing"
                   businessId={detailTask.id}
@@ -1187,13 +1187,13 @@ export default function OutsourcingPage() {
                   }}
                 />
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">创建时间</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailTask.createdAt)}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">创建时间</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailTask.createdAt)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">更新时间</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailTask.updatedAt)}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">更新时间</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailTask.updatedAt)}</p>
               </div>
             </div>
 
@@ -1209,13 +1209,13 @@ export default function OutsourcingPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#6B7280]" />
           </div>
-          <p className="text-[15px] text-[#1D1D1F] mb-1">
+          <p className="text-[15px] text-[#111827] mb-1">
             确定要删除外包任务 <span className="font-semibold">{deleteConfirm?.targetName}</span> 吗？
           </p>
-          <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
             <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>

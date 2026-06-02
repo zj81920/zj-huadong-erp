@@ -102,14 +102,14 @@ export default function AdminStatusOverride({
 
   return (
     <div className="inline-flex items-center gap-1.5">
-      <Shield className={`text-[#FF9500] ${size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"}`} />
+      <Shield className={`text-[#6B7280] ${size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"}`} />
       <select
         value={currentStatus}
         onChange={handleChange}
         disabled={changing}
         className={`ios-select !py-1 !pr-7 !rounded-lg ${
           size === "sm" ? "!text-[11px] !pl-2" : "!text-[12px] !pl-2.5"
-        } border-[#FF9500]/30 bg-[#FF9500]/5`}
+        } border-[#6B7280]/30 bg-[#6B7280]/5`}
       >
         {statuses.map((s) => (
           <option key={s} value={s}>
@@ -117,7 +117,7 @@ export default function AdminStatusOverride({
           </option>
         ))}
       </select>
-      {changing && <Loader2 className="w-3 h-3 text-[#FF9500] animate-spin" />}
+      {changing && <Loader2 className="w-3 h-3 text-[#6B7280] animate-spin" />}
     </div>
   );
 }

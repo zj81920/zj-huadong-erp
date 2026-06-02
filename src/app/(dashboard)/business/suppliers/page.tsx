@@ -420,7 +420,7 @@ export default function SuppliersPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -477,20 +477,20 @@ export default function SuppliersPage() {
             <option value="已驳回">已驳回</option>
           </select>
 
-          <div className="ml-auto text-[13px] text-[#86868B]">
-            共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#6B7280]">
+            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : suppliers.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-              <Users className="w-8 h-8 text-[#86868B]" />
+            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+              <Users className="w-8 h-8 text-[#6B7280]" />
             </div>
             <p>{search || filterType || filterStatus || filterApproval ? "没有匹配的供应商记录" : "暂无供应商，点击右上角新增"}</p>
           </div>
@@ -521,7 +521,7 @@ export default function SuppliersPage() {
               </thead>
               <tbody>
                 {suppliers.map((supplier) => (
-                  <tr key={supplier.id} className={isSelected(supplier.id) ? "bg-[#007AFF]/5" : ""}>
+                  <tr key={supplier.id} className={isSelected(supplier.id) ? "bg-[#111827]/5" : ""}>
                     {isAdminUser && (
                       <td className="w-10">
                         <input
@@ -534,8 +534,8 @@ export default function SuppliersPage() {
                     )}
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="w-4 h-4 text-[#007AFF]" />
+                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="w-4 h-4 text-[#111827]" />
                         </div>
                         <span className="font-semibold">{supplier.name}</span>
                       </div>
@@ -546,7 +546,7 @@ export default function SuppliersPage() {
                           {supplier.supplierType}
                         </span>
                       ) : (
-                        <span className="text-[#86868B]">-</span>
+                        <span className="text-[#6B7280]">-</span>
                       )}
                     </td>
                     <td>
@@ -563,7 +563,7 @@ export default function SuppliersPage() {
                     <td>
                       {supplier.phone ? (
                         <span className="flex items-center gap-1">
-                          <Phone className="w-3.5 h-3.5 text-[#86868B]" />
+                          <Phone className="w-3.5 h-3.5 text-[#6B7280]" />
                           {supplier.phone}
                         </span>
                       ) : (
@@ -582,14 +582,14 @@ export default function SuppliersPage() {
                               编辑
                             </button>
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                               onClick={() => setDeleteConfirm(supplier)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                               删除
                             </button>
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
                               disabled={submittingId === supplier.id}
                               onClick={() => handleSubmitApproval(supplier.id)}
                             >
@@ -601,7 +601,7 @@ export default function SuppliersPage() {
                           <>
                             {isAdminUser && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                                 onClick={() => setDeleteConfirm(supplier)}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -620,7 +620,7 @@ export default function SuppliersPage() {
                           <>
                             {isAdminUser && (
                               <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                                 onClick={() => setDeleteConfirm(supplier)}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -638,7 +638,7 @@ export default function SuppliersPage() {
                         ) : null}
                       </div>
                     </td>
-                    <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                    <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
                       {supplier.lastModifiedBy && (
                         <span>{supplier.lastModifiedBy}</span>
                       )}
@@ -650,7 +650,7 @@ export default function SuppliersPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F0F0F0]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -658,7 +658,7 @@ export default function SuppliersPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#86868B] px-3">
+                <span className="text-[13px] text-[#6B7280] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -691,15 +691,15 @@ export default function SuppliersPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                供应商名称 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                供应商名称 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -711,7 +711,7 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">供应商性质</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">供应商性质</label>
               <select
                 className="ios-select"
                 value={form.supplierType}
@@ -727,7 +727,7 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">供应商状态</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">供应商状态</label>
               <select
                 className="ios-select"
                 value={form.status}
@@ -739,9 +739,9 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">联系人</label>
               <div className="relative">
-                <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -753,9 +753,9 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">电话</label>
               <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -767,9 +767,9 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">邮箱</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">邮箱</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="email"
                   className="ios-input pl-10"
@@ -781,7 +781,7 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">开户行信息</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">开户行信息</label>
               <input
                 type="text"
                 className="ios-input"
@@ -792,7 +792,7 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">开户行账号</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">开户行账号</label>
               <input
                 type="text"
                 className="ios-input"
@@ -803,9 +803,9 @@ export default function SuppliersPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">地址</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">地址</label>
               <div className="relative">
-                <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-[#86868B]" />
+                <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -817,7 +817,7 @@ export default function SuppliersPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
               <textarea
                 className="ios-input min-h-[80px] resize-none"
                 placeholder="备注信息"
@@ -827,7 +827,7 @@ export default function SuppliersPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">供应商资料</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">供应商资料</label>
               <div className="space-y-2">
                 <input
                   ref={fileInputRef}
@@ -839,12 +839,12 @@ export default function SuppliersPage() {
                 {form.attachmentUrl ? (
                   <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0]">
                     <FileCheck className="w-4 h-4 text-[#22C55E] flex-shrink-0" />
-                    <span className="flex-1 text-[13px] text-[#1D1D1F] truncate">
+                    <span className="flex-1 text-[13px] text-[#111827] truncate">
                       {uploadFileName || "已上传文件"}
                     </span>
                     <button
                       type="button"
-                      className="text-[#86868B] hover:text-[#FF3B30]"
+                      className="text-[#6B7280] hover:text-[#6B7280]"
                       onClick={() => {
                         setForm((prev) => ({ ...prev, attachmentUrl: "" }));
                         setUploadFileName("");
@@ -863,14 +863,14 @@ export default function SuppliersPage() {
                   <Upload className="w-4 h-4" />
                   {uploading ? "上传中..." : form.attachmentUrl ? "重新上传" : "选择文件上传"}
                 </button>
-                <p className="text-[12px] text-[#86868B]">
+                <p className="text-[12px] text-[#6B7280]">
                   支持 PDF、Word、Excel、图片、压缩包，最大 10MB
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -895,13 +895,13 @@ export default function SuppliersPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#6B7280]" />
           </div>
-          <p className="text-[15px] text-[#1D1D1F] mb-1">
+          <p className="text-[15px] text-[#111827] mb-1">
             确定要删除供应商 <span className="font-semibold">{deleteConfirm?.name}</span> 吗？
           </p>
-          <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"
@@ -929,38 +929,38 @@ export default function SuppliersPage() {
         {detailSupplier && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">供应商名称</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">供应商名称</p>
                 <p className="text-[14px] font-semibold">{detailSupplier.name}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">供应商性质</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">供应商性质</p>
                 <p className="text-[14px] font-semibold">{detailSupplier.supplierType || "-"}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">审批状态</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">审批状态</p>
                 <span className={`ios-badge ${approvalStatusConfig[detailSupplier.approvalStatus]?.color || "ios-badge-gray"}`}>
                   {approvalStatusConfig[detailSupplier.approvalStatus]?.label || detailSupplier.approvalStatus}
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">供应商状态</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">供应商状态</p>
                 <span className={`ios-badge ${statusColorMap[detailSupplier.status || "当前有效"]}`}>
                   {detailSupplier.status || "当前有效"}
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">联系人</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">联系人</p>
                 <p className="text-[14px] font-semibold">{detailSupplier.contactPerson || "-"}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">电话</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">电话</p>
                 <p className="text-[14px] font-semibold">{detailSupplier.phone || "-"}</p>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[#F0F0F0]">
-              <h4 className="text-[13px] font-bold text-[#1D1D1F] mb-3">审批流程</h4>
+            <div className="pt-3 border-t border-[#F3F4F6]">
+              <h4 className="text-[13px] font-bold text-[#111827] mb-3">审批流程</h4>
               <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
             </div>
           </div>

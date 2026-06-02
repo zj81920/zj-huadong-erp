@@ -66,10 +66,10 @@ const statusLabelMap: Record<string, string> = {
 };
 
 const statusColorMap: Record<string, string> = {
-  "执行": "bg-[#34C759]",
-  "完工": "bg-[#007AFF]",
-  "暂停": "bg-[#FF9500]",
-  "终止": "bg-[#FF3B30]",
+  "执行": "bg-[#6B7280]",
+  "完工": "bg-[#111827]",
+  "暂停": "bg-[#6B7280]",
+  "终止": "bg-[#6B7280]",
 };
 
 export default function Dashboard() {
@@ -98,7 +98,7 @@ export default function Dashboard() {
       value: stats ? String(stats.projectCount) : "-",
       subtitle: stats?.activeEmployeeCount ? `${stats.activeEmployeeCount} 名在职员工` : "",
       icon: <Briefcase className="w-5 h-5" />,
-      tint: "#007AFF",
+      tint: "#111827",
       tintLight: "rgba(0, 122, 255, 0.08)",
     },
     {
@@ -106,7 +106,7 @@ export default function Dashboard() {
       value: stats ? formatMoney(stats.totalIncome) : "-",
       subtitle: `合同 ${formatMoney(stats?.incomeContractTotal || 0)}`,
       icon: <TrendingUp className="w-5 h-5" />,
-      tint: "#34C759",
+      tint: "#6B7280",
       tintLight: "rgba(52, 199, 89, 0.08)",
     },
     {
@@ -114,7 +114,7 @@ export default function Dashboard() {
       value: stats ? formatMoney(stats.totalExpense) : "-",
       subtitle: `合同 ${formatMoney(stats?.expenseContractTotal || 0)}`,
       icon: <TrendingDown className="w-5 h-5" />,
-      tint: "#FF9500",
+      tint: "#6B7280",
       tintLight: "rgba(255, 149, 0, 0.08)",
     },
     {
@@ -122,7 +122,7 @@ export default function Dashboard() {
       value: stats ? String(stats.pendingApprovals) : "-",
       subtitle: "待您处理",
       icon: <FileText className="w-5 h-5" />,
-      tint: "#AF52DE",
+      tint: "#6B7280",
       tintLight: "rgba(175, 82, 222, 0.08)",
       onClick: () => router.push("/approvals"),
     },
@@ -153,7 +153,7 @@ export default function Dashboard() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+          <div className="w-10 h-10 border-2 border-text-secondary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <div className="space-y-5">
@@ -165,20 +165,17 @@ export default function Dashboard() {
                 onClick={card.onClick}
               >
                 <div className="relative z-10 flex flex-col h-full">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[13px] font-medium text-[#86868B]">{card.title}</span>
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: card.tintLight, color: card.tint }}
-                    >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[12px] font-medium text-text-secondary">{card.title}</span>
+                    <div className="w-7 h-7 rounded flex items-center justify-center text-text-secondary">
                       {card.icon}
                     </div>
                   </div>
-                  <div className="text-[36px] font-bold text-[#1D1D1F] tracking-tight leading-none mb-3">
+                  <div className="text-[24px] font-semibold text-text-primary leading-none mb-2">
                     {card.value}
                   </div>
                   <div className="mt-auto">
-                    <span className="text-[12px] text-[#86868B]">{card.subtitle}</span>
+                    <span className="text-[11px] text-text-tertiary">{card.subtitle}</span>
                   </div>
                 </div>
               </div>
@@ -189,39 +186,39 @@ export default function Dashboard() {
             <div className="bento-card">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-[#34C759]" />
-                  <h3 className="text-[15px] font-bold text-[#1D1D1F]">财务概览</h3>
+                  <DollarSign className="w-5 h-5 text-[#6B7280]" />
+                  <h3 className="text-[15px] font-bold text-[#111827]">财务概览</h3>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="p-3 rounded-xl bg-[#34C759]/6">
-                  <p className="text-[12px] text-[#86868B] mb-1">总收入</p>
-                  <p className="text-[18px] font-bold text-[#34C759]">{formatMoney(stats?.totalIncome || 0)}</p>
+                <div className="p-3 rounded border border-border-primary">
+                  <p className="text-[12px] text-text-secondary mb-1">总收入</p>
+                  <p className="text-[16px] font-semibold text-text-primary">{formatMoney(stats?.totalIncome || 0)}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#FF3B30]/6">
-                  <p className="text-[12px] text-[#86868B] mb-1">总支出</p>
-                  <p className="text-[18px] font-bold text-[#FF3B30]">{formatMoney(stats?.totalExpense || 0)}</p>
+                <div className="p-3 rounded border border-border-primary">
+                  <p className="text-[12px] text-text-secondary mb-1">总支出</p>
+                  <p className="text-[16px] font-semibold text-text-primary">{formatMoney(stats?.totalExpense || 0)}</p>
                 </div>
               </div>
               <div className="space-y-3">
-                <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <div className="p-3 rounded border border-border-primary">
                   <div className="flex items-center justify-between">
-                    <span className="text-[13px] text-[#86868B]">净额</span>
-                    <span className={`text-[15px] font-bold ${(stats?.netAmount || 0) >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"}`}>
+                    <span className="text-[13px] text-text-secondary">净额</span>
+                    <span className="text-[15px] font-semibold text-text-primary">
                       {formatMoney(stats?.netAmount || 0)}
                     </span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl bg-[#FF9500]/6">
-                    <p className="text-[12px] text-[#86868B] mb-1">待收款</p>
-                    <p className="text-[15px] font-bold text-[#FF9500]">{formatMoney(receivableUnpaid)}</p>
-                    <p className="text-[11px] text-[#86868B] mt-0.5">应收总额 {formatMoney(stats?.receivableTotal || 0)}</p>
+                  <div className="p-3 rounded border border-border-primary">
+                    <p className="text-[12px] text-text-secondary mb-1">待收款</p>
+                    <p className="text-[15px] font-semibold text-text-primary">{formatMoney(receivableUnpaid)}</p>
+                    <p className="text-[11px] text-text-tertiary mt-0.5">应收总额 {formatMoney(stats?.receivableTotal || 0)}</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#AF52DE]/6">
-                    <p className="text-[12px] text-[#86868B] mb-1">待付款</p>
-                    <p className="text-[15px] font-bold text-[#AF52DE]">{formatMoney(payableUnpaid)}</p>
-                    <p className="text-[11px] text-[#86868B] mt-0.5">应付总额 {formatMoney(stats?.payableTotal || 0)}</p>
+                  <div className="p-3 rounded border border-border-primary">
+                    <p className="text-[12px] text-text-secondary mb-1">待付款</p>
+                    <p className="text-[15px] font-semibold text-text-primary">{formatMoney(payableUnpaid)}</p>
+                    <p className="text-[11px] text-text-tertiary mt-0.5">应付总额 {formatMoney(stats?.payableTotal || 0)}</p>
                   </div>
                 </div>
               </div>
@@ -230,10 +227,10 @@ export default function Dashboard() {
             <div className="bento-card">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-[#FF3B30]" />
-                  <h3 className="text-[15px] font-bold text-[#1D1D1F]">预警事项</h3>
+                  <AlertCircle className="w-5 h-5 text-text-secondary" />
+                  <h3 className="text-[15px] font-semibold text-text-primary">预警事项</h3>
                   {alertItems.length > 0 && (
-                    <span className="ml-auto text-[13px] font-semibold text-[#FF3B30] bg-[#FF3B30]/10 px-2 py-0.5 rounded-full">
+                    <span className="ml-auto text-[12px] font-medium text-text-primary bg-bg-tertiary px-2 py-0.5 rounded">
                       {alertItems.length} 项
                     </span>
                   )}
@@ -241,41 +238,39 @@ export default function Dashboard() {
               </div>
               {alertItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10">
-                  <div className="w-14 h-14 rounded-full bg-[#34C759]/10 flex items-center justify-center mb-3">
-                    <DollarSign className="w-7 h-7 text-[#34C759]" />
-                  </div>
-                  <p className="text-[14px] font-medium text-[#1D1D1F]">暂无预警</p>
-                  <p className="text-[12px] text-[#86868B] mt-1">所有款项均正常</p>
+                  <DollarSign className="w-7 h-7 text-text-secondary mb-3" />
+                  <p className="text-[14px] font-medium text-text-primary">暂无预警</p>
+                  <p className="text-[12px] text-text-secondary mt-1">所有款项均正常</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {alertItems.map((alert, index) => (
-                    <div key={index} className="flex gap-3 p-3 rounded-xl bg-[#F5F5F7] hover:bg-[#EEEEF0] transition-colors duration-150">
-                      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${alert.level === "high" ? "bg-[#FF3B30]" : "bg-[#FF9500]"}`} />
+                    <div key={index} className="flex gap-3 p-3 rounded bg-bg-secondary hover:bg-bg-tertiary transition-colors duration-150">
+                      <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 bg-text-secondary" />
                       <div>
-                        <p className="text-[13px] font-semibold text-[#1D1D1F]">{alert.title}</p>
-                        <p className="text-[12px] text-[#86868B] mt-0.5">{alert.description}</p>
+                        <p className="text-[13px] font-medium text-text-primary">{alert.title}</p>
+                        <p className="text-[12px] text-text-secondary mt-0.5">{alert.description}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
 
-              <div className="mt-4 pt-4 border-t border-[#F0F0F0]">
+              <div className="mt-4 pt-4 border-t border-border-light">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-[#007AFF]" />
-                    <h3 className="text-[15px] font-bold text-[#1D1D1F]">团队概况</h3>
+                    <Users className="w-5 h-5 text-text-secondary" />
+                    <h3 className="text-[15px] font-semibold text-text-primary">团队概况</h3>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl bg-[#007AFF]/6">
-                    <p className="text-[12px] text-[#86868B] mb-1">员工总数</p>
-                    <p className="text-[18px] font-bold text-[#007AFF]">{stats?.employeeCount || 0}</p>
+                  <div className="p-3 rounded border border-border-primary">
+                    <p className="text-[12px] text-text-secondary mb-1">员工总数</p>
+                    <p className="text-[16px] font-semibold text-text-primary">{stats?.employeeCount || 0}</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#34C759]/6">
-                    <p className="text-[12px] text-[#86868B] mb-1">在职人数</p>
-                    <p className="text-[18px] font-bold text-[#34C759]">{stats?.activeEmployeeCount || 0}</p>
+                  <div className="p-3 rounded border border-border-primary">
+                    <p className="text-[12px] text-text-secondary mb-1">在职人数</p>
+                    <p className="text-[16px] font-semibold text-text-primary">{stats?.activeEmployeeCount || 0}</p>
                   </div>
                 </div>
               </div>
@@ -285,15 +280,15 @@ export default function Dashboard() {
           <div className="bento-card">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-[#007AFF]" />
-                <h3 className="text-[15px] font-bold text-[#1D1D1F]">项目概况</h3>
+                <Briefcase className="w-5 h-5 text-text-secondary" />
+                <h3 className="text-[15px] font-semibold text-text-primary">项目概况</h3>
               </div>
               <div className="flex items-center gap-3">
                 {stats?.projectByStatus.map((ps) => (
                   <span key={ps.status} className="flex items-center gap-1 text-[12px]">
-                    <span className={`w-2 h-2 rounded-full ${statusColorMap[ps.status] || "bg-[#86868B]"}`} />
-                    <span className="text-[#86868B]">{statusLabelMap[ps.status] || ps.status}</span>
-                    <span className="font-semibold text-[#1D1D1F]">{ps.count}</span>
+                    <span className="w-2 h-2 rounded-full bg-text-secondary" />
+                    <span className="text-text-secondary">{statusLabelMap[ps.status] || ps.status}</span>
+                    <span className="font-medium text-text-primary">{ps.count}</span>
                   </span>
                 ))}
               </div>
@@ -315,15 +310,15 @@ export default function Dashboard() {
                   <tbody>
                     {stats.recentProjects.map((project) => (
                       <tr key={project.id}>
-                        <td className="font-mono text-[13px]">{project.projectCode || "-"}</td>
-                        <td className="font-semibold">{project.name}</td>
-                        <td className="text-[#86868B]">{project.customer?.name || "-"}</td>
+                        <td className="font-mono text-[12px] text-text-secondary">{project.projectCode || "-"}</td>
+                        <td className="font-medium">{project.name}</td>
+                        <td className="text-text-secondary">{project.customer?.name || "-"}</td>
                         <td>
-                          <span className={`ios-badge ${project.status === "执行" ? "ios-badge-green" : project.status === "完工" ? "ios-badge-blue" : project.status === "暂停" ? "ios-badge-orange" : "ios-badge-gray"}`}>
+                          <span className="ios-badge ios-badge-gray">
                             {statusLabelMap[project.status] || project.status}
                           </span>
                         </td>
-                        <td className="text-[#86868B] text-[13px] whitespace-nowrap">
+                        <td className="text-text-secondary text-[12px] whitespace-nowrap">
                           {new Date(project.createdAt).toLocaleDateString("zh-CN")}
                         </td>
                         <td>
@@ -342,8 +337,8 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-8">
-                <Briefcase className="w-10 h-10 text-[#86868B] mb-2" />
-                <p className="text-[13px] text-[#86868B]">暂无项目</p>
+                <Briefcase className="w-10 h-10 text-text-secondary mb-2" />
+                <p className="text-[13px] text-text-secondary">暂无项目</p>
               </div>
             )}
           </div>

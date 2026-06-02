@@ -875,7 +875,7 @@ export default function ExpenseContractsPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -937,9 +937,9 @@ export default function ExpenseContractsPage() {
             ))}
           </select>
 
-          <div className="ml-auto text-[13px] text-[#86868B]">
+          <div className="ml-auto text-[13px] text-[#6B7280]">
             共{" "}
-            <span className="font-semibold text-[#1D1D1F]">
+            <span className="font-semibold text-[#111827]">
               {pagination.total}
             </span>{" "}
             条记录
@@ -948,13 +948,13 @@ export default function ExpenseContractsPage() {
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : contracts.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-              <FileText className="w-8 h-8 text-[#86868B]" />
+            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+              <FileText className="w-8 h-8 text-[#6B7280]" />
             </div>
             <p>
               {search || filterStatus || filterProject || filterContractType
@@ -981,12 +981,12 @@ export default function ExpenseContractsPage() {
               </thead>
               <tbody>
                 {contracts.map((contract) => (
-                  <tr key={contract.id} className={isSelected(contract.id) ? "bg-[#007AFF]/5" : ""}>
+                  <tr key={contract.id} className={isSelected(contract.id) ? "bg-[#111827]/5" : ""}>
                     {isAdminUser && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(contract.id)} onChange={() => toggleSelect(contract.id)} /></td>}
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-4 h-4 text-[#007AFF]" />
+                        <div className="w-8 h-8 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-4 h-4 text-[#111827]" />
                         </div>
                         <span className="font-semibold">
                           {contract.contractNo}
@@ -996,11 +996,11 @@ export default function ExpenseContractsPage() {
                     <td>
                       {contract.project ? (
                         <div>
-                          <span className="font-semibold text-[#1D1D1F]">{contract.project.name}</span>
-                          <span className="block text-[11px] text-[#86868B]">{contract.projectSourceId}</span>
+                          <span className="font-semibold text-[#111827]">{contract.project.name}</span>
+                          <span className="block text-[11px] text-[#6B7280]">{contract.projectSourceId}</span>
                         </div>
                       ) : contract.projectSourceId ? (
-                        <span className="text-[#86868B]">{contract.projectSourceId}</span>
+                        <span className="text-[#6B7280]">{contract.projectSourceId}</span>
                       ) : (
                         <span className="ios-badge ios-badge-green">公司级</span>
                       )}
@@ -1008,11 +1008,11 @@ export default function ExpenseContractsPage() {
                     <td>
                       {contract.supplier ? (
                         <div className="flex items-center gap-1.5">
-                          <Building2 className="w-3.5 h-3.5 text-[#86868B]" />
+                          <Building2 className="w-3.5 h-3.5 text-[#6B7280]" />
                           {contract.supplier.name}
                         </div>
                       ) : (
-                        <span className="text-[#86868B]">-</span>
+                        <span className="text-[#6B7280]">-</span>
                       )}
                     </td>
                     <td>
@@ -1023,7 +1023,7 @@ export default function ExpenseContractsPage() {
                     <td className="font-semibold">
                       {formatAmount(contract.totalAmount)}
                     </td>
-                    <td className="text-[#86868B]">
+                    <td className="text-[#6B7280]">
                       {formatDate(contract.signedDate)}
                     </td>
                     <td>
@@ -1055,7 +1055,7 @@ export default function ExpenseContractsPage() {
                               编辑
                             </button>
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                               onClick={() => setDeleteConfirm(contract)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1065,7 +1065,7 @@ export default function ExpenseContractsPage() {
                         )}
                         {statusActionsMap[contract.status] && (
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
                             onClick={() => {
                               const next = statusActionsMap[contract.status][0];
                               if (next.nextStatus === "合同归档") {
@@ -1088,7 +1088,7 @@ export default function ExpenseContractsPage() {
                           statusActionsMap["生效"] &&
                           statusActionsMap["生效"].length > 1 && (
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                               onClick={() =>
                                 handleStatusChange(contract, "关闭")
                               }
@@ -1098,7 +1098,7 @@ export default function ExpenseContractsPage() {
                           )}
                       </div>
                     </td>
-                    <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                    <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
                       {contract.lastModifiedBy && (
                         <span>{contract.lastModifiedBy}</span>
                       )}
@@ -1110,7 +1110,7 @@ export default function ExpenseContractsPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F0F0F0]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -1120,7 +1120,7 @@ export default function ExpenseContractsPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#86868B] px-3">
+                <span className="text-[13px] text-[#6B7280] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -1148,15 +1148,15 @@ export default function ExpenseContractsPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                合同编号 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                合同编号 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -1168,7 +1168,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 合同类型
               </label>
               <select
@@ -1193,14 +1193,14 @@ export default function ExpenseContractsPage() {
                 placeholder="不关联（公司级）"
               />
               {form.projectSourceId && (
-                <p className="text-[11px] text-[#86868B] mt-1">
+                <p className="text-[11px] text-[#6B7280] mt-1">
                   审批流程包含"项目管理部"节点
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 供应商
               </label>
               <div className="flex items-center gap-2">
@@ -1218,7 +1218,7 @@ export default function ExpenseContractsPage() {
                 </select>
                 <button
                   type="button"
-                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF] whitespace-nowrap"
+                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827] whitespace-nowrap"
                   onClick={() => {
                     setSupplierError("");
                     setSupplierForm({
@@ -1244,7 +1244,7 @@ export default function ExpenseContractsPage() {
 
             {form.contractType === "项目采购" && (
               <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                   关联询价单
                 </label>
                 <select
@@ -1265,8 +1265,8 @@ export default function ExpenseContractsPage() {
             )}
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                合同金额 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                合同金额 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="number"
@@ -1280,7 +1280,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 签订日期
               </label>
               <input
@@ -1292,7 +1292,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 合同税率
               </label>
               <select
@@ -1311,7 +1311,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 计价方式
               </label>
               <select
@@ -1327,7 +1327,7 @@ export default function ExpenseContractsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
               合同草稿
             </label>
             <input
@@ -1381,12 +1381,12 @@ export default function ExpenseContractsPage() {
                 {form.draftFiles.map((url, idx) => (
                   <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[12px]">
                     <FileCheck className="w-3.5 h-3.5 text-[#22C55E]" />
-                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#007AFF] hover:underline truncate max-w-[150px]">
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:underline truncate max-w-[150px]">
                       {url.split("/").pop() || `文件${idx + 1}`}
                     </a>
                     <button
                       type="button"
-                      className="text-[#86868B] hover:text-[#FF3B30]"
+                      className="text-[#6B7280] hover:text-[#6B7280]"
                       onClick={() => setForm((prev) => ({ ...prev, draftFiles: prev.draftFiles.filter((_, i) => i !== idx) }))}
                     >
                       <X className="w-3 h-3" />
@@ -1404,21 +1404,21 @@ export default function ExpenseContractsPage() {
               <Upload className="w-4 h-4" />
               {uploading ? "上传中..." : "选择合同草稿文件上传"}
             </button>
-            <p className="text-[12px] text-[#86868B] mt-1">
+            <p className="text-[12px] text-[#6B7280] mt-1">
               支持 PDF、DOC、DOCX、JPG、PNG 格式，上传后自动AI分析
             </p>
           </div>
 
           {aiAnalyzing && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-[#007AFF]/5 text-[#007AFF] text-[13px]">
-              <div className="w-4 h-4 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-[#111827]/5 text-[#111827] text-[13px]">
+              <div className="w-4 h-4 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
               AI 正在分析合同内容...
             </div>
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-              合同概要 {aiAnalyzing && <span className="text-[#86868B] font-normal">（AI生成中...）</span>}
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              合同概要 {aiAnalyzing && <span className="text-[#6B7280] font-normal">（AI生成中...）</span>}
             </label>
             <textarea
               className="ios-input min-h-[80px] resize-none"
@@ -1427,12 +1427,12 @@ export default function ExpenseContractsPage() {
               onChange={(e) => updateForm("contractSummary", e.target.value)}
               maxLength={300}
             />
-            <p className="text-[11px] text-[#86868B] mt-1 text-right">{form.contractSummary.length}/300</p>
+            <p className="text-[11px] text-[#6B7280] mt-1 text-right">{form.contractSummary.length}/300</p>
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-              付款条款 {aiAnalyzing && <span className="text-[#86868B] font-normal">（AI生成中...）</span>}
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              付款条款 {aiAnalyzing && <span className="text-[#6B7280] font-normal">（AI生成中...）</span>}
             </label>
             <textarea
               className="ios-input min-h-[60px] resize-none"
@@ -1442,7 +1442,7 @@ export default function ExpenseContractsPage() {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowModal(false)}
@@ -1472,20 +1472,20 @@ export default function ExpenseContractsPage() {
       >
         {detailLoading ? (
           <div className="flex items-center justify-center py-10">
-            <div className="w-8 h-8 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : detailContract ? (
           <div className="space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#007AFF]/10 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-[#007AFF]" />
+                <div className="w-10 h-10 rounded-full bg-[#111827]/10 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-[#111827]" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-bold text-[#1D1D1F]">
+                  <h3 className="text-[15px] font-bold text-[#111827]">
                     {detailContract.contractNo}
                   </h3>
-                  <p className="text-[13px] text-[#86868B]">
+                  <p className="text-[13px] text-[#6B7280]">
                     {detailContract.projectSourceId
                       ? detailContract.projectSourceId
                       : "公司级支出"}
@@ -1504,7 +1504,7 @@ export default function ExpenseContractsPage() {
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
               <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">合同类型</p>
+                <p className="text-[12px] text-[#6B7280] mb-0.5">合同类型</p>
                 <p className="text-[14px]">
                   <span className="ios-badge ios-badge-blue">
                     {detailContract.contractType}
@@ -1512,34 +1512,34 @@ export default function ExpenseContractsPage() {
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">供应商</p>
-                <p className="text-[14px] font-medium text-[#1D1D1F] flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-[#86868B]" />
+                <p className="text-[12px] text-[#6B7280] mb-0.5">供应商</p>
+                <p className="text-[14px] font-medium text-[#111827] flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-[#6B7280]" />
                   {detailContract.supplier?.name || "-"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">合同金额</p>
-                <p className="text-[14px] font-bold text-[#007AFF]">
+                <p className="text-[12px] text-[#6B7280] mb-0.5">合同金额</p>
+                <p className="text-[14px] font-bold text-[#111827]">
                   {formatAmount(detailContract.totalAmount)}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">签订日期</p>
-                <p className="text-[14px] text-[#1D1D1F]">
+                <p className="text-[12px] text-[#6B7280] mb-0.5">签订日期</p>
+                <p className="text-[14px] text-[#111827]">
                   {formatDate(detailContract.signedDate)}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#1D1D1F]">
+                <p className="text-[12px] text-[#6B7280] mb-0.5">创建时间</p>
+                <p className="text-[14px] text-[#111827]">
                   {formatDate(detailContract.createdAt)}
                 </p>
               </div>
               {detailContract.project && (
                 <div>
-                  <p className="text-[12px] text-[#86868B] mb-0.5">关联项目</p>
-                  <p className="text-[14px] text-[#1D1D1F]">
+                  <p className="text-[12px] text-[#6B7280] mb-0.5">关联项目</p>
+                  <p className="text-[14px] text-[#111827]">
                     {detailContract.project.name} ({detailContract.project.projectCode})
                   </p>
                 </div>
@@ -1548,8 +1548,8 @@ export default function ExpenseContractsPage() {
 
             {detailContract.paymentTerms && (
               <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">付款条款</p>
-                <p className="text-[14px] text-[#1D1D1F] whitespace-pre-wrap">
+                <p className="text-[12px] text-[#6B7280] mb-0.5">付款条款</p>
+                <p className="text-[14px] text-[#111827] whitespace-pre-wrap">
                   {detailContract.paymentTerms}
                 </p>
               </div>
@@ -1557,12 +1557,12 @@ export default function ExpenseContractsPage() {
 
             {detailContract.scannedUrl && (
               <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">扫描件</p>
+                <p className="text-[12px] text-[#6B7280] mb-0.5">扫描件</p>
                 <a
                   href={detailContract.scannedUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[14px] text-[#007AFF] hover:underline"
+                  className="text-[14px] text-[#111827] hover:underline"
                 >
                   {detailContract.scannedUrl}
                 </a>
@@ -1579,7 +1579,7 @@ export default function ExpenseContractsPage() {
               }
               return (
                 <div>
-                  <p className="text-[12px] text-[#86868B] mb-1">归档扫描件</p>
+                  <p className="text-[12px] text-[#6B7280] mb-1">归档扫描件</p>
                   <div className="flex flex-wrap gap-2">
                     {files.map((url, idx) => (
                       <a
@@ -1587,7 +1587,7 @@ export default function ExpenseContractsPage() {
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] text-[12px] text-[#007AFF] hover:underline"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] text-[12px] text-[#111827] hover:underline"
                       >
                         <FileCheck className="w-3.5 h-3.5 text-[#3B82F6]" />
                         {url.split("/").pop() || `扫描件${idx + 1}`}
@@ -1599,14 +1599,14 @@ export default function ExpenseContractsPage() {
             })()}
 
             {detailContract.inquiry && (
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-2">关联询价单</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-2">关联询价单</p>
                 <div className="text-[13px] mb-2">
-                  <span className="text-[#86868B]">采购需求：</span>
-                  <span className="text-[#1D1D1F] font-medium">
+                  <span className="text-[#6B7280]">采购需求：</span>
+                  <span className="text-[#111827] font-medium">
                     {detailContract.inquiry.purchaseRequest.requestNo}
                   </span>
-                  <span className="text-[#86868B] ml-3">
+                  <span className="text-[#6B7280] ml-3">
                     ({detailContract.inquiry.purchaseRequest.items?.length || 0}项物资)
                   </span>
                 </div>
@@ -1632,7 +1632,7 @@ export default function ExpenseContractsPage() {
                           <td className="font-mono">
                             {item.unitPrice != null ? `¥${Number(item.unitPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
                           </td>
-                          <td className="font-mono font-semibold text-[#007AFF]">
+                          <td className="font-mono font-semibold text-[#111827]">
                             {item.totalPrice != null ? `¥${Number(item.totalPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
                           </td>
                         </tr>
@@ -1662,8 +1662,8 @@ export default function ExpenseContractsPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#86868B]" />
-                  <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                  <FileText className="w-4 h-4 text-[#6B7280]" />
+                  <p className="text-[13px] font-semibold text-[#111827]">
                     发票登记 ({contractInvoices.length})
                     </p>
                   </div>
@@ -1713,10 +1713,10 @@ export default function ExpenseContractsPage() {
                             <td>
                               <span className="ios-badge ios-badge-blue text-[11px]">{inv.invoiceType}</span>
                             </td>
-                            <td className="font-mono font-semibold text-[#007AFF]">
+                            <td className="font-mono font-semibold text-[#111827]">
                               {parseFloat(inv.totalAmount || inv.amount || 0).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
                             </td>
-                            <td className="text-[#86868B]">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString("zh-CN") : "-"}</td>
+                            <td className="text-[#6B7280]">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString("zh-CN") : "-"}</td>
                             <td>
                               <span className={`ios-badge ${inv.status === "verified" ? "ios-badge-green" : inv.status === "rejected" ? "ios-badge-red" : "ios-badge-gray"}`}>
                                 {inv.status === "verified" ? "已核验" : inv.status === "rejected" ? "已退回" : "待核验"}
@@ -1726,18 +1726,18 @@ export default function ExpenseContractsPage() {
                         ))}
                       </tbody>
                     </table>
-                    <div className="mt-3 p-3 rounded-xl bg-[#F5F5F7]">
+                    <div className="mt-3 p-3 rounded-xl bg-[#F9FAFB]">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[12px] text-[#86868B]">已收票金额 / 合同总额</span>
-                        <span className="text-[13px] font-semibold text-[#1D1D1F]">
+                        <span className="text-[12px] text-[#6B7280]">已收票金额 / 合同总额</span>
+                        <span className="text-[13px] font-semibold text-[#111827]">
                           ¥{contractInvoices.reduce((sum, inv) => sum + (parseFloat(inv.totalAmount || inv.amount || 0)), 0).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
                           {" / "}
                           {formatAmount(detailContract.totalAmount)}
                         </span>
                       </div>
-                      <div className="w-full h-2 rounded-full bg-[#E5E5EA] overflow-hidden">
+                      <div className="w-full h-2 rounded-full bg-[#E5E7EB] overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-[#007AFF] transition-all duration-500"
+                          className="h-full rounded-full bg-[#111827] transition-all duration-500"
                           style={{
                             width: `${Math.min(100, (contractInvoices.reduce((sum, inv) => sum + (parseFloat(inv.totalAmount || inv.amount || 0)), 0) / Math.max(0.01, parseFloat(detailContract.totalAmount || "0"))) * 100).toFixed(1)}%`,
                           }}
@@ -1746,7 +1746,7 @@ export default function ExpenseContractsPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-6 text-[#86868B] text-[13px] rounded-xl bg-[#F5F5F7]">
+                  <div className="text-center py-6 text-[#6B7280] text-[13px] rounded-xl bg-[#F9FAFB]">
                     暂无发票记录
                   </div>
                 )}
@@ -1755,18 +1755,18 @@ export default function ExpenseContractsPage() {
             {detailContract.deliveryReceipts && detailContract.deliveryReceipts.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <FileCheck className="w-4 h-4 text-[#86868B]" />
-                  <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                  <FileCheck className="w-4 h-4 text-[#6B7280]" />
+                  <p className="text-[13px] font-semibold text-[#111827]">
                     到货验收记录 ({detailContract.deliveryReceipts.length})
                   </p>
                 </div>
                 <div className="space-y-2">
                   {detailContract.deliveryReceipts.map((receipt) => (
-                    <div key={receipt.id} className="flex items-center justify-between p-2.5 rounded-xl bg-[#F5F5F7]">
+                    <div key={receipt.id} className="flex items-center justify-between p-2.5 rounded-xl bg-[#F9FAFB]">
                       <div className="text-[13px]">
-                        <span className="text-[#1D1D1F] font-medium">{receipt.receivedQuantity}</span>
-                        {receipt.deliveryAmount && <span className="text-[#007AFF] ml-2 font-semibold">¥{parseFloat(receipt.deliveryAmount).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</span>}
-                        <span className="text-[#86868B] ml-2">{new Date(receipt.deliveryDate).toLocaleDateString("zh-CN")}</span>
+                        <span className="text-[#111827] font-medium">{receipt.receivedQuantity}</span>
+                        {receipt.deliveryAmount && <span className="text-[#111827] ml-2 font-semibold">¥{parseFloat(receipt.deliveryAmount).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}</span>}
+                        <span className="text-[#6B7280] ml-2">{new Date(receipt.deliveryDate).toLocaleDateString("zh-CN")}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="ios-badge ios-badge-gray text-[11px]">{receipt.receiptStatus}</span>
@@ -1779,17 +1779,17 @@ export default function ExpenseContractsPage() {
             )}
 
             {detailContract.contractType === "项目采购" && (
-              <div className="grid grid-cols-3 gap-3 p-3 rounded-xl bg-[#F5F5F7]">
+              <div className="grid grid-cols-3 gap-3 p-3 rounded-xl bg-[#F9FAFB]">
                 <div>
-                  <p className="text-[12px] text-[#86868B] mb-0.5">合同金额</p>
-                  <p className="text-[14px] font-bold text-[#1D1D1F]">{formatAmount(detailContract.totalAmount)}</p>
+                  <p className="text-[12px] text-[#6B7280] mb-0.5">合同金额</p>
+                  <p className="text-[14px] font-bold text-[#111827]">{formatAmount(detailContract.totalAmount)}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#86868B] mb-0.5">已结算金额</p>
-                  <p className="text-[14px] font-bold text-[#007AFF]">{formatAmount(detailContract.settledAmount || "0")}</p>
+                  <p className="text-[12px] text-[#6B7280] mb-0.5">已结算金额</p>
+                  <p className="text-[14px] font-bold text-[#111827]">{formatAmount(detailContract.settledAmount || "0")}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-[#86868B] mb-0.5">结算状态</p>
+                  <p className="text-[12px] text-[#6B7280] mb-0.5">结算状态</p>
                   <p className="text-[14px]">
                     <span className={`ios-badge ${detailContract.settlementStatus === "settled" ? "ios-badge-green" : detailContract.settlementStatus === "partial" ? "ios-badge-orange" : "ios-badge-gray"}`}>
                       {detailContract.settlementStatus === "settled" ? "已结清" : detailContract.settlementStatus === "partial" ? "部分结算" : "未结算"}
@@ -1802,7 +1802,7 @@ export default function ExpenseContractsPage() {
             <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
           </div>
         ) : (
-          <div className="text-center py-10 text-[#86868B]">
+          <div className="text-center py-10 text-[#6B7280]">
             未找到合同信息
           </div>
         )}
@@ -1815,17 +1815,17 @@ export default function ExpenseContractsPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#6B7280]" />
           </div>
-          <p className="text-[15px] text-[#1D1D1F] mb-1">
+          <p className="text-[15px] text-[#111827] mb-1">
             确定要删除支出合同{" "}
             <span className="font-semibold">
               {deleteConfirm?.contractNo}
             </span>{" "}
             吗？
           </p>
-          <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"
@@ -1852,14 +1852,14 @@ export default function ExpenseContractsPage() {
       >
         <div className="space-y-4">
           {supplierError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {supplierError}
             </div>
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-              供应商名称 <span className="text-[#FF3B30]">*</span>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              供应商名称 <span className="text-[#6B7280]">*</span>
             </label>
             <input
               type="text"
@@ -1875,7 +1875,7 @@ export default function ExpenseContractsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">供应商性质</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">供应商性质</label>
               <select
                 className="ios-select"
                 value={supplierForm.supplierType}
@@ -1890,7 +1890,7 @@ export default function ExpenseContractsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">联系人</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1900,7 +1900,7 @@ export default function ExpenseContractsPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">电话</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1910,7 +1910,7 @@ export default function ExpenseContractsPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">邮箱</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">邮箱</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1922,7 +1922,7 @@ export default function ExpenseContractsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">地址</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">地址</label>
             <input
               type="text"
               className="ios-input"
@@ -1934,7 +1934,7 @@ export default function ExpenseContractsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">开户行信息</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">开户行信息</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1944,7 +1944,7 @@ export default function ExpenseContractsPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">开户行账号</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">开户行账号</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1956,7 +1956,7 @@ export default function ExpenseContractsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
             <textarea
               className="ios-input min-h-[60px] resize-none"
               placeholder="备注信息"
@@ -1966,7 +1966,7 @@ export default function ExpenseContractsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">供应商资料</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">供应商资料</label>
             <input
               ref={supplierFileRef}
               type="file"
@@ -1977,12 +1977,12 @@ export default function ExpenseContractsPage() {
             {supplierAttachmentUrl ? (
               <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] mb-2">
                 <FileCheck className="w-4 h-4 text-[#22C55E] flex-shrink-0" />
-                <span className="flex-1 text-[13px] text-[#1D1D1F] truncate">
+                <span className="flex-1 text-[13px] text-[#111827] truncate">
                   {supplierUploadName || "已上传文件"}
                 </span>
                 <button
                   type="button"
-                  className="text-[#86868B] hover:text-[#FF3B30]"
+                  className="text-[#6B7280] hover:text-[#6B7280]"
                   onClick={() => {
                     setSupplierAttachmentUrl("");
                     setSupplierUploadName("");
@@ -2001,12 +2001,12 @@ export default function ExpenseContractsPage() {
               <Upload className="w-4 h-4" />
               {supplierUploading ? "上传中..." : supplierAttachmentUrl ? "重新上传" : "选择文件上传"}
             </button>
-            <p className="text-[12px] text-[#86868B] mt-1">
+            <p className="text-[12px] text-[#6B7280] mt-1">
               支持 PDF、Word、Excel、图片、压缩包，最大 10MB
             </p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowSupplierModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleCreateSupplier} disabled={supplierSaving}>
               {supplierSaving ? "保存中..." : "确认创建"}
@@ -2023,15 +2023,15 @@ export default function ExpenseContractsPage() {
       >
         <div className="space-y-4">
           {invoiceError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {invoiceError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                发票号码 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                发票号码 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -2046,7 +2046,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">发票代码</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">发票代码</label>
               <input
                 type="text"
                 className="ios-input"
@@ -2057,7 +2057,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">发票类型</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">发票类型</label>
               <select
                 className="ios-select"
                 value={invoiceForm.invoiceType}
@@ -2071,7 +2071,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">开票日期</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">开票日期</label>
               <input
                 type="date"
                 className="ios-input"
@@ -2081,8 +2081,8 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                不含税金额 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                不含税金额 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="number"
@@ -2096,7 +2096,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">税率</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">税率</label>
               <select
                 className="ios-select"
                 value={invoiceForm.taxRate}
@@ -2110,27 +2110,27 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">税额（自动计算）</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">税额（自动计算）</label>
               <input
                 type="text"
-                className="ios-input bg-[#F5F5F7]"
+                className="ios-input bg-[#F9FAFB]"
                 value={invoiceForm.taxAmount ? `¥${invoiceForm.taxAmount}` : ""}
                 readOnly
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">价税合计（自动计算）</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">价税合计（自动计算）</label>
               <input
                 type="text"
-                className="ios-input bg-[#F5F5F7] font-semibold text-[#007AFF]"
+                className="ios-input bg-[#F9FAFB] font-semibold text-[#111827]"
                 value={invoiceForm.totalAmount ? `¥${invoiceForm.totalAmount}` : ""}
                 readOnly
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">销方名称</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">销方名称</label>
               <input
                 type="text"
                 className="ios-input"
@@ -2141,7 +2141,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">销方税号</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">销方税号</label>
               <input
                 type="text"
                 className="ios-input"
@@ -2152,7 +2152,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
               <textarea
                 className="ios-input min-h-[60px] resize-none"
                 placeholder="备注信息"
@@ -2162,7 +2162,7 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">发票扫描件</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">发票扫描件</label>
               <input
                 ref={invoiceFileRef}
                 type="file"
@@ -2175,10 +2175,10 @@ export default function ExpenseContractsPage() {
                   {invoiceForm.attachments.map((url, idx) => (
                     <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[12px]">
                       <FileCheck className="w-3.5 h-3.5 text-[#22C55E]" />
-                      <span className="text-[#1D1D1F] truncate max-w-[150px]">{invoiceUploadName || `附件${idx + 1}`}</span>
+                      <span className="text-[#111827] truncate max-w-[150px]">{invoiceUploadName || `附件${idx + 1}`}</span>
                       <button
                         type="button"
-                        className="text-[#86868B] hover:text-[#FF3B30]"
+                        className="text-[#6B7280] hover:text-[#6B7280]"
                         onClick={() => setInvoiceForm(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== idx) }))}
                       >
                         <X className="w-3 h-3" />
@@ -2196,13 +2196,13 @@ export default function ExpenseContractsPage() {
                 <Upload className="w-4 h-4" />
                 {invoiceUploading ? "上传中..." : "选择发票扫描件上传"}
               </button>
-              <p className="text-[12px] text-[#86868B] mt-1">
+              <p className="text-[12px] text-[#6B7280] mt-1">
                 支持 PDF、JPG、PNG、OFD 格式
               </p>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowInvoiceModal(false)}
@@ -2254,26 +2254,26 @@ export default function ExpenseContractsPage() {
       >
         {archiveContract && (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-[#F5F5F7]">
-              <p className="text-[13px] text-[#86868B] mb-1">合同编号</p>
-              <p className="text-[15px] font-bold text-[#1D1D1F]">{archiveContract.contractNo}</p>
+            <div className="p-4 rounded-xl bg-[#F9FAFB]">
+              <p className="text-[13px] text-[#6B7280] mb-1">合同编号</p>
+              <p className="text-[15px] font-bold text-[#111827]">{archiveContract.contractNo}</p>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                上传盖章扫描件 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                上传盖章扫描件 <span className="text-[#6B7280]">*</span>
               </label>
               {archiveFiles.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
                   {archiveFiles.map((url, idx) => (
                     <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[12px]">
                       <FileCheck className="w-3.5 h-3.5 text-[#22C55E]" />
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#007AFF] hover:underline truncate max-w-[150px]">
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#111827] hover:underline truncate max-w-[150px]">
                         {url.split("/").pop() || `文件${idx + 1}`}
                       </a>
                       <button
                         type="button"
-                        className="text-[#86868B] hover:text-[#FF3B30]"
+                        className="text-[#6B7280] hover:text-[#6B7280]"
                         onClick={() => setArchiveFiles(prev => prev.filter((_, i) => i !== idx))}
                       >
                         <X className="w-3 h-3" />
@@ -2291,7 +2291,7 @@ export default function ExpenseContractsPage() {
                 <Upload className="w-4 h-4" />
                 {archiveUploading ? "上传中..." : "选择盖章扫描件上传"}
               </button>
-              <p className="text-[12px] text-[#86868B] mt-1">
+              <p className="text-[12px] text-[#6B7280] mt-1">
                 支持 PDF、JPG、PNG 格式，至少上传1个文件
               </p>
             </div>
@@ -2304,7 +2304,7 @@ export default function ExpenseContractsPage() {
                 取消
               </button>
               <button
-                className="ios-btn !bg-[#007AFF] !text-white text-sm hover:!bg-[#0066DD] disabled:opacity-50 flex items-center gap-1"
+                className="ios-btn !bg-[#111827] !text-white text-sm hover:!bg-[#0066DD] disabled:opacity-50 flex items-center gap-1"
                 disabled={archiveFiles.length === 0 || archiveSaving}
                 onClick={async () => {
                   if (archiveFiles.length === 0) {

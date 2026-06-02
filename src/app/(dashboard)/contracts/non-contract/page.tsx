@@ -471,9 +471,9 @@ export default function NonContractPage() {
   const formatAmount = (amount: number, type: TabType) => {
     const formatted = `¥${Number(amount).toLocaleString("zh-CN")}`;
     return type === "income" ? (
-      <span className="text-[#34C759] font-semibold">{formatted}</span>
+      <span className="text-[#6B7280] font-semibold">{formatted}</span>
     ) : (
-      <span className="text-[#FF3B30] font-semibold">{formatted}</span>
+      <span className="text-[#6B7280] font-semibold">{formatted}</span>
     );
   };
 
@@ -520,7 +520,7 @@ export default function NonContractPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -564,23 +564,23 @@ export default function NonContractPage() {
             ))}
           </select>
 
-          <div className="ml-auto text-[13px] text-[#86868B]">
-            共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#6B7280]">
+            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : records.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
               {isIncome ? (
-                <ArrowUpCircle className="w-8 h-8 text-[#86868B]" />
+                <ArrowUpCircle className="w-8 h-8 text-[#6B7280]" />
               ) : (
-                <ArrowDownCircle className="w-8 h-8 text-[#86868B]" />
+                <ArrowDownCircle className="w-8 h-8 text-[#6B7280]" />
               )}
             </div>
             <p>{search || filterStatus || filterProject ? `没有匹配的${tabLabel}记录` : `暂无${tabLabel}记录，点击右上角新增`}</p>
@@ -605,26 +605,26 @@ export default function NonContractPage() {
                 {records.map((record) => {
                   const nextStatuses = statusFlow[record.status] || [];
                   return (
-                    <tr key={record.id} className={isSelected(record.id) ? "bg-[#007AFF]/5" : ""}>
+                    <tr key={record.id} className={isSelected(record.id) ? "bg-[#111827]/5" : ""}>
                       {isAdminUser && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(record.id)} onChange={() => toggleSelect(record.id)} /></td>}
                       <td className="font-semibold">{record.counterparty}</td>
                       <td>{formatAmount(record.amount, activeTab)}</td>
-                      <td className="text-[#86868B]">{formatDate(record.transactionDate)}</td>
+                      <td className="text-[#6B7280]">{formatDate(record.transactionDate)}</td>
                       <td>
                         {record.projectSourceId ? (
                           <div>
-                            <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
+                            <span className="font-mono text-[13px] font-semibold text-[#111827]">
                               {record.projectSourceId}
                             </span>
                             {record.project && (
-                              <p className="text-[11px] text-[#86868B] mt-0.5">{record.project.name}</p>
+                              <p className="text-[11px] text-[#6B7280] mt-0.5">{record.project.name}</p>
                             )}
                           </div>
                         ) : (
                           <span className="ios-badge ios-badge-blue">公司级</span>
                         )}
                       </td>
-                      <td className="text-[#86868B] max-w-[200px] truncate">
+                      <td className="text-[#6B7280] max-w-[200px] truncate">
                         {record.description || "-"}
                       </td>
                       <td>
@@ -662,7 +662,7 @@ export default function NonContractPage() {
                           </button>
                           {!isIncome && (
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
                               title="登记发票"
                               onClick={() => {
                                 setInvoiceReceiptId(record.id);
@@ -689,7 +689,7 @@ export default function NonContractPage() {
                           )}
                           {(record.status === "草稿" || record.status === "已驳回" || isAdminUser) && (
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                               onClick={() => setDeleteConfirm(record)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -697,7 +697,7 @@ export default function NonContractPage() {
                           )}
                           {nextStatuses.length > 0 && (
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
                               onClick={() => {
                                 if (nextStatuses[0] === "审批中") {
                                   handleSubmitApproval(record);
@@ -712,7 +712,7 @@ export default function NonContractPage() {
                           )}
                         </div>
                       </td>
-                      <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                      <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
                         {record.lastModifiedBy && (
                           <span>{record.lastModifiedBy}</span>
                         )}
@@ -725,7 +725,7 @@ export default function NonContractPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F0F0F0]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -733,7 +733,7 @@ export default function NonContractPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#86868B] px-3">
+                <span className="text-[13px] text-[#6B7280] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -759,15 +759,15 @@ export default function NonContractPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                交易对方 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                交易对方 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -779,8 +779,8 @@ export default function NonContractPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                金额（元） <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                金额（元） <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="number"
@@ -794,7 +794,7 @@ export default function NonContractPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 交易日期
               </label>
               <input
@@ -816,7 +816,7 @@ export default function NonContractPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 描述
               </label>
               <textarea
@@ -828,7 +828,7 @@ export default function NonContractPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>
               取消
             </button>
@@ -847,21 +847,21 @@ export default function NonContractPage() {
       >
         {detailRecord && (
           <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F0F0F0]">
+            <div className="flex items-center gap-3 pb-4 border-b border-[#F3F4F6]">
               <div
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                  isIncome ? "bg-[#34C759]/10" : "bg-[#FF3B30]/10"
+                  isIncome ? "bg-[#6B7280]/10" : "bg-[#6B7280]/10"
                 }`}
               >
                 {isIncome ? (
-                  <ArrowUpCircle className="w-6 h-6 text-[#34C759]" />
+                  <ArrowUpCircle className="w-6 h-6 text-[#6B7280]" />
                 ) : (
-                  <ArrowDownCircle className="w-6 h-6 text-[#FF3B30]" />
+                  <ArrowDownCircle className="w-6 h-6 text-[#6B7280]" />
                 )}
               </div>
               <div>
-                <p className="text-[17px] font-bold text-[#1D1D1F]">{detailRecord.counterparty}</p>
-                <p className="text-[13px] text-[#86868B]">
+                <p className="text-[17px] font-bold text-[#111827]">{detailRecord.counterparty}</p>
+                <p className="text-[13px] text-[#6B7280]">
                   {isIncome ? "收入" : "支出"} · {formatDate(detailRecord.transactionDate)}
                 </p>
               </div>
@@ -880,26 +880,26 @@ export default function NonContractPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">金额</p>
-                <p className={`text-[14px] font-semibold ${isIncome ? "text-[#34C759]" : "text-[#FF3B30]"}`}>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">金额</p>
+                <p className={`text-[14px] font-semibold ${isIncome ? "text-[#6B7280]" : "text-[#6B7280]"}`}>
                   ¥{Number(detailRecord.amount).toLocaleString("zh-CN")}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">交易日期</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">交易日期</p>
+                <p className="text-[14px] font-semibold text-[#111827]">
                   {formatDate(detailRecord.transactionDate)}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">项目源</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">项目源</p>
+                <p className="text-[14px] font-semibold text-[#111827]">
                   {detailRecord.projectSourceId ? (
                     <span>
-                      <span className="font-mono text-[#007AFF]">{detailRecord.projectSourceId}</span>
+                      <span className="font-mono text-[#111827]">{detailRecord.projectSourceId}</span>
                       {detailRecord.project && (
-                        <span className="text-[#86868B] text-[12px] ml-1.5">{detailRecord.project.name}</span>
+                        <span className="text-[#6B7280] text-[12px] ml-1.5">{detailRecord.project.name}</span>
                       )}
                     </span>
                   ) : (
@@ -907,14 +907,14 @@ export default function NonContractPage() {
                   )}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">创建时间</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailRecord.createdAt)}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">创建时间</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailRecord.createdAt)}</p>
               </div>
               {detailRecord.description && (
-                <div className="p-3 rounded-xl bg-[#F5F5F7] col-span-2">
-                  <p className="text-[12px] text-[#86868B] mb-1">描述</p>
-                  <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailRecord.description}</p>
+                <div className="p-3 rounded-xl bg-[#F9FAFB] col-span-2">
+                  <p className="text-[12px] text-[#6B7280] mb-1">描述</p>
+                  <p className="text-[14px] font-semibold text-[#111827]">{detailRecord.description}</p>
                 </div>
               )}
             </div>
@@ -923,8 +923,8 @@ export default function NonContractPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#86868B]" />
-                    <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                    <FileText className="w-4 h-4 text-[#6B7280]" />
+                    <p className="text-[13px] font-semibold text-[#111827]">
                       发票登记 ({expenseInvoices.length})
                     </p>
                   </div>
@@ -973,10 +973,10 @@ export default function NonContractPage() {
                             <td>
                               <span className="ios-badge ios-badge-blue text-[11px]">{inv.invoiceType}</span>
                             </td>
-                            <td className="font-mono font-semibold text-[#007AFF]">
+                            <td className="font-mono font-semibold text-[#111827]">
                               ¥{parseFloat(inv.totalAmount || inv.amount || 0).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
                             </td>
-                            <td className="text-[#86868B]">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString("zh-CN") : "-"}</td>
+                            <td className="text-[#6B7280]">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString("zh-CN") : "-"}</td>
                             <td>
                               <span className="ios-badge ios-badge-gray">{inv.status}</span>
                             </td>
@@ -984,18 +984,18 @@ export default function NonContractPage() {
                         ))}
                       </tbody>
                     </table>
-                    <div className="mt-3 p-3 rounded-xl bg-[#F5F5F7]">
+                    <div className="mt-3 p-3 rounded-xl bg-[#F9FAFB]">
                       <div className="flex items-center justify-between">
-                        <span className="text-[12px] text-[#86868B]">已收票金额 / 支出金额</span>
-                        <span className="text-[13px] font-semibold text-[#1D1D1F]">
+                        <span className="text-[12px] text-[#6B7280]">已收票金额 / 支出金额</span>
+                        <span className="text-[13px] font-semibold text-[#111827]">
                           ¥{expenseInvoices.reduce((sum: number, inv: any) => sum + (parseFloat(inv.totalAmount || inv.amount || 0)), 0).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
                           {" / "}
                           ¥{Number(detailRecord.amount).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
                         </span>
                       </div>
-                      <div className="w-full h-2 rounded-full bg-[#E5E5EA] overflow-hidden mt-2">
+                      <div className="w-full h-2 rounded-full bg-[#E5E7EB] overflow-hidden mt-2">
                         <div
-                          className="h-full rounded-full bg-[#007AFF] transition-all duration-500"
+                          className="h-full rounded-full bg-[#111827] transition-all duration-500"
                           style={{
                             width: `${Math.min(100, (expenseInvoices.reduce((sum: number, inv: any) => sum + (parseFloat(inv.totalAmount || inv.amount || 0)), 0) / Math.max(0.01, detailRecord.amount)) * 100).toFixed(1)}%`,
                           }}
@@ -1004,7 +1004,7 @@ export default function NonContractPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-6 text-[#86868B] text-[13px] rounded-xl bg-[#F5F5F7]">
+                  <div className="text-center py-6 text-[#6B7280] text-[13px] rounded-xl bg-[#F9FAFB]">
                     暂无发票记录
                   </div>
                 )}
@@ -1025,11 +1025,11 @@ export default function NonContractPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#6B7280]" />
           </div>
-          <p className="text-[15px] text-[#1D1D1F] mb-1">确定要删除该{tabLabel}记录吗？</p>
-          <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
+          <p className="text-[15px] text-[#111827] mb-1">确定要删除该{tabLabel}记录吗？</p>
+          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>
               取消
@@ -1049,15 +1049,15 @@ export default function NonContractPage() {
       >
         <div className="space-y-4">
           {invoiceError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {invoiceError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                发票号码 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                发票号码 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -1072,7 +1072,7 @@ export default function NonContractPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">发票代码</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">发票代码</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1083,7 +1083,7 @@ export default function NonContractPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">发票类型</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">发票类型</label>
               <select
                 className="ios-select"
                 value={invoiceForm.invoiceType}
@@ -1097,7 +1097,7 @@ export default function NonContractPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">开票日期</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">开票日期</label>
               <input
                 type="date"
                 className="ios-input"
@@ -1107,8 +1107,8 @@ export default function NonContractPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                不含税金额 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                不含税金额 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="number"
@@ -1122,7 +1122,7 @@ export default function NonContractPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">税率</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">税率</label>
               <select
                 className="ios-select"
                 value={invoiceForm.taxRate}
@@ -1136,27 +1136,27 @@ export default function NonContractPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">税额（自动计算）</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">税额（自动计算）</label>
               <input
                 type="text"
-                className="ios-input bg-[#F5F5F7]"
+                className="ios-input bg-[#F9FAFB]"
                 value={invoiceForm.taxAmount ? `¥${invoiceForm.taxAmount}` : ""}
                 readOnly
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">价税合计（自动计算）</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">价税合计（自动计算）</label>
               <input
                 type="text"
-                className="ios-input bg-[#F5F5F7] font-semibold text-[#007AFF]"
+                className="ios-input bg-[#F9FAFB] font-semibold text-[#111827]"
                 value={invoiceForm.totalAmount ? `¥${invoiceForm.totalAmount}` : ""}
                 readOnly
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">销方名称</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">销方名称</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1167,7 +1167,7 @@ export default function NonContractPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">销方税号</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">销方税号</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1178,7 +1178,7 @@ export default function NonContractPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
               <textarea
                 className="ios-input min-h-[60px] resize-none"
                 placeholder="备注信息"
@@ -1188,7 +1188,7 @@ export default function NonContractPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowInvoiceModal(false)}

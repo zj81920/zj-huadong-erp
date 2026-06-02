@@ -274,8 +274,8 @@ function DetailGrid({ fields }: { fields: { label: string; value: any }[] }) {
   return (
     <div className="grid grid-cols-2 gap-3">
       {fields.map((f, i) => (
-        <div key={i} className="p-3 rounded-xl bg-[#F5F5F7]">
-          <p className="text-[12px] text-[#86868B] mb-1">{f.label}</p>
+        <div key={i} className="p-3 rounded-xl bg-[#F9FAFB]">
+          <p className="text-[12px] text-[#6B7280] mb-1">{f.label}</p>
           <p className="text-[14px] font-semibold truncate">{f.value ?? "-"}</p>
         </div>
       ))}
@@ -288,9 +288,9 @@ function BusinessDetailPanel({ businessType, data, loading }: { businessType: st
     return (
       <div className="grid grid-cols-2 gap-3 animate-pulse">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="p-3 rounded-xl bg-[#F5F5F7]">
-            <div className="h-3 w-16 bg-[#E5E5EA] rounded mb-2" />
-            <div className="h-4 w-24 bg-[#E5E5EA] rounded" />
+          <div key={i} className="p-3 rounded-xl bg-[#F9FAFB]">
+            <div className="h-3 w-16 bg-[#E5E7EB] rounded mb-2" />
+            <div className="h-4 w-24 bg-[#E5E7EB] rounded" />
           </div>
         ))}
       </div>
@@ -309,8 +309,8 @@ function BusinessDetailPanel({ businessType, data, loading }: { businessType: st
   if (!CardComponent) {
     return (
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-xl bg-[#F5F5F7]">
-          <p className="text-[12px] text-[#86868B] mb-1">业务类型</p>
+        <div className="p-3 rounded-xl bg-[#F9FAFB]">
+          <p className="text-[12px] text-[#6B7280] mb-1">业务类型</p>
           <p className="text-[14px] font-semibold">{BUSINESS_TYPE_LABELS[businessType] || businessType}</p>
         </div>
       </div>
@@ -419,10 +419,10 @@ export default function ApprovalsPage() {
       <div className="bento-card-static">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-[#AF52DE]" />
-            <h3 className="text-[15px] font-bold text-[#1D1D1F]">待处理审批</h3>
+            <Clock className="w-5 h-5 text-[#6B7280]" />
+            <h3 className="text-[15px] font-bold text-[#111827]">待处理审批</h3>
             {!loading && (
-              <span className="text-[13px] font-semibold text-[#AF52DE] bg-[#AF52DE]/10 px-2 py-0.5 rounded-full">
+              <span className="text-[13px] font-semibold text-[#6B7280] bg-[#6B7280]/10 px-2 py-0.5 rounded-full">
                 {pendingList.length} 项
               </span>
             )}
@@ -441,26 +441,26 @@ export default function ApprovalsPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-10 h-10 border-2 border-[#AF52DE] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#6B7280] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mb-3">
-              <XCircle className="w-7 h-7 text-[#FF3B30]" />
+            <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mb-3">
+              <XCircle className="w-7 h-7 text-[#6B7280]" />
             </div>
-            <p className="text-[14px] font-medium text-[#1D1D1F]">加载失败</p>
-            <p className="text-[12px] text-[#86868B] mt-1 mb-4">{error}</p>
+            <p className="text-[14px] font-medium text-[#111827]">加载失败</p>
+            <p className="text-[12px] text-[#6B7280] mt-1 mb-4">{error}</p>
             <button className="ios-btn ios-btn-primary ios-btn-sm" onClick={fetchPending}>
               重新加载
             </button>
           </div>
         ) : pendingList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-[#34C759]" />
+            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 text-[#6B7280]" />
             </div>
-            <p className="text-[14px] font-medium text-[#1D1D1F] mt-3">暂无待审批事项</p>
-            <p className="text-[12px] text-[#86868B] mt-1">所有审批流程均已处理完毕</p>
+            <p className="text-[14px] font-medium text-[#111827] mt-3">暂无待审批事项</p>
+            <p className="text-[12px] text-[#6B7280] mt-1">所有审批流程均已处理完毕</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -479,8 +479,8 @@ export default function ApprovalsPage() {
                   <tr key={item.id}>
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#AF52DE]/10 flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-4 h-4 text-[#AF52DE]" />
+                        <div className="w-8 h-8 rounded-full bg-[#6B7280]/10 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-4 h-4 text-[#6B7280]" />
                         </div>
                         <span className="font-semibold">
                           {BUSINESS_TYPE_LABELS[item.businessType] || item.businessType}
@@ -488,7 +488,7 @@ export default function ApprovalsPage() {
                       </div>
                     </td>
                     <td>
-                      <span className="text-[#1D1D1F]">{item.nodeName}</span>
+                      <span className="text-[#111827]">{item.nodeName}</span>
                     </td>
                     <td>
                       {item.nodeType === "archive" ? (
@@ -499,12 +499,12 @@ export default function ApprovalsPage() {
                         <span className="ios-badge ios-badge-gray">审批</span>
                       )}
                     </td>
-                    <td className="text-[#86868B] text-[13px] whitespace-nowrap">
+                    <td className="text-[#6B7280] text-[13px] whitespace-nowrap">
                       <span title={formatDate(item.createdAt)}>{getTimeAgo(item.createdAt)}</span>
                     </td>
                     <td>
                       <button
-                        className="ios-btn ios-btn-ghost ios-btn-sm text-[#AF52DE]!"
+                        className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                         onClick={() => openApprovalDetail(item)}
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -533,12 +533,12 @@ export default function ApprovalsPage() {
               loading={businessDetailLoading}
             />
 
-            <div className="pt-3 border-t border-[#F0F0F0]">
-              <h4 className="text-[13px] font-bold text-[#1D1D1F] mb-3">审批流程</h4>
+            <div className="pt-3 border-t border-[#F3F4F6]">
+              <h4 className="text-[13px] font-bold text-[#111827] mb-3">审批流程</h4>
               <ApprovalTimeline instance={approvalDetail} loading={detailLoading} />
             </div>
 
-            <div className="pt-3 border-t border-[#F0F0F0]">
+            <div className="pt-3 border-t border-[#F3F4F6]">
               <ApprovalActionButton
                 instanceId={approvalDetail?.id || null}
                 businessType={selectedApproval.businessType}

@@ -188,16 +188,13 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="glass-sidebar fixed left-0 top-0 h-full w-[260px] z-50 flex flex-col">
+    <aside className="fixed left-0 top-0 h-full w-[240px] z-50 flex flex-col bg-bg-secondary border-r border-border-primary">
       <Link href="/" className="flex items-center gap-3 px-5 h-16 flex-shrink-0">
-        <div className="w-8 h-8 rounded-xl bg-[#007AFF] flex items-center justify-center">
-          <LayoutDashboard className="w-4.5 h-4.5 text-white" />
-        </div>
         <div className="flex flex-col">
-          <span className="text-[15px] font-bold text-[#1D1D1F] leading-tight">
+          <span className="text-[15px] font-bold text-text-primary leading-tight">
             华东工程 ERP
           </span>
-          <span className="text-[11px] text-[#86868B] leading-tight">
+          <span className="text-[11px] text-text-secondary leading-tight">
             化工医药工程
           </span>
         </div>
@@ -208,19 +205,19 @@ export default function Sidebar() {
           href="/"
           className={`nav-item w-full ${isActive("/") ? "active" : ""}`}
         >
-          <LayoutDashboard className="w-4.5 h-4.5" />
+          <LayoutDashboard className="w-4 h-4" />
           <span>总览仪表板</span>
         </Link>
         <Link
           href="/approvals"
           className={`nav-item w-full ${isActive("/approvals") ? "active" : ""}`}
         >
-          <FileText className="w-4.5 h-4.5" />
+          <FileText className="w-4 h-4" />
           <span>待审批</span>
         </Link>
       </div>
 
-      <div className="mx-5 h-px bg-[#E5E5EA] mb-2" />
+      <div className="mx-3 h-px bg-border-primary mb-2" />
 
       <nav className="flex-1 overflow-y-auto custom-scrollbar px-3 pb-6">
         {navSections.map((section) => {
@@ -233,7 +230,7 @@ export default function Sidebar() {
             <div key={section.title} className="mb-1">
               <button
                 onClick={() => toggleSection(section.title)}
-                className="flex items-center justify-between w-full px-3 py-2 text-[13px] font-semibold text-[#86868B] hover:text-[#1D1D1F] transition-colors duration-150 rounded-lg"
+                className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-semibold text-text-tertiary hover:text-text-primary transition-colors duration-150 rounded uppercase tracking-wider"
               >
                 <div className="flex items-center gap-2">
                   {section.icon}
@@ -247,7 +244,7 @@ export default function Sidebar() {
               </button>
 
               {isExpanded && (
-                <div className="ml-4 mt-0.5 space-y-0.5">
+                <div className="ml-3 mt-0.5 space-y-0.5">
                   {section.items.filter((item) => {
                     const subModuleEntry = Object.entries(SUB_MODULE_TO_HREF).find(([, href]) => item.href === href);
                     if (subModuleEntry) {
@@ -263,7 +260,7 @@ export default function Sidebar() {
                       href={item.href}
                       className={`nav-item w-full ${isActive(item.href) ? "active" : ""}`}
                     >
-                      <span className="ml-6">{item.label}</span>
+                      <span className="ml-4">{item.label}</span>
                     </Link>
                   ))}
                 </div>
@@ -273,39 +270,39 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-[#E5E5EA] relative" ref={menuRef}>
+      <div className="p-3 border-t border-border-primary relative" ref={menuRef}>
         <button
           onClick={() => setShowUserMenu(!showUserMenu)}
           className="flex items-center gap-3 w-full text-left"
         >
-          <div className="w-9 h-9 rounded-full bg-[#007AFF] flex items-center justify-center text-white text-sm font-semibold">
+          <div className="w-8 h-8 rounded-full bg-text-secondary flex items-center justify-center text-white text-sm font-semibold">
             {user?.realName?.charAt(0) || "用"}
           </div>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-[13px] font-semibold text-[#1D1D1F] truncate">
+            <span className="text-[13px] font-semibold text-text-primary truncate">
               {user?.realName || "未登录"}
             </span>
-            <span className="text-[11px] text-[#86868B] truncate">
+            <span className="text-[11px] text-text-secondary truncate">
               {user?.department || user?.username || ""}
             </span>
           </div>
-          <ChevronUp className={`w-3.5 h-3.5 text-[#86868B] transition-transform duration-200 ${showUserMenu ? "" : "rotate-180"}`} />
+          <ChevronUp className={`w-3.5 h-3.5 text-text-secondary transition-transform duration-200 ${showUserMenu ? "" : "rotate-180"}`} />
         </button>
 
         {showUserMenu && (
-          <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden z-50">
-            <div className="px-4 py-3 border-b border-[#F0F0F0]">
-              <div className="text-[13px] font-semibold text-[#1D1D1F]">{user?.realName}</div>
-              <div className="text-[11px] text-[#86868B]">{user?.department || ""}</div>
+          <div className="absolute bottom-full left-3 right-3 mb-2 bg-white rounded border border-border-primary overflow-hidden z-50 shadow-sm">
+            <div className="px-3 py-2 border-b border-border-light">
+              <div className="text-[13px] font-semibold text-text-primary">{user?.realName}</div>
+              <div className="text-[11px] text-text-secondary">{user?.department || ""}</div>
             </div>
             <button
               onClick={() => {
                 setShowUserMenu(false);
                 setShowChangePassword(true);
               }}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+              className="flex items-center gap-3 w-full px-3 py-2 text-[13px] text-text-primary hover:bg-bg-secondary transition-colors"
             >
-              <KeyRound className="w-4 h-4 text-[#86868B]" />
+              <KeyRound className="w-4 h-4 text-text-secondary" />
               修改密码
             </button>
             <button
@@ -313,7 +310,7 @@ export default function Sidebar() {
                 setShowUserMenu(false);
                 logout();
               }}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] text-[#FF3B30] hover:bg-red-50 transition-colors"
+              className="flex items-center gap-3 w-full px-3 py-2 text-[13px] text-danger hover:bg-danger-bg transition-colors"
             >
               <LogOut className="w-4 h-4" />
               退出登录
@@ -334,22 +331,22 @@ export default function Sidebar() {
           }}
         >
           <div className="ios-modal" style={{ maxWidth: "440px" }}>
-            <div className="flex items-center justify-between px-6 py-5 border-b border-[#F0F0F0]">
-              <h2 className="text-[17px] font-bold text-[#1D1D1F]">修改密码</h2>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border-primary">
+              <h2 className="text-[15px] font-semibold text-text-primary">修改密码</h2>
               <button
                 onClick={() => {
                   setShowChangePassword(false);
                   setPasswordError("");
                   setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
                 }}
-                className="w-8 h-8 rounded-full bg-[#F5F5F7] hover:bg-[#E5E5EA] flex items-center justify-center transition-colors duration-150"
+                className="w-7 h-7 rounded bg-bg-secondary hover:bg-bg-tertiary flex items-center justify-center transition-colors duration-150"
               >
-                <X className="w-4 h-4 text-[#86868B]" />
+                <X className="w-4 h-4 text-text-secondary" />
               </button>
             </div>
-            <div className="px-6 py-5 space-y-4">
+            <div className="px-5 py-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#1D1D1F] mb-2">当前密码</label>
+                <label className="block text-sm font-medium text-text-primary mb-1.5">当前密码</label>
                 <input
                   type="password"
                   value={passwordForm.currentPassword}
@@ -359,7 +356,7 @@ export default function Sidebar() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1D1D1F] mb-2">新密码</label>
+                <label className="block text-sm font-medium text-text-primary mb-1.5">新密码</label>
                 <input
                   type="password"
                   value={passwordForm.newPassword}
@@ -369,7 +366,7 @@ export default function Sidebar() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1D1D1F] mb-2">确认新密码</label>
+                <label className="block text-sm font-medium text-text-primary mb-1.5">确认新密码</label>
                 <input
                   type="password"
                   value={passwordForm.confirmPassword}
@@ -380,15 +377,15 @@ export default function Sidebar() {
                 />
               </div>
               {passwordError && (
-                <div className="bg-red-50 text-[#FF3B30] text-sm rounded-xl px-4 py-3 flex items-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF3B30] mr-2.5 shrink-0" />
+                <div className="bg-danger-bg text-danger text-sm rounded px-3 py-2.5 flex items-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-danger mr-2.5 shrink-0" />
                   {passwordError}
                 </div>
               )}
               <button
                 onClick={handleChangePassword}
                 disabled={passwordLoading}
-                className="ios-btn ios-btn-primary w-full !py-3 !rounded-xl font-medium"
+                className="ios-btn ios-btn-primary w-full !py-2.5 font-medium"
               >
                 {passwordLoading ? "提交中..." : "确认修改"}
               </button>

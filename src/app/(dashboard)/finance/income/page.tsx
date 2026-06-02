@@ -804,13 +804,13 @@ export default function FinanceIncomePage() {
         <div className="bento-card-static">
           {loading ? (
             <div className="empty-state">
-              <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
           ) : receivables.length === 0 ? (
             <div className="empty-state">
-              <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-                <ArrowUpCircle className="w-8 h-8 text-[#86868B]" />
+              <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+                <ArrowUpCircle className="w-8 h-8 text-[#6B7280]" />
               </div>
               <p>暂无合同收入记录</p>
             </div>
@@ -834,36 +834,36 @@ export default function FinanceIncomePage() {
                 <tbody>
                   {receivables.map((r) => (
                     <tr key={r.id}>
-                      <td className="font-mono text-[13px] font-semibold text-[#007AFF]">
+                      <td className="font-mono text-[13px] font-semibold text-[#111827]">
                         {r.sourceContract?.contractNo || r.sourceId}
                       </td>
                       <td>
                         {r.sourceContract?.project?.name || r.project?.name ? (
                           <div>
-                            <span className="font-semibold text-[#1D1D1F]">{r.sourceContract?.project?.name || r.project?.name}</span>
-                            <span className="block text-[11px] text-[#86868B]">{r.projectSourceId}</span>
+                            <span className="font-semibold text-[#111827]">{r.sourceContract?.project?.name || r.project?.name}</span>
+                            <span className="block text-[11px] text-[#6B7280]">{r.projectSourceId}</span>
                           </div>
                         ) : r.projectSourceId || "-"}
                       </td>
                       <td>
                         <div className="flex items-center gap-1.5">
-                          <Building2 className="w-3.5 h-3.5 text-[#86868B]" />
+                          <Building2 className="w-3.5 h-3.5 text-[#6B7280]" />
                           {r.sourceContract?.customer?.name || "-"}
                         </div>
                       </td>
                       <td className="font-semibold">
                         {formatAmount(r.sourceContract?.totalAmount || 0)}
                       </td>
-                      <td className="font-semibold text-[#34C759]">
+                      <td className="font-semibold text-[#6B7280]">
                         {formatAmount(r.amount)}
                       </td>
                       <td className="font-semibold">
                         {formatAmount(r.paidAmount)}
                       </td>
-                      <td className="font-semibold text-[#FF9500]">
+                      <td className="font-semibold text-[#6B7280]">
                         {formatAmount(r.amount - r.paidAmount)}
                       </td>
-                      <td className="font-semibold text-[#007AFF]">
+                      <td className="font-semibold text-[#111827]">
                         {formatAmount(r.invoicedAmount)}
                       </td>
                       <td>{getStatusBadge(r.status)}</td>
@@ -878,7 +878,7 @@ export default function FinanceIncomePage() {
                           </button>
                           {r.status !== "已收" && (
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
                               onClick={() => handleOpenReceiptModalForReceivable(r)}
                             >
                               <Wallet className="w-3.5 h-3.5" />
@@ -887,7 +887,7 @@ export default function FinanceIncomePage() {
                           )}
                           {isAdmin && (
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                               onClick={() => handleDeleteReceivable(r.id)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -909,7 +909,7 @@ export default function FinanceIncomePage() {
         <div className="bento-card-static">
           <div className="filter-bar">
             <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
               <input
                 type="text"
                 className="ios-input pl-10"
@@ -921,20 +921,20 @@ export default function FinanceIncomePage() {
                 }}
               />
             </div>
-            <div className="ml-auto text-[13px] text-[#86868B]">
-              共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 条记录
+            <div className="ml-auto text-[13px] text-[#6B7280]">
+              共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 条记录
             </div>
           </div>
 
           {loading ? (
             <div className="empty-state">
-              <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
           ) : otherIncomes.length === 0 ? (
             <div className="empty-state">
-              <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-                <DollarSign className="w-8 h-8 text-[#86868B]" />
+              <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+                <DollarSign className="w-8 h-8 text-[#6B7280]" />
               </div>
               <p>{search ? "没有匹配的收入记录" : "暂无其他收入记录"}</p>
             </div>
@@ -964,7 +964,7 @@ export default function FinanceIncomePage() {
                 </thead>
                 <tbody>
                   {otherIncomes.map((item) => (
-                    <tr key={item.id} className={isSelected(item.id) ? "bg-[#007AFF]/5" : ""}>
+                    <tr key={item.id} className={isSelected(item.id) ? "bg-[#111827]/5" : ""}>
                       {isAdmin && (
                         <td className="w-10">
                           <input
@@ -976,10 +976,10 @@ export default function FinanceIncomePage() {
                         </td>
                       )}
                       <td className="font-semibold">{item.counterparty || "-"}</td>
-                      <td className="text-[#34C759] font-semibold">{formatAmount(item.amount)}</td>
-                      <td className="text-[#86868B]">{formatDate(item.transactionDate)}</td>
-                      <td className="text-[#86868B] max-w-[200px] truncate">{item.description || "-"}</td>
-                      <td className="text-[#86868B]">{item.project?.name || item.projectSourceId || "-"}</td>
+                      <td className="text-[#6B7280] font-semibold">{formatAmount(item.amount)}</td>
+                      <td className="text-[#6B7280]">{formatDate(item.transactionDate)}</td>
+                      <td className="text-[#6B7280] max-w-[200px] truncate">{item.description || "-"}</td>
+                      <td className="text-[#6B7280]">{item.project?.name || item.projectSourceId || "-"}</td>
                       <td>
                         <AdminStatusOverride
                           businessType="non_contract_income"
@@ -1004,7 +1004,7 @@ export default function FinanceIncomePage() {
                           </button>
                           {(item.status === "草稿" || item.status === "已驳回" || isAdmin) && (
                             <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                               onClick={() => setDeleteConfirm(item)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1017,7 +1017,7 @@ export default function FinanceIncomePage() {
                 </tbody>
               </table>
               {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F0F0F0]">
+                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
                   <button
                     className="ios-btn ios-btn-secondary ios-btn-sm"
                     disabled={pagination.page <= 1}
@@ -1025,7 +1025,7 @@ export default function FinanceIncomePage() {
                   >
                     上一页
                   </button>
-                  <span className="text-[13px] text-[#86868B] px-3">{pagination.page} / {pagination.totalPages}</span>
+                  <span className="text-[13px] text-[#6B7280] px-3">{pagination.page} / {pagination.totalPages}</span>
                   <button
                     className="ios-btn ios-btn-secondary ios-btn-sm"
                     disabled={pagination.page >= pagination.totalPages}
@@ -1054,13 +1054,13 @@ export default function FinanceIncomePage() {
         <div className="bento-card-static">
           {loading ? (
             <div className="empty-state">
-              <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
           ) : contributions.length === 0 ? (
             <div className="empty-state">
-              <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-                <TrendingUp className="w-8 h-8 text-[#86868B]" />
+              <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+                <TrendingUp className="w-8 h-8 text-[#6B7280]" />
               </div>
               <p>暂无出资记录</p>
             </div>
@@ -1082,17 +1082,17 @@ export default function FinanceIncomePage() {
                   {contributions.map((c) => (
                     <tr key={c.id}>
                       <td className="font-semibold">{c.shareholder?.name || "-"}</td>
-                      <td className="text-[#34C759] font-semibold">{formatAmount(c.amount)}</td>
+                      <td className="text-[#6B7280] font-semibold">{formatAmount(c.amount)}</td>
                       <td className="font-semibold">{formatAmount(c.returnedAmount)}</td>
-                      <td className="font-semibold text-[#FF9500]">{formatAmount(c.remainingAmount)}</td>
-                      <td className="text-[#86868B]">{formatDate(c.contributeDate)}</td>
+                      <td className="font-semibold text-[#6B7280]">{formatAmount(c.remainingAmount)}</td>
+                      <td className="text-[#6B7280]">{formatDate(c.contributeDate)}</td>
                       <td>
                         {c.method ? <span className="ios-badge ios-badge-blue">{c.method}</span> : "-"}
                       </td>
                       <td>
                         {c.remainingAmount > 0 && (
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
                             onClick={() => handleOpenCapitalReturnModal(c)}
                           >
                             <Wallet className="w-3.5 h-3.5" />
@@ -1113,13 +1113,13 @@ export default function FinanceIncomePage() {
         <div className="bento-card-static">
           {loading ? (
             <div className="empty-state">
-              <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
           ) : borrowings.length === 0 ? (
             <div className="empty-state">
-              <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-                <Landmark className="w-8 h-8 text-[#86868B]" />
+              <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+                <Landmark className="w-8 h-8 text-[#6B7280]" />
               </div>
               <p>暂无借入款记录</p>
             </div>
@@ -1142,11 +1142,11 @@ export default function FinanceIncomePage() {
                   {borrowings.map((b) => (
                     <tr key={b.id}>
                       <td className="font-semibold">{b.lenderName}</td>
-                      <td className="text-[#34C759] font-semibold">{formatAmount(b.amount)}</td>
+                      <td className="text-[#6B7280] font-semibold">{formatAmount(b.amount)}</td>
                       <td className="font-semibold">{formatAmount(b.returnedAmount)}</td>
-                      <td className="font-semibold text-[#FF9500]">{formatAmount(b.remainingAmount)}</td>
-                      <td className="text-[#86868B]">{formatDate(b.borrowingDate)}</td>
-                      <td className="text-[#86868B]">{formatDate(b.expectedReturnDate)}</td>
+                      <td className="font-semibold text-[#6B7280]">{formatAmount(b.remainingAmount)}</td>
+                      <td className="text-[#6B7280]">{formatDate(b.borrowingDate)}</td>
+                      <td className="text-[#6B7280]">{formatDate(b.expectedReturnDate)}</td>
                       <td>
                         <AdminStatusOverride
                           businessType="other_borrowing"
@@ -1164,7 +1164,7 @@ export default function FinanceIncomePage() {
                       <td>
                         {b.remainingAmount > 0 && (
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827]!"
                             onClick={() => handleOpenBorrowingReturnModal(b)}
                           >
                             <Wallet className="w-3.5 h-3.5" />
@@ -1189,11 +1189,11 @@ export default function FinanceIncomePage() {
       >
         <div className="space-y-5">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">关联应收记录 <span className="text-[#FF3B30]">*</span></label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">关联应收记录 <span className="text-[#6B7280]">*</span></label>
             <select
               className="ios-select"
               value={receiptForm.receivableId}
@@ -1222,25 +1222,25 @@ export default function FinanceIncomePage() {
           {selectedContract && (() => {
             const receivable = getSelectedReceivable();
             return (
-              <div className="p-3.5 rounded-xl bg-[#F5F5F7] space-y-2.5">
+              <div className="p-3.5 rounded-xl bg-[#F9FAFB] space-y-2.5">
                 <div className="flex items-center gap-2 text-[13px]">
-                  <FileText className="w-3.5 h-3.5 text-[#007AFF] shrink-0" />
-                  <span className="font-mono font-semibold text-[#007AFF]">{selectedContract.contractNo}</span>
-                  <span className="text-[#C7C7CC]">|</span>
-                  <Building2 className="w-3.5 h-3.5 text-[#86868B] shrink-0" />
+                  <FileText className="w-3.5 h-3.5 text-[#111827] shrink-0" />
+                  <span className="font-mono font-semibold text-[#111827]">{selectedContract.contractNo}</span>
+                  <span className="text-[#9CA3AF]">|</span>
+                  <Building2 className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />
                   <span className="truncate">{selectedContract.customer.name}</span>
                 </div>
                 {selectedContract.project?.name && (
                   <div className="flex items-center gap-1.5 text-[12px]">
-                    <span className="text-[#86868B]">关联项目:</span>
-                    <span className="font-semibold text-[#1D1D1F]">{selectedContract.project.name}</span>
-                    <span className="text-[#86868B]">({selectedContract.project.projectSourceId})</span>
+                    <span className="text-[#6B7280]">关联项目:</span>
+                    <span className="font-semibold text-[#111827]">{selectedContract.project.name}</span>
+                    <span className="text-[#6B7280]">({selectedContract.project.projectSourceId})</span>
                   </div>
                 )}
                 <div className="flex items-center gap-4 text-[12px]">
-                  <span className="text-[#86868B]">合同 <span className="font-semibold text-[#1D1D1F]">{formatAmount(selectedContract.totalAmount)}</span></span>
-                  <span className="text-[#86868B]">已收 <span className="font-semibold text-[#34C759]">{receivable ? formatAmount(receivable.paidAmount) : "¥0.00"}</span></span>
-                  <span className="text-[#86868B]">未收 <span className="font-semibold text-[#FF9500]">{receivable ? formatAmount(receivable.amount - receivable.paidAmount) : "-"}</span></span>
+                  <span className="text-[#6B7280]">合同 <span className="font-semibold text-[#111827]">{formatAmount(selectedContract.totalAmount)}</span></span>
+                  <span className="text-[#6B7280]">已收 <span className="font-semibold text-[#6B7280]">{receivable ? formatAmount(receivable.paidAmount) : "¥0.00"}</span></span>
+                  <span className="text-[#6B7280]">未收 <span className="font-semibold text-[#6B7280]">{receivable ? formatAmount(receivable.amount - receivable.paidAmount) : "-"}</span></span>
                 </div>
               </div>
             );
@@ -1248,9 +1248,9 @@ export default function FinanceIncomePage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">本次收款金额 <span className="text-[#FF3B30]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">本次收款金额 <span className="text-[#6B7280]">*</span></label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#86868B] text-[15px] font-medium">¥</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7280] text-[15px] font-medium">¥</span>
                 <input
                   type="number"
                   className="ios-input pl-8 text-[17px] font-semibold"
@@ -1265,7 +1265,7 @@ export default function FinanceIncomePage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">收款形式</label>
+                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">收款形式</label>
                 <select
                   className="ios-select"
                   value={receiptForm.receiptMethod}
@@ -1278,7 +1278,7 @@ export default function FinanceIncomePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">收款账户</label>
+                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">收款账户</label>
                 <select
                   className="ios-select"
                   value={receiptForm.bankAccount}
@@ -1296,7 +1296,7 @@ export default function FinanceIncomePage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">收款事由</label>
+                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">收款事由</label>
                 <input
                   type="text"
                   className="ios-input"
@@ -1306,7 +1306,7 @@ export default function FinanceIncomePage() {
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">登记人</label>
+                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">登记人</label>
                 <select
                   className="ios-select"
                   value={receiptForm.registrant}
@@ -1319,7 +1319,7 @@ export default function FinanceIncomePage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1330,7 +1330,7 @@ export default function FinanceIncomePage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitReceipt} disabled={saving}>
               {saving ? "保存中..." : "确认收款"}
@@ -1347,11 +1347,11 @@ export default function FinanceIncomePage() {
       >
         {receiptHistoryLoading ? (
           <div className="flex items-center justify-center py-10">
-            <div className="w-8 h-8 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : receiptHistory.length === 0 ? (
-          <div className="text-center py-10 text-[#86868B]">
-            <Receipt className="w-10 h-10 mx-auto mb-3 text-[#86868B]" />
+          <div className="text-center py-10 text-[#6B7280]">
+            <Receipt className="w-10 h-10 mx-auto mb-3 text-[#6B7280]" />
             <p>暂无收款记录</p>
           </div>
         ) : (
@@ -1374,29 +1374,29 @@ export default function FinanceIncomePage() {
                   <tr key={v.id}>
                     <td className="font-mono font-semibold">{v.receiptNo || "-"}</td>
                     <td>{users.find(u => u.id === v.registrant)?.realName || v.registrant || "-"}</td>
-                    <td className="font-semibold text-[#34C759]">{formatAmount(v.amount)}</td>
-                    <td className="text-[#86868B]">{formatDate(v.receiptDate)}</td>
+                    <td className="font-semibold text-[#6B7280]">{formatAmount(v.amount)}</td>
+                    <td className="text-[#6B7280]">{formatDate(v.receiptDate)}</td>
                     <td>{v.receiptMethod || "-"}</td>
-                    <td className="text-[#86868B]">{v.bankAccount || "-"}</td>
-                    <td className="text-[#86868B] max-w-[120px] truncate">{v.receiptReason || "-"}</td>
-                    <td className="text-[#86868B] max-w-[120px] truncate">{v.remark || "-"}</td>
+                    <td className="text-[#6B7280]">{v.bankAccount || "-"}</td>
+                    <td className="text-[#6B7280] max-w-[120px] truncate">{v.receiptReason || "-"}</td>
+                    <td className="text-[#6B7280] max-w-[120px] truncate">{v.remark || "-"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {receiptHistoryReceivable && (
-              <div className="mt-4 p-3 rounded-xl bg-[#F5F5F7] flex items-center justify-between text-[13px]">
-                <span className="text-[#86868B]">
-                  合同金额: <span className="font-semibold text-[#1D1D1F]">{formatAmount(receiptHistoryReceivable.sourceContract?.totalAmount || 0)}</span>
+              <div className="mt-4 p-3 rounded-xl bg-[#F9FAFB] flex items-center justify-between text-[13px]">
+                <span className="text-[#6B7280]">
+                  合同金额: <span className="font-semibold text-[#111827]">{formatAmount(receiptHistoryReceivable.sourceContract?.totalAmount || 0)}</span>
                 </span>
-                <span className="text-[#86868B]">
-                  应收: <span className="font-semibold text-[#1D1D1F]">{formatAmount(receiptHistoryReceivable.amount)}</span>
+                <span className="text-[#6B7280]">
+                  应收: <span className="font-semibold text-[#111827]">{formatAmount(receiptHistoryReceivable.amount)}</span>
                 </span>
-                <span className="text-[#86868B]">
-                  累计已收: <span className="font-semibold text-[#34C759]">{formatAmount(receiptHistoryReceivable.paidAmount)}</span>
+                <span className="text-[#6B7280]">
+                  累计已收: <span className="font-semibold text-[#6B7280]">{formatAmount(receiptHistoryReceivable.paidAmount)}</span>
                 </span>
-                <span className="text-[#86868B]">
-                  未收: <span className="font-semibold text-[#FF9500]">{formatAmount(receiptHistoryReceivable.amount - receiptHistoryReceivable.paidAmount)}</span>
+                <span className="text-[#6B7280]">
+                  未收: <span className="font-semibold text-[#6B7280]">{formatAmount(receiptHistoryReceivable.amount - receiptHistoryReceivable.paidAmount)}</span>
                 </span>
               </div>
             )}
@@ -1412,11 +1412,11 @@ export default function FinanceIncomePage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
           )}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">金额（元） <span className="text-[#FF3B30]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">金额（元） <span className="text-[#6B7280]">*</span></label>
               <input
                 type="number"
                 className="ios-input"
@@ -1428,7 +1428,7 @@ export default function FinanceIncomePage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">交易对方</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">交易对方</label>
               <input
                 type="text"
                 className="ios-input"
@@ -1439,7 +1439,7 @@ export default function FinanceIncomePage() {
             </div>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">交易日期</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">交易日期</label>
             <input
               type="date"
               className="ios-input"
@@ -1448,7 +1448,7 @@ export default function FinanceIncomePage() {
             />
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">说明</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">说明</label>
             <textarea
               className="ios-textarea"
               placeholder="请输入说明"
@@ -1464,7 +1464,7 @@ export default function FinanceIncomePage() {
               label="关联项目"
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitOtherIncome} disabled={saving}>
               {saving ? "保存中..." : "保存"}
@@ -1481,10 +1481,10 @@ export default function FinanceIncomePage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
           )}
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">股东 <span className="text-[#FF3B30]">*</span></label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">股东 <span className="text-[#6B7280]">*</span></label>
             <select
               className="ios-select"
               value={contributionForm.shareholderId}
@@ -1498,7 +1498,7 @@ export default function FinanceIncomePage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">出资金额（元） <span className="text-[#FF3B30]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">出资金额（元） <span className="text-[#6B7280]">*</span></label>
               <input
                 type="number"
                 className="ios-input"
@@ -1510,7 +1510,7 @@ export default function FinanceIncomePage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">出资日期</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">出资日期</label>
               <input
                 type="date"
                 className="ios-input"
@@ -1520,7 +1520,7 @@ export default function FinanceIncomePage() {
             </div>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">出资方式</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">出资方式</label>
             <select
               className="ios-select"
               value={contributionForm.method}
@@ -1533,7 +1533,7 @@ export default function FinanceIncomePage() {
             </select>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
             <textarea
               className="ios-textarea"
               placeholder="请输入备注"
@@ -1541,7 +1541,7 @@ export default function FinanceIncomePage() {
               onChange={(e) => setContributionForm((p) => ({ ...p, remark: e.target.value }))}
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitContribution} disabled={saving}>
               {saving ? "保存中..." : "保存"}
@@ -1558,32 +1558,32 @@ export default function FinanceIncomePage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
           )}
           {(returnTargetContribution || returnTargetBorrowing) && (() => {
             const source = returnTargetContribution || returnTargetBorrowing!;
             const sourceName = returnTargetContribution ? returnTargetContribution.shareholder?.name : returnTargetBorrowing!.lenderName;
             const sourceType = returnTargetContribution ? "股东出资" : "其他借入款";
             return (
-              <div className="p-3.5 rounded-xl bg-[#F5F5F7] space-y-2 text-[13px]">
+              <div className="p-3.5 rounded-xl bg-[#F9FAFB] space-y-2 text-[13px]">
                 <div className="flex items-center gap-2">
-                  <span className="text-[#86868B]">来源类型:</span>
-                  <span className="font-semibold text-[#1D1D1F]">{sourceType}</span>
+                  <span className="text-[#6B7280]">来源类型:</span>
+                  <span className="font-semibold text-[#111827]">{sourceType}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[#86868B]">来源名称:</span>
-                  <span className="font-semibold text-[#1D1D1F]">{sourceName}</span>
+                  <span className="text-[#6B7280]">来源名称:</span>
+                  <span className="font-semibold text-[#111827]">{sourceName}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-[#86868B]">原始金额: <span className="font-semibold text-[#1D1D1F]">{formatAmount(source.amount)}</span></span>
-                  <span className="text-[#86868B]">剩余金额: <span className="font-semibold text-[#FF9500]">{formatAmount(source.remainingAmount)}</span></span>
+                  <span className="text-[#6B7280]">原始金额: <span className="font-semibold text-[#111827]">{formatAmount(source.amount)}</span></span>
+                  <span className="text-[#6B7280]">剩余金额: <span className="font-semibold text-[#6B7280]">{formatAmount(source.remainingAmount)}</span></span>
                 </div>
               </div>
             );
           })()}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">归还金额（元） <span className="text-[#FF3B30]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">归还金额（元） <span className="text-[#6B7280]">*</span></label>
               <input
                 type="number"
                 className="ios-input"
@@ -1595,7 +1595,7 @@ export default function FinanceIncomePage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">归还日期</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">归还日期</label>
               <input
                 type="date"
                 className="ios-input"
@@ -1605,7 +1605,7 @@ export default function FinanceIncomePage() {
             </div>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">备注</label>
             <textarea
               className="ios-textarea"
               placeholder="请输入备注"
@@ -1613,7 +1613,7 @@ export default function FinanceIncomePage() {
               onChange={(e) => setReturnAppForm((p) => ({ ...p, remark: e.target.value }))}
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
             <button className="ios-btn ios-btn-secondary" onClick={() => { setShowModal(false); setReturnTargetContribution(null); setReturnTargetBorrowing(null); }}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitReturnApplication} disabled={saving}>
               {saving ? "提交中..." : "提交归还申请"}
@@ -1630,10 +1630,10 @@ export default function FinanceIncomePage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{formError}</div>
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">{formError}</div>
           )}
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">出借方名称 <span className="text-[#FF3B30]">*</span></label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">出借方名称 <span className="text-[#6B7280]">*</span></label>
             <input
               type="text"
               className="ios-input"
@@ -1644,7 +1644,7 @@ export default function FinanceIncomePage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">借入金额（元） <span className="text-[#FF3B30]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">借入金额（元） <span className="text-[#6B7280]">*</span></label>
               <input
                 type="number"
                 className="ios-input"
@@ -1656,7 +1656,7 @@ export default function FinanceIncomePage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">借入日期</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">借入日期</label>
               <input
                 type="date"
                 className="ios-input"
@@ -1666,7 +1666,7 @@ export default function FinanceIncomePage() {
             </div>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">预计归还日期</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">预计归还日期</label>
             <input
               type="date"
               className="ios-input"
@@ -1675,7 +1675,7 @@ export default function FinanceIncomePage() {
             />
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">说明</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">说明</label>
             <textarea
               className="ios-textarea"
               placeholder="请输入说明"
@@ -1683,7 +1683,7 @@ export default function FinanceIncomePage() {
               onChange={(e) => setBorrowingForm((p) => ({ ...p, description: e.target.value }))}
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitBorrowing} disabled={saving}>
               {saving ? "保存中..." : "保存"}
@@ -1699,17 +1699,17 @@ export default function FinanceIncomePage() {
         maxWidth="400px"
       >
         <div className="space-y-4">
-          <p className="text-[15px] text-[#1D1D1F]">
+          <p className="text-[15px] text-[#111827]">
             确定要删除该收入记录吗？此操作不可撤销。
           </p>
           {deleteConfirm && (
-            <div className="p-3 rounded-xl bg-[#F5F5F7] text-[13px]">
+            <div className="p-3 rounded-xl bg-[#F9FAFB] text-[13px]">
               <p>交易对方: <span className="font-semibold">{deleteConfirm.counterparty || "-"}</span></p>
-              <p>金额: <span className="font-semibold text-[#34C759]">{formatAmount(deleteConfirm.amount)}</span></p>
+              <p>金额: <span className="font-semibold text-[#6B7280]">{formatAmount(deleteConfirm.amount)}</span></p>
               <p>日期: <span className="font-semibold">{formatDate(deleteConfirm.transactionDate)}</span></p>
             </div>
           )}
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
             <button className="ios-btn ios-btn-danger" onClick={handleDeleteOtherIncome} disabled={deleting}>
               {deleting ? "删除中..." : "确认删除"}

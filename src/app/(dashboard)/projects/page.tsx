@@ -529,30 +529,30 @@ export default function ProjectsPage() {
 
       <div className="grid grid-cols-3 gap-5 mb-6">
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#007AFF]/10 flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-[#007AFF]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
+            <Briefcase className="w-5 h-5 text-[#111827]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">项目总数</p>
-            <p className="text-[24px] font-bold text-[#1D1D1F] leading-tight">{stats.total}</p>
+            <p className="text-[13px] text-[#6B7280]">项目总数</p>
+            <p className="text-[24px] font-bold text-[#111827] leading-tight">{stats.total}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#34C759]/10 flex items-center justify-center">
-            <Play className="w-5 h-5 text-[#34C759]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
+            <Play className="w-5 h-5 text-[#6B7280]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">执行中</p>
-            <p className="text-[24px] font-bold text-[#34C759] leading-tight">{stats.executing}</p>
+            <p className="text-[13px] text-[#6B7280]">执行中</p>
+            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.executing}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#FF9500]/10 flex items-center justify-center">
-            <Pause className="w-5 h-5 text-[#FF9500]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
+            <Pause className="w-5 h-5 text-[#6B7280]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">已暂停</p>
-            <p className="text-[24px] font-bold text-[#FF9500] leading-tight">{stats.paused}</p>
+            <p className="text-[13px] text-[#6B7280]">已暂停</p>
+            <p className="text-[24px] font-bold text-[#6B7280] leading-tight">{stats.paused}</p>
           </div>
         </div>
       </div>
@@ -560,7 +560,7 @@ export default function ProjectsPage() {
       <div className="bento-card-static">
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
             <input
               type="text"
               className="ios-input pl-10"
@@ -627,20 +627,20 @@ export default function ProjectsPage() {
             <option value="直接委托">直接委托</option>
           </select>
 
-          <div className="ml-auto text-[13px] text-[#86868B]">
-            共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 个项目
+          <div className="ml-auto text-[13px] text-[#6B7280]">
+            共 <span className="font-semibold text-[#111827]">{pagination.total}</span> 个项目
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : projects.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-              <Briefcase className="w-8 h-8 text-[#86868B]" />
+            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+              <Briefcase className="w-8 h-8 text-[#6B7280]" />
             </div>
             <p>{search || filterStatus || filterType || filterCategory || filterSource ? "没有匹配的项目" : "暂无项目，点击右上角新建"}</p>
           </div>
@@ -693,7 +693,7 @@ export default function ProjectsPage() {
               <tbody>
                 {projects.map((project) => {
                   return (
-                    <tr key={project.id} className={isSelected(project.id) ? "bg-[#007AFF]/5" : ""}>
+                    <tr key={project.id} className={isSelected(project.id) ? "bg-[#111827]/5" : ""}>
                       {isAdminUser && (
                         <td className="w-10">
                           <input
@@ -705,7 +705,7 @@ export default function ProjectsPage() {
                         </td>
                       )}
                       <td className="whitespace-nowrap">
-                        <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
+                        <span className="font-mono text-[13px] font-semibold text-[#111827]">
                           {project.projectSourceId}
                         </span>
                       </td>
@@ -720,29 +720,29 @@ export default function ProjectsPage() {
                         {project.type ? (
                           <span className={`ios-badge text-[11px] ${typeBadgeColor(project.type)}`}>{project.type}</span>
                         ) : (
-                          <span className="text-[#86868B]">-</span>
+                          <span className="text-[#6B7280]">-</span>
                         )}
                       </td>
                       <td className="whitespace-nowrap">
                         {project.projectCategory ? (
                           <span className={`ios-badge text-[11px] ${categoryBadgeColor(project.projectCategory)}`}>{project.projectCategory}</span>
                         ) : (
-                          <span className="text-[#86868B]">-</span>
+                          <span className="text-[#6B7280]">-</span>
                         )}
                       </td>
-                      <td className="whitespace-nowrap text-[13px] text-[#86868B]">{project.source}</td>
+                      <td className="whitespace-nowrap text-[13px] text-[#6B7280]">{project.source}</td>
                       <td className="whitespace-nowrap">
                         {project.designManager ? (
                           <span className="text-[13px]">{project.designManager.realName}</span>
                         ) : (
-                          <span className="text-[#86868B]">-</span>
+                          <span className="text-[#6B7280]">-</span>
                         )}
                       </td>
                       <td className="whitespace-nowrap">
                         {project.supervisorLeader ? (
                           <span className="text-[13px]">{project.supervisorLeader.realName}</span>
                         ) : (
-                          <span className="text-[#86868B]">-</span>
+                          <span className="text-[#6B7280]">-</span>
                         )}
                       </td>
                       <td className="whitespace-nowrap">
@@ -757,8 +757,8 @@ export default function ProjectsPage() {
                           <option value="关闭">关闭</option>
                         </select>
                       </td>
-                      <td className="whitespace-nowrap text-[#86868B]">{formatDate(project.startDate)}</td>
-                      <td className="whitespace-nowrap text-[#86868B]">{formatDate(project.plannedEndDate)}</td>
+                      <td className="whitespace-nowrap text-[#6B7280]">{formatDate(project.startDate)}</td>
+                      <td className="whitespace-nowrap text-[#6B7280]">{formatDate(project.plannedEndDate)}</td>
                       <td className="whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(project)}>
@@ -770,14 +770,14 @@ export default function ProjectsPage() {
                             编辑
                           </button>
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                             onClick={() => setDeleteConfirm(project)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
-                      <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                      <td className="text-[#6B7280] text-[12px] whitespace-nowrap">
                         {project.lastModifiedBy && (
                           <span>{project.lastModifiedBy}</span>
                         )}
@@ -790,7 +790,7 @@ export default function ProjectsPage() {
             </table>
 
             {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F0F0F0]">
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F3F4F6]">
                 <button
                   className="ios-btn ios-btn-secondary ios-btn-sm"
                   disabled={pagination.page <= 1}
@@ -798,7 +798,7 @@ export default function ProjectsPage() {
                 >
                   上一页
                 </button>
-                <span className="text-[13px] text-[#86868B] px-3">
+                <span className="text-[13px] text-[#6B7280] px-3">
                   {pagination.page} / {pagination.totalPages}
                 </span>
                 <button
@@ -831,15 +831,15 @@ export default function ProjectsPage() {
       >
         <div className="space-y-4">
           {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {formError}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                来源 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                来源 <span className="text-[#6B7280]">*</span>
               </label>
               <select
                 className="ios-select"
@@ -855,7 +855,7 @@ export default function ProjectsPage() {
 
             {form.source === "项目线索" && (
               <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                   选择项目线索
                 </label>
                 <select
@@ -876,10 +876,10 @@ export default function ProjectsPage() {
 
             {editingProject && form.projectSourceId && (
               <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目源ID</label>
+                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">项目源ID</label>
                 <input
                   type="text"
-                  className="ios-input bg-[#F5F5F7]"
+                  className="ios-input bg-[#F9FAFB]"
                   value={form.projectSourceId}
                   readOnly
                 />
@@ -888,10 +888,10 @@ export default function ProjectsPage() {
 
             {form.source === "项目线索" && !editingProject && form.projectSourceId && (
               <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目源ID</label>
+                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">项目源ID</label>
                 <input
                   type="text"
-                  className="ios-input bg-[#F5F5F7]"
+                  className="ios-input bg-[#F9FAFB]"
                   value={form.projectSourceId}
                   readOnly
                 />
@@ -900,10 +900,10 @@ export default function ProjectsPage() {
 
             {!editingProject && form.source === "直接委托" && (
               <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目源ID</label>
+                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">项目源ID</label>
                 <input
                   type="text"
-                  className="ios-input bg-[#F5F5F7]"
+                  className="ios-input bg-[#F9FAFB]"
                   value="提交后系统自动生成"
                   readOnly
                 />
@@ -911,8 +911,8 @@ export default function ProjectsPage() {
             )}
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                项目编号 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                项目编号 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -924,8 +924,8 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                项目名称 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                项目名称 <span className="text-[#6B7280]">*</span>
               </label>
               <input
                 type="text"
@@ -937,8 +937,8 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                客户 <span className="text-[#FF3B30]">*</span>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+                客户 <span className="text-[#6B7280]">*</span>
               </label>
               <select
                 className="ios-select"
@@ -952,7 +952,7 @@ export default function ProjectsPage() {
               </select>
               <button
                 type="button"
-                className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF] mt-1"
+                className="ios-btn ios-btn-ghost ios-btn-sm text-[#111827] mt-1"
                 onClick={() => {
                   setCustomerError("");
                   setShowCustomerModal(true);
@@ -964,7 +964,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">类型</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">类型</label>
               <select
                 className="ios-select"
                 value={form.type}
@@ -977,9 +977,9 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">地址</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">地址</label>
               <div className="relative">
-                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
@@ -993,9 +993,9 @@ export default function ProjectsPage() {
             {!editingProject && form.source === "直接委托" && (
               <>
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目地点</label>
+                  <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">项目地点</label>
                   <div className="relative">
-                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                     <input
                       type="text"
                       className="ios-input pl-10"
@@ -1006,7 +1006,7 @@ export default function ProjectsPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">预计投资额（元）</label>
+                  <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">预计投资额（元）</label>
                   <input
                     type="number"
                     className="ios-input"
@@ -1016,7 +1016,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">信息来源</label>
+                  <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">信息来源</label>
                   <input
                     type="text"
                     className="ios-input"
@@ -1029,7 +1029,7 @@ export default function ProjectsPage() {
             )}
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">类别</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">类别</label>
               <select
                 className="ios-select"
                 value={form.projectCategory}
@@ -1043,7 +1043,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">状态</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">状态</label>
               <select
                 className="ios-select"
                 value={form.status}
@@ -1056,7 +1056,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">设计经理</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">设计经理</label>
               <select
                 className="ios-select"
                 value={form.designManagerId}
@@ -1070,7 +1070,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">主管领导</label>
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">主管领导</label>
               <select
                 className="ios-select"
                 value={form.supervisorLeaderId}
@@ -1084,7 +1084,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 <Calendar className="w-3.5 h-3.5 inline mr-1" />
                 项目启动时间
               </label>
@@ -1097,7 +1097,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 <Calendar className="w-3.5 h-3.5 inline mr-1" />
                 计划结束时间
               </label>
@@ -1111,7 +1111,7 @@ export default function ProjectsPage() {
 
             {editingProject && (
               <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                   <Calendar className="w-3.5 h-3.5 inline mr-1" />
                   实际关闭时间
                 </label>
@@ -1125,7 +1125,7 @@ export default function ProjectsPage() {
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmit} disabled={saving}>
               {saving ? "保存中..." : editingProject ? "保存修改" : "创建项目"}
@@ -1142,13 +1142,13 @@ export default function ProjectsPage() {
       >
         {detailProject && (
           <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F0F0F0]">
-              <div className="w-12 h-12 rounded-2xl bg-[#007AFF]/10 flex items-center justify-center">
-                <Briefcase className="w-6 h-6 text-[#007AFF]" />
+            <div className="flex items-center gap-3 pb-4 border-b border-[#F3F4F6]">
+              <div className="w-12 h-12 rounded-2xl bg-[#111827]/10 flex items-center justify-center">
+                <Briefcase className="w-6 h-6 text-[#111827]" />
               </div>
               <div>
-                <p className="text-[17px] font-bold text-[#1D1D1F]">{detailProject.name}</p>
-                <p className="text-[13px] text-[#007AFF] font-mono font-semibold">{detailProject.projectSourceId}</p>
+                <p className="text-[17px] font-bold text-[#111827]">{detailProject.name}</p>
+                <p className="text-[13px] text-[#111827] font-mono font-semibold">{detailProject.projectSourceId}</p>
               </div>
               <span className={`ios-badge ml-auto ${statusConfig[detailProject.status]?.color || "ios-badge-gray"}`}>
                 {detailProject.status}
@@ -1156,89 +1156,89 @@ export default function ProjectsPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">项目编号</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F] font-mono">{detailProject.projectCode}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">项目编号</p>
+                <p className="text-[14px] font-semibold text-[#111827] font-mono">{detailProject.projectCode}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">客户</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.customer.name}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">客户</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{detailProject.customer.name}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">类型</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.type || "-"}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">类型</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{detailProject.type || "-"}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">类别</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.projectCategory || "-"}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">类别</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{detailProject.projectCategory || "-"}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">来源</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.source}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">来源</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{detailProject.source}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">地址</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.address || "-"}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">地址</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{detailProject.address || "-"}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">
                   <UserCircle className="w-3 h-3 inline mr-1" />
                   设计经理
                 </p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.designManager?.realName || "-"}</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{detailProject.designManager?.realName || "-"}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">
                   <UsersIcon className="w-3 h-3 inline mr-1" />
                   主管领导
                 </p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailProject.supervisorLeader?.realName || "-"}</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{detailProject.supervisorLeader?.realName || "-"}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">
                   <Calendar className="w-3 h-3 inline mr-1" />
                   项目启动时间
                 </p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailProject.startDate)}</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailProject.startDate)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">
                   <Calendar className="w-3 h-3 inline mr-1" />
                   计划结束时间
                 </p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailProject.plannedEndDate)}</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailProject.plannedEndDate)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">
                   <Calendar className="w-3 h-3 inline mr-1" />
                   实际关闭时间
                 </p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailProject.actualCloseDate)}</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailProject.actualCloseDate)}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">创建时间</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailProject.createdAt)}</p>
+              <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[12px] text-[#6B7280] mb-1">创建时间</p>
+                <p className="text-[14px] font-semibold text-[#111827]">{formatDate(detailProject.createdAt)}</p>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[#F0F0F0]">
-              <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">关联统计</p>
+            <div className="pt-3 border-t border-[#F3F4F6]">
+              <p className="text-[13px] font-semibold text-[#111827] mb-2">关联统计</p>
               <div className="grid grid-cols-4 gap-3">
-                <div className="p-3 rounded-xl bg-[#F5F5F7] text-center">
-                  <p className="text-[20px] font-bold text-[#1D1D1F]">{detailProject._count.plans}</p>
-                  <p className="text-[11px] text-[#86868B]">计划</p>
+                <div className="p-3 rounded-xl bg-[#F9FAFB] text-center">
+                  <p className="text-[20px] font-bold text-[#111827]">{detailProject._count.plans}</p>
+                  <p className="text-[11px] text-[#6B7280]">计划</p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#F5F5F7] text-center">
-                  <p className="text-[20px] font-bold text-[#1D1D1F]">{detailProject._count.designTasks}</p>
-                  <p className="text-[11px] text-[#86868B]">设计任务</p>
+                <div className="p-3 rounded-xl bg-[#F9FAFB] text-center">
+                  <p className="text-[20px] font-bold text-[#111827]">{detailProject._count.designTasks}</p>
+                  <p className="text-[11px] text-[#6B7280]">设计任务</p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#F5F5F7] text-center">
-                  <p className="text-[20px] font-bold text-[#1D1D1F]">{detailProject._count.outsourcingTasks}</p>
-                  <p className="text-[11px] text-[#86868B]">外包任务</p>
+                <div className="p-3 rounded-xl bg-[#F9FAFB] text-center">
+                  <p className="text-[20px] font-bold text-[#111827]">{detailProject._count.outsourcingTasks}</p>
+                  <p className="text-[11px] text-[#6B7280]">外包任务</p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#F5F5F7] text-center">
-                  <p className="text-[20px] font-bold text-[#1D1D1F]">{detailProject._count.purchaseRequests}</p>
-                  <p className="text-[11px] text-[#86868B]">采购申请</p>
+                <div className="p-3 rounded-xl bg-[#F9FAFB] text-center">
+                  <p className="text-[20px] font-bold text-[#111827]">{detailProject._count.purchaseRequests}</p>
+                  <p className="text-[11px] text-[#6B7280]">采购申请</p>
                 </div>
               </div>
             </div>
@@ -1253,16 +1253,16 @@ export default function ProjectsPage() {
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#6B7280]" />
           </div>
-          <p className="text-[15px] text-[#1D1D1F] mb-1">
+          <p className="text-[15px] text-[#111827] mb-1">
             确定要删除项目 <span className="font-semibold">{deleteConfirm?.projectCode}</span> 吗？
           </p>
           {deleteConfirm && (deleteConfirm.status === "执行" || deleteConfirm.status === "关闭") && currentUser?.username !== "admin" ? (
-            <p className="text-[13px] text-[#FF3B30] mb-4">{deleteConfirm.status}中的项目不能删除，请联系管理员</p>
+            <p className="text-[13px] text-[#6B7280] mb-4">{deleteConfirm.status}中的项目不能删除，请联系管理员</p>
           ) : (
-            <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
+            <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
           )}
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
@@ -1283,14 +1283,14 @@ export default function ProjectsPage() {
       >
         <div className="space-y-4">
           {customerError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {customerError}
             </div>
           )}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-              客户名称 <span className="text-[#FF3B30]">*</span>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
+              客户名称 <span className="text-[#6B7280]">*</span>
             </label>
             <input
               type="text"
@@ -1305,7 +1305,7 @@ export default function ProjectsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">联系人</label>
             <input
               type="text"
               className="ios-input"
@@ -1316,7 +1316,7 @@ export default function ProjectsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">电话</label>
             <input
               type="text"
               className="ios-input"
@@ -1327,7 +1327,7 @@ export default function ProjectsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">行业类型</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">行业类型</label>
             <select
               className="ios-select"
               value={customerForm.industryType}
@@ -1340,7 +1340,7 @@ export default function ProjectsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">客户等级</label>
+            <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">客户等级</label>
             <select
               className="ios-select"
               value={customerForm.customerGrade}
@@ -1352,7 +1352,7 @@ export default function ProjectsPage() {
             </select>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowCustomerModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleCreateCustomer} disabled={customerSaving}>
               {customerSaving ? "保存中..." : "确认"}

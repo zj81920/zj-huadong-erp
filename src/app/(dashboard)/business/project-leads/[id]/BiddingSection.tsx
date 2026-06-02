@@ -68,7 +68,7 @@ function MarkdownRenderer({ content }: { content: string }) {
       elements.push(
         <ul key={`ul-${elements.length}`} className="list-disc pl-5 mb-2 space-y-1">
           {listItems.map((li, i) => (
-            <li key={i} className="text-[13px] text-[#1D1D1F] leading-relaxed">
+            <li key={i} className="text-[13px] text-[#111827] leading-relaxed">
               {li.replace(/`([^`]+)`/g, "$1")}
             </li>
           ))}
@@ -89,22 +89,22 @@ function MarkdownRenderer({ content }: { content: string }) {
     if (h1Match) {
       flushList();
       elements.push(
-        <h2 key={idx} className="text-[16px] font-bold text-[#1D1D1F] mt-4 mb-2">
+        <h2 key={idx} className="text-[16px] font-bold text-[#111827] mt-4 mb-2">
           {h1Match[1]}
         </h2>
       );
     } else if (h2Match) {
       flushList();
       elements.push(
-        <h3 key={idx} className="text-[14px] font-bold text-[#1D1D1F] mt-3 mb-1.5 flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#007AFF]" />
+        <h3 key={idx} className="text-[14px] font-bold text-[#111827] mt-3 mb-1.5 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#111827]" />
           {h2Match[1]}
         </h3>
       );
     } else if (h3Match) {
       flushList();
       elements.push(
-        <h4 key={idx} className="text-[13px] font-bold text-[#1D1D1F] mt-2 mb-1">
+        <h4 key={idx} className="text-[13px] font-bold text-[#111827] mt-2 mb-1">
           {h3Match[1]}
         </h4>
       );
@@ -118,7 +118,7 @@ function MarkdownRenderer({ content }: { content: string }) {
       elements.push(
         <p
           key={idx}
-          className="text-[13px] text-[#1D1D1F] leading-relaxed mb-1"
+          className="text-[13px] text-[#111827] leading-relaxed mb-1"
           dangerouslySetInnerHTML={{ __html: boldLine.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") }}
         />
       );
@@ -391,12 +391,12 @@ export default function BiddingSection({
     <div className="mb-8">
       {/* 投标状态栏 */}
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-7 h-7 rounded-lg bg-[#FF9500]/10 flex items-center justify-center">
-          <Trophy className="w-4 h-4 text-[#FF9500]" />
+        <div className="w-7 h-7 rounded-lg bg-[#6B7280]/10 flex items-center justify-center">
+          <Trophy className="w-4 h-4 text-[#6B7280]" />
         </div>
-        <h2 className="text-[15px] font-bold text-[#1D1D1F]">投标管理</h2>
+        <h2 className="text-[15px] font-bold text-[#111827]">投标管理</h2>
         <div className="flex items-center gap-2 ml-4">
-          <span className="text-[13px] font-semibold text-[#1D1D1F]">
+          <span className="text-[13px] font-semibold text-[#111827]">
             投标状态:
           </span>
           <select
@@ -416,10 +416,10 @@ export default function BiddingSection({
       <div className="bento-card-static mb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#007AFF]/10 flex items-center justify-center">
-              <FolderOpen className="w-3.5 h-3.5 text-[#007AFF]" />
+            <div className="w-6 h-6 rounded-lg bg-[#111827]/10 flex items-center justify-center">
+              <FolderOpen className="w-3.5 h-3.5 text-[#111827]" />
             </div>
-            <span className="text-[14px] font-semibold text-[#1D1D1F]">
+            <span className="text-[14px] font-semibold text-[#111827]">
               招标资料
             </span>
           </div>
@@ -436,9 +436,9 @@ export default function BiddingSection({
 
         {!hasTenderInfo ? (
           <div className="empty-state py-6">
-            <FolderOpen className="w-6 h-6 text-[#86868B]" />
+            <FolderOpen className="w-6 h-6 text-[#6B7280]" />
             <p className="text-[13px]">暂无招标资料</p>
-            <p className="text-[12px] text-[#86868B]">
+            <p className="text-[12px] text-[#6B7280]">
               点击上方按钮填写招标信息
             </p>
           </div>
@@ -446,33 +446,33 @@ export default function BiddingSection({
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {lead.tenderNo && (
-                <div className="p-2.5 rounded-xl bg-[#F5F5F7]">
-                  <p className="text-[11px] text-[#86868B] mb-0.5">招标编号</p>
-                  <p className="text-[13px] font-semibold text-[#1D1D1F] font-mono">
+                <div className="p-2.5 rounded-xl bg-[#F9FAFB]">
+                  <p className="text-[11px] text-[#6B7280] mb-0.5">招标编号</p>
+                  <p className="text-[13px] font-semibold text-[#111827] font-mono">
                     {lead.tenderNo}
                   </p>
                 </div>
               )}
               {lead.tenderDeadline && (
-                <div className="p-2.5 rounded-xl bg-[#F5F5F7]">
-                  <p className="text-[11px] text-[#86868B] mb-0.5">截止日期</p>
-                  <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                <div className="p-2.5 rounded-xl bg-[#F9FAFB]">
+                  <p className="text-[11px] text-[#6B7280] mb-0.5">截止日期</p>
+                  <p className="text-[13px] font-semibold text-[#111827]">
                     {formatDate(lead.tenderDeadline)}
                   </p>
                 </div>
               )}
               {lead.biddingMethod && (
-                <div className="p-2.5 rounded-xl bg-[#F5F5F7]">
-                  <p className="text-[11px] text-[#86868B] mb-0.5">投标方式</p>
-                  <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                <div className="p-2.5 rounded-xl bg-[#F9FAFB]">
+                  <p className="text-[11px] text-[#6B7280] mb-0.5">投标方式</p>
+                  <p className="text-[13px] font-semibold text-[#111827]">
                     {lead.biddingMethod}
                   </p>
                 </div>
               )}
-              <div className="p-2.5 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[11px] text-[#86868B] mb-0.5">投标保证金</p>
+              <div className="p-2.5 rounded-xl bg-[#F9FAFB]">
+                <p className="text-[11px] text-[#6B7280] mb-0.5">投标保证金</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-semibold text-[#1D1D1F]">
+                  <span className="text-[13px] font-semibold text-[#111827]">
                     {formatMoney(lead.bondAmount)}
                   </span>
                   <span
@@ -496,20 +496,20 @@ export default function BiddingSection({
             </div>
 
             {leadTenderFiles.length > 0 && (
-              <div className="pt-3 border-t border-[#F0F0F0]">
-                <p className="text-[11px] text-[#86868B] mb-2">招标文件</p>
+              <div className="pt-3 border-t border-[#F3F4F6]">
+                <p className="text-[11px] text-[#6B7280] mb-2">招标文件</p>
                 <div className="space-y-1.5">
                   {leadTenderFiles.map((f, fi) => (
                     <div
                       key={fi}
-                      className="flex items-center gap-2 p-2 rounded-lg bg-[#F5F5F7]"
+                      className="flex items-center gap-2 p-2 rounded-lg bg-[#F9FAFB]"
                     >
-                      <FileText className="w-3.5 h-3.5 text-[#007AFF]" />
+                      <FileText className="w-3.5 h-3.5 text-[#111827]" />
                       <a
                         href={f.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[13px] text-[#007AFF] hover:underline truncate"
+                        className="text-[13px] text-[#111827] hover:underline truncate"
                       >
                         {f.name}
                       </a>
@@ -520,12 +520,12 @@ export default function BiddingSection({
             )}
 
             {lead.tenderDescription && (
-              <div className="pt-3 border-t border-[#F0F0F0]">
+              <div className="pt-3 border-t border-[#F3F4F6]">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles className="w-3 h-3 text-[#AF52DE]" />
-                  <p className="text-[11px] text-[#86868B]">招标文件说明</p>
+                  <Sparkles className="w-3 h-3 text-[#6B7280]" />
+                  <p className="text-[11px] text-[#6B7280]">招标文件说明</p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#F5F5F7] border border-[#E5E5EA]">
+                <div className="p-3 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]">
                   <MarkdownRenderer content={lead.tenderDescription} />
                 </div>
               </div>
@@ -537,7 +537,7 @@ export default function BiddingSection({
       {/* 投标记录区 */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[14px] font-semibold text-[#1D1D1F]">
+          <span className="text-[14px] font-semibold text-[#111827]">
             投标记录
           </span>
           {bidCount > 0 && (
@@ -559,9 +559,9 @@ export default function BiddingSection({
         {bidCount === 0 ? (
           <div className="bento-card-static">
             <div className="empty-state py-6">
-              <Trophy className="w-6 h-6 text-[#86868B]" />
+              <Trophy className="w-6 h-6 text-[#6B7280]" />
               <p className="text-[13px]">暂无投标记录</p>
-              <p className="text-[12px] text-[#86868B]">
+              <p className="text-[12px] text-[#6B7280]">
                 点击上方按钮添加投标
               </p>
             </div>
@@ -578,10 +578,10 @@ export default function BiddingSection({
                 <div key={b.id} className="bento-card-static">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-[#FF9500]/10 text-[12px] font-bold text-[#FF9500]">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-[#6B7280]/10 text-[12px] font-bold text-[#6B7280]">
                         {idx + 1}
                       </span>
-                      <span className="text-[13px] font-semibold text-[#1D1D1F]">
+                      <span className="text-[13px] font-semibold text-[#111827]">
                         第{idx + 1}轮投标
                       </span>
                     </div>
@@ -601,7 +601,7 @@ export default function BiddingSection({
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                             onClick={() => setDeleteItem(b)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -611,50 +611,50 @@ export default function BiddingSection({
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div className="p-2.5 rounded-xl bg-[#F5F5F7]">
-                      <p className="text-[11px] text-[#86868B] mb-0.5">
+                    <div className="p-2.5 rounded-xl bg-[#F9FAFB]">
+                      <p className="text-[11px] text-[#6B7280] mb-0.5">
                         投标报价
                       </p>
-                      <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                      <p className="text-[13px] font-semibold text-[#111827]">
                         {formatMoney(b.bidAmount)}
                       </p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[#F5F5F7]">
-                      <p className="text-[11px] text-[#86868B] mb-0.5">
+                    <div className="p-2.5 rounded-xl bg-[#F9FAFB]">
+                      <p className="text-[11px] text-[#6B7280] mb-0.5">
                         投标时间
                       </p>
-                      <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                      <p className="text-[13px] font-semibold text-[#111827]">
                         {formatDate(b.createdAt)}
                       </p>
                     </div>
                     {desc && (
-                      <div className="p-2.5 rounded-xl bg-[#F5F5F7] col-span-2">
-                        <p className="text-[11px] text-[#86868B] mb-0.5">
+                      <div className="p-2.5 rounded-xl bg-[#F9FAFB] col-span-2">
+                        <p className="text-[11px] text-[#6B7280] mb-0.5">
                           情况说明
                         </p>
-                        <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                        <p className="text-[13px] font-semibold text-[#111827]">
                           {desc}
                         </p>
                       </div>
                     )}
                   </div>
                   {files.length > 0 && (
-                    <div className="pt-3 border-t border-[#F0F0F0]">
-                      <p className="text-[11px] text-[#86868B] mb-2">
+                    <div className="pt-3 border-t border-[#F3F4F6]">
+                      <p className="text-[11px] text-[#6B7280] mb-2">
                         投标文件
                       </p>
                       <div className="space-y-1.5">
                         {files.map((f, fi) => (
                           <div
                             key={fi}
-                            className="flex items-center gap-2 p-2 rounded-lg bg-[#F5F5F7]"
+                            className="flex items-center gap-2 p-2 rounded-lg bg-[#F9FAFB]"
                           >
-                            <FileText className="w-3.5 h-3.5 text-[#007AFF]" />
+                            <FileText className="w-3.5 h-3.5 text-[#111827]" />
                             <a
                               href={f.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[12px] text-[#007AFF] hover:underline truncate"
+                              className="text-[12px] text-[#111827] hover:underline truncate"
                             >
                               {f.name}
                             </a>
@@ -679,13 +679,13 @@ export default function BiddingSection({
       >
         <div className="space-y-4">
           {tenderError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {tenderError}
             </div>
           )}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 招标编号
               </label>
               <input
@@ -699,11 +699,11 @@ export default function BiddingSection({
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 截止日期
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="date"
                   className="ios-input pl-10"
@@ -718,11 +718,11 @@ export default function BiddingSection({
               </div>
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 投标保证金（元）
               </label>
               <div className="relative">
-                <Shield className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Shield className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="number"
                   className="ios-input pl-10"
@@ -735,7 +735,7 @@ export default function BiddingSection({
               </div>
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 投标方式
               </label>
               <select
@@ -763,13 +763,13 @@ export default function BiddingSection({
           />
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F]">
+              <label className="block text-[13px] font-semibold text-[#111827]">
                 招标文件说明
               </label>
               <button
                 className="ios-btn ios-btn-sm"
                 style={{
-                  background: "linear-gradient(135deg, #AF52DE, #007AFF)",
+                  background: "linear-gradient(135deg, #6B7280, #111827)",
                   color: "#fff",
                   border: "none",
                 }}
@@ -785,7 +785,7 @@ export default function BiddingSection({
               </button>
             </div>
             {analyzeError && (
-              <p className="text-[12px] text-[#FF3B30] mb-1">{analyzeError}</p>
+              <p className="text-[12px] text-[#6B7280] mb-1">{analyzeError}</p>
             )}
             <textarea
               className="ios-textarea"
@@ -800,7 +800,7 @@ export default function BiddingSection({
               }
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowTenderModal(false)}
@@ -826,16 +826,16 @@ export default function BiddingSection({
         maxWidth="480px"
       >
         <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-[#F5F5F7]">
-            <p className="text-[12px] text-[#86868B] mb-1">保证金金额</p>
-            <p className="text-[20px] font-bold text-[#1D1D1F]">
+          <div className="p-4 rounded-xl bg-[#F9FAFB]">
+            <p className="text-[12px] text-[#6B7280] mb-1">保证金金额</p>
+            <p className="text-[20px] font-bold text-[#111827]">
               {formatMoney(lead.bondAmount)}
             </p>
           </div>
-          <p className="text-[13px] text-[#86868B]">
+          <p className="text-[13px] text-[#6B7280]">
             点击确认后将自动创建借出款记录并提交审批流程。审批通过后保证金状态将自动更新为「已付」；如被驳回则显示「已退回」，可重新发起。
           </p>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowBondModal(false)}
@@ -862,17 +862,17 @@ export default function BiddingSection({
       >
         <div className="space-y-4">
           {bidError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium">
               {bidError}
             </div>
           )}
           <div className="space-y-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 投标报价（元）
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
                 <input
                   type="number"
                   className="ios-input pl-10"
@@ -885,7 +885,7 @@ export default function BiddingSection({
               </div>
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 情况说明
               </label>
               <textarea
@@ -905,7 +905,7 @@ export default function BiddingSection({
               }
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
             <button
               className="ios-btn ios-btn-secondary"
               onClick={() => setShowBidModal(false)}
@@ -942,64 +942,64 @@ export default function BiddingSection({
             .description;
           return (
             <div className="space-y-5">
-              <div className="flex items-center gap-3 pb-4 border-b border-[#F0F0F0]">
-                <div className="w-12 h-12 rounded-2xl bg-[#FF9500]/10 flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-[#FF9500]" />
+              <div className="flex items-center gap-3 pb-4 border-b border-[#F3F4F6]">
+                <div className="w-12 h-12 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
+                  <Trophy className="w-6 h-6 text-[#6B7280]" />
                 </div>
                 <div>
-                  <p className="text-[17px] font-bold text-[#1D1D1F]">
+                  <p className="text-[17px] font-bold text-[#111827]">
                     {lead.projectName}
                   </p>
-                  <p className="text-[13px] text-[#007AFF] font-mono font-semibold">
+                  <p className="text-[13px] text-[#111827] font-mono font-semibold">
                     {lead.projectSourceId}
                   </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                  <p className="text-[12px] text-[#86868B] mb-1">客户</p>
-                  <p className="text-[14px] font-semibold text-[#1D1D1F]">
+                <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                  <p className="text-[12px] text-[#6B7280] mb-1">客户</p>
+                  <p className="text-[14px] font-semibold text-[#111827]">
                     {lead.customer?.name}
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                  <p className="text-[12px] text-[#86868B] mb-1">投标报价</p>
-                  <p className="text-[14px] font-semibold text-[#1D1D1F]">
+                <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                  <p className="text-[12px] text-[#6B7280] mb-1">投标报价</p>
+                  <p className="text-[14px] font-semibold text-[#111827]">
                     {formatMoney(detailItem.bidAmount)}
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                  <p className="text-[12px] text-[#86868B] mb-1">投标时间</p>
-                  <p className="text-[14px] font-semibold text-[#1D1D1F]">
+                <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                  <p className="text-[12px] text-[#6B7280] mb-1">投标时间</p>
+                  <p className="text-[14px] font-semibold text-[#111827]">
                     {formatDate(detailItem.createdAt)}
                   </p>
                 </div>
               </div>
               {detailDesc && (
-                <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                  <p className="text-[12px] text-[#86868B] mb-1">情况说明</p>
-                  <p className="text-[14px] font-semibold text-[#1D1D1F]">
+                <div className="p-3 rounded-xl bg-[#F9FAFB]">
+                  <p className="text-[12px] text-[#6B7280] mb-1">情况说明</p>
+                  <p className="text-[14px] font-semibold text-[#111827]">
                     {detailDesc}
                   </p>
                 </div>
               )}
               {detailFiles.length > 0 && (
                 <div>
-                  <p className="text-[12px] text-[#86868B] mb-2">投标文件</p>
+                  <p className="text-[12px] text-[#6B7280] mb-2">投标文件</p>
                   <div className="space-y-2">
                     {detailFiles.map((f, fi) => (
                       <div
                         key={fi}
-                        className="flex items-center gap-3 p-2.5 rounded-xl bg-[#F5F5F7]"
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-[#F9FAFB]"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-4 h-4 text-[#007AFF]" />
+                        <div className="w-8 h-8 rounded-lg bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-4 h-4 text-[#111827]" />
                         </div>
                         <a
                           href={f.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[13px] text-[#007AFF] hover:underline truncate"
+                          className="text-[13px] text-[#111827] hover:underline truncate"
                         >
                           {f.name}
                         </a>
@@ -1021,13 +1021,13 @@ export default function BiddingSection({
         maxWidth="400px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#6B7280]" />
           </div>
-          <p className="text-[15px] text-[#1D1D1F] mb-1">
+          <p className="text-[15px] text-[#111827] mb-1">
             确定要删除该投标记录吗？
           </p>
-          <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
+          <p className="text-[13px] text-[#6B7280] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">
             <button
               className="ios-btn ios-btn-secondary"

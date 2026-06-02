@@ -183,7 +183,7 @@ export default function ApprovalDebugPage() {
   if (checkingAdmin) {
     return (
       <div className="empty-state min-h-[400px]">
-        <div className="w-8 h-8 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
         <p>验证权限中...</p>
       </div>
     );
@@ -192,11 +192,11 @@ export default function ApprovalDebugPage() {
   if (!isAdminUser) {
     return (
       <div className="empty-state min-h-[400px]">
-        <div className="w-16 h-16 rounded-full bg-[#FF3B30]/10 flex items-center justify-center">
-          <Shield className="w-8 h-8 text-[#FF3B30]" />
+        <div className="w-16 h-16 rounded-full bg-[#6B7280]/10 flex items-center justify-center">
+          <Shield className="w-8 h-8 text-[#6B7280]" />
         </div>
-        <p className="text-[#FF3B30] font-semibold">仅系统管理员可访问此页面</p>
-        <p className="text-[13px] text-[#86868B]">请使用 admin 账号登录</p>
+        <p className="text-[#6B7280] font-semibold">仅系统管理员可访问此页面</p>
+        <p className="text-[13px] text-[#6B7280]">请使用 admin 账号登录</p>
       </div>
     );
   }
@@ -206,12 +206,12 @@ export default function ApprovalDebugPage() {
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#FF9500]/10 flex items-center justify-center">
-              <Bug className="w-5 h-5 text-[#FF9500]" />
+            <div className="w-10 h-10 rounded-2xl bg-[#6B7280]/10 flex items-center justify-center">
+              <Bug className="w-5 h-5 text-[#6B7280]" />
             </div>
             <div>
               <h1>审批调试</h1>
-              <p className="text-[#FF9500]">管理员专用 — 直接查看和修改审批实例状态</p>
+              <p className="text-[#6B7280]">管理员专用 — 直接查看和修改审批实例状态</p>
             </div>
           </div>
           <button
@@ -249,20 +249,20 @@ export default function ApprovalDebugPage() {
               ))}
             </select>
           </div>
-          <div className="ml-auto text-[13px] text-[#86868B]">
-            共 <span className="font-semibold text-[#1D1D1F]">{instances.length}</span> 条记录
+          <div className="ml-auto text-[13px] text-[#6B7280]">
+            共 <span className="font-semibold text-[#111827]">{instances.length}</span> 条记录
           </div>
         </div>
 
         {loading ? (
           <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
         ) : instances.length === 0 ? (
           <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
-              <Bug className="w-8 h-8 text-[#86868B]" />
+            <div className="w-16 h-16 rounded-full bg-[#F9FAFB] flex items-center justify-center">
+              <Bug className="w-8 h-8 text-[#6B7280]" />
             </div>
             <p>暂无审批实例</p>
           </div>
@@ -275,23 +275,23 @@ export default function ApprovalDebugPage() {
               return (
                 <div
                   key={inst.id}
-                  className="border border-[#E5E5EA] rounded-2xl overflow-hidden transition-all duration-200"
+                  className="border border-[#E5E7EB] rounded-2xl overflow-hidden transition-all duration-200"
                 >
                   <div
-                    className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-[#FAFAFA] transition-colors"
+                    className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-[#FFFFFF] transition-colors"
                     onClick={() => setExpandedId(isExpanded ? null : inst.id)}
                   >
                     <button className="flex-shrink-0">
                       {isExpanded ? (
-                        <ChevronDown className="w-4 h-4 text-[#86868B]" />
+                        <ChevronDown className="w-4 h-4 text-[#6B7280]" />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-[#86868B]" />
+                        <ChevronRight className="w-4 h-4 text-[#6B7280]" />
                       )}
                     </button>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-[14px] text-[#1D1D1F]">
+                        <span className="font-semibold text-[14px] text-[#111827]">
                           {BUSINESS_TYPE_MAP[inst.businessType] || inst.businessType}
                         </span>
                         <span className={`ios-badge ${statusInfo.color} gap-1`}>
@@ -302,7 +302,7 @@ export default function ApprovalDebugPage() {
                           {inst.flowLevel === "common" ? "通用" : inst.flowLevel}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 text-[12px] text-[#86868B]">
+                      <div className="flex items-center gap-3 text-[12px] text-[#6B7280]">
                         <span>业务ID: <span className="font-mono text-[11px]">{inst.businessId.slice(0, 12)}...</span></span>
                         <span>当前节点: {inst.currentNode}</span>
                         <span>创建: {new Date(inst.createdAt).toLocaleString("zh-CN")}</span>
@@ -321,7 +321,7 @@ export default function ApprovalDebugPage() {
                         修改状态
                       </button>
                       <button
-                        className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                        className="ios-btn ios-btn-ghost ios-btn-sm text-[#6B7280]!"
                         onClick={(e) => {
                           e.stopPropagation();
                           setDeleteConfirm(inst);
@@ -334,22 +334,22 @@ export default function ApprovalDebugPage() {
                   </div>
 
                   {isExpanded && (
-                    <div className="px-5 pb-4 border-t border-[#F0F0F0] bg-[#FAFAFA]">
+                    <div className="px-5 pb-4 border-t border-[#F3F4F6] bg-[#FFFFFF]">
                       <div className="pt-3">
-                        <p className="text-[12px] font-semibold text-[#86868B] mb-2">审批记录</p>
+                        <p className="text-[12px] font-semibold text-[#6B7280] mb-2">审批记录</p>
                         {inst.actions.length === 0 ? (
-                          <p className="text-[12px] text-[#86868B]">暂无操作记录</p>
+                          <p className="text-[12px] text-[#6B7280]">暂无操作记录</p>
                         ) : (
                           <div className="space-y-1.5">
                             {inst.actions.map((action) => (
                               <div
                                 key={action.id}
-                                className="flex items-center gap-3 text-[12px] py-1.5 px-3 bg-white rounded-lg border border-[#F0F0F0]"
+                                className="flex items-center gap-3 text-[12px] py-1.5 px-3 bg-white rounded-lg border border-[#F3F4F6]"
                               >
-                                <span className="text-[#86868B] w-[130px] flex-shrink-0">
+                                <span className="text-[#6B7280] w-[130px] flex-shrink-0">
                                   {new Date(action.actedAt || action.createdAt).toLocaleString("zh-CN")}
                                 </span>
-                                <span className="font-medium text-[#1D1D1F] min-w-[60px]">
+                                <span className="font-medium text-[#111827] min-w-[60px]">
                                   {action.approver?.realName || action.approverId}
                                 </span>
                                 <span className={`ios-badge ${
@@ -362,20 +362,20 @@ export default function ApprovalDebugPage() {
                                 } !text-[10px] !px-1.5 !py-0`}>
                                   {action.action}
                                 </span>
-                                <span className="text-[#1D1D1F]">{action.nodeName}</span>
+                                <span className="text-[#111827]">{action.nodeName}</span>
                                 {action.comment && (
-                                  <span className="text-[#86868B] truncate">({action.comment})</span>
+                                  <span className="text-[#6B7280] truncate">({action.comment})</span>
                                 )}
                               </div>
                             ))}
                           </div>
                         )}
 
-                        <div className="mt-3 pt-3 border-t border-[#F0F0F0]">
-                          <p className="text-[11px] text-[#86868B]">
+                        <div className="mt-3 pt-3 border-t border-[#F3F4F6]">
+                          <p className="text-[11px] text-[#6B7280]">
                             实例ID: <span className="font-mono">{inst.id}</span>
                           </p>
-                          <p className="text-[11px] text-[#86868B]">
+                          <p className="text-[11px] text-[#6B7280]">
                             业务ID: <span className="font-mono">{inst.businessId}</span>
                           </p>
                         </div>
@@ -398,19 +398,19 @@ export default function ApprovalDebugPage() {
       >
         {modifyModal && (
           <div className="space-y-4">
-            <div className="p-3 rounded-xl bg-[#FF9500]/8 text-[#FF9500] text-[13px] font-medium flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-[#6B7280]/8 text-[#6B7280] text-[13px] font-medium flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               此操作将绕过正常审批流程，强制修改状态
             </div>
 
-            <div className="p-3 rounded-xl bg-[#F5F5F7] text-[13px] space-y-1.5">
-              <p><span className="text-[#86868B]">业务类型：</span>{BUSINESS_TYPE_MAP[modifyModal.businessType] || modifyModal.businessType}</p>
-              <p><span className="text-[#86868B]">当前状态：</span>{modifyModal.status}</p>
-              <p><span className="text-[#86868B]">当前节点：</span>{modifyModal.currentNode}</p>
+            <div className="p-3 rounded-xl bg-[#F9FAFB] text-[13px] space-y-1.5">
+              <p><span className="text-[#6B7280]">业务类型：</span>{BUSINESS_TYPE_MAP[modifyModal.businessType] || modifyModal.businessType}</p>
+              <p><span className="text-[#6B7280]">当前状态：</span>{modifyModal.status}</p>
+              <p><span className="text-[#6B7280]">当前节点：</span>{modifyModal.currentNode}</p>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-semibold text-[#111827] mb-1.5">
                 修改为
               </label>
               <select
@@ -424,7 +424,7 @@ export default function ApprovalDebugPage() {
               </select>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+            <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
               <button className="ios-btn ios-btn-secondary" onClick={() => setModifyModal(null)}>
                 取消
               </button>
@@ -449,16 +449,16 @@ export default function ApprovalDebugPage() {
         maxWidth="420px"
       >
         <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#FF3B30]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#FF3B30]" />
+          <div className="w-14 h-14 rounded-full bg-[#6B7280]/10 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-7 h-7 text-[#6B7280]" />
           </div>
-          <p className="text-[15px] text-[#1D1D1F] mb-1">
+          <p className="text-[15px] text-[#111827] mb-1">
             确定要删除此审批实例吗？
           </p>
-          <p className="text-[13px] text-[#86868B] mb-1">
+          <p className="text-[13px] text-[#6B7280] mb-1">
             {BUSINESS_TYPE_MAP[deleteConfirm?.businessType || ""] || deleteConfirm?.businessType}
           </p>
-          <p className="text-[12px] text-[#FF3B30] mb-4">此操作不可撤销，关联的审批记录将一并删除</p>
+          <p className="text-[12px] text-[#6B7280] mb-4">此操作不可撤销，关联的审批记录将一并删除</p>
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>
               取消
@@ -474,7 +474,7 @@ export default function ApprovalDebugPage() {
       {toast && (
         <div
           className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-lg text-[14px] font-semibold backdrop-blur-xl transition-all duration-300 ${
-            toast.type === "success" ? "bg-[#34C759]/90 text-white" : "bg-[#FF3B30]/90 text-white"
+            toast.type === "success" ? "bg-[#6B7280]/90 text-white" : "bg-[#6B7280]/90 text-white"
           }`}
         >
           {toast.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}

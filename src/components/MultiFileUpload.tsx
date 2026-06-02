@@ -120,7 +120,7 @@ export default function MultiFileUpload({
 
   return (
     <div className="space-y-1.5">
-      <label className="block text-[13px] font-medium text-[#1D1D1F]">
+      <label className="block text-[13px] font-medium text-[#111827]">
         {label}
       </label>
 
@@ -129,25 +129,25 @@ export default function MultiFileUpload({
           {value.map((file, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-3 p-2.5 rounded-xl bg-[#F5F5F7] border border-[#E5E5EA]"
+              className="flex items-center gap-3 p-2.5 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB]"
             >
-              <div className="w-8 h-8 rounded-lg bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
-                <FileText className="w-4 h-4 text-[#007AFF]" />
+              <div className="w-8 h-8 rounded-lg bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-4 h-4 text-[#111827]" />
               </div>
               <a
                 href={file.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 min-w-0 text-[13px] text-[#007AFF] hover:underline truncate"
+                className="flex-1 min-w-0 text-[13px] text-[#111827] hover:underline truncate"
               >
                 {file.name}
               </a>
               <button
                 type="button"
                 onClick={() => handleRemove(idx)}
-                className="w-6 h-6 rounded-full bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20 flex items-center justify-center transition-colors duration-150 flex-shrink-0"
+                className="w-6 h-6 rounded-full bg-[#6B7280]/10 hover:bg-[#6B7280]/20 flex items-center justify-center transition-colors duration-150 flex-shrink-0"
               >
-                <X className="w-3 h-3 text-[#FF3B30]" />
+                <X className="w-3 h-3 text-[#6B7280]" />
               </button>
             </div>
           ))}
@@ -155,18 +155,18 @@ export default function MultiFileUpload({
       )}
 
       {uploading && (
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#007AFF]/5 border border-[#007AFF]/20">
-          <Loader2 className="w-5 h-5 text-[#007AFF] animate-spin" />
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#111827]/5 border border-[#111827]/20">
+          <Loader2 className="w-5 h-5 text-[#111827] animate-spin" />
           <div className="flex-1">
-            <div className="text-[13px] text-[#007AFF] mb-1">上传中...</div>
-            <div className="w-full max-w-[200px] h-1.5 bg-[#E5E5EA] rounded-full overflow-hidden">
+            <div className="text-[13px] text-[#111827] mb-1">上传中...</div>
+            <div className="w-full max-w-[200px] h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#007AFF] rounded-full transition-all duration-300 ease-out"
+                className="h-full bg-[#111827] rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
-          <div className="text-[12px] text-[#86868B]">{progress}%</div>
+          <div className="text-[12px] text-[#6B7280]">{progress}%</div>
         </div>
       )}
 
@@ -178,10 +178,10 @@ export default function MultiFileUpload({
         className={`
           relative flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200
           ${uploading
-            ? "border-[#007AFF]/40 bg-[#007AFF]/5 pointer-events-none"
+            ? "border-[#111827]/40 bg-[#111827]/5 pointer-events-none"
             : dragOver
-              ? "border-[#007AFF] bg-[#007AFF]/5"
-              : "border-[#E5E5EA] bg-[#F5F5F7] hover:border-[#007AFF]/40 hover:bg-[#007AFF]/5"
+              ? "border-[#111827] bg-[#111827]/5"
+              : "border-[#E5E7EB] bg-[#F9FAFB] hover:border-[#111827]/40 hover:bg-[#111827]/5"
           }
         `}
       >
@@ -193,8 +193,8 @@ export default function MultiFileUpload({
           onChange={handleFileChange}
           className="hidden"
         />
-        <Plus className="w-4 h-4 text-[#86868B]" />
-        <span className="text-[13px] text-[#86868B]">点击或拖拽添加文件</span>
+        <Plus className="w-4 h-4 text-[#6B7280]" />
+        <span className="text-[13px] text-[#6B7280]">点击或拖拽添加文件</span>
       </div>
     </div>
   );

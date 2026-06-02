@@ -13,19 +13,19 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F5F7] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-[#86868B]">加载中...</span>
+          <div className="w-8 h-8 border-2 border-text-secondary border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm text-text-secondary">加载中...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7]">
+    <div className="min-h-screen bg-white">
       <Sidebar />
-      <main className="ml-[260px] min-h-screen p-8">
+      <main className="ml-[240px] min-h-screen p-6">
         <div className="mb-6 -mt-2">
           <AISearchBar />
         </div>
