@@ -1,26 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 async function generateProjectSourceId(): Promise<string> {
   const year = new Date().getFullYear();
-  const prefix = `PJ-${year}-`;
-
-  const lastLead = await prisma.projectLead.findFirst({
-    where: { projectSourceId: { startsWith: prefix } },
-    orderBy: { projectSourceId: "desc" },
-    select: { projectSourceId: true },
-  });
-
-  let nextNum = 1;
-  if (lastLead) {
-    const parts = lastLead.projectSourceId.split("-");
-    const lastNum = parseInt(parts[parts.length - 1], 10);
-    if (!isNaN(lastNum)) {
-      nextNum = lastNum + 1;
-    }
-  }
-
-  return `${prefix}${String(nextNum).padStart(4, "0")}`;
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `PJ-${year}-${timestamp}${random}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -39,7 +25,10 @@ export async function GET(request: NextRequest) {
         { projectSourceId: { contains: search, mode: "insensitive" } },
         { projectName: { contains: search, mode: "insensitive" } },
         { location: { contains: search, mode: "insensitive" } },
-        { infoSource: { contains: search, mode: "insensitive" } },
+        { implementationEntity: { contains: search, mode: "insensitive" } },
+        { contactPerson: { contains: search, mode: "insensitive" } },
+        { project: { projectCode: { contains: search, mode: "insensitive" } } },
+        { project: { name: { contains: search, mode: "insensitive" } } },
       ];
     }
 
@@ -56,6 +45,7 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           customer: { select: { id: true, name: true, industryType: true } },
+          project: { select: { id: true, projectCode: true, name: true, status: true, projectCategory: true } },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
@@ -77,13 +67,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const {
       customerId,
       projectName,
       location,
-      estimatedInvestment,
-      bidReleaseTime,
-      infoSource,
+      contactPerson,
+      contactPhone,
+      contactEmail,
+      projectNature,
+      implementationEntity,
       currentStatus,
       followUpRecords,
       competitorInfo,
@@ -94,6 +87,12 @@ export async function POST(request: NextRequest) {
     }
     if (!projectName || !projectName.trim()) {
       return NextResponse.json({ error: "项目名称不能为空" }, { status: 400 });
+    }
+    if (!projectNature || !Array.isArray(projectNature) || projectNature.length === 0) {
+      return NextResponse.json({ error: "请选择项目性质" }, { status: 400 });
+    }
+    if (!implementationEntity || !implementationEntity.trim()) {
+      return NextResponse.json({ error: "请选择实施主体" }, { status: 400 });
     }
 
     const customer = await prisma.customer.findUnique({ where: { id: customerId } });
@@ -109,12 +108,15 @@ export async function POST(request: NextRequest) {
         customerId,
         projectName: projectName.trim(),
         location: location?.trim() || null,
-        estimatedInvestment: estimatedInvestment ? parseFloat(estimatedInvestment) : null,
-        bidReleaseTime: bidReleaseTime ? new Date(bidReleaseTime) : null,
-        infoSource: infoSource?.trim() || null,
-        currentStatus: currentStatus || "潜在",
+        contactPerson: contactPerson?.trim() || null,
+        contactPhone: contactPhone?.trim() || null,
+        contactEmail: contactEmail?.trim() || null,
+        projectNature: projectNature || [],
+        implementationEntity: implementationEntity.trim(),
+        currentStatus: currentStatus || "跟踪中",
         followUpRecords: followUpRecords || [],
         competitorInfo: competitorInfo || [],
+        lastModifiedBy: currentUser?.realName || null,
       },
       include: {
         customer: { select: { id: true, name: true, industryType: true } },

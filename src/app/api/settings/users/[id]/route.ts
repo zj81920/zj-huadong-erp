@@ -62,6 +62,10 @@ export async function DELETE(
       return NextResponse.json({ error: "用户不存在" }, { status: 404 });
     }
 
+    if (existing.username === "admin") {
+      return NextResponse.json({ error: "系统管理员账号不可删除" }, { status: 403 });
+    }
+
     await prisma.userRole.deleteMany({ where: { userId: id } });
     await prisma.user.delete({ where: { id } });
 

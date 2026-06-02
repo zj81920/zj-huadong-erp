@@ -29,6 +29,7 @@ interface Certificate {
   remark: string | null;
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
 }
 
 interface CertificateFormData {
@@ -360,6 +361,7 @@ export default function CertificatesPage() {
                   <th>状态</th>
                   <th>存放位置</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
@@ -419,6 +421,12 @@ export default function CertificatesPage() {
                             删除
                           </button>
                         </div>
+                      </td>
+                      <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                        {item.lastModifiedBy && (
+                          <span>{item.lastModifiedBy}</span>
+                        )}
+                        <span className="block text-[11px]">{formatDate(item.updatedAt)}</span>
                       </td>
                     </tr>
                   );

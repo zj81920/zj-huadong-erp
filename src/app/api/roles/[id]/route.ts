@@ -8,11 +8,19 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, description, departmentId, isProjectRole, sort, isActive } = body;
+    const { name, description, departmentId, isProjectRole, sort, isActive, accessibleModules, isGlobalVisible } = body;
 
     const existing = await prisma.role.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "角色不存在" }, { status: 404 });
+    }
+
+    if (existing.code === "admin") {
+      return NextResponse.json({ error: "系统内定角色不可编辑" }, { status: 403 });
+    }
+
+    if (existing.code === "finance" && name && name.trim() !== existing.name) {
+      return NextResponse.json({ error: "系统角色名称不可修改" }, { status: 403 });
     }
 
     if (name && name.trim() !== existing.name) {
@@ -33,6 +41,8 @@ export async function PUT(
         ...(isProjectRole !== undefined && { isProjectRole }),
         ...(sort !== undefined && { sort }),
         ...(isActive !== undefined && { isActive }),
+        ...(accessibleModules !== undefined && { accessibleModules: typeof accessibleModules === "string" ? accessibleModules : JSON.stringify(accessibleModules) }),
+        ...(isGlobalVisible !== undefined && { isGlobalVisible }),
       },
     });
     return NextResponse.json({ data: role });
@@ -51,6 +61,9 @@ export async function DELETE(
     const existing = await prisma.role.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "角色不存在" }, { status: 404 });
+    }
+    if (existing.code === "admin" || existing.code === "finance") {
+      return NextResponse.json({ error: "系统内定角色不可删除" }, { status: 403 });
     }
     const flowUsage = await prisma.approvalFlowDefinition.count({
       where: { approverRole: existing.code, isActive: true },

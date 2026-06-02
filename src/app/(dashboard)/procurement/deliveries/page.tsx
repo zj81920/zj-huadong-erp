@@ -8,10 +8,16 @@ import {
   Eye,
   Truck,
   CheckCircle2,
-  XCircle,
   FileCheck,
+  Trash2,
+  FileText,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFlowConfigured } from "@/hooks/useFlowConfigured";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 
 interface Supplier {
   id: string;
@@ -20,26 +26,54 @@ interface Supplier {
   phone: string | null;
 }
 
-interface PurchaseContract {
+interface ExpenseContract {
   id: string;
   contractNo: string;
   supplierId: string;
   totalAmount: number;
   status: string;
   supplier: Supplier;
+  items?: {
+    id: string;
+    materialName: string;
+    spec: string | null;
+    unit: string | null;
+    quantity: number | null;
+    unitPrice: number | null;
+    totalPrice: number | null;
+  }[];
 }
 
 interface DeliveryReceipt {
   id: string;
-  purchaseContractId: string;
+  expenseContractId: string;
   deliveryDate: string;
-  receivedQuantity: string;
+  deliveryAmount?: string | null;
+  acceptedAmount?: string | null;
+  invoiceAmount?: string | null;
+  invoiceNo?: string | null;
   inspectionResult: string;
   receiptStatus: string;
   invoiceMatched: boolean;
+  attachments?: string | null;
+  approvalInstanceId?: string | null;
+  status?: string;
   createdAt: string;
   updatedAt: string;
-  purchaseContract: PurchaseContract & {
+  lastModifiedBy: string | null;
+  items: {
+    id: string;
+    materialName: string;
+    spec: string | null;
+    unit: string | null;
+    orderedQuantity: number | null;
+    receivedQuantity: number | null;
+    acceptedQuantity: number | null;
+    inspectionResult: string;
+    remark: string | null;
+    contractItemId: string | null;
+  }[];
+  expenseContract: ExpenseContract & {
     inquiry?: {
       id: string;
       inquiryDate: string;
@@ -48,12 +82,24 @@ interface DeliveryReceipt {
 }
 
 interface DeliveryReceiptFormData {
-  purchaseContractId: string;
+  expenseContractId: string;
   deliveryDate: string;
-  receivedQuantity: string;
+  deliveryAmount: string;
+  acceptedAmount: string;
   inspectionResult: string;
-  receiptStatus: string;
-  invoiceMatched: boolean;
+  items: {
+    contractItemId: string;
+    materialName: string;
+    spec: string;
+    unit: string;
+    orderedQuantity: number;
+    unitPrice: number;
+    receivedQuantity: string;
+    acceptedQuantity: string;
+    inspectionResult: string;
+    remark: string;
+  }[];
+  attachments: string[];
 }
 
 interface PaginationInfo {
@@ -63,13 +109,58 @@ interface PaginationInfo {
   totalPages: number;
 }
 
+interface Invoice {
+  id: string;
+  invoiceNo: string;
+  invoiceCode: string | null;
+  invoiceType: string;
+  invoiceDate: string;
+  amount: number;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
+  sellerName: string | null;
+  remark: string | null;
+  invoiceCategory: string;
+  sourceType: string;
+  sourceId: string;
+  createdAt: string;
+}
+
+interface InvoiceFormData {
+  invoiceNo: string;
+  invoiceCode: string;
+  invoiceType: string;
+  invoiceDate: string;
+  amount: string;
+  taxRate: string;
+  taxAmount: string;
+  totalAmount: string;
+  sellerName: string;
+  remark: string;
+}
+
+const emptyInvoiceForm: InvoiceFormData = {
+  invoiceNo: "",
+  invoiceCode: "",
+  invoiceType: "增值税专用发票",
+  invoiceDate: new Date().toISOString().split("T")[0],
+  amount: "",
+  taxRate: "6",
+  taxAmount: "0.00",
+  totalAmount: "0.00",
+  sellerName: "",
+  remark: "",
+};
+
 const emptyForm: DeliveryReceiptFormData = {
-  purchaseContractId: "",
+  expenseContractId: "",
   deliveryDate: "",
-  receivedQuantity: "",
+  deliveryAmount: "",
+  acceptedAmount: "",
   inspectionResult: "待检",
-  receiptStatus: "待验收",
-  invoiceMatched: false,
+  items: [],
+  attachments: [],
 };
 
 const inspectionColorMap: Record<string, string> = {
@@ -78,13 +169,10 @@ const inspectionColorMap: Record<string, string> = {
   不合格: "ios-badge-red",
 };
 
-const receiptStatusColorMap: Record<string, string> = {
-  待验收: "ios-badge-gray",
-  已验收: "ios-badge-green",
-  已拒绝: "ios-badge-red",
-};
-
 export default function DeliveryReceiptsPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin";
+  const { configured: flowConfigured } = useFlowConfigured("delivery_receipt");
   const [receipts, setReceipts] = useState<DeliveryReceipt[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -96,7 +184,6 @@ export default function DeliveryReceiptsPage() {
 
   const [search, setSearch] = useState("");
   const [filterInspection, setFilterInspection] = useState("");
-  const [filterReceiptStatus, setFilterReceiptStatus] = useState("");
 
   const [showModal, setShowModal] = useState(false);
   const [editingReceipt, setEditingReceipt] = useState<DeliveryReceipt | null>(
@@ -110,7 +197,22 @@ export default function DeliveryReceiptsPage() {
     null
   );
 
-  const [contracts, setContracts] = useState<PurchaseContract[]>([]);
+  const [contracts, setContracts] = useState<ExpenseContract[]>([]);
+
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [invoiceModalReceipt, setInvoiceModalReceipt] = useState<DeliveryReceipt | null>(null);
+  const [invoiceForm, setInvoiceForm] = useState<InvoiceFormData>(emptyInvoiceForm);
+  const [invoiceSubmitting, setInvoiceSubmitting] = useState(false);
+  const [invoiceError, setInvoiceError] = useState("");
+  const [receiptInvoices, setReceiptInvoices] = useState<Record<string, Invoice[]>>({});
+  const [deliveredMap, setDeliveredMap] = useState<Record<string, { qty: number; amount: number }>>({});
+  const [uploading, setUploading] = useState(false);
+  const [approvalInstance, setApprovalInstance] = useState<any>(null);
+  const [approvalLoading, setApprovalLoading] = useState(false);
+
+  const {
+    toggleSelect, selectAll, clearSelection, isAllSelected, selectedCount, isSelected,
+  } = useBatchSelection(receipts.map((r) => r.id));
 
   const fetchReceipts = useCallback(async () => {
     setLoading(true);
@@ -118,8 +220,6 @@ export default function DeliveryReceiptsPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (filterInspection) params.set("inspectionResult", filterInspection);
-      if (filterReceiptStatus)
-        params.set("receiptStatus", filterReceiptStatus);
       params.set("page", pagination.page.toString());
       params.set("pageSize", pagination.pageSize.toString());
 
@@ -135,23 +235,49 @@ export default function DeliveryReceiptsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterInspection, filterReceiptStatus, pagination.page, pagination.pageSize]);
+  }, [search, filterInspection, pagination.page, pagination.pageSize]);
 
   const fetchContracts = useCallback(async () => {
     try {
-      const res = await fetch("/api/purchase-contracts?status=生效");
+      const res = await fetch("/api/expense-contracts?contractType=项目采购");
       const json = await res.json();
       if (res.ok) {
         setContracts(json.data || []);
       }
     } catch (err) {
-      console.error("获取采购合同列表失败:", err);
+      console.error("获取支出合同列表失败:", err);
+    }
+  }, []);
+
+  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
+    setApprovalLoading(true);
+    try {
+      const res = await fetch(`/api/approval-instances/${instanceId}`);
+      const json = await res.json();
+      if (res.ok) {
+        setApprovalInstance(json.data);
+      }
+    } catch (err) {
+      console.error("获取审批实例失败:", err);
+    } finally {
+      setApprovalLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchReceipts();
   }, [fetchReceipts]);
+
+  useEffect(() => {
+    const amt = parseFloat(invoiceForm.amount) || 0;
+    const rate = parseFloat(invoiceForm.taxRate) / 100 || 0;
+    const tax = amt * rate;
+    setInvoiceForm((prev) => ({
+      ...prev,
+      taxAmount: tax.toFixed(2),
+      totalAmount: (amt + tax).toFixed(2),
+    }));
+  }, [invoiceForm.amount, invoiceForm.taxRate]);
 
   const handleOpenCreate = () => {
     setEditingReceipt(null);
@@ -164,14 +290,26 @@ export default function DeliveryReceiptsPage() {
   const handleOpenEdit = (receipt: DeliveryReceipt) => {
     setEditingReceipt(receipt);
     setForm({
-      purchaseContractId: receipt.purchaseContractId,
+      expenseContractId: receipt.expenseContractId,
       deliveryDate: receipt.deliveryDate
         ? new Date(receipt.deliveryDate).toISOString().split("T")[0]
         : "",
-      receivedQuantity: receipt.receivedQuantity,
+      deliveryAmount: receipt.deliveryAmount || "",
+      acceptedAmount: receipt.acceptedAmount || "",
       inspectionResult: receipt.inspectionResult,
-      receiptStatus: receipt.receiptStatus,
-      invoiceMatched: receipt.invoiceMatched,
+      items: (receipt.items || []).map((item) => ({
+        contractItemId: item.contractItemId || "",
+        materialName: item.materialName,
+        spec: item.spec || "",
+        unit: item.unit || "",
+        orderedQuantity: item.orderedQuantity || 0,
+        unitPrice: (item as any).unitPrice || 0,
+        receivedQuantity: item.receivedQuantity?.toString() || "",
+        acceptedQuantity: item.acceptedQuantity?.toString() || "",
+        inspectionResult: item.inspectionResult || "待检",
+        remark: item.remark || "",
+      })),
+      attachments: typeof receipt.attachments === 'string' ? JSON.parse(receipt.attachments || '[]') : ((receipt as any).attachments || []),
     });
     setFormError("");
     fetchContracts();
@@ -179,11 +317,19 @@ export default function DeliveryReceiptsPage() {
   };
 
   const handleOpenDetail = async (receipt: DeliveryReceipt) => {
+    setApprovalInstance(null);
     try {
       const res = await fetch(`/api/delivery-receipts/${receipt.id}`);
       const json = await res.json();
       if (res.ok) {
         setDetailReceipt(json.data);
+        if (json.data?.approvalInstanceId) {
+          fetchApprovalInstance(json.data.approvalInstanceId);
+        }
+        const contractId = json.data?.expenseContract?.id;
+        if (contractId) {
+          fetchInvoicesForReceipt(contractId, receipt.id);
+        }
       }
     } catch (err) {
       console.error("获取验收详情失败:", err);
@@ -191,12 +337,19 @@ export default function DeliveryReceiptsPage() {
   };
 
   const handleSubmit = async () => {
-    if (!form.purchaseContractId) {
-      setFormError("请选择采购合同");
+    if (!form.expenseContractId) {
+      setFormError("请选择支出合同");
       return;
     }
-    if (!form.receivedQuantity.trim()) {
-      setFormError("实收数量不能为空");
+    if (form.items.length === 0) {
+      setFormError("请选择包含物资明细的合同");
+      return;
+    }
+    const hasReceived = form.items.some(
+      (item) => item.receivedQuantity && Number(item.receivedQuantity) > 0
+    );
+    if (!hasReceived) {
+      setFormError("至少填写一项实收数量");
       return;
     }
 
@@ -209,10 +362,20 @@ export default function DeliveryReceiptsPage() {
         : "/api/delivery-receipts";
       const method = editingReceipt ? "PUT" : "POST";
 
+      const payload = {
+        ...form,
+        attachments: JSON.stringify(form.attachments),
+        items: form.items.map((item) => ({
+          ...item,
+          receivedQuantity: Number(item.receivedQuantity) || 0,
+          acceptedQuantity: Number(item.acceptedQuantity) || 0,
+        })),
+      };
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
@@ -270,6 +433,164 @@ export default function DeliveryReceiptsPage() {
     } catch {
       alert("网络错误，请重试");
     }
+  };
+
+  const handleContractChange = async (contractId: string) => {
+    updateForm("expenseContractId", contractId);
+    if (!contractId) {
+      setForm((prev) => ({ ...prev, items: [] }));
+      setDeliveredMap({});
+      return;
+    }
+    try {
+      const [contractRes, deliveryRes] = await Promise.all([
+        fetch(`/api/expense-contracts/${contractId}`),
+        fetch(`/api/delivery-receipts?expenseContractId=${contractId}&pageSize=200`),
+      ]);
+      const contractJson = await contractRes.json();
+      const deliveryJson = await deliveryRes.json();
+
+      const deliveredMap: Record<string, { qty: number; amount: number }> = {};
+
+      if (deliveryJson.ok !== false && deliveryJson.data) {
+        const receipts = Array.isArray(deliveryJson.data) ? deliveryJson.data : deliveryJson.data?.data || [];
+        for (const receipt of receipts) {
+          if (receipt.inspectionResult === "合格" && receipt.items) {
+            for (const item of receipt.items) {
+              if (item.contractItemId) {
+                if (!deliveredMap[item.contractItemId]) {
+                  deliveredMap[item.contractItemId] = { qty: 0, amount: 0 };
+                }
+                deliveredMap[item.contractItemId].qty += Number(item.receivedQuantity || 0);
+                deliveredMap[item.contractItemId].amount += Number(item.receivedQuantity || 0) * Number(item.unitPrice || 0);
+              }
+            }
+          }
+        }
+      }
+
+      setDeliveredMap(deliveredMap);
+
+      if (contractJson.data?.items) {
+        const mappedItems = contractJson.data.items.map((item: any) => ({
+          contractItemId: item.id,
+          materialName: item.materialName,
+          spec: item.spec || "",
+          unit: item.unit || "",
+          orderedQuantity: item.quantity || 0,
+          unitPrice: item.unitPrice || 0,
+          receivedQuantity: "",
+          acceptedQuantity: "",
+          inspectionResult: "待检",
+          remark: "",
+        }));
+        setForm((prev) => ({ ...prev, items: mappedItems }));
+      }
+    } catch (error) {
+      console.error("加载合同明细失败:", error);
+    }
+  };
+
+  const handleDelete = async (receipt: DeliveryReceipt) => {
+    if (!confirm(`确认删除该验收记录？`)) return;
+    try {
+      const res = await fetch(`/api/delivery-receipts/${receipt.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        fetchReceipts();
+      } else {
+        const json = await res.json();
+        alert(json.error || "删除失败");
+      }
+    } catch {
+      alert("网络错误，请重试");
+    }
+  };
+
+  const handleOpenInvoice = (receipt: DeliveryReceipt) => {
+    setInvoiceModalReceipt(receipt);
+    setInvoiceForm({
+      ...emptyInvoiceForm,
+      sellerName: (receipt.expenseContract as any)?.supplier?.name || "",
+    });
+    setInvoiceError("");
+    setShowInvoiceModal(true);
+  };
+
+  const fetchInvoicesForReceipt = async (contractId: string, receiptId: string) => {
+    try {
+      const res = await fetch(`/api/invoices?sourceType=expense_contract&sourceId=${contractId}`);
+      const json = await res.json();
+      if (res.ok) {
+        setReceiptInvoices((prev) => ({
+          ...prev,
+          [receiptId]: json.data || [],
+        }));
+      }
+    } catch (err) {
+      console.error("获取关联发票失败:", err);
+    }
+  };
+
+  const handleInvoiceSubmit = async () => {
+    if (!invoiceForm.invoiceNo) {
+      setInvoiceError("请输入发票号码");
+      return;
+    }
+    if (!invoiceModalReceipt) return;
+
+    const contractId = (invoiceModalReceipt.expenseContract as any)?.id;
+    if (!contractId) {
+      setInvoiceError("该验收记录未关联合同，无法登记发票");
+      return;
+    }
+
+    setInvoiceSubmitting(true);
+    setInvoiceError("");
+    try {
+      const res = await fetch("/api/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...invoiceForm,
+          invoiceCategory: "收票",
+          sourceType: "expense_contract",
+          sourceId: contractId,
+          projectSourceId:
+            (invoiceModalReceipt.expenseContract as any)?.projectSourceId ||
+            null,
+          amount: parseFloat(invoiceForm.amount) || 0,
+          taxRate: parseFloat(invoiceForm.taxRate) / 100,
+          taxAmount: parseFloat(invoiceForm.taxAmount) || 0,
+          totalAmount: parseFloat(invoiceForm.totalAmount) || 0,
+        }),
+      });
+      if (res.ok) {
+        setShowInvoiceModal(false);
+        fetchReceipts();
+      } else {
+        const json = await res.json();
+        setInvoiceError(json.error || "登记发票失败");
+      }
+    } catch {
+      setInvoiceError("网络错误，请重试");
+    } finally {
+      setInvoiceSubmitting(false);
+    }
+  };
+
+  const updateFormItem = (
+    index: number,
+    field: string,
+    value: string
+  ) => {
+    setForm((prev) => {
+      const items = [...prev.items];
+      items[index] = { ...items[index], [field]: value };
+      return { ...prev, items };
+    });
+    if (formError) setFormError("");
   };
 
   const updateForm = (
@@ -330,20 +651,6 @@ export default function DeliveryReceiptsPage() {
             <option value="不合格">不合格</option>
           </select>
 
-          <select
-            className="ios-select w-[140px]"
-            value={filterReceiptStatus}
-            onChange={(e) => {
-              setFilterReceiptStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
-            }}
-          >
-            <option value="">全部状态</option>
-            <option value="待验收">待验收</option>
-            <option value="已验收">已验收</option>
-            <option value="已拒绝">已拒绝</option>
-          </select>
-
           <div className="ml-auto text-[13px] text-[#86868B]">
             共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 条记录
           </div>
@@ -360,7 +667,7 @@ export default function DeliveryReceiptsPage() {
               <Truck className="w-8 h-8 text-[#86868B]" />
             </div>
             <p>
-              {search || filterInspection || filterReceiptStatus
+              {search || filterInspection
                 ? "没有匹配的验收记录"
                 : "暂无验收记录，点击右上角新增"}
             </p>
@@ -370,36 +677,56 @@ export default function DeliveryReceiptsPage() {
             <table className="ios-table">
               <thead>
                 <tr>
-                  <th>采购合同编号</th>
+                  {isAdminUser && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
+                  <th>支出合同编号</th>
                   <th>供应商</th>
                   <th>到货日期</th>
                   <th>实收数量</th>
+                  <th>到货金额</th>
                   <th>检验结果</th>
-                  <th>验收状态</th>
+                  <th>附件</th>
                   <th>发票匹配</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
                 {receipts.map((receipt) => (
-                  <tr key={receipt.id}>
+                  <tr key={receipt.id} className={isSelected(receipt.id) ? "bg-[#007AFF]/5" : ""}>
+                    {isAdminUser && (
+                      <td className="w-10">
+                        <input type="checkbox" className="ios-checkbox" checked={isSelected(receipt.id)} onChange={() => toggleSelect(receipt.id)} />
+                      </td>
+                    )}
                     <td>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
                           <FileCheck className="w-4 h-4 text-[#007AFF]" />
                         </div>
                         <span className="font-semibold">
-                          {receipt.purchaseContract?.contractNo || "-"}
+                          {receipt.expenseContract?.contractNo || "-"}
                         </span>
                       </div>
                     </td>
                     <td>
-                      {receipt.purchaseContract?.supplier?.name || "-"}
+                      {receipt.expenseContract?.supplier?.name || "-"}
                     </td>
                     <td className="text-[#86868B]">
                       {formatDate(receipt.deliveryDate)}
                     </td>
-                    <td>{receipt.receivedQuantity}</td>
+                    <td>
+                      {receipt.items && receipt.items.length > 0
+                        ? receipt.items.reduce(
+                            (sum, item) => sum + (item.receivedQuantity || 0),
+                            0
+                          )
+                        : "-"}
+                    </td>
+                    <td>
+                      {receipt.deliveryAmount
+                        ? `¥${Number(receipt.deliveryAmount).toLocaleString()}`
+                        : "-"}
+                    </td>
                     <td>
                       {receipt.inspectionResult === "待检" ? (
                         <button
@@ -420,37 +747,20 @@ export default function DeliveryReceiptsPage() {
                       )}
                     </td>
                     <td>
-                      {receipt.receiptStatus === "待验收" &&
-                      receipt.inspectionResult === "合格" ? (
-                        <div className="flex items-center gap-1">
+                      {(() => {
+                        const atts: string[] = typeof receipt.attachments === 'string' ? JSON.parse(receipt.attachments || '[]') : ((receipt as any).attachments || []);
+                        return atts.length > 0 ? (
                           <button
-                            className="ios-badge ios-badge-green cursor-pointer hover:opacity-80"
-                            onClick={() =>
-                              handleQuickUpdate(receipt, "receiptStatus", "已验收")
-                            }
-                            title="点击验收通过"
+                            className="ios-badge ios-badge-blue cursor-pointer hover:opacity-80"
+                            onClick={() => handleOpenDetail(receipt)}
+                            title="点击查看详情"
                           >
-                            <CheckCircle2 className="w-3 h-3" />
-                            验收
+                            {atts.length} 个附件
                           </button>
-                          <button
-                            className="ios-badge ios-badge-red cursor-pointer hover:opacity-80"
-                            onClick={() =>
-                              handleQuickUpdate(receipt, "receiptStatus", "已拒绝")
-                            }
-                            title="点击拒绝"
-                          >
-                            <XCircle className="w-3 h-3" />
-                            拒绝
-                          </button>
-                        </div>
-                      ) : (
-                        <span
-                          className={`ios-badge ${receiptStatusColorMap[receipt.receiptStatus] || "ios-badge-gray"}`}
-                        >
-                          {receipt.receiptStatus}
-                        </span>
-                      )}
+                        ) : (
+                          <span className="text-[#86868B] text-[12px]">-</span>
+                        );
+                      })()}
                     </td>
                     <td>
                       <button
@@ -477,7 +787,29 @@ export default function DeliveryReceiptsPage() {
                           <Pencil className="w-3.5 h-3.5" />
                           编辑
                         </button>
+                        <button
+                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]"
+                          onClick={() => handleOpenInvoice(receipt)}
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          登记发票
+                        </button>
+                        {isAdminUser && (
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]"
+                            onClick={() => handleDelete(receipt)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            删除
+                          </button>
+                        )}
                       </div>
+                    </td>
+                    <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                      {receipt.lastModifiedBy && (
+                        <span>{receipt.lastModifiedBy}</span>
+                      )}
+                      <span className="block text-[11px]">{formatDate(receipt.updatedAt)}</span>
                     </td>
                   </tr>
                 ))}
@@ -513,11 +845,20 @@ export default function DeliveryReceiptsPage() {
         )}
       </div>
 
+      {isAdminUser && (
+        <BatchDeleteBar
+          businessType="delivery_receipt"
+          selectedIds={receipts.filter((d) => isSelected(d.id)).map((d) => d.id)}
+          onDeleteSuccess={fetchReceipts}
+          onClear={clearSelection}
+        />
+      )}
+
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         title={editingReceipt ? "编辑验收记录" : "新增验收记录"}
-        maxWidth="600px"
+        maxWidth="900px"
       >
         <div className="space-y-4">
           {formError && (
@@ -529,17 +870,17 @@ export default function DeliveryReceiptsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                采购合同 <span className="text-[#FF3B30]">*</span>
+                支出合同（采购类） <span className="text-[#FF3B30]">*</span>
               </label>
               <select
                 className="ios-select"
-                value={form.purchaseContractId}
+                value={form.expenseContractId}
                 onChange={(e) =>
-                  updateForm("purchaseContractId", e.target.value)
+                  handleContractChange(e.target.value)
                 }
                 disabled={!!editingReceipt}
               >
-                <option value="">请选择采购合同</option>
+                <option value="">请选择支出合同</option>
                 {contracts.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.contractNo} - {c.supplier?.name || "未知供应商"}
@@ -564,15 +905,32 @@ export default function DeliveryReceiptsPage() {
 
             <div>
               <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                实收数量 <span className="text-[#FF3B30]">*</span>
+                到货金额
               </label>
               <input
-                type="text"
+                type="number"
+                step="0.01"
                 className="ios-input"
-                placeholder="请输入实收数量"
-                value={form.receivedQuantity}
+                placeholder="请输入到货金额"
+                value={form.deliveryAmount}
                 onChange={(e) =>
-                  updateForm("receivedQuantity", e.target.value)
+                  updateForm("deliveryAmount", e.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                验收合格金额
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                className="ios-input"
+                placeholder="请输入验收合格金额"
+                value={form.acceptedAmount}
+                onChange={(e) =>
+                  updateForm("acceptedAmount", e.target.value)
                 }
               />
             </div>
@@ -593,39 +951,143 @@ export default function DeliveryReceiptsPage() {
                 <option value="不合格">不合格</option>
               </select>
             </div>
+          </div>
 
+          {form.items.length > 0 && (
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                验收状态
-              </label>
-              <select
-                className="ios-select"
-                value={form.receiptStatus}
-                onChange={(e) =>
-                  updateForm("receiptStatus", e.target.value)
-                }
-              >
-                <option value="待验收">待验收</option>
-                <option value="已验收">已验收</option>
-                <option value="已拒绝">已拒绝</option>
-              </select>
+              <h3 className="text-[13px] font-semibold text-[#1D1D1F] mb-2">
+                物资明细
+              </h3>
+              <div className="overflow-x-auto rounded-xl border border-[#E5E5EA]">
+                <table className="ios-table text-[12px]">
+                  <thead>
+                    <tr>
+                      <th>物资名称</th>
+                      <th>规格</th>
+                      <th>单位</th>
+                      <th>采购数量</th>
+                      <th>单价(元)</th>
+                      <th>已到货数量</th>
+                      <th>已到货金额</th>
+                      <th>本次到货数量</th>
+                      <th>本次到货金额</th>
+                      <th>检验结果</th>
+                      <th>备注</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {form.items.map((item, idx) => (
+                      <tr key={idx}>
+                        <td className="font-medium whitespace-nowrap">
+                          {item.materialName}
+                        </td>
+                        <td className="text-[#86868B]">{item.spec || "-"}</td>
+                        <td>{item.unit || "-"}</td>
+                        <td className="text-center">{item.orderedQuantity}</td>
+                        <td className="text-right">{Number(item.unitPrice || 0).toFixed(2)}</td>
+                        <td className="text-center">
+                          {deliveredMap[item.contractItemId]?.qty || 0}
+                        </td>
+                        <td className="text-right">
+                          {(deliveredMap[item.contractItemId]?.amount || 0).toFixed(2)}
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            className="ios-input !py-1 !text-[12px] text-center w-[80px]"
+                            value={item.receivedQuantity}
+                            onChange={(e) =>
+                              updateFormItem(idx, "receivedQuantity", e.target.value)
+                            }
+                            min={0}
+                          />
+                        </td>
+                        <td className="text-right font-medium">
+                          {(Number(item.receivedQuantity || 0) * Number(item.unitPrice || 0)).toFixed(2)}
+                        </td>
+                        <td>
+                          <select
+                            className="ios-select !py-1 !text-[12px] !w-[80px]"
+                            value={item.inspectionResult}
+                            onChange={(e) =>
+                              updateFormItem(idx, "inspectionResult", e.target.value)
+                            }
+                          >
+                            <option value="待检">待检</option>
+                            <option value="合格">合格</option>
+                            <option value="不合格">不合格</option>
+                          </select>
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="ios-input !py-1 !text-[12px] w-[100px]"
+                            value={item.remark}
+                            onChange={(e) =>
+                              updateFormItem(idx, "remark", e.target.value)
+                            }
+                            placeholder="备注"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
+          )}
 
-            <div className="col-span-2">
-              <label className="flex items-center gap-2.5 cursor-pointer py-2">
-                <input
-                  type="checkbox"
-                  className="w-4.5 h-4.5 rounded-md border-[#D1D1D6] text-[#007AFF] focus:ring-[#007AFF]"
-                  checked={form.invoiceMatched}
-                  onChange={(e) =>
-                    updateForm("invoiceMatched", e.target.checked)
-                  }
-                />
-                <span className="text-[13px] font-semibold text-[#1D1D1F]">
-                  发票已匹配
-                </span>
-              </label>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-2">
+              附件上传
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {form.attachments.map((url, idx) => (
+                <div key={idx} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#34C759]/10 text-[#34C759] text-[12px] font-medium">
+                  <a href={url} target="_blank" rel="noopener noreferrer" className="hover:underline max-w-[150px] truncate">
+                    {url.split('/').pop()?.split('?')[0] || `附件${idx + 1}`}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setForm(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== idx) }))}
+                    className="ml-1 text-[#FF3B30] hover:text-[#FF3B30]/70"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
+            <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#E5E5EA] cursor-pointer hover:border-[#007AFF] hover:bg-[#007AFF]/5 transition-all text-[13px] text-[#86868B]">
+              {uploading ? (
+                <><span className="w-4 h-4 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" /> 上传中...</>
+              ) : (
+                <>📎 点击上传验收资料/照片</>
+              )}
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip,.rar"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 10 * 1024 * 1024) { alert("文件大小不能超过10MB"); return; }
+                  setUploading(true);
+                  const formData = new FormData();
+                  formData.append("file", file);
+                  try {
+                    const res = await fetch("/api/upload", { method: "POST", body: formData });
+                    const json = await res.json();
+                    if (res.ok) {
+                      setForm(prev => ({ ...prev, attachments: [...prev.attachments, json.url] }));
+                    } else {
+                      alert(json.error || "上传失败");
+                    }
+                  } catch { alert("上传失败"); }
+                  finally { setUploading(false); }
+                  e.target.value = "";
+                }}
+              />
+            </label>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
@@ -652,9 +1114,9 @@ export default function DeliveryReceiptsPage() {
 
       <Modal
         isOpen={!!detailReceipt}
-        onClose={() => setDetailReceipt(null)}
+        onClose={() => { setDetailReceipt(null); setApprovalInstance(null); }}
         title="验收记录详情"
-        maxWidth="600px"
+        maxWidth="900px"
       >
         {detailReceipt && (
           <div className="space-y-5">
@@ -664,28 +1126,28 @@ export default function DeliveryReceiptsPage() {
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[12px] text-[#86868B]">采购合同编号</span>
+                  <span className="text-[12px] text-[#86868B]">支出合同编号</span>
                   <p className="text-[14px] font-semibold text-[#1D1D1F]">
-                    {detailReceipt.purchaseContract?.contractNo || "-"}
+                    {detailReceipt.expenseContract?.contractNo || "-"}
                   </p>
                 </div>
                 <div>
                   <span className="text-[12px] text-[#86868B]">供应商</span>
                   <p className="text-[14px] font-semibold text-[#1D1D1F]">
-                    {detailReceipt.purchaseContract?.supplier?.name || "-"}
+                    {detailReceipt.expenseContract?.supplier?.name || "-"}
                   </p>
                 </div>
                 <div>
                   <span className="text-[12px] text-[#86868B]">合同金额</span>
                   <p className="text-[14px] font-semibold text-[#1D1D1F]">
-                    ¥{Number(detailReceipt.purchaseContract?.totalAmount || 0).toLocaleString()}
+                    ¥{Number(detailReceipt.expenseContract?.totalAmount || 0).toLocaleString()}
                   </p>
                 </div>
                 <div>
                   <span className="text-[12px] text-[#86868B]">合同状态</span>
                   <p className="text-[14px]">
                     <span className="ios-badge ios-badge-green">
-                      {detailReceipt.purchaseContract?.status || "-"}
+                      {detailReceipt.expenseContract?.status || "-"}
                     </span>
                   </p>
                 </div>
@@ -706,7 +1168,20 @@ export default function DeliveryReceiptsPage() {
                 <div>
                   <span className="text-[12px] text-[#86868B]">实收数量</span>
                   <p className="text-[14px] font-semibold text-[#1D1D1F]">
-                    {detailReceipt.receivedQuantity}
+                    {detailReceipt.items && detailReceipt.items.length > 0
+                      ? detailReceipt.items.reduce(
+                          (sum, item) => sum + (item.receivedQuantity || 0),
+                          0
+                        )
+                      : "-"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-[12px] text-[#86868B]">到货金额</span>
+                  <p className="text-[14px] font-semibold text-[#1D1D1F]">
+                    {detailReceipt.deliveryAmount
+                      ? `¥${Number(detailReceipt.deliveryAmount).toLocaleString()}`
+                      : "-"}
                   </p>
                 </div>
                 <div>
@@ -720,26 +1195,6 @@ export default function DeliveryReceiptsPage() {
                   </p>
                 </div>
                 <div>
-                  <span className="text-[12px] text-[#86868B]">验收状态</span>
-                  <p className="text-[14px]">
-                    <span
-                      className={`ios-badge ${receiptStatusColorMap[detailReceipt.receiptStatus] || "ios-badge-gray"}`}
-                    >
-                      {detailReceipt.receiptStatus}
-                    </span>
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[12px] text-[#86868B]">发票匹配</span>
-                  <p className="text-[14px]">
-                    <span
-                      className={`ios-badge ${detailReceipt.invoiceMatched ? "ios-badge-blue" : "ios-badge-gray"}`}
-                    >
-                      {detailReceipt.invoiceMatched ? "是" : "否"}
-                    </span>
-                  </p>
-                </div>
-                <div>
                   <span className="text-[12px] text-[#86868B]">创建时间</span>
                   <p className="text-[14px] font-semibold text-[#1D1D1F]">
                     {formatDate(detailReceipt.createdAt)}
@@ -747,6 +1202,94 @@ export default function DeliveryReceiptsPage() {
                 </div>
               </div>
             </div>
+
+            {detailReceipt.items && detailReceipt.items.length > 0 && (
+              <div className="border-t border-[#F0F0F0] pt-4">
+                <h3 className="text-[13px] font-semibold text-[#86868B] uppercase tracking-wider mb-3">
+                  物资明细
+                </h3>
+                <div className="overflow-x-auto rounded-xl border border-[#E5E5EA]">
+                  <table className="ios-table text-[12px]">
+                    <thead>
+                      <tr>
+                        <th>物资名称</th>
+                        <th>规格</th>
+                        <th>单位</th>
+                        <th>合同数量</th>
+                        <th>实收数量</th>
+                        <th>合格数量</th>
+                        <th>检验结果</th>
+                        <th>备注</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailReceipt.items.map((item, idx) => (
+                        <tr key={idx}>
+                          <td className="font-medium whitespace-nowrap">
+                            {item.materialName}
+                          </td>
+                          <td className="whitespace-nowrap">{item.spec || "-"}</td>
+                          <td>{item.unit || "-"}</td>
+                          <td>{item.orderedQuantity ?? "-"}</td>
+                          <td>{item.receivedQuantity ?? "-"}</td>
+                          <td>{item.acceptedQuantity ?? "-"}</td>
+                          <td>
+                            <span
+                              className={`ios-badge ${inspectionColorMap[item.inspectionResult] || "ios-badge-gray"}`}
+                            >
+                              {item.inspectionResult}
+                            </span>
+                          </td>
+                          <td>{item.remark || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {receiptInvoices[detailReceipt.id] && receiptInvoices[detailReceipt.id].length > 0 && (
+              <div className="border-t border-[#F0F0F0] pt-4">
+                <h3 className="text-[13px] font-semibold text-[#86868B] uppercase tracking-wider mb-3">
+                  已关联发票
+                </h3>
+                <div className="space-y-2">
+                  {receiptInvoices[detailReceipt.id].map((inv) => (
+                    <div
+                      key={inv.id}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-[#F5F5F7]"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-4 h-4 text-[#007AFF]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] font-semibold text-[#1D1D1F]">
+                            {inv.invoiceNo}
+                          </span>
+                          <span className="ios-badge ios-badge-blue text-[11px]">
+                            {inv.invoiceType}
+                          </span>
+                        </div>
+                        <div className="text-[12px] text-[#86868B] mt-0.5">
+                          {inv.invoiceDate ? formatDate(inv.invoiceDate) : "-"}
+                          {inv.sellerName ? ` · ${inv.sellerName}` : ""}
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-[14px] font-semibold text-[#1D1D1F]">
+                          ¥{Number(inv.totalAmount).toLocaleString()}
+                        </div>
+                        <div className="text-[11px] text-[#86868B]">
+                          不含税 ¥{Number(inv.amount).toLocaleString()} · 税额 ¥{Number(inv.taxAmount).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {detailReceipt.inspectionResult === "合格" &&
               detailReceipt.receiptStatus === "已验收" && (
@@ -758,10 +1301,39 @@ export default function DeliveryReceiptsPage() {
                 </div>
               )}
 
+            {(() => {
+              const detailAtts: string[] = typeof detailReceipt.attachments === 'string' ? JSON.parse(detailReceipt.attachments || '[]') : ((detailReceipt as any).attachments || []);
+              return detailAtts.length > 0 ? (
+                <div className="border-t border-[#F0F0F0] pt-4">
+                  <h3 className="text-[13px] font-semibold text-[#86868B] uppercase tracking-wider mb-3">
+                    附件
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {detailAtts.map((url, idx) => (
+                      <a
+                        key={idx}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F5F5F7] hover:bg-[#007AFF]/10 transition-colors text-[13px] text-[#1D1D1F]"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-[#007AFF] flex-shrink-0" />
+                        <span className="max-w-[200px] truncate">
+                          {url.split('/').pop()?.split('?')[0] || `附件${idx + 1}`}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
+
             <div className="flex justify-end gap-3 pt-2">
               <button
                 className="ios-btn ios-btn-secondary"
-                onClick={() => setDetailReceipt(null)}
+                onClick={() => { setDetailReceipt(null); setApprovalInstance(null); }}
               >
                 关闭
               </button>
@@ -778,6 +1350,201 @@ export default function DeliveryReceiptsPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={showInvoiceModal}
+        onClose={() => setShowInvoiceModal(false)}
+        title="登记发票"
+        maxWidth="700px"
+      >
+        <div className="space-y-4">
+          {invoiceError && (
+            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">
+              {invoiceError}
+            </div>
+          )}
+
+          {invoiceModalReceipt && (
+            <div className="p-3 rounded-xl bg-[#F5F5F7] text-[13px]">
+              <span className="text-[#86868B]">关联合同：</span>
+              <span className="font-semibold text-[#1D1D1F]">
+                {invoiceModalReceipt.expenseContract?.contractNo || "-"}
+              </span>
+              <span className="text-[#86868B] ml-4">供应商：</span>
+              <span className="font-semibold text-[#1D1D1F]">
+                {invoiceModalReceipt.expenseContract?.supplier?.name || "-"}
+              </span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                发票号码 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入发票号码"
+                value={invoiceForm.invoiceNo}
+                onChange={(e) =>
+                  setInvoiceForm((prev) => ({ ...prev, invoiceNo: e.target.value }))
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                发票代码
+              </label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入发票代码"
+                value={invoiceForm.invoiceCode}
+                onChange={(e) =>
+                  setInvoiceForm((prev) => ({ ...prev, invoiceCode: e.target.value }))
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                发票类型
+              </label>
+              <select
+                className="ios-select"
+                value={invoiceForm.invoiceType}
+                onChange={(e) =>
+                  setInvoiceForm((prev) => ({ ...prev, invoiceType: e.target.value }))
+                }
+              >
+                <option value="增值税专用发票">增值税专用发票</option>
+                <option value="增值税普通发票">增值税普通发票</option>
+                <option value="增值税电子发票">增值税电子发票</option>
+                <option value="收据">收据</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                开票日期
+              </label>
+              <input
+                type="date"
+                className="ios-input"
+                value={invoiceForm.invoiceDate}
+                onChange={(e) =>
+                  setInvoiceForm((prev) => ({ ...prev, invoiceDate: e.target.value }))
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                不含税金额
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                className="ios-input"
+                placeholder="请输入不含税金额"
+                value={invoiceForm.amount}
+                onChange={(e) =>
+                  setInvoiceForm((prev) => ({ ...prev, amount: e.target.value }))
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                税率
+              </label>
+              <select
+                className="ios-select"
+                value={invoiceForm.taxRate}
+                onChange={(e) =>
+                  setInvoiceForm((prev) => ({ ...prev, taxRate: e.target.value }))
+                }
+              >
+                <option value="3">3%</option>
+                <option value="6">6%</option>
+                <option value="9">9%</option>
+                <option value="13">13%</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                税额（自动计算）
+              </label>
+              <input
+                type="text"
+                className="ios-input bg-[#F5F5F7]"
+                value={invoiceForm.taxAmount}
+                readOnly
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                价税合计（自动计算）
+              </label>
+              <input
+                type="text"
+                className="ios-input bg-[#F5F5F7] font-semibold text-[#1D1D1F]"
+                value={`¥${invoiceForm.totalAmount}`}
+                readOnly
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                销方名称
+              </label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入销方名称"
+                value={invoiceForm.sellerName}
+                onChange={(e) =>
+                  setInvoiceForm((prev) => ({ ...prev, sellerName: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                备注
+              </label>
+              <textarea
+                className="ios-input min-h-[80px] resize-none"
+                placeholder="请输入备注信息"
+                value={invoiceForm.remark}
+                onChange={(e) =>
+                  setInvoiceForm((prev) => ({ ...prev, remark: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
+            <button
+              className="ios-btn ios-btn-secondary"
+              onClick={() => setShowInvoiceModal(false)}
+            >
+              取消
+            </button>
+            <button
+              className="ios-btn ios-btn-primary"
+              onClick={handleInvoiceSubmit}
+              disabled={invoiceSubmitting}
+            >
+              {invoiceSubmitting ? "提交中..." : "确认登记"}
+            </button>
+          </div>
+        </div>
       </Modal>
     </>
   );

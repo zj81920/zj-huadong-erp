@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +12,9 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "20");
 
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = {
+      username: { not: "admin" },
+    };
 
     if (search) {
       where.OR = [
@@ -32,6 +35,11 @@ export async function GET(request: NextRequest) {
       where.isActive = isActiveParam === "true";
     }
 
+    const employmentStatus = searchParams.get("employmentStatus") || "";
+    if (employmentStatus) {
+      where.employmentStatus = employmentStatus;
+    }
+
     const select = {
       id: true,
       username: true,
@@ -41,8 +49,25 @@ export async function GET(request: NextRequest) {
       role: true,
       department: true,
       isActive: true,
+      idNumber: true,
+      birthDate: true,
+      position: true,
+      employmentStatus: true,
+      hireDate: true,
+      leaveDate: true,
+      bankName: true,
+      bankAccount: true,
+      baseSalary: true,
+      socialInsuranceBase: true,
+      housingFundBase: true,
+      housingFundRate: true,
+      socialInsuranceCompanyRate: true,
+      housingFundCompanyRate: true,
+      taxDeduction: true,
+      remark: true,
       createdAt: true,
       updatedAt: true,
+      lastModifiedBy: true,
     };
 
     const [employees, total] = await Promise.all([
@@ -74,7 +99,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, realName, phone, email, role, department } = body;
+    const currentUser = await getCurrentUser();
+    const { username, realName, phone, email, role, department,
+      idNumber, birthDate, position, employmentStatus, hireDate,
+      bankName, bankAccount, baseSalary, socialInsuranceBase,
+      housingFundBase, housingFundRate, socialInsuranceCompanyRate,
+      housingFundCompanyRate, taxDeduction, remark } = body;
 
     if (!username || !username.trim()) {
       return NextResponse.json({ error: "用户名不能为空" }, { status: 400 });
@@ -101,6 +131,23 @@ export async function POST(request: NextRequest) {
         email: email?.trim() || null,
         role: role || "staff",
         department: department || null,
+        idNumber: idNumber?.trim() || null,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        position: position?.trim() || null,
+        employmentStatus: employmentStatus || null,
+        hireDate: hireDate ? new Date(hireDate) : null,
+        leaveDate: null,
+        bankName: bankName?.trim() || null,
+        bankAccount: bankAccount?.trim() || null,
+        baseSalary: baseSalary ? parseFloat(baseSalary) : null,
+        socialInsuranceBase: socialInsuranceBase ? parseFloat(socialInsuranceBase) : null,
+        housingFundBase: housingFundBase ? parseFloat(housingFundBase) : null,
+        housingFundRate: housingFundRate ? parseFloat(housingFundRate) : null,
+        socialInsuranceCompanyRate: socialInsuranceCompanyRate ? parseFloat(socialInsuranceCompanyRate) : null,
+        housingFundCompanyRate: housingFundCompanyRate ? parseFloat(housingFundCompanyRate) : null,
+        taxDeduction: taxDeduction ? parseFloat(taxDeduction) : null,
+        remark: remark?.trim() || null,
+        lastModifiedBy: currentUser?.realName || null,
       },
       select: {
         id: true,
@@ -111,8 +158,25 @@ export async function POST(request: NextRequest) {
         role: true,
         department: true,
         isActive: true,
+        idNumber: true,
+        birthDate: true,
+        position: true,
+        employmentStatus: true,
+        hireDate: true,
+        leaveDate: true,
+        bankName: true,
+        bankAccount: true,
+        baseSalary: true,
+        socialInsuranceBase: true,
+        housingFundBase: true,
+        housingFundRate: true,
+        socialInsuranceCompanyRate: true,
+        housingFundCompanyRate: true,
+        taxDeduction: true,
+        remark: true,
         createdAt: true,
         updatedAt: true,
+        lastModifiedBy: true,
       },
     });
 

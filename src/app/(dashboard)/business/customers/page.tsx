@@ -6,6 +6,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Eye,
   Building2,
   Phone,
   Mail,
@@ -13,6 +14,9 @@ import {
   Users,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useAuth } from "@/contexts/AuthContext";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 
 interface Customer {
   id: string;
@@ -26,6 +30,7 @@ interface Customer {
   customerGrade: string | null;
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
 }
 
 interface CustomerFormData {
@@ -69,6 +74,9 @@ const industryLabelMap: Record<string, string> = {
 };
 
 export default function CustomersPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin" || false;
+
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -90,6 +98,10 @@ export default function CustomersPage() {
 
   const [deleteConfirm, setDeleteConfirm] = useState<Customer | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
+
+  const { toggleSelect, selectAll, clearSelection, isAllSelected, selectedCount, isSelected } = useBatchSelection(customers.map((d) => d.id));
 
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
@@ -293,19 +305,21 @@ export default function CustomersPage() {
             <table className="ios-table">
               <thead>
                 <tr>
+                  {isAdminUser && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
                   <th>客户名称</th>
                   <th>行业类型</th>
                   <th>客户等级</th>
                   <th>联系人</th>
                   <th>电话</th>
-                  <th>维护人</th>
-                  <th>创建时间</th>
+                  <th>商务责任人</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
                 {customers.map((customer) => (
-                  <tr key={customer.id}>
+                  <tr key={customer.id} className={isSelected(customer.id) ? "bg-[#007AFF]/5" : ""}>
+                    {isAdminUser && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(customer.id)} onChange={() => toggleSelect(customer.id)} /></td>}
                     <td>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
@@ -340,9 +354,15 @@ export default function CustomersPage() {
                       )}
                     </td>
                     <td>{customer.maintainer || "-"}</td>
-                    <td className="text-[#86868B]">{formatDate(customer.createdAt)}</td>
                     <td>
                       <div className="flex items-center gap-1">
+                        <button
+                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                          onClick={() => setDetailCustomer(customer)}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          详情
+                        </button>
                         <button
                           className="ios-btn ios-btn-ghost ios-btn-sm"
                           onClick={() => handleOpenEdit(customer)}
@@ -358,6 +378,12 @@ export default function CustomersPage() {
                           删除
                         </button>
                       </div>
+                    </td>
+                    <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                      {customer.lastModifiedBy && (
+                        <span>{customer.lastModifiedBy}</span>
+                      )}
+                      <span className="block text-[11px]">{formatDate(customer.updatedAt)}</span>
                     </td>
                   </tr>
                 ))}
@@ -387,6 +413,8 @@ export default function CustomersPage() {
             )}
           </div>
         )}
+
+        {isAdminUser && <BatchDeleteBar businessType="customer" selectedIds={customers.filter(d => isSelected(d.id)).map(d => d.id)} onDeleteSuccess={fetchCustomers} onClear={clearSelection} />}
       </div>
 
       <Modal
@@ -485,11 +513,11 @@ export default function CustomersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">维护人</label>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">商务责任人</label>
               <input
                 type="text"
                 className="ios-input"
-                placeholder="负责维护的人员"
+                placeholder="负责商务的人员"
                 value={form.maintainer}
                 onChange={(e) => updateForm("maintainer", e.target.value)}
               />
@@ -558,6 +586,64 @@ export default function CustomersPage() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!detailCustomer}
+        onClose={() => setDetailCustomer(null)}
+        title="客户详情"
+        maxWidth="600px"
+      >
+        {detailCustomer && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">客户名称</p>
+                <p className="text-[14px] font-semibold">{detailCustomer.name}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">行业类型</p>
+                <p className="text-[14px] font-semibold">{detailCustomer.industryType || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">客户等级</p>
+                <span className={`ios-badge ${gradeColorMap[detailCustomer.customerGrade || "C"]}`}>
+                  {detailCustomer.customerGrade || "C"}级
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">商务责任人</p>
+                <p className="text-[14px] font-semibold">{detailCustomer.maintainer || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">联系人</p>
+                <p className="text-[14px] font-semibold">{detailCustomer.contactPerson || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">电话</p>
+                <p className="text-[14px] font-semibold">{detailCustomer.phone || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">邮箱</p>
+                <p className="text-[14px] font-semibold">{detailCustomer.email || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">地址</p>
+                <p className="text-[14px] font-semibold">{detailCustomer.address || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">创建时间</p>
+                <p className="text-[14px] font-semibold">{formatDate(detailCustomer.createdAt)}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">最后修改</p>
+                <p className="text-[14px] font-semibold">
+                  {detailCustomer.lastModifiedBy ? `${detailCustomer.lastModifiedBy} · ${formatDate(detailCustomer.updatedAt)}` : formatDate(detailCustomer.updatedAt)}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </Modal>
     </>
   );

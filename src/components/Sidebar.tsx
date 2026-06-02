@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { SECTION_TO_MODULE, SUB_MODULE_TO_HREF, SubModuleKey } from "@/lib/module-permissions";
 import {
   LayoutDashboard,
   Briefcase,
@@ -14,7 +15,11 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   Gem,
+  KeyRound,
+  LogOut,
+  X,
 } from "lucide-react";
 
 interface NavItem {
@@ -36,8 +41,8 @@ const navSections: NavSection[] = [
       { label: "客户管理", href: "/business/customers" },
       { label: "供应商管理", href: "/business/suppliers" },
       { label: "市场开发", href: "/business/project-leads" },
-      { label: "投标管理", href: "/business/biddings" },
-      { label: "商务报价", href: "/business/quotations" },
+      { label: "投标统计", href: "/business/biddings" },
+      { label: "报价统计", href: "/business/quotations" },
     ],
   },
   {
@@ -51,11 +56,11 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: "采购管理",
+    title: "项目采购",
     icon: <ShoppingCart className="w-4.5 h-4.5" />,
     items: [
       { label: "采购需求", href: "/procurement/requests" },
-      { label: "询价管理", href: "/procurement/inquiries" },
+      { label: "采购单", href: "/procurement/inquiries" },
       { label: "到货验收", href: "/procurement/deliveries" },
     ],
   },
@@ -73,6 +78,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "财务收入", href: "/finance/income" },
       { label: "财务支出", href: "/finance/expense" },
+      { label: "发票管理", href: "/finance/invoices" },
       { label: "财务报表", href: "/finance/reports" },
       { label: "银行账户", href: "/finance/bank-accounts" },
     ],
@@ -95,17 +101,80 @@ const navSections: NavSection[] = [
       { label: "角色设置", href: "/settings/roles" },
       { label: "用户设置", href: "/settings/users" },
       { label: "流程设置", href: "/settings/approval-flow" },
+      { label: "审批调试", href: "/settings/approval-debug" },
+      { label: "AI 模型配置", href: "/settings/ai-model" },
     ],
   },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, modulePermissions, logout } = useAuth();
   const [expandedSections, setExpandedSections] = useState<string[]>([
     "商务管理",
     "项目管理",
   ]);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    if (showUserMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showUserMenu]);
+
+  const handleChangePassword = async () => {
+    setPasswordError("");
+    if (!passwordForm.currentPassword) {
+      setPasswordError("请输入当前密码");
+      return;
+    }
+    if (!passwordForm.newPassword) {
+      setPasswordError("请输入新密码");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("两次输入的密码不一致");
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPasswordError(data.error || "修改失败");
+        return;
+      }
+      setShowChangePassword(false);
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      alert("密码修改成功");
+    } catch {
+      setPasswordError("网络错误，请重试");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const toggleSection = (title: string) => {
     setExpandedSections((prev) =>
@@ -134,7 +203,7 @@ export default function Sidebar() {
         </div>
       </Link>
 
-      <div className="px-3 mb-2">
+      <div className="px-3 mb-2 space-y-0.5">
         <Link
           href="/"
           className={`nav-item w-full ${isActive("/") ? "active" : ""}`}
@@ -142,12 +211,23 @@ export default function Sidebar() {
           <LayoutDashboard className="w-4.5 h-4.5" />
           <span>总览仪表板</span>
         </Link>
+        <Link
+          href="/approvals"
+          className={`nav-item w-full ${isActive("/approvals") ? "active" : ""}`}
+        >
+          <FileText className="w-4.5 h-4.5" />
+          <span>待审批</span>
+        </Link>
       </div>
 
       <div className="mx-5 h-px bg-[#E5E5EA] mb-2" />
 
       <nav className="flex-1 overflow-y-auto custom-scrollbar px-3 pb-6">
         {navSections.map((section) => {
+          const moduleKey = SECTION_TO_MODULE[section.title];
+          if (moduleKey && !modulePermissions.accessibleModules.includes(moduleKey) && !modulePermissions.isGlobalVisible) {
+            return null;
+          }
           const isExpanded = expandedSections.includes(section.title);
           return (
             <div key={section.title} className="mb-1">
@@ -168,7 +248,16 @@ export default function Sidebar() {
 
               {isExpanded && (
                 <div className="ml-4 mt-0.5 space-y-0.5">
-                  {section.items.map((item) => (
+                  {section.items.filter((item) => {
+                    const subModuleEntry = Object.entries(SUB_MODULE_TO_HREF).find(([, href]) => item.href === href);
+                    if (subModuleEntry) {
+                      const subKey = subModuleEntry[0] as SubModuleKey;
+                      if (!modulePermissions.isGlobalVisible && !modulePermissions.accessibleSubModules?.includes(subKey)) {
+                        return false;
+                      }
+                    }
+                    return true;
+                  }).map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
@@ -184,19 +273,129 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-[#E5E5EA] flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-[#007AFF] flex items-center justify-center text-white text-sm font-semibold">
-          {user?.realName?.charAt(0) || "用"}
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[13px] font-semibold text-[#1D1D1F]">
-            {user?.realName || "未登录"}
-          </span>
-          <span className="text-[11px] text-[#86868B]">
-            {user?.department || user?.username || ""}
-          </span>
-        </div>
+      <div className="p-4 border-t border-[#E5E5EA] relative" ref={menuRef}>
+        <button
+          onClick={() => setShowUserMenu(!showUserMenu)}
+          className="flex items-center gap-3 w-full text-left"
+        >
+          <div className="w-9 h-9 rounded-full bg-[#007AFF] flex items-center justify-center text-white text-sm font-semibold">
+            {user?.realName?.charAt(0) || "用"}
+          </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="text-[13px] font-semibold text-[#1D1D1F] truncate">
+              {user?.realName || "未登录"}
+            </span>
+            <span className="text-[11px] text-[#86868B] truncate">
+              {user?.department || user?.username || ""}
+            </span>
+          </div>
+          <ChevronUp className={`w-3.5 h-3.5 text-[#86868B] transition-transform duration-200 ${showUserMenu ? "" : "rotate-180"}`} />
+        </button>
+
+        {showUserMenu && (
+          <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden z-50">
+            <div className="px-4 py-3 border-b border-[#F0F0F0]">
+              <div className="text-[13px] font-semibold text-[#1D1D1F]">{user?.realName}</div>
+              <div className="text-[11px] text-[#86868B]">{user?.department || ""}</div>
+            </div>
+            <button
+              onClick={() => {
+                setShowUserMenu(false);
+                setShowChangePassword(true);
+              }}
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+            >
+              <KeyRound className="w-4 h-4 text-[#86868B]" />
+              修改密码
+            </button>
+            <button
+              onClick={() => {
+                setShowUserMenu(false);
+                logout();
+              }}
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] text-[#FF3B30] hover:bg-red-50 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              退出登录
+            </button>
+          </div>
+        )}
       </div>
+
+      {showChangePassword && (
+        <div
+          className="ios-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowChangePassword(false);
+              setPasswordError("");
+              setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+            }
+          }}
+        >
+          <div className="ios-modal" style={{ maxWidth: "440px" }}>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#F0F0F0]">
+              <h2 className="text-[17px] font-bold text-[#1D1D1F]">修改密码</h2>
+              <button
+                onClick={() => {
+                  setShowChangePassword(false);
+                  setPasswordError("");
+                  setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                }}
+                className="w-8 h-8 rounded-full bg-[#F5F5F7] hover:bg-[#E5E5EA] flex items-center justify-center transition-colors duration-150"
+              >
+                <X className="w-4 h-4 text-[#86868B]" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#1D1D1F] mb-2">当前密码</label>
+                <input
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                  className="ios-input"
+                  placeholder="请输入当前密码"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1D1D1F] mb-2">新密码</label>
+                <input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  className="ios-input"
+                  placeholder="请输入新密码"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1D1D1F] mb-2">确认新密码</label>
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  className="ios-input"
+                  placeholder="请再次输入新密码"
+                  onKeyDown={(e) => e.key === "Enter" && handleChangePassword()}
+                />
+              </div>
+              {passwordError && (
+                <div className="bg-red-50 text-[#FF3B30] text-sm rounded-xl px-4 py-3 flex items-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF3B30] mr-2.5 shrink-0" />
+                  {passwordError}
+                </div>
+              )}
+              <button
+                onClick={handleChangePassword}
+                disabled={passwordLoading}
+                className="ios-btn ios-btn-primary w-full !py-3 !rounded-xl font-medium"
+              >
+                {passwordLoading ? "提交中..." : "确认修改"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

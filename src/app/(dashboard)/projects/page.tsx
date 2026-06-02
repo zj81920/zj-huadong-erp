@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Search,
   Plus,
@@ -11,12 +12,14 @@ import {
   MapPin,
   ChevronRight,
   Play,
-  Clock,
+  Pause,
   Users as UsersIcon,
   Calendar,
   UserCircle,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 
 interface Customer {
   id: string;
@@ -39,6 +42,7 @@ interface ProjectLeadItem {
   customerId: string;
   currentStatus: string;
   customer: { id: string; name: string };
+  project: { id: string; projectCode: string; name: string; status: string } | null;
 }
 
 interface Project {
@@ -60,6 +64,7 @@ interface Project {
   actualCloseDate: string | null;
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
   customer: Customer;
   projectLead: { projectSourceId: string; projectName: string; currentStatus: string } | null;
   designManager: { id: string; realName: string } | null;
@@ -109,7 +114,7 @@ const emptyForm: ProjectFormData = {
   address: "",
   projectCategory: "",
   source: "项目线索",
-  status: "筹备",
+  status: "执行",
   designManagerId: "",
   supervisorLeaderId: "",
   startDate: "",
@@ -122,19 +127,15 @@ const emptyForm: ProjectFormData = {
 };
 
 const statusConfig: Record<string, { color: string; label: string }> = {
-  "筹备": { color: "ios-badge-gray", label: "筹备" },
   "执行": { color: "ios-badge-green", label: "执行" },
   "暂停": { color: "ios-badge-orange", label: "暂停" },
   "关闭": { color: "ios-badge-red", label: "关闭" },
-  "归档": { color: "ios-badge-blue", label: "归档" },
 };
 
 const statusFlow: Record<string, string[]> = {
-  "筹备": ["执行", "关闭"],
   "执行": ["暂停", "关闭"],
   "暂停": ["执行", "关闭"],
-  "关闭": ["归档"],
-  "归档": [],
+  "关闭": [],
 };
 
 const sourceOptions = [
@@ -143,6 +144,8 @@ const sourceOptions = [
 ];
 
 export default function ProjectsPage() {
+  const { user: currentUser } = useAuth();
+  const isAdminUser = currentUser?.username === "admin" || currentUser?.roles?.some((r: any) => r.code === "admin") || false;
   const [projects, setProjects] = useState<Project[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1, pageSize: 20, total: 0, totalPages: 0,
@@ -170,6 +173,14 @@ export default function ProjectsPage() {
   const [deleting, setDeleting] = useState(false);
 
   const [statusChanging, setStatusChanging] = useState<string | null>(null);
+
+  const {
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isAllSelected,
+    isSelected,
+  } = useBatchSelection(projects.map((d) => d.id));
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [customerForm, setCustomerForm] = useState({
@@ -422,8 +433,8 @@ export default function ProjectsPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
-    if (deleteConfirm.status === "执行" || deleteConfirm.status === "关闭") {
-      alert("执行中或已关闭的项目不能删除");
+    if ((deleteConfirm.status === "执行" || deleteConfirm.status === "关闭") && currentUser?.username !== "admin") {
+      alert("执行中或已关闭的项目不能删除，请联系管理员");
       setDeleteConfirm(null);
       return;
     }
@@ -485,7 +496,7 @@ export default function ProjectsPage() {
   const stats = {
     total: pagination.total,
     executing: projects.filter((p) => p.status === "执行").length,
-    preparing: projects.filter((p) => p.status === "筹备").length,
+    paused: projects.filter((p) => p.status === "暂停").length,
   };
 
   const typeBadgeColor = (type: string | null) => {
@@ -507,7 +518,7 @@ export default function ProjectsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1>项目立项</h1>
-            <p>管理项目全生命周期，从筹备到归档</p>
+            <p>管理项目全生命周期</p>
           </div>
           <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
             <Plus className="w-4 h-4" />
@@ -537,11 +548,11 @@ export default function ProjectsPage() {
         </div>
         <div className="bento-card-static flex items-center gap-4">
           <div className="w-11 h-11 rounded-2xl bg-[#FF9500]/10 flex items-center justify-center">
-            <Clock className="w-5 h-5 text-[#FF9500]" />
+            <Pause className="w-5 h-5 text-[#FF9500]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">筹备中</p>
-            <p className="text-[24px] font-bold text-[#FF9500] leading-tight">{stats.preparing}</p>
+            <p className="text-[13px] text-[#86868B]">已暂停</p>
+            <p className="text-[24px] font-bold text-[#FF9500] leading-tight">{stats.paused}</p>
           </div>
         </div>
       </div>
@@ -571,11 +582,9 @@ export default function ProjectsPage() {
             }}
           >
             <option value="">全部状态</option>
-            <option value="筹备">筹备</option>
             <option value="执行">执行</option>
             <option value="暂停">暂停</option>
             <option value="关闭">关闭</option>
-            <option value="归档">归档</option>
           </select>
 
           <select
@@ -637,9 +646,34 @@ export default function ProjectsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="ios-table">
+            <table className="ios-table" style={{ minWidth: 1400 }}>
+              <colgroup>
+                <col style={{ minWidth: 110 }} />
+                <col style={{ minWidth: 100 }} />
+                <col style={{ minWidth: 160 }} />
+                <col style={{ minWidth: 120 }} />
+                <col style={{ minWidth: 70 }} />
+                <col style={{ minWidth: 70 }} />
+                <col style={{ minWidth: 80 }} />
+                <col style={{ minWidth: 80 }} />
+                <col style={{ minWidth: 80 }} />
+                <col style={{ minWidth: 120 }} />
+                <col style={{ minWidth: 100 }} />
+                <col style={{ minWidth: 100 }} />
+                <col style={{ minWidth: 170 }} />
+              </colgroup>
               <thead>
                 <tr>
+                  {isAdminUser && (
+                    <th className="w-10">
+                      <input
+                        type="checkbox"
+                        className="ios-checkbox"
+                        checked={isAllSelected}
+                        onChange={() => isAllSelected ? clearSelection() : selectAll()}
+                      />
+                    </th>
+                  )}
                   <th>项目源ID</th>
                   <th>项目编号</th>
                   <th>项目名称</th>
@@ -653,87 +687,79 @@ export default function ProjectsPage() {
                   <th>项目启动时间</th>
                   <th>计划结束时间</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
                 {projects.map((project) => {
-                  const sc = statusConfig[project.status] || statusConfig["筹备"];
-                  const nextStatuses = statusFlow[project.status] || [];
                   return (
-                    <tr key={project.id}>
-                      <td>
+                    <tr key={project.id} className={isSelected(project.id) ? "bg-[#007AFF]/5" : ""}>
+                      {isAdminUser && (
+                        <td className="w-10">
+                          <input
+                            type="checkbox"
+                            className="ios-checkbox"
+                            checked={isSelected(project.id)}
+                            onChange={() => toggleSelect(project.id)}
+                          />
+                        </td>
+                      )}
+                      <td className="whitespace-nowrap">
                         <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
                           {project.projectSourceId}
                         </span>
                       </td>
-                      <td>
+                      <td className="whitespace-nowrap">
                         <span className="font-mono text-[13px]">{project.projectCode}</span>
                       </td>
-                      <td>
+                      <td className="whitespace-nowrap">
                         <span className="font-semibold">{project.name}</span>
                       </td>
-                      <td>
-                        <div className="flex items-center gap-1.5">
-                          <span>{project.customer.name}</span>
-                          {project.customer.industryType && (
-                            <span className={`ios-badge text-[10px] ${project.customer.industryType === "石化" ? "ios-badge-orange" : "ios-badge-green"}`}>
-                              {project.customer.industryType}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td>
+                      <td className="whitespace-nowrap">{project.customer.name}</td>
+                      <td className="whitespace-nowrap">
                         {project.type ? (
-                          <span className={`ios-badge text-[10px] ${typeBadgeColor(project.type)}`}>{project.type}</span>
+                          <span className={`ios-badge text-[11px] ${typeBadgeColor(project.type)}`}>{project.type}</span>
                         ) : (
                           <span className="text-[#86868B]">-</span>
                         )}
                       </td>
-                      <td>
+                      <td className="whitespace-nowrap">
                         {project.projectCategory ? (
-                          <span className={`ios-badge text-[10px] ${categoryBadgeColor(project.projectCategory)}`}>{project.projectCategory}</span>
+                          <span className={`ios-badge text-[11px] ${categoryBadgeColor(project.projectCategory)}`}>{project.projectCategory}</span>
                         ) : (
                           <span className="text-[#86868B]">-</span>
                         )}
                       </td>
-                      <td className="text-[#86868B]">{project.source}</td>
-                      <td>
+                      <td className="whitespace-nowrap text-[13px] text-[#86868B]">{project.source}</td>
+                      <td className="whitespace-nowrap">
                         {project.designManager ? (
                           <span className="text-[13px]">{project.designManager.realName}</span>
                         ) : (
                           <span className="text-[#86868B]">-</span>
                         )}
                       </td>
-                      <td>
+                      <td className="whitespace-nowrap">
                         {project.supervisorLeader ? (
                           <span className="text-[13px]">{project.supervisorLeader.realName}</span>
                         ) : (
                           <span className="text-[#86868B]">-</span>
                         )}
                       </td>
-                      <td>
-                        <div className="flex items-center gap-1.5">
-                          <span className={`ios-badge ${sc.color}`}>{sc.label}</span>
-                          {nextStatuses.length > 0 && (
-                            <select
-                              className="text-[11px] border-none bg-transparent text-[#007AFF] cursor-pointer font-semibold p-0 outline-none"
-                              value=""
-                              disabled={statusChanging === project.id}
-                              onChange={(e) => {
-                                if (e.target.value) handleStatusChange(project, e.target.value);
-                              }}
-                            >
-                              <option value="">变更→</option>
-                              {nextStatuses.map((s) => (
-                                <option key={s} value={s}>{s}</option>
-                              ))}
-                            </select>
-                          )}
-                        </div>
+                      <td className="whitespace-nowrap">
+                        <select
+                          className="ios-select text-[12px] py-1 px-2 w-auto min-w-[80px]"
+                          value={project.status}
+                          disabled={statusChanging === project.id}
+                          onChange={(e) => handleStatusChange(project, e.target.value)}
+                        >
+                          <option value="执行">执行</option>
+                          <option value="暂停">暂停</option>
+                          <option value="关闭">关闭</option>
+                        </select>
                       </td>
-                      <td className="text-[#86868B]">{formatDate(project.startDate)}</td>
-                      <td className="text-[#86868B]">{formatDate(project.plannedEndDate)}</td>
-                      <td>
+                      <td className="whitespace-nowrap text-[#86868B]">{formatDate(project.startDate)}</td>
+                      <td className="whitespace-nowrap text-[#86868B]">{formatDate(project.plannedEndDate)}</td>
+                      <td className="whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(project)}>
                             <Eye className="w-3.5 h-3.5" />
@@ -750,6 +776,12 @@ export default function ProjectsPage() {
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                      </td>
+                      <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                        {project.lastModifiedBy && (
+                          <span>{project.lastModifiedBy}</span>
+                        )}
+                        <span className="block text-[11px]">{formatDate(project.updatedAt)}</span>
                       </td>
                     </tr>
                   );
@@ -781,6 +813,15 @@ export default function ProjectsPage() {
           </div>
         )}
       </div>
+
+      {isAdminUser && (
+        <BatchDeleteBar
+          businessType="project"
+          selectedIds={projects.filter((d) => isSelected(d.id)).map((d) => d.id)}
+          onDeleteSuccess={fetchProjects}
+          onClear={clearSelection}
+        />
+      )}
 
       <Modal
         isOpen={showModal}
@@ -826,7 +867,7 @@ export default function ProjectsPage() {
                   <option value="">请选择项目线索</option>
                   {projectLeads.map((l) => (
                     <option key={l.id} value={l.id}>
-                      {l.projectSourceId} - {l.projectName} - {l.customer.name} [{l.currentStatus}]
+                      {l.project ? `${l.project.projectCode} - ${l.project.name}` : `${l.projectSourceId} - ${l.projectName}`} - {l.customer.name} [{l.currentStatus}]
                     </option>
                   ))}
                 </select>
@@ -1008,11 +1049,9 @@ export default function ProjectsPage() {
                 value={form.status}
                 onChange={(e) => updateForm("status", e.target.value)}
               >
-                <option value="筹备">筹备</option>
                 <option value="执行">执行</option>
                 <option value="暂停">暂停</option>
                 <option value="关闭">关闭</option>
-                <option value="归档">归档</option>
               </select>
             </div>
 
@@ -1203,25 +1242,6 @@ export default function ProjectsPage() {
                 </div>
               </div>
             </div>
-
-            {(statusFlow[detailProject.status] || []).length > 0 && (
-              <div className="pt-3 border-t border-[#F0F0F0]">
-                <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">状态变更</p>
-                <div className="flex gap-2">
-                  {statusFlow[detailProject.status].map((nextStatus) => (
-                    <button
-                      key={nextStatus}
-                      className="ios-btn ios-btn-primary ios-btn-sm"
-                      disabled={statusChanging === detailProject.id}
-                      onClick={() => handleStatusChange(detailProject, nextStatus)}
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                      转为{nextStatus}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </Modal>
@@ -1239,14 +1259,14 @@ export default function ProjectsPage() {
           <p className="text-[15px] text-[#1D1D1F] mb-1">
             确定要删除项目 <span className="font-semibold">{deleteConfirm?.projectCode}</span> 吗？
           </p>
-          {deleteConfirm && (deleteConfirm.status === "执行" || deleteConfirm.status === "关闭") ? (
-            <p className="text-[13px] text-[#FF3B30] mb-4">{deleteConfirm.status}中的项目不能删除</p>
+          {deleteConfirm && (deleteConfirm.status === "执行" || deleteConfirm.status === "关闭") && currentUser?.username !== "admin" ? (
+            <p className="text-[13px] text-[#FF3B30] mb-4">{deleteConfirm.status}中的项目不能删除，请联系管理员</p>
           ) : (
             <p className="text-[13px] text-[#86868B] mb-6">此操作不可撤销</p>
           )}
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
-            {deleteConfirm && deleteConfirm.status !== "执行" && deleteConfirm.status !== "关闭" && (
+            {deleteConfirm && ((deleteConfirm.status !== "执行" && deleteConfirm.status !== "关闭") || currentUser?.username === "admin") && (
               <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>
                 {deleting ? "删除中..." : "确认删除"}
               </button>

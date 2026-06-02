@@ -11,10 +11,15 @@ export async function GET(
     const receipt = await prisma.deliveryReceipt.findUnique({
       where: { id },
       include: {
-        purchaseContract: {
+        expenseContract: {
           include: {
             supplier: true,
             inquiry: true,
+          },
+        },
+        items: {
+          include: {
+            contractItem: true,
           },
         },
       },
@@ -46,6 +51,13 @@ export async function PUT(
 
     const existing = await prisma.deliveryReceipt.findUnique({
       where: { id },
+      include: {
+        expenseContract: {
+          include: {
+            items: true,
+          },
+        },
+      },
     });
 
     if (!existing) {
@@ -58,18 +70,10 @@ export async function PUT(
     const body = await request.json();
     const {
       deliveryDate,
-      receivedQuantity,
       inspectionResult,
-      receiptStatus,
-      invoiceMatched,
+      attachments,
+      items,
     } = body;
-
-    if (receivedQuantity !== undefined && !receivedQuantity.trim()) {
-      return NextResponse.json(
-        { error: "实收数量不能为空" },
-        { status: 400 }
-      );
-    }
 
     const validInspectionResults = ["待检", "合格", "不合格"];
     if (
@@ -82,35 +86,78 @@ export async function PUT(
       );
     }
 
-    const validReceiptStatuses = ["待验收", "已验收", "已拒绝"];
-    if (
-      receiptStatus !== undefined &&
-      !validReceiptStatuses.includes(receiptStatus)
-    ) {
-      return NextResponse.json(
-        { error: "无效的验收状态" },
-        { status: 400 }
-      );
-    }
-
     const data: Record<string, unknown> = {};
     if (deliveryDate !== undefined) data.deliveryDate = new Date(deliveryDate);
-    if (receivedQuantity !== undefined)
-      data.receivedQuantity = receivedQuantity.trim();
     if (inspectionResult !== undefined) data.inspectionResult = inspectionResult;
-    if (receiptStatus !== undefined) data.receiptStatus = receiptStatus;
-    if (invoiceMatched !== undefined) data.invoiceMatched = invoiceMatched;
+    if (attachments !== undefined) data.attachments = attachments;
 
-    const receipt = await prisma.deliveryReceipt.update({
-      where: { id },
-      data,
-      include: {
-        purchaseContract: {
-          include: {
-            supplier: true,
+    const contractItemMap = new Map(
+      existing.expenseContract.items.map((ci) => [ci.id, ci])
+    );
+
+    const receipt = await prisma.$transaction(async (tx) => {
+      if (items && Array.isArray(items)) {
+        await tx.deliveryReceiptItem.deleteMany({
+          where: { deliveryReceiptId: id },
+        });
+
+        const itemsData = items.map((item: Record<string, unknown>) => {
+          const ci = item.contractItemId
+            ? contractItemMap.get(item.contractItemId as string)
+            : null;
+          const itemUnitPrice = ci ? Number(ci.unitPrice) : null;
+
+          return {
+            deliveryReceiptId: id,
+            contractItemId: (item.contractItemId as string) || null,
+            materialName: (item.materialName as string) || "",
+            spec: (item.spec as string) || null,
+            unit: (item.unit as string) || null,
+            orderedQuantity: item.orderedQuantity
+              ? Number(item.orderedQuantity)
+              : null,
+            receivedQuantity: item.receivedQuantity
+              ? Number(item.receivedQuantity)
+              : null,
+            acceptedQuantity: item.acceptedQuantity
+              ? Number(item.acceptedQuantity)
+              : null,
+            unitPrice: itemUnitPrice,
+            inspectionResult: (item.inspectionResult as string) || "待检",
+            remark: (item.remark as string) || null,
+          };
+        });
+
+        await tx.deliveryReceiptItem.createMany({ data: itemsData });
+
+        // 重新计算到货金额
+        const newDeliveryAmount = itemsData.reduce((sum: number, item: typeof itemsData[number]) => {
+          if (item.receivedQuantity && item.unitPrice) {
+            return sum + item.receivedQuantity * item.unitPrice;
+          }
+          return sum;
+        }, 0);
+        data.deliveryAmount = newDeliveryAmount || null;
+      }
+
+      const updated = await tx.deliveryReceipt.update({
+        where: { id },
+        data,
+        include: {
+          expenseContract: {
+            include: {
+              supplier: true,
+            },
+          },
+          items: {
+            include: {
+              contractItem: true,
+            },
           },
         },
-      },
+      });
+
+      return updated;
     });
 
     return NextResponse.json({ data: receipt });

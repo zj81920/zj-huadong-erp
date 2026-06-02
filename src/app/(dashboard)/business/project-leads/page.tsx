@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Plus,
@@ -9,12 +10,17 @@ import {
   Eye,
   Briefcase,
   MapPin,
-  Calendar,
-  DollarSign,
+  Phone,
+  Mail,
+  User,
+  Users,
   ChevronRight,
   Info,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Customer {
   id: string;
@@ -28,14 +34,18 @@ interface ProjectLead {
   customerId: string;
   projectName: string;
   location: string | null;
-  estimatedInvestment: number | null;
-  bidReleaseTime: string | null;
-  infoSource: string | null;
+  contactPerson: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  projectNature: string[];
+  implementationEntity: string;
   currentStatus: string;
+  leadMode: string;
   followUpRecords: unknown[];
   competitorInfo: unknown[];
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
   customer: Customer;
   biddings?: unknown[];
   quotations?: unknown[];
@@ -45,9 +55,11 @@ interface LeadFormData {
   customerId: string;
   projectName: string;
   location: string;
-  estimatedInvestment: string;
-  bidReleaseTime: string;
-  infoSource: string;
+  contactPerson: string;
+  contactPhone: string;
+  contactEmail: string;
+  projectNature: string[];
+  implementationEntity: string;
 }
 
 interface PaginationInfo {
@@ -61,10 +73,21 @@ const emptyForm: LeadFormData = {
   customerId: "",
   projectName: "",
   location: "",
-  estimatedInvestment: "",
-  bidReleaseTime: "",
-  infoSource: "",
+  contactPerson: "",
+  contactPhone: "",
+  contactEmail: "",
+  projectNature: [],
+  implementationEntity: "",
 };
+
+const projectNatureOptions = [
+  "方案设计",
+  "初步设计",
+  "详细设计",
+  "EPC",
+  "框架协议",
+  "咨询",
+];
 
 const statusConfig: Record<string, { color: string; label: string }> = {
   "跟踪中": { color: "ios-badge-gray", label: "跟踪中" },
@@ -76,17 +99,10 @@ const statusConfig: Record<string, { color: string; label: string }> = {
   "已立项": { color: "ios-badge-purple", label: "已立项" },
 };
 
-const statusFlow: Record<string, string[]> = {
-  "跟踪中": ["投标中", "报价中", "放弃"],
-  "投标中": ["已中标", "放弃"],
-  "已中标": [],
-  "报价中": ["落地", "放弃"],
-  "落地": [],
-  "放弃": ["跟踪中"],
-  "已立项": [],
-};
-
 export default function ProjectLeadsPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin";
   const [leads, setLeads] = useState<ProjectLead[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1, pageSize: 20, total: 0, totalPages: 0,
@@ -103,18 +119,27 @@ export default function ProjectLeadsPage() {
   const [formError, setFormError] = useState("");
 
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<{ id: string; accountName: string }[]>([]);
 
-  const [detailLead, setDetailLead] = useState<ProjectLead | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<ProjectLead | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const [statusChanging, setStatusChanging] = useState<string | null>(null);
+  const {
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isAllSelected,
+    isSelected,
+  } = useBatchSelection(leads.map((l) => l.id));
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [customerForm, setCustomerForm] = useState({
     name: "",
+    address: "",
     contactPerson: "",
     phone: "",
+    email: "",
+    maintainer: "",
     industryType: "",
     customerGrade: "C",
   });
@@ -128,6 +153,21 @@ export default function ProjectLeadsPage() {
       if (res.ok) setCustomers(json.data);
     } catch (err) {
       console.error("获取客户列表失败:", err);
+    }
+  }, []);
+
+  const fetchBankAccounts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/bank-accounts?isActive=true&pageSize=200");
+      const json = await res.json();
+      if (res.ok) {
+        const companyAccounts = (json.data || []).filter(
+          (a: { accountType: string }) => a.accountType === "公司账户"
+        );
+        setBankAccounts(companyAccounts.map((a: { id: string; accountName: string }) => ({ id: a.id, accountName: a.accountName })));
+      }
+    } catch (err) {
+      console.error("获取银行账户列表失败:", err);
     }
   }, []);
 
@@ -155,7 +195,8 @@ export default function ProjectLeadsPage() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [fetchCustomers]);
+    fetchBankAccounts();
+  }, [fetchCustomers, fetchBankAccounts]);
 
   useEffect(() => {
     fetchLeads();
@@ -174,9 +215,11 @@ export default function ProjectLeadsPage() {
       customerId: lead.customerId,
       projectName: lead.projectName,
       location: lead.location || "",
-      estimatedInvestment: lead.estimatedInvestment ? String(lead.estimatedInvestment) : "",
-      bidReleaseTime: lead.bidReleaseTime ? lead.bidReleaseTime.split("T")[0] : "",
-      infoSource: lead.infoSource || "",
+      contactPerson: lead.contactPerson || "",
+      contactPhone: lead.contactPhone || "",
+      contactEmail: lead.contactEmail || "",
+      projectNature: lead.projectNature || [],
+      implementationEntity: lead.implementationEntity || "",
     });
     setFormError("");
     setShowModal(true);
@@ -189,6 +232,14 @@ export default function ProjectLeadsPage() {
     }
     if (!form.projectName.trim()) {
       setFormError("项目名称不能为空");
+      return;
+    }
+    if (!form.projectNature || form.projectNature.length === 0) {
+      setFormError("请选择项目性质");
+      return;
+    }
+    if (!form.implementationEntity.trim()) {
+      setFormError("请选择实施主体");
       return;
     }
 
@@ -224,7 +275,6 @@ export default function ProjectLeadsPage() {
 
   const handleCreateCustomer = async () => {
     if (!customerForm.name.trim()) {
-      setCustomerError("客户名称不能为空");
       return;
     }
 
@@ -246,8 +296,11 @@ export default function ProjectLeadsPage() {
         setShowCustomerModal(false);
         setCustomerForm({
           name: "",
+          address: "",
           contactPerson: "",
           phone: "",
+          email: "",
+          maintainer: "",
           industryType: "",
           customerGrade: "C",
         });
@@ -258,43 +311,6 @@ export default function ProjectLeadsPage() {
       setCustomerError("网络错误，请重试");
     } finally {
       setCustomerSaving(false);
-    }
-  };
-
-  const handleStatusChange = async (lead: ProjectLead, newStatus: string) => {
-    setStatusChanging(lead.id);
-    try {
-      const res = await fetch(`/api/project-leads/${lead.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentStatus: newStatus }),
-      });
-
-      if (res.ok) {
-        fetchLeads();
-        if (detailLead?.id === lead.id) {
-          setDetailLead({ ...detailLead, currentStatus: newStatus });
-        }
-      } else {
-        const json = await res.json();
-        alert(json.error || "状态更新失败");
-      }
-    } catch {
-      alert("网络错误，请重试");
-    } finally {
-      setStatusChanging(null);
-    }
-  };
-
-  const handleViewDetail = async (lead: ProjectLead) => {
-    try {
-      const res = await fetch(`/api/project-leads/${lead.id}`);
-      const json = await res.json();
-      if (res.ok) {
-        setDetailLead(json.data);
-      }
-    } catch {
-      setDetailLead(lead);
     }
   };
 
@@ -319,6 +335,23 @@ export default function ProjectLeadsPage() {
     }
   };
 
+  const handleModeChange = async (lead: ProjectLead, mode: string) => {
+    try {
+      const res = await fetch(`/api/project-leads/${lead.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadMode: mode }),
+      });
+      if (res.ok) fetchLeads();
+      else {
+        const j = await res.json();
+        alert(j.error || "模式切换失败");
+      }
+    } catch {
+      alert("网络错误");
+    }
+  };
+
   const updateForm = (field: keyof LeadFormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (formError) setFormError("");
@@ -330,15 +363,10 @@ export default function ProjectLeadsPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  const formatMoney = (amount: number | null) => {
-    if (!amount) return "-";
-    return `¥${Number(amount).toLocaleString("zh-CN")}`;
-  };
-
   const stats = {
     total: pagination.total,
     bidding: leads.filter((l) => l.currentStatus === "投标中").length,
-    won: leads.filter((l) => l.currentStatus === "已中标").length,
+    quotation: leads.filter((l) => l.currentStatus === "报价中").length,
   };
 
   return (
@@ -376,12 +404,12 @@ export default function ProjectLeadsPage() {
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#34C759]/10 flex items-center justify-center">
-            <DollarSign className="w-5 h-5 text-[#34C759]" />
+          <div className="w-11 h-11 rounded-2xl bg-[#AF52DE]/10 flex items-center justify-center">
+            <Phone className="w-5 h-5 text-[#AF52DE]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">已中标</p>
-            <p className="text-[24px] font-bold text-[#34C759] leading-tight">{stats.won}</p>
+            <p className="text-[13px] text-[#86868B]">报价中</p>
+            <p className="text-[24px] font-bold text-[#AF52DE] leading-tight">{stats.quotation}</p>
           </div>
         </div>
       </div>
@@ -439,83 +467,115 @@ export default function ProjectLeadsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="ios-table">
+            <table className="ios-table" style={{ minWidth: 1100 }}>
+              <colgroup>
+                <col style={{ minWidth: 110 }} />
+                <col style={{ minWidth: 180 }} />
+                <col style={{ minWidth: 120 }} />
+                <col style={{ minWidth: 140 }} />
+                <col style={{ minWidth: 100 }} />
+                <col style={{ minWidth: 80 }} />
+                <col style={{ minWidth: 100 }} />
+                <col style={{ minWidth: 100 }} />
+                <col style={{ minWidth: 170 }} />
+              </colgroup>
               <thead>
                 <tr>
+                  {isAdminUser && (
+                    <th className="w-10">
+                      <input
+                        type="checkbox"
+                        className="ios-checkbox"
+                        checked={isAllSelected}
+                        onChange={() => isAllSelected ? clearSelection() : selectAll()}
+                      />
+                    </th>
+                  )}
                   <th>项目源ID</th>
                   <th>项目名称</th>
                   <th>客户</th>
-                  <th>预计投资</th>
-                  <th>投标截止</th>
+                  <th>项目性质</th>
+                  <th>实施主体</th>
                   <th>状态</th>
-                  <th>创建时间</th>
+                  <th>模式</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
                 {leads.map((lead) => {
                   const sc = statusConfig[lead.currentStatus] || statusConfig["跟踪中"];
-                  const nextStatuses = statusFlow[lead.currentStatus] || [];
+                  const isEstablished = lead.currentStatus === "已立项";
                   return (
-                    <tr key={lead.id}>
-                      <td>
+                    <tr key={lead.id} className={isSelected(lead.id) ? "bg-[#007AFF]/5" : ""}>
+                      {isAdminUser && (
+                        <td className="w-10">
+                          <input
+                            type="checkbox"
+                            className="ios-checkbox"
+                            checked={isSelected(lead.id)}
+                            onChange={() => toggleSelect(lead.id)}
+                          />
+                        </td>
+                      )}
+                      <td className="whitespace-nowrap">
                         <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
                           {lead.projectSourceId}
                         </span>
                       </td>
-                      <td>
+                      <td className="whitespace-nowrap">
                         <span className="font-semibold">{lead.projectName}</span>
                       </td>
+                      <td className="whitespace-nowrap">{lead.customer.name}</td>
                       <td>
-                        <div className="flex items-center gap-1.5">
-                          <span>{lead.customer.name}</span>
-                          {lead.customer.industryType && (
-                            <span className={`ios-badge text-[10px] ${lead.customer.industryType === "石化" ? "ios-badge-orange" : "ios-badge-green"}`}>
-                              {lead.customer.industryType}
-                            </span>
-                          )}
+                        <div className="flex flex-wrap gap-1 whitespace-nowrap">
+                          {(lead.projectNature || []).map((n: string) => (
+                            <span key={n} className="ios-badge text-[11px] ios-badge-blue">{n}</span>
+                          ))}
                         </div>
                       </td>
-                      <td className="text-[#86868B]">{formatMoney(lead.estimatedInvestment)}</td>
-                      <td className="text-[#86868B]">{formatDate(lead.bidReleaseTime)}</td>
-                      <td>
-                        <div className="flex items-center gap-1.5">
-                          <span className={`ios-badge ${sc.color}`}>{sc.label}</span>
-                          {nextStatuses.length > 0 && (
-                            <select
-                              className="text-[11px] border-none bg-transparent text-[#007AFF] cursor-pointer font-semibold p-0 outline-none"
-                              value=""
-                              disabled={statusChanging === lead.id}
-                              onChange={(e) => {
-                                if (e.target.value) handleStatusChange(lead, e.target.value);
-                              }}
-                            >
-                              <option value="">变更→</option>
-                              {nextStatuses.map((s) => (
-                                <option key={s} value={s}>{s}</option>
-                              ))}
-                            </select>
-                          )}
-                        </div>
+                      <td className="whitespace-nowrap text-[13px]">{lead.implementationEntity || "-"}</td>
+                      <td className="whitespace-nowrap">
+                        <span className={`ios-badge ${sc.color}`}>{sc.label}</span>
                       </td>
-                      <td className="text-[#86868B]">{formatDate(lead.createdAt)}</td>
-                      <td>
+                      <td className="whitespace-nowrap">
+                        <select
+                          className="ios-select text-[12px] py-1 px-2 w-auto min-w-[90px]"
+                          value={lead.leadMode === "商务报价" ? "商务报价" : "投标"}
+                          disabled={isEstablished}
+                          onChange={(e) => handleModeChange(lead, e.target.value)}
+                        >
+                          <option value="投标">投标</option>
+                          <option value="商务报价">商务报价</option>
+                        </select>
+                      </td>
+                      <td className="whitespace-nowrap">
                         <div className="flex items-center gap-1">
-                          <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(lead)}>
+                          <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => router.push(`/business/project-leads/${lead.id}`)}>
                             <Eye className="w-3.5 h-3.5" />
                             详情
                           </button>
-                          <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(lead)}>
-                            <Pencil className="w-3.5 h-3.5" />
-                            编辑
-                          </button>
-                          <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                            onClick={() => setDeleteConfirm(lead)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {!isEstablished && (
+                            <>
+                              <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(lead)}>
+                                <Pencil className="w-3.5 h-3.5" />
+                                编辑
+                              </button>
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                onClick={() => setDeleteConfirm(lead)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
+                      </td>
+                      <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                        {lead.lastModifiedBy && (
+                          <span>{lead.lastModifiedBy}</span>
+                        )}
+                        <span className="block text-[11px]">{formatDate(lead.updatedAt)}</span>
                       </td>
                     </tr>
                   );
@@ -545,6 +605,15 @@ export default function ProjectLeadsPage() {
               </div>
             )}
           </div>
+        )}
+
+        {isAdminUser && (
+          <BatchDeleteBar
+            businessType="project_lead"
+            selectedIds={leads.filter((l) => isSelected(l.id)).map((l) => l.id)}
+            onDeleteSuccess={fetchLeads}
+            onClear={clearSelection}
+          />
         )}
       </div>
 
@@ -617,41 +686,92 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">预计投资额（元）</label>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目联系人</label>
               <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
                 <input
-                  type="number"
+                  type="text"
                   className="ios-input pl-10"
-                  placeholder="预计投资金额"
-                  value={form.estimatedInvestment}
-                  onChange={(e) => updateForm("estimatedInvestment", e.target.value)}
+                  placeholder="请输入项目联系人"
+                  value={form.contactPerson}
+                  onChange={(e) => updateForm("contactPerson", e.target.value)}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">投标截止时间</label>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系电话</label>
               <div className="relative">
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
                 <input
-                  type="date"
+                  type="text"
                   className="ios-input pl-10"
-                  value={form.bidReleaseTime}
-                  onChange={(e) => updateForm("bidReleaseTime", e.target.value)}
+                  placeholder="请输入联系电话"
+                  value={form.contactPhone}
+                  onChange={(e) => updateForm("contactPhone", e.target.value)}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">信息来源</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="如：招标网站、客户推荐"
-                value={form.infoSource}
-                onChange={(e) => updateForm("infoSource", e.target.value)}
-              />
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系邮箱</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <input
+                  type="email"
+                  className="ios-input pl-10"
+                  placeholder="请输入联系邮箱"
+                  value={form.contactEmail}
+                  onChange={(e) => updateForm("contactEmail", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                项目性质 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <div className="flex flex-wrap gap-2 p-2.5 border border-[#E5E5EA] rounded-xl bg-white min-h-[42px]">
+                {projectNatureOptions.map((opt) => {
+                  const selected = form.projectNature.includes(opt);
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      className={`px-2.5 py-1 rounded-lg text-[12px] font-medium transition-all ${
+                        selected
+                          ? "bg-[#007AFF] text-white"
+                          : "bg-[#F5F5F7] text-[#86868B] hover:bg-[#E8E8ED]"
+                      }`}
+                      onClick={() => {
+                        const updated = selected
+                          ? form.projectNature.filter((v) => v !== opt)
+                          : [...form.projectNature, opt];
+                        setForm((prev) => ({ ...prev, projectNature: updated }));
+                        if (formError) setFormError("");
+                      }}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                实施主体 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <select
+                className="ios-select"
+                value={form.implementationEntity}
+                onChange={(e) => updateForm("implementationEntity", e.target.value)}
+              >
+                <option value="">请选择实施主体</option>
+                {bankAccounts.map((a) => (
+                  <option key={a.id} value={a.accountName}>{a.accountName}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -662,76 +782,6 @@ export default function ProjectLeadsPage() {
             </button>
           </div>
         </div>
-      </Modal>
-
-      <Modal
-        isOpen={!!detailLead}
-        onClose={() => setDetailLead(null)}
-        title="项目线索详情"
-        maxWidth="680px"
-      >
-        {detailLead && (
-          <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F0F0F0]">
-              <div className="w-12 h-12 rounded-2xl bg-[#007AFF]/10 flex items-center justify-center">
-                <Briefcase className="w-6 h-6 text-[#007AFF]" />
-              </div>
-              <div>
-                <p className="text-[17px] font-bold text-[#1D1D1F]">{detailLead.projectName}</p>
-                <p className="text-[13px] text-[#007AFF] font-mono font-semibold">{detailLead.projectSourceId}</p>
-              </div>
-              <span className={`ios-badge ml-auto ${statusConfig[detailLead.currentStatus]?.color || "ios-badge-gray"}`}>
-                {detailLead.currentStatus}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">客户</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailLead.customer.name}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">项目地点</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailLead.location || "-"}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">预计投资额</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatMoney(detailLead.estimatedInvestment)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">投标截止时间</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailLead.bidReleaseTime)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">信息来源</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{detailLead.infoSource || "-"}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">创建时间</p>
-                <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailLead.createdAt)}</p>
-              </div>
-            </div>
-
-            {(statusFlow[detailLead.currentStatus] || []).length > 0 && (
-              <div className="pt-3 border-t border-[#F0F0F0]">
-                <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">状态变更</p>
-                <div className="flex gap-2">
-                  {statusFlow[detailLead.currentStatus].map((nextStatus) => (
-                    <button
-                      key={nextStatus}
-                      className="ios-btn ios-btn-primary ios-btn-sm"
-                      disabled={statusChanging === detailLead.id}
-                      onClick={() => handleStatusChange(detailLead, nextStatus)}
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                      转为{nextStatus}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </Modal>
 
       <Modal
@@ -761,7 +811,7 @@ export default function ProjectLeadsPage() {
         isOpen={showCustomerModal}
         onClose={() => setShowCustomerModal(false)}
         title="新增客户"
-        maxWidth="480px"
+        maxWidth="600px"
       >
         <div className="space-y-4">
           {customerError && (
@@ -770,74 +820,121 @@ export default function ProjectLeadsPage() {
             </div>
           )}
 
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-              客户名称 <span className="text-[#FF3B30]">*</span>
-            </label>
-            <input
-              type="text"
-              className="ios-input"
-              placeholder="请输入客户名称"
-              value={customerForm.name}
-              onChange={(e) => {
-                setCustomerForm((prev) => ({ ...prev, name: e.target.value }));
-                if (customerError) setCustomerError("");
-              }}
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                客户名称 <span className="text-[#FF3B30]">*</span>
+              </label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入客户名称"
+                value={customerForm.name}
+                onChange={(e) => {
+                  setCustomerForm((prev) => ({ ...prev, name: e.target.value }));
+                  if (customerError) setCustomerError("");
+                }}
+              />
+            </div>
 
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
-            <input
-              type="text"
-              className="ios-input"
-              placeholder="请输入联系人"
-              value={customerForm.contactPerson}
-              onChange={(e) => setCustomerForm((prev) => ({ ...prev, contactPerson: e.target.value }))}
-            />
-          </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">行业类型</label>
+              <select
+                className="ios-select"
+                value={customerForm.industryType}
+                onChange={(e) => setCustomerForm((prev) => ({ ...prev, industryType: e.target.value }))}
+              >
+                <option value="">请选择</option>
+                <option value="石化">石化</option>
+                <option value="医药">医药</option>
+              </select>
+            </div>
 
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
-            <input
-              type="text"
-              className="ios-input"
-              placeholder="请输入电话"
-              value={customerForm.phone}
-              onChange={(e) => setCustomerForm((prev) => ({ ...prev, phone: e.target.value }))}
-            />
-          </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">客户等级</label>
+              <select
+                className="ios-select"
+                value={customerForm.customerGrade}
+                onChange={(e) => setCustomerForm((prev) => ({ ...prev, customerGrade: e.target.value }))}
+              >
+                <option value="A">A级（重要客户）</option>
+                <option value="B">B级（普通客户）</option>
+                <option value="C">C级（潜在客户）</option>
+              </select>
+            </div>
 
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">行业类型</label>
-            <select
-              className="ios-select"
-              value={customerForm.industryType}
-              onChange={(e) => setCustomerForm((prev) => ({ ...prev, industryType: e.target.value }))}
-            >
-              <option value="">请选择行业类型</option>
-              <option value="石化">石化</option>
-              <option value="医药">医药</option>
-            </select>
-          </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">联系人</label>
+              <div className="relative">
+                <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <input
+                  type="text"
+                  className="ios-input pl-10"
+                  placeholder="联系人姓名"
+                  value={customerForm.contactPerson}
+                  onChange={(e) => setCustomerForm((prev) => ({ ...prev, contactPerson: e.target.value }))}
+                />
+              </div>
+            </div>
 
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">客户等级</label>
-            <select
-              className="ios-select"
-              value={customerForm.customerGrade}
-              onChange={(e) => setCustomerForm((prev) => ({ ...prev, customerGrade: e.target.value }))}
-            >
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C">C</option>
-            </select>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">电话</label>
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <input
+                  type="text"
+                  className="ios-input pl-10"
+                  placeholder="联系电话"
+                  value={customerForm.phone}
+                  onChange={(e) => setCustomerForm((prev) => ({ ...prev, phone: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">邮箱</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B]" />
+                <input
+                  type="email"
+                  className="ios-input pl-10"
+                  placeholder="邮箱地址"
+                  value={customerForm.email}
+                  onChange={(e) => setCustomerForm((prev) => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">商务责任人</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="负责商务的人员"
+                value={customerForm.maintainer}
+                onChange={(e) => setCustomerForm((prev) => ({ ...prev, maintainer: e.target.value }))}
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">地址</label>
+              <div className="relative">
+                <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-[#86868B]" />
+                <input
+                  type="text"
+                  className="ios-input pl-10"
+                  placeholder="客户地址"
+                  value={customerForm.address}
+                  onChange={(e) => setCustomerForm((prev) => ({ ...prev, address: e.target.value }))}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowCustomerModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleCreateCustomer} disabled={customerSaving}>
-              {customerSaving ? "保存中..." : "确认"}
+              {customerSaving ? "保存中..." : "创建客户"}
             </button>
           </div>
         </div>

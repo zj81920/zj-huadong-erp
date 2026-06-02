@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,6 +31,11 @@ export async function GET(request: NextRequest) {
       where.status = status;
     }
 
+    const approvalStatus = searchParams.get("approvalStatus") || "";
+    if (approvalStatus) {
+      where.approvalStatus = approvalStatus;
+    }
+
     const [suppliers, total] = await Promise.all([
       prisma.supplier.findMany({
         where,
@@ -58,6 +64,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const { name, supplierType, status, contactPerson, phone, email, address, bankName, bankAccount, remark, attachmentUrl } = body;
 
     if (!name || !name.trim()) {
@@ -85,6 +92,8 @@ export async function POST(request: NextRequest) {
         bankAccount: bankAccount?.trim() || null,
         remark: remark?.trim() || null,
         attachmentUrl: attachmentUrl?.trim() || null,
+        approvalStatus: "草稿",
+        lastModifiedBy: currentUser?.realName || null,
       },
     });
 

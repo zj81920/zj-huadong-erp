@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFileSync, mkdirSync } from "fs";
 import path from "path";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 const ALLOWED_EXTENSIONS = [
   "pdf",
@@ -10,12 +10,22 @@ const ALLOWED_EXTENSIONS = [
   "docx",
   "xls",
   "xlsx",
+  "ppt",
+  "pptx",
+  "zip",
+  "rar",
   "jpg",
   "jpeg",
   "png",
-  "zip",
-  "rar",
+  "gif",
+  "bmp",
+  "webp",
+  "svg",
+  "tiff",
+  "tif",
 ];
+
+const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "文件大小超过10MB限制" },
+        { error: "文件大小超过20MB限制" },
         { status: 400 }
       );
     }
@@ -47,21 +57,14 @@ export async function POST(request: NextRequest) {
     const random = Math.random().toString(36).substring(2, 8);
     const filename = `${timestamp}-${random}.${ext}`;
 
-    const uploadDir = path.join(
-      process.cwd(),
-      "public",
-      "uploads",
-      "suppliers"
-    );
-
-    await mkdir(uploadDir, { recursive: true });
+    mkdirSync(UPLOAD_DIR, { recursive: true });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const filePath = path.join(uploadDir, filename);
-    await writeFile(filePath, buffer);
+    const filePath = path.join(UPLOAD_DIR, filename);
+    writeFileSync(filePath, buffer);
 
     return NextResponse.json({
-      url: `/uploads/suppliers/${filename}`,
+      url: `/uploads/${filename}`,
       filename: originalName,
     });
   } catch (error) {

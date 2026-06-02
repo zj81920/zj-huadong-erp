@@ -26,8 +26,14 @@ export async function GET(request: NextRequest) {
       prisma.inquiry.findMany({
         where,
         include: {
-          purchaseRequest: { include: { items: { orderBy: { sortOrder: "asc" } } } },
-          purchaseContract: { select: { id: true } },
+          purchaseRequest: { include: { items: { orderBy: { sortOrder: "asc" } }, project: { select: { projectSourceId: true, name: true, projectCode: true } } } },
+          expenseContract: { select: { id: true } },
+          supplierQuotes: {
+            where: { isValid: true },
+            include: {
+              items: { include: { purchaseRequestItem: { select: { id: true } } } },
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
@@ -66,6 +72,23 @@ export async function GET(request: NextRequest) {
         ? supplierMap.get(inq.recommendedSupplierId) || null
         : null;
 
+      const confirmedQuoteItems: Record<string, { unitPrice: number | null; totalPrice: number | null; quantity: number | null }> = {};
+      if (inq.confirmedSupplierId && inq.confirmedRound) {
+        const confirmedQuote = inq.supplierQuotes.find(
+          (sq: { supplierId: string; round: number }) =>
+            sq.supplierId === inq.confirmedSupplierId && sq.round === inq.confirmedRound
+        );
+        if (confirmedQuote && confirmedQuote.items) {
+          for (const qi of confirmedQuote.items) {
+            confirmedQuoteItems[qi.purchaseRequestItemId] = {
+              unitPrice: qi.unitPrice ? Number(qi.unitPrice) : null,
+              totalPrice: qi.totalPrice ? Number(qi.totalPrice) : null,
+              quantity: qi.quantity ? Number(qi.quantity) : null,
+            };
+          }
+        }
+      }
+
       return {
         id: inq.id,
         purchaseRequestId: inq.purchaseRequestId,
@@ -79,12 +102,23 @@ export async function GET(request: NextRequest) {
         singleSourceReason: inq.singleSourceReason,
         createdAt: inq.createdAt,
         updatedAt: inq.updatedAt,
-        hasContract: !!inq.purchaseContract,
+        hasContract: !!inq.expenseContract,
+        currentRound: inq.currentRound,
+        confirmedSupplierId: inq.confirmedSupplierId,
+        confirmedRound: inq.confirmedRound,
+        inquiryStatus: inq.status,
+        approvalInstanceId: inq.approvalInstanceId,
+        inquiryMode: inq.inquiryMode,
+        onlineToken: inq.onlineToken,
+        onlineDeadline: inq.onlineDeadline,
+        onlineStatus: inq.onlineStatus,
         purchaseRequest: {
           id: inq.purchaseRequest.id,
           requestNo: inq.purchaseRequest.requestNo,
           status: inq.purchaseRequest.status,
           projectSourceId: inq.purchaseRequest.projectSourceId,
+          projectName: inq.purchaseRequest.project?.name || inq.purchaseRequest.projectSourceId,
+          projectCode: inq.purchaseRequest.project?.projectCode || inq.purchaseRequest.projectSourceId,
           items: inq.purchaseRequest.items.map((item) => ({
             id: item.id,
             materialName: item.materialName,
@@ -96,6 +130,8 @@ export async function GET(request: NextRequest) {
             quantity: item.quantity,
             remark: item.remark,
             sortOrder: item.sortOrder,
+            unitPrice: confirmedQuoteItems[item.id]?.unitPrice ?? null,
+            totalPrice: confirmedQuoteItems[item.id]?.totalPrice ?? null,
           })),
         },
         supplierNames: ids.map((sid: string) => ({ id: sid, name: supplierMap.get(sid) || "未知供应商" })),
@@ -129,6 +165,9 @@ export async function POST(request: NextRequest) {
       recommendedSupplierId,
       isSingleSource,
       singleSourceReason,
+      inquiryMode,
+      onlineDeadline,
+      attachments,
     } = body;
 
     if (!purchaseRequestId) {
@@ -168,27 +207,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "单一来源采购需填写原因" }, { status: 400 });
     }
 
-    const inquiry = await prisma.inquiry.create({
-      data: {
-        purchaseRequestId,
-        projectSourceId: purchaseRequest.projectSourceId,
-        supplierIds: parsedSupplierIds,
-        closingDate: closingDate || null,
-        quoteSummary: quoteSummary || {},
-        recommendedSupplierId: recommendedSupplierId || null,
-        isSingleSource: !!isSingleSource,
-        singleSourceReason: isSingleSource ? singleSourceReason?.trim() || null : null,
-      },
-    });
-
-    await prisma.purchaseRequest.update({
-      where: { id: purchaseRequestId },
-      data: { status: "已批准" },
-    });
+    const [inquiry] = await prisma.$transaction([
+      prisma.inquiry.create({
+        data: {
+          purchaseRequestId,
+          projectSourceId: purchaseRequest.projectSourceId,
+          supplierIds: parsedSupplierIds,
+          closingDate: closingDate ? new Date(closingDate) : null,
+          quoteSummary: quoteSummary || {},
+          recommendedSupplierId: recommendedSupplierId || null,
+          isSingleSource: !!isSingleSource,
+          singleSourceReason: isSingleSource ? singleSourceReason?.trim() || null : null,
+          attachments: attachments || [],
+          currentRound: 1,
+          status: "草稿",
+          inquiryMode: inquiryMode === "online" ? "online" : "offline",
+          onlineToken: inquiryMode === "online" ? crypto.randomUUID() : null,
+          onlineDeadline: inquiryMode === "online" && onlineDeadline ? new Date(onlineDeadline) : null,
+          onlineStatus: inquiryMode === "online" ? "pending" : "pending",
+        },
+      }),
+      prisma.purchaseRequest.update({
+        where: { id: purchaseRequestId },
+        data: { status: "已转询价" },
+      }),
+    ]);
 
     return NextResponse.json({ data: inquiry }, { status: 201 });
   } catch (error) {
     console.error("创建询价失败:", error);
-    return NextResponse.json({ error: "创建询价失败" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "创建询价失败";
+    return NextResponse.json({ error: "创建询价失败: " + message }, { status: 500 });
   }
 }

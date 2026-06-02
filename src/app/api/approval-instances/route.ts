@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import {
   startApprovalFlow,
   getPendingApprovals,
+  canInitiateFlow,
 } from "@/lib/approval-engine";
 
 export async function POST(request: NextRequest) {
@@ -17,6 +18,11 @@ export async function POST(request: NextRequest) {
 
     if (!businessType || !businessId || !flowLevel) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
+    }
+
+    const canInitiate = await canInitiateFlow({ businessType, flowLevel, userId: user.id });
+    if (!canInitiate) {
+      return NextResponse.json({ error: "您没有权限发起此类型的审批流程" }, { status: 403 });
     }
 
     const result = await startApprovalFlow({
@@ -65,6 +71,39 @@ export async function GET(request: NextRequest) {
         take: 50,
       });
       return NextResponse.json({ data: instances });
+    }
+
+    const businessType = searchParams.get("businessType");
+    const businessId = searchParams.get("businessId");
+    if (businessType && businessId) {
+      const { prisma } = await import("@/lib/prisma");
+      const instances = await prisma.approvalInstance.findMany({
+        where: { businessType, businessId },
+        orderBy: { createdAt: "desc" },
+        include: {
+          actions: {
+            include: {
+              approver: {
+                select: { id: true, realName: true, username: true },
+              },
+            },
+            orderBy: { actedAt: "asc" },
+          },
+        },
+      });
+
+      const enriched = await Promise.all(
+        instances.map(async (inst) => {
+          const flowNodes = await prisma.approvalFlowDefinition.findMany({
+            where: { businessType: inst.businessType, flowLevel: inst.flowLevel, isActive: true },
+            orderBy: { nodeOrder: "asc" },
+            select: { nodeOrder: true, nodeName: true, approverRole: true, nodeType: true },
+          });
+          return { ...inst, flowNodes };
+        })
+      );
+
+      return NextResponse.json({ data: enriched });
     }
 
     return NextResponse.json(

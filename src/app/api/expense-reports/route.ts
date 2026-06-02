@@ -45,7 +45,11 @@ export async function GET(request: NextRequest) {
           applicant: {
             select: { id: true, realName: true, username: true },
           },
-          items: true,
+          items: {
+            include: {
+              project: { select: { name: true } },
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
@@ -149,19 +153,24 @@ export async function POST(request: NextRequest) {
           applicant: {
             select: { id: true, realName: true, username: true },
           },
-          items: true,
+          items: {
+            include: {
+              project: { select: { name: true } },
+            },
+          },
         },
       });
 
       if (items && Array.isArray(items) && items.length > 0) {
         await tx.expenseReportItem.createMany({
           data: items.map(
-            (item: { expenseType: string; amount: number; description?: string; projectSourceId?: string }, index: number) => ({
+            (item: { expenseType: string; amount: number; description?: string; projectSourceId?: string; invoiceAttachments?: string[] }, index: number) => ({
               reportId: report.id,
               expenseType: item.expenseType,
               amount: parseFloat(String(item.amount)),
               description: item.description?.trim() || null,
               projectSourceId: item.projectSourceId || null,
+              invoiceAttachments: item.invoiceAttachments || [],
               sortOrder: index,
             })
           ),
@@ -174,7 +183,11 @@ export async function POST(request: NextRequest) {
             applicant: {
               select: { id: true, realName: true, username: true },
             },
-            items: true,
+            items: {
+              include: {
+                project: { select: { name: true } },
+              },
+            },
           },
         });
 

@@ -252,6 +252,17 @@
     color: white;
   }
 
+  .ios-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .ios-btn-primary:disabled:hover {
+    background: #007AFF;
+    transform: none;
+  }
+
   .ios-btn-primary:hover {
     background: #0066D6;
     transform: scale(1.02);

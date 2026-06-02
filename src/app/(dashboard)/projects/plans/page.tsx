@@ -14,6 +14,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useAuth } from "@/contexts/AuthContext";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import ProjectPicker, { ProjectLeadItem } from "@/components/ProjectPicker";
 
 interface Project {
   id: string;
@@ -88,6 +92,8 @@ const progressColor = (value: number) => {
 };
 
 export default function ProjectPlansPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
   const [plans, setPlans] = useState<ProjectPlan[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1, pageSize: 20, total: 0, totalPages: 0,
@@ -106,17 +112,31 @@ export default function ProjectPlansPage() {
   const [formError, setFormError] = useState("");
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
   const [users, setUsers] = useState<{id: string; username: string; realName: string}[]>([]);
 
   const [detailPlan, setDetailPlan] = useState<ProjectPlan | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<ProjectPlan | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const {
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isAllSelected,
+    isSelected,
+  } = useBatchSelection(plans.map((d) => d.id));
+
   const fetchProjects = useCallback(async () => {
     try {
       const res = await fetch("/api/projects?pageSize=200");
       const json = await res.json();
       if (res.ok) setProjects(json.data);
+      const leadsRes = await fetch("/api/project-leads?pageSize=200");
+      if (leadsRes.ok) {
+        const lj = await leadsRes.json();
+        setProjectLeads((lj.data || []).filter((l: { currentStatus: string }) => l.currentStatus !== "放弃"));
+      }
     } catch (err) {
       console.error("获取项目列表失败:", err);
     }
@@ -413,6 +433,16 @@ export default function ProjectPlansPage() {
             <table className="ios-table">
               <thead>
                 <tr>
+                  {isAdminUser && (
+                    <th className="w-10">
+                      <input
+                        type="checkbox"
+                        className="ios-checkbox"
+                        checked={isAllSelected}
+                        onChange={() => isAllSelected ? clearSelection() : selectAll()}
+                      />
+                    </th>
+                  )}
                   <th>项目源ID</th>
                   <th>项目名称</th>
                   <th>计划类型</th>
@@ -430,7 +460,17 @@ export default function ProjectPlansPage() {
                   const sc = statusConfig[plan.status] || statusConfig["未开始"];
                   const tc = planTypeConfig[plan.planType] || "ios-badge-gray";
                   return (
-                    <tr key={plan.id}>
+                    <tr key={plan.id} className={isSelected(plan.id) ? "bg-[#007AFF]/5" : ""}>
+                      {isAdminUser && (
+                        <td className="w-10">
+                          <input
+                            type="checkbox"
+                            className="ios-checkbox"
+                            checked={isSelected(plan.id)}
+                            onChange={() => toggleSelect(plan.id)}
+                          />
+                        </td>
+                      )}
                       <td>
                         <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
                           {plan.projectSourceId}
@@ -515,6 +555,15 @@ export default function ProjectPlansPage() {
         )}
       </div>
 
+      {isAdminUser && (
+        <BatchDeleteBar
+          businessType="project_plan"
+          selectedIds={plans.filter((d) => isSelected(d.id)).map((d) => d.id)}
+          onDeleteSuccess={fetchPlans}
+          onClear={clearSelection}
+        />
+      )}
+
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -530,21 +579,15 @@ export default function ProjectPlansPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                项目 <span className="text-[#FF3B30]">*</span>
-              </label>
-              <select
-                className="ios-select"
+              <ProjectPicker
+                projectLeads={projectLeads}
                 value={form.projectSourceId}
-                onChange={(e) => updateForm("projectSourceId", e.target.value)}
-              >
-                <option value="">请选择项目</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.projectSourceId}>
-                    {p.projectSourceId} - {p.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(id) => updateForm("projectSourceId", id)}
+                label="项目"
+                placeholder="请选择项目"
+                required
+                showCustomer={false}
+              />
             </div>
 
             <div>

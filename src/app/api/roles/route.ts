@@ -34,6 +34,8 @@ export async function GET() {
       departmentId: r.departmentId,
       departmentName: r.department?.name || null,
       isProjectRole: r.isProjectRole,
+      accessibleModules: r.accessibleModules,
+      isGlobalVisible: r.isGlobalVisible,
       sort: r.sort,
       isActive: r.isActive,
       createdAt: r.createdAt,
@@ -50,7 +52,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, departmentId, isProjectRole, sort } = body;
+    const { name, description, departmentId, isProjectRole, sort, accessibleModules, isGlobalVisible } = body;
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "角色名称不能为空" }, { status: 400 });
     }
@@ -79,6 +81,8 @@ export async function POST(request: NextRequest) {
         departmentId: departmentId || null,
         isProjectRole: isProjectRole || false,
         sort: sort || 0,
+        accessibleModules: typeof accessibleModules === "string" ? accessibleModules : JSON.stringify(accessibleModules || []),
+        isGlobalVisible: isGlobalVisible || false,
       },
     });
     return NextResponse.json({ data: role }, { status: 201 });

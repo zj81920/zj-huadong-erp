@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const {
       projectSourceId,
       taskNode,
@@ -82,6 +84,7 @@ export async function POST(request: NextRequest) {
         actualPercentage: actual,
         delayDays: delayDays ?? 0,
         alertStatus: calculatedAlertStatus,
+        lastModifiedBy: currentUser?.realName || null,
       },
       include: {
         project: { select: { name: true, projectSourceId: true } },

@@ -14,11 +14,11 @@ export async function POST(
 
     const { id } = await params;
     const body = await request.json();
-    const { action, comment, projectSourceId } = body;
+    const { action, comment, projectSourceId, archivedUrl, bankAccountId, paymentMethod } = body;
 
-    if (!action || !["approve", "reject"].includes(action)) {
+    if (!action || !["approve", "reject", "archive", "payment"].includes(action)) {
       return NextResponse.json(
-        { error: "无效的审批动作，需要 approve 或 reject" },
+        { error: "无效的审批动作" },
         { status: 400 }
       );
     }
@@ -29,6 +29,9 @@ export async function POST(
       action,
       comment,
       projectSourceId,
+      archivedUrl,
+      bankAccountId,
+      paymentMethod,
     });
 
     return NextResponse.json({ data: result });

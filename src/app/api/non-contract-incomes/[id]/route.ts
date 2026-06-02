@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isAdmin, getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
@@ -101,6 +102,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const adminUser = await getCurrentUser();
 
     const existing = await prisma.nonContractIncome.findUnique({
       where: { id },
@@ -113,7 +115,7 @@ export async function DELETE(
       );
     }
 
-    if (existing.status !== "草稿") {
+    if (existing.status !== "草稿" && !isAdmin(adminUser)) {
       return NextResponse.json(
         { error: "只有草稿状态的记录可以删除" },
         { status: 400 }

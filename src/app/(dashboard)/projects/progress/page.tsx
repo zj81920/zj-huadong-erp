@@ -12,6 +12,9 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useAuth } from "@/contexts/AuthContext";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 
 interface Project {
   id: string;
@@ -29,6 +32,7 @@ interface ProjectProgress {
   alertStatus: string;
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
   project: Project;
 }
 
@@ -61,6 +65,8 @@ const alertStatusConfig: Record<string, { color: string; label: string }> = {
 };
 
 export default function ProjectProgressPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
   const [records, setRecords] = useState<ProjectProgress[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1, pageSize: 20, total: 0, totalPages: 0,
@@ -82,6 +88,14 @@ export default function ProjectProgressPage() {
   const [detailRecord, setDetailRecord] = useState<ProjectProgress | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<ProjectProgress | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const {
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isAllSelected,
+    isSelected,
+  } = useBatchSelection(records.map((d) => d.id));
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -364,6 +378,16 @@ export default function ProjectProgressPage() {
             <table className="ios-table">
               <thead>
                 <tr>
+                  {isAdminUser && (
+                    <th className="w-10">
+                      <input
+                        type="checkbox"
+                        className="ios-checkbox"
+                        checked={isAllSelected}
+                        onChange={() => isAllSelected ? clearSelection() : selectAll()}
+                      />
+                    </th>
+                  )}
                   <th>项目源ID</th>
                   <th>项目名称</th>
                   <th>任务节点</th>
@@ -372,15 +396,25 @@ export default function ProjectProgressPage() {
                   <th>进度条</th>
                   <th>滞后天数</th>
                   <th>预警状态</th>
-                  <th>创建时间</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
                 {records.map((record) => {
                   const progressColor = getProgressColor(record.actualPercentage, record.plannedPercentage);
                   return (
-                    <tr key={record.id}>
+                    <tr key={record.id} className={isSelected(record.id) ? "bg-[#007AFF]/5" : ""}>
+                      {isAdminUser && (
+                        <td className="w-10">
+                          <input
+                            type="checkbox"
+                            className="ios-checkbox"
+                            checked={isSelected(record.id)}
+                            onChange={() => toggleSelect(record.id)}
+                          />
+                        </td>
+                      )}
                       <td>
                         <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
                           {record.projectSourceId}
@@ -415,7 +449,6 @@ export default function ProjectProgressPage() {
                           {alertStatusConfig[record.alertStatus]?.label || record.alertStatus}
                         </span>
                       </td>
-                      <td className="text-[#86868B]">{formatDate(record.createdAt)}</td>
                       <td>
                         <div className="flex items-center gap-1">
                           <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(record)}>
@@ -433,6 +466,12 @@ export default function ProjectProgressPage() {
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                      </td>
+                      <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                        {record.lastModifiedBy && (
+                          <span>{record.lastModifiedBy}</span>
+                        )}
+                        <span className="block text-[11px]">{formatDate(record.updatedAt)}</span>
                       </td>
                     </tr>
                   );
@@ -464,6 +503,15 @@ export default function ProjectProgressPage() {
           </div>
         )}
       </div>
+
+      {isAdminUser && (
+        <BatchDeleteBar
+          businessType="project_progress"
+          selectedIds={records.filter((d) => isSelected(d.id)).map((d) => d.id)}
+          onDeleteSuccess={fetchRecords}
+          onClear={clearSelection}
+        />
+      )}
 
       <Modal
         isOpen={showModal}

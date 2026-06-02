@@ -29,6 +29,18 @@ export async function GET(request: NextRequest) {
             },
           },
           applicant: { select: { id: true, realName: true, username: true } },
+          paymentVouchers: {
+            select: {
+              id: true,
+              amount: true,
+              paymentDate: true,
+              bankAccount: true,
+              paymentMethod: true,
+              paymentReason: true,
+              remark: true,
+            },
+            orderBy: { createdAt: "desc" },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
@@ -87,6 +99,18 @@ export async function POST(request: NextRequest) {
           },
         },
         applicant: { select: { id: true, realName: true, username: true } },
+        paymentVouchers: {
+          select: {
+            id: true,
+            amount: true,
+            paymentDate: true,
+            bankAccount: true,
+            paymentMethod: true,
+            paymentReason: true,
+            remark: true,
+          },
+          orderBy: { createdAt: "desc" },
+        },
       },
     });
 

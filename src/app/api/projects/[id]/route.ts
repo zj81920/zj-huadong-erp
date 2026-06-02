@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isAdmin, getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   _request: NextRequest,
@@ -118,6 +119,9 @@ export async function PUT(
     if (plannedEndDate !== undefined) updateData.plannedEndDate = plannedEndDate ? new Date(plannedEndDate) : null;
     if (actualCloseDate !== undefined) updateData.actualCloseDate = actualCloseDate ? new Date(actualCloseDate) : null;
 
+    const currentUser = await getCurrentUser();
+    updateData.lastModifiedBy = currentUser?.realName || null;
+
     const project = await prisma.project.update({
       where: { id },
       data: updateData,
@@ -142,16 +146,28 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const adminUser = await getCurrentUser();
+    console.log("[DELETE PROJECT] adminUser:", adminUser?.username, "isAdmin:", isAdmin(adminUser));
 
     const existing = await prisma.project.findUnique({
       where: { id },
       include: {
         _count: {
           select: {
+            plans: true,
+            progressRecords: true,
+            designTasks: true,
+            outsourcingTasks: true,
             purchaseRequests: true,
             budgets: true,
             incomeContracts: true,
             expenseContracts: true,
+            expenseReports: true,
+            receivables: true,
+            payables: true,
+            nonContractIncomes: true,
+            nonContractExpenses: true,
+            invoices: true,
           },
         },
       },
@@ -161,32 +177,65 @@ export async function DELETE(
       return NextResponse.json({ error: "项目不存在" }, { status: 404 });
     }
 
-    if (existing.status === "执行" || existing.status === "关闭") {
+    if ((existing.status === "执行" || existing.status === "关闭") && !isAdmin(adminUser)) {
       return NextResponse.json({ error: "执行中或已关闭的项目不能删除" }, { status: 400 });
     }
 
-    if (existing._count.purchaseRequests > 0) {
+    if (existing._count.purchaseRequests > 0 && !isAdmin(adminUser)) {
       return NextResponse.json(
         { error: `该项目下有 ${existing._count.purchaseRequests} 条采购申请，无法删除` },
         { status: 400 }
       );
     }
 
-    if (existing._count.budgets > 0) {
+    if (existing._count.budgets > 0 && !isAdmin(adminUser)) {
       return NextResponse.json(
         { error: `该项目下有 ${existing._count.budgets} 条预算记录，无法删除` },
         { status: 400 }
       );
     }
 
-    if (existing._count.incomeContracts > 0 || existing._count.expenseContracts > 0) {
+    if ((existing._count.incomeContracts > 0 || existing._count.expenseContracts > 0) && !isAdmin(adminUser)) {
       return NextResponse.json(
         { error: "该项目下存在关联合同，无法删除" },
         { status: 400 }
       );
     }
 
-    await prisma.project.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      const psid = existing.projectSourceId;
+
+      if (existing._count.plans > 0) await tx.projectPlan.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.progressRecords > 0) await tx.projectProgress.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.designTasks > 0) await tx.designTask.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.outsourcingTasks > 0) await tx.outsourcingTask.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.purchaseRequests > 0) await tx.purchaseRequest.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.budgets > 0) await tx.projectBudget.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.expenseReports > 0) await tx.expenseReport.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.receivables > 0) await tx.receivable.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.payables > 0) await tx.payable.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.nonContractIncomes > 0) await tx.nonContractIncome.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.nonContractExpenses > 0) await tx.nonContractExpense.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.invoices > 0) await tx.invoice.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.incomeContracts > 0) await tx.incomeContract.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.expenseContracts > 0) await tx.expenseContract.deleteMany({ where: { projectSourceId: psid } });
+
+      if (psid) {
+        const linkedLead = await tx.projectLead.findUnique({
+          where: { projectSourceId: psid },
+          select: { leadMode: true },
+        });
+        if (linkedLead) {
+          const revertStatus = linkedLead.leadMode === "商务报价" ? "落地" : "已中标";
+          await tx.projectLead.update({
+            where: { projectSourceId: psid },
+            data: { currentStatus: revertStatus },
+          });
+        }
+      }
+
+      await tx.project.delete({ where: { id } });
+    });
 
     return NextResponse.json({ message: "删除成功" });
   } catch (error) {

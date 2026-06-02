@@ -18,6 +18,10 @@ import {
   Receipt,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import AdminStatusOverride from "@/components/AdminStatusOverride";
+import ProjectPicker from "@/components/ProjectPicker";
 
 interface IncomeContract {
   id: string;
@@ -122,11 +126,13 @@ interface BorrowingReturn {
   remark: string | null;
 }
 
-interface Project {
-  id: string;
+interface ProjectLeadItem {
   projectSourceId: string;
-  name: string;
-  projectCode: string;
+  projectName: string;
+  customerId: string;
+  customer: { id: string; name: string };
+  currentStatus: string;
+  project: { id: string; projectCode: string; name: string; status: string } | null;
 }
 
 interface BankAccount {
@@ -196,13 +202,6 @@ const emptyContributionForm = {
   remark: "",
 };
 
-const emptyCapitalReturnForm = {
-  contributionId: "",
-  amount: "",
-  returnDate: "",
-  remark: "",
-};
-
 const emptyBorrowingForm = {
   lenderName: "",
   amount: "",
@@ -211,15 +210,14 @@ const emptyBorrowingForm = {
   description: "",
 };
 
-const emptyBorrowingReturnForm = {
-  borrowingId: "",
-  amount: "",
+const emptyReturnAppForm = {
+  returnAmount: "",
   returnDate: "",
   remark: "",
 };
 
 export default function FinanceIncomePage() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, modulePermissions } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("contractIncome");
 
   const [receivables, setReceivables] = useState<Receivable[]>([]);
@@ -228,7 +226,7 @@ export default function FinanceIncomePage() {
   const [borrowings, setBorrowings] = useState<OtherBorrowing[]>([]);
 
   const [shareholders, setShareholders] = useState<Shareholder[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [users, setUsers] = useState<{id: string; username: string; realName: string}[]>([]);
 
@@ -247,15 +245,22 @@ export default function FinanceIncomePage() {
   const [receiptForm, setReceiptForm] = useState(emptyReceiptForm);
   const [otherIncomeForm, setOtherIncomeForm] = useState(emptyOtherIncomeForm);
   const [contributionForm, setContributionForm] = useState(emptyContributionForm);
-  const [capitalReturnForm, setCapitalReturnForm] = useState(emptyCapitalReturnForm);
   const [borrowingForm, setBorrowingForm] = useState(emptyBorrowingForm);
-  const [borrowingReturnForm, setBorrowingReturnForm] = useState(emptyBorrowingReturnForm);
+  const [returnAppForm, setReturnAppForm] = useState(emptyReturnAppForm);
 
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
   const [deleteConfirm, setDeleteConfirm] = useState<NonContractIncome | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const {
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isAllSelected,
+    isSelected,
+  } = useBatchSelection(otherIncomes.map((d) => d.id));
 
   const [returnTargetContribution, setReturnTargetContribution] = useState<CapitalContribution | null>(null);
   const [returnTargetBorrowing, setReturnTargetBorrowing] = useState<OtherBorrowing | null>(null);
@@ -347,18 +352,18 @@ export default function FinanceIncomePage() {
 
   const fetchReferenceData = useCallback(async () => {
     try {
-      const [shareholdersRes, projectsRes, bankAccountsRes] = await Promise.all([
+      const [shareholdersRes, leadsRes, bankAccountsRes] = await Promise.all([
         fetch("/api/shareholders?pageSize=200"),
-        fetch("/api/projects?pageSize=200"),
+        fetch("/api/project-leads?pageSize=200"),
         fetch("/api/bank-accounts?isActive=true&pageSize=200"),
       ]);
       if (shareholdersRes.ok) {
         const j = await shareholdersRes.json();
         setShareholders(j.data || []);
       }
-      if (projectsRes.ok) {
-        const j = await projectsRes.json();
-        setProjects(j.data || []);
+      if (leadsRes.ok) {
+        const j = await leadsRes.json();
+        setProjectLeads((j.data || []).filter((l: { currentStatus: string }) => l.currentStatus !== "放弃"));
       }
       if (bankAccountsRes.ok) {
         const j = await bankAccountsRes.json();
@@ -549,6 +554,11 @@ export default function FinanceIncomePage() {
 
   const handleDeleteOtherIncome = async () => {
     if (!deleteConfirm) return;
+    if (deleteConfirm.status !== "草稿" && deleteConfirm.status !== "已驳回" && !isAdmin) {
+      alert("该记录已进入审批流程，仅管理员可删除");
+      setDeleteConfirm(null);
+      return;
+    }
     setDeleting(true);
     try {
       const res = await fetch(`/api/non-contract-incomes/${deleteConfirm.id}`, { method: "DELETE" });
@@ -565,6 +575,21 @@ export default function FinanceIncomePage() {
       setDeleteConfirm(null);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleDeleteReceivable = async (id: string) => {
+    if (!confirm("确定要删除该应收记录吗？此操作不可撤销。")) return;
+    try {
+      const res = await fetch(`/api/receivables/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchReceivables();
+      } else {
+        const json = await res.json();
+        alert(json.error || "删除失败");
+      }
+    } catch {
+      alert("删除失败");
     }
   };
 
@@ -608,44 +633,53 @@ export default function FinanceIncomePage() {
 
   const handleOpenCapitalReturnModal = (contribution: CapitalContribution) => {
     setReturnTargetContribution(contribution);
-    setCapitalReturnForm({
-      contributionId: contribution.id,
-      amount: "",
-      returnDate: "",
-      remark: "",
-    });
+    setReturnAppForm(emptyReturnAppForm);
     setFormError("");
     setShowModal(true);
   };
 
-  const handleSubmitCapitalReturn = async () => {
-    if (!capitalReturnForm.amount || Number(capitalReturnForm.amount) <= 0) {
+  const handleSubmitReturnApplication = async () => {
+    if (!returnAppForm.returnAmount || Number(returnAppForm.returnAmount) <= 0) {
       setFormError("请输入有效金额");
       return;
     }
-    if (returnTargetContribution && Number(capitalReturnForm.amount) > returnTargetContribution.remainingAmount) {
+    const target = returnTargetContribution || returnTargetBorrowing;
+    const remainingAmount = target ? ("remainingAmount" in target ? target.remainingAmount : 0) : 0;
+    if (Number(returnAppForm.returnAmount) > remainingAmount) {
       setFormError("归还金额不能超过剩余金额");
       return;
     }
     setSaving(true);
     setFormError("");
     try {
-      const res = await fetch("/api/capital-returns", {
+      const body: Record<string, unknown> = {
+        returnAmount: Number(returnAppForm.returnAmount),
+        returnDate: returnAppForm.returnDate || new Date().toISOString(),
+        remark: returnAppForm.remark || null,
+      };
+      if (returnTargetContribution) {
+        body.sourceType = "shareholder_capital";
+        body.sourceId = returnTargetContribution.id;
+        body.sourceName = returnTargetContribution.shareholder?.name || "";
+        body.sourceAmount = returnTargetContribution.amount;
+      } else if (returnTargetBorrowing) {
+        body.sourceType = "other_borrowing";
+        body.sourceId = returnTargetBorrowing.id;
+        body.sourceName = returnTargetBorrowing.lenderName;
+        body.sourceAmount = returnTargetBorrowing.amount;
+      }
+      const res = await fetch("/api/borrowing-return-applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contributionId: capitalReturnForm.contributionId,
-          amount: Number(capitalReturnForm.amount),
-          returnDate: capitalReturnForm.returnDate || new Date().toISOString(),
-          remark: capitalReturnForm.remark || null,
-        }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       if (res.ok) {
         setShowModal(false);
-        setCapitalReturnForm(emptyCapitalReturnForm);
+        setReturnAppForm(emptyReturnAppForm);
         setReturnTargetContribution(null);
-        fetchContributions();
+        setReturnTargetBorrowing(null);
+        alert("归还申请已提交，请在财务支出-借入资金归还中查看");
       } else {
         setFormError(json.error || "操作失败");
       }
@@ -696,60 +730,31 @@ export default function FinanceIncomePage() {
 
   const handleOpenBorrowingReturnModal = (borrowing: OtherBorrowing) => {
     setReturnTargetBorrowing(borrowing);
-    setBorrowingReturnForm({
-      borrowingId: borrowing.id,
-      amount: "",
-      returnDate: "",
-      remark: "",
-    });
+    setReturnAppForm(emptyReturnAppForm);
     setFormError("");
     setShowModal(true);
   };
 
-  const handleSubmitBorrowingReturn = async () => {
-    if (!borrowingReturnForm.amount || Number(borrowingReturnForm.amount) <= 0) {
-      setFormError("请输入有效金额");
-      return;
-    }
-    if (returnTargetBorrowing && Number(borrowingReturnForm.amount) > returnTargetBorrowing.remainingAmount) {
-      setFormError("归还金额不能超过剩余金额");
-      return;
-    }
-    setSaving(true);
-    setFormError("");
-    try {
-      const res = await fetch("/api/borrowing-returns", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          borrowingId: borrowingReturnForm.borrowingId,
-          amount: Number(borrowingReturnForm.amount),
-          returnDate: borrowingReturnForm.returnDate || new Date().toISOString(),
-          remark: borrowingReturnForm.remark || null,
-        }),
-      });
-      const json = await res.json();
-      if (res.ok) {
-        setShowModal(false);
-        setBorrowingReturnForm(emptyBorrowingReturnForm);
-        setReturnTargetBorrowing(null);
-        fetchBorrowings();
-      } else {
-        setFormError(json.error || "操作失败");
-      }
-    } catch {
-      setFormError("网络错误");
-    } finally {
-      setSaving(false);
-    }
+
+  const TAB_PERMISSION_MAP: Record<string, string> = {
+    contractIncome: "finance.income.contract",
+    otherIncome: "finance.income.other",
+    shareholderCapital: "finance.income.shareholder",
+    otherBorrowing: "finance.income.borrowing",
   };
 
-  const tabs = [
+  const allTabs = [
     { key: "contractIncome" as TabType, label: "合同收入", icon: <ArrowUpCircle className="w-4 h-4" /> },
     { key: "otherIncome" as TabType, label: "其他收入", icon: <DollarSign className="w-4 h-4" /> },
     { key: "shareholderCapital" as TabType, label: "股东出资", icon: <TrendingUp className="w-4 h-4" /> },
     { key: "otherBorrowing" as TabType, label: "其他借入款", icon: <Landmark className="w-4 h-4" /> },
   ];
+
+  const userModules: string[] = [...modulePermissions.accessibleSubModules];
+  const tabPermValues = Object.values(TAB_PERMISSION_MAP);
+  const hasTabPermissions = userModules.some((m) => tabPermValues.includes(m));
+  const isAdmin = currentUser?.roles?.some((r: any) => r.code === "admin");
+  const tabs = (!hasTabPermissions || isAdmin) ? allTabs : allTabs.filter((tab) => userModules.includes(TAB_PERMISSION_MAP[tab.key]));
 
   const getPrimaryBtnLabel = () => {
     if (activeTab === "contractIncome") return "收款登记";
@@ -880,6 +885,14 @@ export default function FinanceIncomePage() {
                               收款
                             </button>
                           )}
+                          {isAdmin && (
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              onClick={() => handleDeleteReceivable(r.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -892,6 +905,7 @@ export default function FinanceIncomePage() {
       )}
 
       {activeTab === "otherIncome" && (
+        <>
         <div className="bento-card-static">
           <div className="filter-bar">
             <div className="relative flex-1 min-w-[200px] max-w-[360px]">
@@ -929,6 +943,16 @@ export default function FinanceIncomePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
+                    {isAdmin && (
+                      <th className="w-10">
+                        <input
+                          type="checkbox"
+                          className="ios-checkbox"
+                          checked={isAllSelected}
+                          onChange={() => isAllSelected ? clearSelection() : selectAll()}
+                        />
+                      </th>
+                    )}
                     <th>交易对方</th>
                     <th>金额</th>
                     <th>交易日期</th>
@@ -940,13 +964,36 @@ export default function FinanceIncomePage() {
                 </thead>
                 <tbody>
                   {otherIncomes.map((item) => (
-                    <tr key={item.id}>
+                    <tr key={item.id} className={isSelected(item.id) ? "bg-[#007AFF]/5" : ""}>
+                      {isAdmin && (
+                        <td className="w-10">
+                          <input
+                            type="checkbox"
+                            className="ios-checkbox"
+                            checked={isSelected(item.id)}
+                            onChange={() => toggleSelect(item.id)}
+                          />
+                        </td>
+                      )}
                       <td className="font-semibold">{item.counterparty || "-"}</td>
                       <td className="text-[#34C759] font-semibold">{formatAmount(item.amount)}</td>
                       <td className="text-[#86868B]">{formatDate(item.transactionDate)}</td>
                       <td className="text-[#86868B] max-w-[200px] truncate">{item.description || "-"}</td>
                       <td className="text-[#86868B]">{item.project?.name || item.projectSourceId || "-"}</td>
-                      <td>{getStatusBadge(item.status)}</td>
+                      <td>
+                        <AdminStatusOverride
+                          businessType="non_contract_income"
+                          businessId={item.id}
+                          currentStatus={item.status}
+                          onStatusChanged={(newStatus) => {
+                            setOtherIncomes((prev) =>
+                              prev.map((i) =>
+                                i.id === item.id ? { ...i, status: newStatus } : i
+                              )
+                            );
+                          }}
+                        />
+                      </td>
                       <td>
                         <div className="flex items-center gap-1">
                           <button
@@ -955,12 +1002,14 @@ export default function FinanceIncomePage() {
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                            onClick={() => setDeleteConfirm(item)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {(item.status === "草稿" || item.status === "已驳回" || isAdmin) && (
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              onClick={() => setDeleteConfirm(item)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -989,6 +1038,16 @@ export default function FinanceIncomePage() {
             </div>
           )}
         </div>
+
+        {isAdmin && (
+          <BatchDeleteBar
+            businessType="non_contract_income"
+            selectedIds={otherIncomes.filter((d) => isSelected(d.id)).map((d) => d.id)}
+            onDeleteSuccess={fetchOtherIncomes}
+            onClear={clearSelection}
+          />
+        )}
+        </>
       )}
 
       {activeTab === "shareholderCapital" && (
@@ -1088,7 +1147,20 @@ export default function FinanceIncomePage() {
                       <td className="font-semibold text-[#FF9500]">{formatAmount(b.remainingAmount)}</td>
                       <td className="text-[#86868B]">{formatDate(b.borrowingDate)}</td>
                       <td className="text-[#86868B]">{formatDate(b.expectedReturnDate)}</td>
-                      <td>{getStatusBadge(b.status, true)}</td>
+                      <td>
+                        <AdminStatusOverride
+                          businessType="other_borrowing"
+                          businessId={b.id}
+                          currentStatus={b.status}
+                          onStatusChanged={(newStatus) => {
+                            setBorrowings((prev) =>
+                              prev.map((br) =>
+                                br.id === b.id ? { ...br, status: newStatus } : br
+                              )
+                            );
+                          }}
+                        />
+                      </td>
                       <td>
                         {b.remainingAmount > 0 && (
                           <button
@@ -1385,17 +1457,12 @@ export default function FinanceIncomePage() {
             />
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">关联项目</label>
-            <select
-              className="ios-select"
+            <ProjectPicker
+              projectLeads={projectLeads}
               value={otherIncomeForm.projectSourceId}
-              onChange={(e) => setOtherIncomeForm((p) => ({ ...p, projectSourceId: e.target.value }))}
-            >
-              <option value="">不关联项目</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.projectSourceId}>{p.projectSourceId} - {p.name}</option>
-              ))}
-            </select>
+              onChange={(id) => setOtherIncomeForm((p) => ({ ...p, projectSourceId: id }))}
+              label="关联项目"
+            />
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
@@ -1484,21 +1551,36 @@ export default function FinanceIncomePage() {
       </Modal>
 
       <Modal
-        isOpen={showModal && activeTab === "shareholderCapital" && !!returnTargetContribution}
-        onClose={() => { setShowModal(false); setReturnTargetContribution(null); }}
-        title={`出资归还 - ${returnTargetContribution?.shareholder?.name || ""}`}
+        isOpen={showModal && (!!returnTargetContribution || !!returnTargetBorrowing)}
+        onClose={() => { setShowModal(false); setReturnTargetContribution(null); setReturnTargetBorrowing(null); }}
+        title={`归还申请 - ${returnTargetContribution ? "股东出资" : returnTargetBorrowing ? "借入款" : ""}`}
         maxWidth="520px"
       >
         <div className="space-y-4">
           {formError && (
             <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{formError}</div>
           )}
-          {returnTargetContribution && (
-            <div className="p-3 rounded-xl bg-[#F5F5F7] text-[13px]">
-              <span className="text-[#86868B]">可归还余额: </span>
-              <span className="font-semibold text-[#FF9500]">{formatAmount(returnTargetContribution.remainingAmount)}</span>
-            </div>
-          )}
+          {(returnTargetContribution || returnTargetBorrowing) && (() => {
+            const source = returnTargetContribution || returnTargetBorrowing!;
+            const sourceName = returnTargetContribution ? returnTargetContribution.shareholder?.name : returnTargetBorrowing!.lenderName;
+            const sourceType = returnTargetContribution ? "股东出资" : "其他借入款";
+            return (
+              <div className="p-3.5 rounded-xl bg-[#F5F5F7] space-y-2 text-[13px]">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#86868B]">来源类型:</span>
+                  <span className="font-semibold text-[#1D1D1F]">{sourceType}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#86868B]">来源名称:</span>
+                  <span className="font-semibold text-[#1D1D1F]">{sourceName}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-[#86868B]">原始金额: <span className="font-semibold text-[#1D1D1F]">{formatAmount(source.amount)}</span></span>
+                  <span className="text-[#86868B]">剩余金额: <span className="font-semibold text-[#FF9500]">{formatAmount(source.remainingAmount)}</span></span>
+                </div>
+              </div>
+            );
+          })()}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">归还金额（元） <span className="text-[#FF3B30]">*</span></label>
@@ -1508,8 +1590,8 @@ export default function FinanceIncomePage() {
                 placeholder="请输入金额"
                 min="0"
                 step="0.01"
-                value={capitalReturnForm.amount}
-                onChange={(e) => setCapitalReturnForm((p) => ({ ...p, amount: e.target.value }))}
+                value={returnAppForm.returnAmount}
+                onChange={(e) => setReturnAppForm((p) => ({ ...p, returnAmount: e.target.value }))}
               />
             </div>
             <div>
@@ -1517,8 +1599,8 @@ export default function FinanceIncomePage() {
               <input
                 type="date"
                 className="ios-input"
-                value={capitalReturnForm.returnDate}
-                onChange={(e) => setCapitalReturnForm((p) => ({ ...p, returnDate: e.target.value }))}
+                value={returnAppForm.returnDate}
+                onChange={(e) => setReturnAppForm((p) => ({ ...p, returnDate: e.target.value }))}
               />
             </div>
           </div>
@@ -1527,14 +1609,14 @@ export default function FinanceIncomePage() {
             <textarea
               className="ios-textarea"
               placeholder="请输入备注"
-              value={capitalReturnForm.remark}
-              onChange={(e) => setCapitalReturnForm((p) => ({ ...p, remark: e.target.value }))}
+              value={returnAppForm.remark}
+              onChange={(e) => setReturnAppForm((p) => ({ ...p, remark: e.target.value }))}
             />
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
-            <button className="ios-btn ios-btn-secondary" onClick={() => { setShowModal(false); setReturnTargetContribution(null); }}>取消</button>
-            <button className="ios-btn ios-btn-primary" onClick={handleSubmitCapitalReturn} disabled={saving}>
-              {saving ? "保存中..." : "确认归还"}
+            <button className="ios-btn ios-btn-secondary" onClick={() => { setShowModal(false); setReturnTargetContribution(null); setReturnTargetBorrowing(null); }}>取消</button>
+            <button className="ios-btn ios-btn-primary" onClick={handleSubmitReturnApplication} disabled={saving}>
+              {saving ? "提交中..." : "提交归还申请"}
             </button>
           </div>
         </div>
@@ -1605,63 +1687,6 @@ export default function FinanceIncomePage() {
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitBorrowing} disabled={saving}>
               {saving ? "保存中..." : "保存"}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={showModal && activeTab === "otherBorrowing" && !!returnTargetBorrowing}
-        onClose={() => { setShowModal(false); setReturnTargetBorrowing(null); }}
-        title={`借入归还 - ${returnTargetBorrowing?.lenderName || ""}`}
-        maxWidth="520px"
-      >
-        <div className="space-y-4">
-          {formError && (
-            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{formError}</div>
-          )}
-          {returnTargetBorrowing && (
-            <div className="p-3 rounded-xl bg-[#F5F5F7] text-[13px]">
-              <span className="text-[#86868B]">可归还余额: </span>
-              <span className="font-semibold text-[#FF9500]">{formatAmount(returnTargetBorrowing.remainingAmount)}</span>
-            </div>
-          )}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">归还金额（元） <span className="text-[#FF3B30]">*</span></label>
-              <input
-                type="number"
-                className="ios-input"
-                placeholder="请输入金额"
-                min="0"
-                step="0.01"
-                value={borrowingReturnForm.amount}
-                onChange={(e) => setBorrowingReturnForm((p) => ({ ...p, amount: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">归还日期</label>
-              <input
-                type="date"
-                className="ios-input"
-                value={borrowingReturnForm.returnDate}
-                onChange={(e) => setBorrowingReturnForm((p) => ({ ...p, returnDate: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
-            <textarea
-              className="ios-textarea"
-              placeholder="请输入备注"
-              value={borrowingReturnForm.remark}
-              onChange={(e) => setBorrowingReturnForm((p) => ({ ...p, remark: e.target.value }))}
-            />
-          </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
-            <button className="ios-btn ios-btn-secondary" onClick={() => { setShowModal(false); setReturnTargetBorrowing(null); }}>取消</button>
-            <button className="ios-btn ios-btn-primary" onClick={handleSubmitBorrowingReturn} disabled={saving}>
-              {saving ? "保存中..." : "确认归还"}
             </button>
           </div>
         </div>

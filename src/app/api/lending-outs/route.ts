@@ -79,9 +79,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (lendingType === "投标保证金" && !biddingId) {
+    if (lendingType === "投标保证金" && !projectSourceId) {
       return NextResponse.json(
-        { error: "投标保证金必须关联投标记录" },
+        { error: "投标保证金必须关联项目线索" },
         { status: 400 }
       );
     }

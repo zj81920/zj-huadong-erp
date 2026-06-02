@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import {
   Search,
   Plus,
@@ -15,9 +15,20 @@ import {
   Download,
   X,
   FileSpreadsheet,
+  ChevronRight,
+  ChevronDown,
+  Paperclip,
+  File,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import AdminStatusOverride from "@/components/AdminStatusOverride";
+import ProjectPicker from "@/components/ProjectPicker";
+import { ApprovalTimeline } from "@/components/ApprovalComponents";
 import * as XLSX from "xlsx";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFlowConfigured } from "@/hooks/useFlowConfigured";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 
 interface PurchaseRequestItem {
   id: string;
@@ -42,9 +53,12 @@ interface PurchaseRequest {
   status: string;
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
   project: { projectSourceId: string; name: string };
   items: PurchaseRequestItem[];
+  attachments: { name: string; url: string }[];
   inquiry?: Record<string, unknown> | null;
+  approvalInstanceId?: string | null;
 }
 
 interface PurchaseRequestItemData {
@@ -63,13 +77,16 @@ interface PurchaseRequestFormData {
   requestType: string;
   requiredDate: string;
   items: PurchaseRequestItemData[];
+  attachments: { name: string; url: string }[];
 }
 
-interface Project {
+interface ProjectLeadItem {
   projectSourceId: string;
-  name: string;
-  status: string;
-  projectCategory: string | null;
+  projectName: string;
+  customerId: string;
+  customer: { id: string; name: string };
+  currentStatus: string;
+  project: { id: string; projectCode: string; name: string; status: string; projectCategory: string | null } | null;
 }
 
 interface PaginationInfo {
@@ -95,6 +112,7 @@ const emptyForm: PurchaseRequestFormData = {
   requestType: "项目需求",
   requiredDate: "",
   items: [{ ...emptyItem }],
+  attachments: [],
 };
 
 const statusColorMap: Record<string, string> = {
@@ -102,9 +120,9 @@ const statusColorMap: Record<string, string> = {
   "审批中": "ios-badge-blue",
   "已批准": "ios-badge-green",
   "已驳回": "ios-badge-red",
+  "已转询价": "ios-badge-blue",
+  "已采购": "ios-badge-purple",
 };
-
-const requestTypeOptions = ["项目需求", "日常采购", "应急采购"];
 
 const excelColumnMap: Record<string, keyof PurchaseRequestItemData> = {
   "物资名称": "materialName",
@@ -118,6 +136,9 @@ const excelColumnMap: Record<string, keyof PurchaseRequestItemData> = {
 };
 
 export default function PurchaseRequestsPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin";
+  const { configured: flowConfigured } = useFlowConfigured("purchase_request");
   const [records, setRecords] = useState<PurchaseRequest[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -131,18 +152,56 @@ export default function PurchaseRequestsPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [filterProject, setFilterProject] = useState("");
 
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
 
   const [showModal, setShowModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<PurchaseRequest | null>(null);
   const [form, setForm] = useState<PurchaseRequestFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   const [deleteConfirm, setDeleteConfirm] = useState<PurchaseRequest | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const [detailRecord, setDetailRecord] = useState<PurchaseRequest | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const [approvalInstance, setApprovalInstance] = useState<any>(null);
+  const [approvalLoading, setApprovalLoading] = useState(false);
+
+  const {
+    toggleSelect, selectAll, clearSelection, isAllSelected, selectedCount, isSelected,
+  } = useBatchSelection(records.map((r) => r.id));
+
+  const toggleRowExpand = (id: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
+    setApprovalLoading(true);
+    try {
+      const res = await fetch(`/api/approval-instances/${instanceId}`);
+      if (res.ok) {
+        const json = await res.json();
+        setApprovalInstance(json.data);
+      } else {
+        setApprovalInstance(null);
+      }
+    } catch {
+      setApprovalInstance(null);
+    } finally {
+      setApprovalLoading(false);
+    }
+  }, []);
 
   const fetchRecords = useCallback(async () => {
     setLoading(true);
@@ -168,19 +227,21 @@ export default function PurchaseRequestsPage() {
     }
   }, [search, filterStatus, filterProject, pagination.page, pagination.pageSize]);
 
-  const fetchProjects = useCallback(async () => {
+  const fetchProjectLeads = useCallback(async () => {
     try {
-      const res = await fetch("/api/projects?pageSize=200");
+      const res = await fetch("/api/project-leads?pageSize=200");
       const json = await res.json();
       if (res.ok) {
-        setProjects(
-          json.data.filter(
-            (p: Project) => p.projectCategory === "EP" || p.projectCategory === "EPcm"
-          )
+        setProjectLeads(
+          (json.data || [])
+            .filter((l: { currentStatus: string }) => l.currentStatus !== "放弃")
+            .filter((l: { project: { projectCategory: string | null } | null }) =>
+              l.project && (!l.project.projectCategory || l.project.projectCategory === "EP" || l.project.projectCategory === "EPcm")
+            )
         );
       }
     } catch (err) {
-      console.error("获取项目列表失败:", err);
+      console.error("获取项目线索列表失败:", err);
     }
   }, []);
 
@@ -189,8 +250,41 @@ export default function PurchaseRequestsPage() {
   }, [fetchRecords]);
 
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+    fetchProjectLeads();
+  }, [fetchProjectLeads]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    setUploadingFile(true);
+    try {
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const json = await res.json();
+        if (res.ok) {
+          setForm((prev) => ({
+            ...prev,
+            attachments: [...prev.attachments, { name: json.filename || file.name, url: json.url }],
+          }));
+        } else {
+          alert(json.error || "上传失败");
+        }
+      }
+    } catch {
+      alert("上传失败");
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleRemoveAttachment = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index),
+    }));
+  };
 
   const handleOpenCreate = () => {
     setEditingRecord(null);
@@ -220,6 +314,7 @@ export default function PurchaseRequestsPage() {
                 remark: item.remark || "",
               }))
           : [{ ...emptyItem }],
+      attachments: record.attachments && Array.isArray(record.attachments) ? record.attachments : [],
     });
     setFormError("");
     setShowModal(true);
@@ -242,12 +337,13 @@ export default function PurchaseRequestsPage() {
     try {
       const payload = {
         projectSourceId: form.projectSourceId,
-        requestType: form.requestType,
+        requestType: "项目需求",
         requiredDate: form.requiredDate || null,
         items: validItems.map((item, index) => ({
           ...item,
           sortOrder: index,
         })),
+        attachments: form.attachments,
       };
 
       const url = editingRecord
@@ -278,7 +374,11 @@ export default function PurchaseRequestsPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
-
+    if (deleteConfirm.status !== "草稿" && deleteConfirm.status !== "已驳回" && !isAdminUser) {
+      alert("该记录已进入审批流程，仅管理员可删除");
+      setDeleteConfirm(null);
+      return;
+    }
     setDeleting(true);
     try {
       const res = await fetch(`/api/purchase-requests/${deleteConfirm.id}`, {
@@ -324,11 +424,15 @@ export default function PurchaseRequestsPage() {
   };
 
   const handleViewDetail = async (record: PurchaseRequest) => {
+    setApprovalInstance(null);
     try {
       const res = await fetch(`/api/purchase-requests/${record.id}`);
       const json = await res.json();
       if (res.ok) {
         setDetailRecord(json.data);
+        if (json.data.approvalInstanceId) {
+          fetchApprovalInstance(json.data.approvalInstanceId);
+        }
       }
     } catch {
       alert("获取详情失败");
@@ -387,7 +491,7 @@ export default function PurchaseRequestsPage() {
     XLSX.writeFile(wb, "采购需求导入模板.xlsx");
   };
 
-  const updateFormHeader = (field: "projectSourceId" | "requestType" | "requiredDate", value: string) => {
+  const updateFormHeader = (field: "projectSourceId" | "requiredDate", value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (formError) setFormError("");
   };
@@ -465,6 +569,7 @@ export default function PurchaseRequestsPage() {
             <option value="审批中">审批中</option>
             <option value="已批准">已批准</option>
             <option value="已驳回">已驳回</option>
+            <option value="已转询价">已转询价</option>
           </select>
 
           <select
@@ -476,9 +581,9 @@ export default function PurchaseRequestsPage() {
             }}
           >
             <option value="">全部项目</option>
-            {projects.map((p) => (
-              <option key={p.projectSourceId} value={p.projectSourceId}>
-                {p.name} ({p.projectSourceId})
+            {projectLeads.map((l) => (
+              <option key={l.projectSourceId} value={l.projectSourceId}>
+                {l.project ? `${l.project.projectCode} - ${l.project.name}` : `${l.projectSourceId} - ${l.projectName}`}
               </option>
             ))}
           </select>
@@ -505,105 +610,174 @@ export default function PurchaseRequestsPage() {
             <table className="ios-table">
               <thead>
                 <tr>
+                  {isAdminUser && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
                   <th>计划单号</th>
                   <th>项目源ID</th>
                   <th>项目名称</th>
-                  <th>需求类型</th>
                   <th>物资明细数</th>
                   <th>需求日期</th>
                   <th>状态</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
-                {records.map((record) => (
-                  <tr key={record.id}>
-                    <td>
-                      <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
-                        {record.requestNo}
-                      </span>
-                    </td>
-                    <td className="font-mono text-[13px]">{record.projectSourceId}</td>
-                    <td>
-                      <span className="font-semibold">{record.project?.name || "-"}</span>
-                    </td>
-                    <td>{record.requestType}</td>
-                    <td>
-                      <span className="inline-flex items-center gap-1">
-                        <Package className="w-3.5 h-3.5 text-[#86868B]" />
-                        <span className="ios-badge ios-badge-gray">{record.items?.length || 0}</span>
-                      </span>
-                    </td>
-                    <td className="text-[#86868B]">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {formatDate(record.requiredDate)}
-                      </span>
-                    </td>
-                    <td>
-                      <select
-                        className="ios-select ios-select-sm text-[12px] py-1 px-2"
-                        value={record.status}
-                        onChange={async (e) => {
-                          const newStatus = e.target.value;
-                          try {
-                            const res = await fetch(`/api/purchase-requests/${record.id}`, {
-                              method: "PUT",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ status: newStatus }),
-                            });
-                            if (res.ok) {
-                              fetchRecords();
-                            }
-                          } catch {}
-                        }}
-                      >
-                        <option value="草稿">草稿</option>
-                        <option value="审批中">审批中</option>
-                        <option value="已批准">已批准</option>
-                        <option value="已驳回">已驳回</option>
-                      </select>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-1">
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm"
-                          onClick={() => handleViewDetail(record)}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          详情
-                        </button>
-                        {record.status === "草稿" && (
-                          <>
+                {records.map((record) => {
+                  const isExpanded = expandedRows.has(record.id);
+                  return (
+                    <Fragment key={record.id}>
+                      <tr className={`${isExpanded ? "bg-[#F5F5F7]/60" : ""} ${isSelected(record.id) ? "bg-[#007AFF]/5" : ""}`}>
+                        {isAdminUser && (
+                          <td className="w-10">
+                            <input type="checkbox" className="ios-checkbox" checked={isSelected(record.id)} onChange={() => toggleSelect(record.id)} />
+                          </td>
+                        )}
+                        <td>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              className="w-6 h-6 rounded-md hover:bg-[#E5E5EA] flex items-center justify-center transition-colors"
+                              onClick={() => toggleRowExpand(record.id)}
+                              title={isExpanded ? "收起明细" : "展开明细"}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4 text-[#007AFF]" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-[#86868B]" />
+                              )}
+                            </button>
+                            <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
+                              {record.requestNo}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="font-mono text-[13px]">{record.projectSourceId}</td>
+                        <td>
+                          <span className="font-semibold">{record.project?.name || "-"}</span>
+                        </td>
+                        <td>
+                          <span className="inline-flex items-center gap-1">
+                            <Package className="w-3.5 h-3.5 text-[#86868B]" />
+                            <span className="ios-badge ios-badge-gray">{record.items?.length || 0}</span>
+                          </span>
+                        </td>
+                        <td className="text-[#86868B]">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {formatDate(record.requiredDate)}
+                          </span>
+                        </td>
+                        <td>
+                          <AdminStatusOverride
+                            businessType="purchase_request"
+                            businessId={record.id}
+                            currentStatus={record.status}
+                            onStatusChanged={(newStatus) => {
+                              setRecords(prev => prev.map(r => r.id === record.id ? { ...r, status: newStatus } : r));
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-1">
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm"
-                              onClick={() => handleOpenEdit(record)}
+                              onClick={() => handleViewDetail(record)}
                             >
-                              <Pencil className="w-3.5 h-3.5" />
-                              编辑
+                              <Eye className="w-3.5 h-3.5" />
+                              详情
                             </button>
-                            <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                              onClick={() => setDeleteConfirm(record)}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              删除
-                            </button>
-                          </>
-                        )}
-                        {record.status === "已批准" && (
-                          <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF9500]!"
-                            onClick={() => handleConvertToInquiry(record)}
-                          >
-                            <ArrowRight className="w-3.5 h-3.5" />
-                            转询价
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                            {record.status === "已批准" && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                                onClick={() => {
+                                  window.location.href = "/procurement/inquiries?prId=" + record.id;
+                                }}
+                              >
+                                <ArrowRight className="w-3.5 h-3.5" />
+                                转询价
+                              </button>
+                            )}
+                            {(record.status === "草稿" || record.status === "已驳回" || isAdminUser) && (
+                              <>
+                                <button
+                                  className="ios-btn ios-btn-ghost ios-btn-sm"
+                                  onClick={() => handleOpenEdit(record)}
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                  编辑
+                                </button>
+                                <button
+                                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                  onClick={() => setDeleteConfirm(record)}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  删除
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                          {record.lastModifiedBy && (
+                            <span>{record.lastModifiedBy}</span>
+                          )}
+                          <span className="block text-[11px]">{formatDate(record.updatedAt)}</span>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={9} className="p-0">
+                            <div className="px-10 py-4 bg-[#FAFAFA] border-t border-b border-[#E5E5EA]">
+                              <div className="flex items-center gap-2 mb-3">
+                                <Package className="w-4 h-4 text-[#007AFF]" />
+                                <span className="text-[13px] font-semibold text-[#1D1D1F]">
+                                  物资明细（{record.items?.length || 0} 项）
+                                </span>
+                              </div>
+                              {record.items && record.items.length > 0 ? (
+                                <div className="overflow-x-auto border border-[#E5E5EA] rounded-xl bg-white">
+                                  <table className="w-full text-[13px]">
+                                    <thead className="bg-[#F5F5F7]">
+                                      <tr>
+                                        <th className="py-2 px-3 text-center font-semibold text-[#86868B] w-[44px]">序号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">物资名称</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">规格型号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">材质</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">品牌</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">适用标准号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">单位</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">数量</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">备注</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {record.items
+                                        .sort((a, b) => a.sortOrder - b.sortOrder)
+                                        .map((item, index) => (
+                                          <tr key={item.id} className="border-t border-[#F0F0F0]">
+                                            <td className="py-2 px-3 text-center text-[#86868B]">{index + 1}</td>
+                                            <td className="py-2 px-3 font-semibold">{item.materialName}</td>
+                                            <td className="py-2 px-3">{item.spec || "-"}</td>
+                                            <td className="py-2 px-3">{item.material || "-"}</td>
+                                            <td className="py-2 px-3">{item.brand || "-"}</td>
+                                            <td className="py-2 px-3">{item.standardNo || "-"}</td>
+                                            <td className="py-2 px-3">{item.unit || "-"}</td>
+                                            <td className="py-2 px-3 font-mono">{item.quantity || "-"}</td>
+                                            <td className="py-2 px-3 text-[#86868B]">{item.remark || "-"}</td>
+                                          </tr>
+                                        ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                <p className="text-[13px] text-[#86868B] text-center py-4">暂无物资明细</p>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
 
@@ -630,6 +804,15 @@ export default function PurchaseRequestsPage() {
             )}
           </div>
         )}
+
+        {isAdminUser && (
+          <BatchDeleteBar
+            businessType="purchase_request"
+            selectedIds={records.filter((d) => isSelected(d.id)).map((d) => d.id)}
+            onDeleteSuccess={fetchRecords}
+            onClear={clearSelection}
+          />
+        )}
       </div>
 
       <Modal
@@ -647,34 +830,14 @@ export default function PurchaseRequestsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                所属项目 <span className="text-[#FF3B30]">*</span>
-              </label>
-              <select
-                className="ios-select"
+              <ProjectPicker
+                projectLeads={projectLeads}
                 value={form.projectSourceId}
-                onChange={(e) => updateFormHeader("projectSourceId", e.target.value)}
-              >
-                <option value="">请选择项目</option>
-                {projects.map((p) => (
-                  <option key={p.projectSourceId} value={p.projectSourceId}>
-                    {p.name} ({p.projectSourceId})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">需求类型</label>
-              <select
-                className="ios-select"
-                value={form.requestType}
-                onChange={(e) => updateFormHeader("requestType", e.target.value)}
-              >
-                {requestTypeOptions.map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
+                onChange={(id) => updateFormHeader("projectSourceId", id)}
+                label="所属项目"
+                placeholder="请选择项目"
+                required
+              />
             </div>
 
             <div>
@@ -831,6 +994,47 @@ export default function PurchaseRequestsPage() {
             </div>
           </div>
 
+          <div className="pt-2">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-[13px] font-semibold text-[#1D1D1F]">
+                <Paperclip className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+                附件
+              </label>
+              <button
+                className="ios-btn ios-btn-secondary ios-btn-sm"
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.multiple = true;
+                  input.accept = ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip,.rar";
+                  input.onchange = (e) => handleFileUpload(e as any);
+                  input.click();
+                }}
+                disabled={uploadingFile}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                {uploadingFile ? "上传中..." : "上传附件"}
+              </button>
+            </div>
+            {form.attachments.length > 0 ? (
+              <div className="space-y-1.5">
+                {form.attachments.map((att, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#F5F5F7]">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <File className="w-3.5 h-3.5 text-[#86868B] flex-shrink-0" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#007AFF] truncate hover:underline">{att.name}</a>
+                    </div>
+                    <button className="w-6 h-6 rounded-full hover:bg-[#E5E5EA] flex items-center justify-center flex-shrink-0" onClick={() => handleRemoveAttachment(idx)}>
+                      <X className="w-3 h-3 text-[#86868B]" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12px] text-[#86868B] text-center py-3">暂无附件</p>
+            )}
+          </div>
+
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
             <button
               className="ios-btn ios-btn-secondary"
@@ -883,7 +1087,7 @@ export default function PurchaseRequestsPage() {
 
       <Modal
         isOpen={!!detailRecord}
-        onClose={() => setDetailRecord(null)}
+        onClose={() => { setDetailRecord(null); setApprovalInstance(null); }}
         title="采购需求详情"
         maxWidth="860px"
       >
@@ -901,10 +1105,6 @@ export default function PurchaseRequestsPage() {
               <div>
                 <label className="block text-[12px] text-[#86868B] mb-1">项目名称</label>
                 <p className="text-[15px] font-semibold">{detailRecord.project?.name || "-"}</p>
-              </div>
-              <div>
-                <label className="block text-[12px] text-[#86868B] mb-1">需求类型</label>
-                <p className="text-[15px]">{detailRecord.requestType}</p>
               </div>
               <div>
                 <label className="block text-[12px] text-[#86868B] mb-1">需求日期</label>
@@ -969,14 +1169,35 @@ export default function PurchaseRequestsPage() {
             {detailRecord.inquiry && (
               <div className="p-4 rounded-xl bg-[#F5F5F7] border border-[#E5E5EA]">
                 <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">已关联询价单</p>
-                <p className="text-[13px] text-[#86868B]">该需求已完成询价转办</p>
+                <a href="/procurement/inquiries" className="text-[13px] text-[#007AFF] hover:underline">
+                  点击查看询价详情 →
+                </a>
               </div>
             )}
+
+            {detailRecord.attachments && Array.isArray(detailRecord.attachments) && detailRecord.attachments.length > 0 && (
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-2">
+                  <Paperclip className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+                  附件 ({detailRecord.attachments.length})
+                </label>
+                <div className="space-y-1.5">
+                  {detailRecord.attachments.map((att: { name: string; url: string }, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-[#F5F5F7]">
+                      <File className="w-3.5 h-3.5 text-[#86868B]" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#007AFF] hover:underline">{att.name}</a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
 
             <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
               <button
                 className="ios-btn ios-btn-secondary"
-                onClick={() => setDetailRecord(null)}
+                onClick={() => { setDetailRecord(null); setApprovalInstance(null); }}
               >
                 关闭
               </button>

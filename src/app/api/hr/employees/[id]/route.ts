@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 const select = {
   id: true,
@@ -10,8 +11,25 @@ const select = {
   role: true,
   department: true,
   isActive: true,
+  idNumber: true,
+  birthDate: true,
+  position: true,
+  employmentStatus: true,
+  hireDate: true,
+  leaveDate: true,
+  bankName: true,
+  bankAccount: true,
+  baseSalary: true,
+  socialInsuranceBase: true,
+  housingFundBase: true,
+  housingFundRate: true,
+  socialInsuranceCompanyRate: true,
+  housingFundCompanyRate: true,
+  taxDeduction: true,
+  remark: true,
   createdAt: true,
   updatedAt: true,
+  lastModifiedBy: true,
 };
 
 export async function GET(
@@ -43,12 +61,28 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { realName, phone, email, role, department, isActive } = body;
+    const { realName, phone, email, role, department, isActive,
+      idNumber, birthDate, position, employmentStatus, hireDate,
+      leaveDate, bankName, bankAccount, baseSalary, socialInsuranceBase,
+      housingFundBase, housingFundRate, socialInsuranceCompanyRate,
+      housingFundCompanyRate, taxDeduction, remark } = body;
 
     const existing = await prisma.user.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "员工不存在" }, { status: 404 });
     }
+
+    if (existing?.username === "admin" && body.isActive === false) {
+      return NextResponse.json({ error: "系统管理员账号不可禁用" }, { status: 403 });
+    }
+
+    const autoLeaveDate =
+      (employmentStatus === "resigned" || employmentStatus === "dismissed") &&
+      !leaveDate
+        ? new Date()
+        : leaveDate
+          ? new Date(leaveDate)
+          : undefined;
 
     const employee = await prisma.user.update({
       where: { id },
@@ -59,6 +93,24 @@ export async function PUT(
         ...(role !== undefined && { role }),
         ...(department !== undefined && { department: department || null }),
         ...(isActive !== undefined && { isActive }),
+        ...(idNumber !== undefined && { idNumber: idNumber?.trim() || null }),
+        ...(birthDate !== undefined && { birthDate: birthDate ? new Date(birthDate) : null }),
+        ...(position !== undefined && { position: position?.trim() || null }),
+        ...(employmentStatus !== undefined && { employmentStatus: employmentStatus || null }),
+        ...(hireDate !== undefined && { hireDate: hireDate ? new Date(hireDate) : null }),
+        ...(autoLeaveDate !== undefined && { leaveDate: autoLeaveDate }),
+        ...(leaveDate !== undefined && autoLeaveDate === undefined && { leaveDate: leaveDate ? new Date(leaveDate) : null }),
+        ...(bankName !== undefined && { bankName: bankName?.trim() || null }),
+        ...(bankAccount !== undefined && { bankAccount: bankAccount?.trim() || null }),
+        ...(baseSalary !== undefined && { baseSalary: baseSalary ? parseFloat(baseSalary) : null }),
+        ...(socialInsuranceBase !== undefined && { socialInsuranceBase: socialInsuranceBase ? parseFloat(socialInsuranceBase) : null }),
+        ...(housingFundBase !== undefined && { housingFundBase: housingFundBase ? parseFloat(housingFundBase) : null }),
+        ...(housingFundRate !== undefined && { housingFundRate: housingFundRate ? parseFloat(housingFundRate) : null }),
+        ...(socialInsuranceCompanyRate !== undefined && { socialInsuranceCompanyRate: socialInsuranceCompanyRate ? parseFloat(socialInsuranceCompanyRate) : null }),
+        ...(housingFundCompanyRate !== undefined && { housingFundCompanyRate: housingFundCompanyRate ? parseFloat(housingFundCompanyRate) : null }),
+        ...(taxDeduction !== undefined && { taxDeduction: taxDeduction ? parseFloat(taxDeduction) : null }),
+        ...(remark !== undefined && { remark: remark?.trim() || null }),
+        lastModifiedBy: (await getCurrentUser())?.realName || null,
       },
       select,
     });

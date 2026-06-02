@@ -37,6 +37,7 @@ interface UserItem {
   roles: Role[];
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
 }
 
 interface UserFormData {
@@ -72,6 +73,11 @@ const ROLE_COLORS = [
 function getRoleColor(index: number): string {
   return ROLE_COLORS[index % ROLE_COLORS.length];
 }
+
+const formatDate = (dateStr: string) => {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 export default function UsersSettingsPage() {
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -370,6 +376,7 @@ export default function UsersSettingsPage() {
                   <th>电子签名</th>
                   <th>状态</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
@@ -429,14 +436,24 @@ export default function UsersSettingsPage() {
                           <Pencil className="w-3.5 h-3.5" />
                           编辑
                         </button>
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                          onClick={() => setDeleteConfirm(item)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          删除
-                        </button>
+                        {item.username === "admin" ? (
+                          <span className="ios-badge ios-badge-gray text-[11px]">系统管理员</span>
+                        ) : (
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                            onClick={() => setDeleteConfirm(item)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            删除
+                          </button>
+                        )}
                       </div>
+                    </td>
+                    <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                      {item.lastModifiedBy && (
+                        <span>{item.lastModifiedBy}</span>
+                      )}
+                      <span className="block text-[11px]">{formatDate(item.updatedAt)}</span>
                     </td>
                   </tr>
                 ))}
@@ -550,30 +567,37 @@ export default function UsersSettingsPage() {
               分配角色
             </label>
             {roles.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
                 {roles.map((role) => {
                   const checked = form.roleIds.includes(role.id);
                   return (
                     <label
                       key={role.id}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-150 text-[13px] font-medium ${
-                        checked
-                          ? "bg-[#007AFF]/8 text-[#007AFF] border border-[#007AFF]/20"
-                          : "bg-[#F5F5F7] text-[#1D1D1F] border border-transparent hover:bg-[#E5E5EA]"
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-150 ${
+                        checked ? "bg-[#007AFF]/6" : "bg-white hover:bg-[#FAFAFA]"
                       }`}
                     >
-                      <input
-                        type="checkbox"
-                        className="ios-checkbox !w-[18px] !h-[18px]"
-                        checked={checked}
-                        onChange={() => toggleRole(role.id)}
-                      />
-                      <span className="flex-1">{role.name}</span>
+                      <span
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
+                          checked ? "border-[#007AFF] bg-[#007AFF]" : "border-[#D1D1D6] bg-white"
+                        }`}
+                      >
+                        {checked && <span className="w-2 h-2 rounded-full bg-white" />}
+                      </span>
+                      <span className={`text-[14px] font-semibold flex-1 ${checked ? "text-[#007AFF]" : "text-[#1D1D1F]"}`}>
+                        {role.name}
+                      </span>
                       {role.isProjectRole && (
                         <span className="ios-badge ios-badge-orange !text-[10px] !px-1.5 !py-0">
                           项目关联
                         </span>
                       )}
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={checked}
+                        onChange={() => toggleRole(role.id)}
+                      />
                     </label>
                   );
                 })}

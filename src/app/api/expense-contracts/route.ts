@@ -4,6 +4,34 @@ import prisma from "@/lib/prisma";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const mode = searchParams.get("mode") || "";
+
+    if (mode === "available-inquiries") {
+      const inquiries = await prisma.inquiry.findMany({
+        where: {
+          expenseContract: null,
+          status: "已批准",
+        },
+        include: {
+          purchaseRequest: {
+            include: { items: { orderBy: { sortOrder: "asc" } } },
+          },
+          supplierQuotes: {
+            include: {
+              items: {
+                include: {
+                  purchaseRequestItem: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return NextResponse.json({ data: inquiries });
+    }
+
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
     const projectSourceId = searchParams.get("projectSourceId") || "";
@@ -79,18 +107,14 @@ export async function POST(request: NextRequest) {
       paymentTerms,
       contractType,
       scannedUrl,
+      taxRate,
+      pricingMethod,
+      contractSummary,
     } = body;
 
     if (!contractNo || !contractNo.trim()) {
       return NextResponse.json(
         { error: "合同编号不能为空" },
-        { status: 400 }
-      );
-    }
-
-    if (!totalAmount || isNaN(parseFloat(totalAmount)) || parseFloat(totalAmount) <= 0) {
-      return NextResponse.json(
-        { error: "合同金额必须大于0" },
         { status: 400 }
       );
     }
@@ -106,35 +130,142 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (supplierId) {
-      const supplier = await prisma.supplier.findUnique({
-        where: { id: supplierId },
-      });
-
-      if (!supplier || !supplier.isActive) {
-        return NextResponse.json(
-          { error: "供应商不存在或已停用" },
-          { status: 400 }
-        );
-      }
-    }
+    let contractItemsData: {
+      purchaseRequestItemId?: string;
+      materialName: string;
+      spec?: string | null;
+      material?: string | null;
+      brand?: string | null;
+      standardNo?: string | null;
+      unit?: string | null;
+      quantity?: number | null;
+      unitPrice?: number | null;
+      totalPrice?: number | null;
+      deliveryDays?: number | null;
+      remark?: string | null;
+      sortOrder: number;
+    }[] = [];
+    let finalSupplierId = supplierId || null;
+    let finalTotalAmount = totalAmount ? parseFloat(totalAmount) : 0;
 
     if (inquiryId) {
       const inquiry = await prisma.inquiry.findUnique({
         where: { id: inquiryId },
+        include: {
+          purchaseRequest: {
+            include: { items: { orderBy: { sortOrder: "asc" } } },
+          },
+          supplierQuotes: {
+            include: {
+              items: {
+                include: {
+                  purchaseRequestItem: true,
+                },
+              },
+            },
+          },
+        },
       });
+
       if (!inquiry) {
         return NextResponse.json(
           { error: "询价单不存在" },
           { status: 400 }
         );
       }
+
       const linked = await prisma.expenseContract.findUnique({
         where: { inquiryId },
       });
+
       if (linked) {
         return NextResponse.json(
           { error: "该询价单已关联合同" },
+          { status: 400 }
+        );
+      }
+
+      if (inquiry.confirmedSupplierId && inquiry.confirmedRound) {
+        const confirmedQuote = inquiry.supplierQuotes.find(
+          (q) =>
+            q.supplierId === inquiry.confirmedSupplierId &&
+            q.round === inquiry.confirmedRound
+        );
+
+        if (confirmedQuote) {
+          if (confirmedQuote.items.length > 0) {
+            contractItemsData = confirmedQuote.items.map(
+              (quoteItem, index) => ({
+                purchaseRequestItemId: quoteItem.purchaseRequestItemId,
+                materialName: quoteItem.purchaseRequestItem.materialName,
+                spec: quoteItem.purchaseRequestItem.spec,
+                material: quoteItem.purchaseRequestItem.material,
+                brand: quoteItem.purchaseRequestItem.brand,
+                standardNo: quoteItem.purchaseRequestItem.standardNo,
+                unit: quoteItem.purchaseRequestItem.unit,
+                quantity: quoteItem.quantity
+                  ? Number(quoteItem.quantity)
+                  : quoteItem.purchaseRequestItem.quantity
+                    ? Number(quoteItem.purchaseRequestItem.quantity)
+                    : null,
+                unitPrice: quoteItem.unitPrice
+                  ? Number(quoteItem.unitPrice)
+                  : null,
+                totalPrice: quoteItem.totalPrice
+                  ? Number(quoteItem.totalPrice)
+                  : null,
+                deliveryDays: quoteItem.deliveryDays,
+                remark: quoteItem.remark,
+                sortOrder: index,
+              })
+            );
+          } else if (confirmedQuote.totalPrice) {
+            contractItemsData = inquiry.purchaseRequest.items.map(
+              (item, index) => ({
+                purchaseRequestItemId: item.id,
+                materialName: item.materialName,
+                spec: item.spec,
+                material: item.material,
+                brand: item.brand,
+                standardNo: item.standardNo,
+                unit: item.unit,
+                quantity: item.quantity ? Number(item.quantity) : null,
+                sortOrder: index,
+              })
+            );
+          }
+        }
+      }
+
+      finalSupplierId = inquiry.confirmedSupplierId || supplierId || null;
+
+      const calculatedTotal = contractItemsData.reduce(
+        (sum, item) => sum + (item.totalPrice ? Number(item.totalPrice) : 0),
+        0
+      );
+
+      if (calculatedTotal > 0) {
+        finalTotalAmount = totalAmount ? parseFloat(totalAmount) : calculatedTotal;
+      } else {
+        finalTotalAmount = totalAmount ? parseFloat(totalAmount) : 0;
+      }
+    }
+
+    if (finalTotalAmount <= 0) {
+      return NextResponse.json(
+        { error: "合同金额必须大于0" },
+        { status: 400 }
+      );
+    }
+
+    if (finalSupplierId) {
+      const supplier = await prisma.supplier.findUnique({
+        where: { id: finalSupplierId },
+      });
+
+      if (!supplier || !supplier.isActive) {
+        return NextResponse.json(
+          { error: "供应商不存在或已停用" },
           { status: 400 }
         );
       }
@@ -160,27 +291,46 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const contract = await prisma.expenseContract.create({
-      data: {
-        contractNo: contractNo.trim(),
-        projectSourceId: projectSourceId || null,
-        supplierId: supplierId || null,
-        inquiryId: inquiryId || null,
-        signedDate: signedDate ? new Date(signedDate) : null,
-        totalAmount: parseFloat(totalAmount),
-        paymentTerms: paymentTerms?.trim() || null,
-        contractType: contractType || "其他",
-        scannedUrl: scannedUrl?.trim() || null,
-      },
-      include: {
-        supplier: true,
-        project: true,
-        inquiry: {
-          include: {
-            purchaseRequest: true,
+    const contract = await prisma.$transaction(async (tx) => {
+      const created = await tx.expenseContract.create({
+        data: {
+          contractNo: contractNo.trim(),
+          projectSourceId: projectSourceId || null,
+          supplierId: finalSupplierId,
+          inquiryId: inquiryId || null,
+          signedDate: signedDate ? new Date(signedDate) : null,
+          totalAmount: finalTotalAmount,
+          paymentTerms: paymentTerms?.trim() || null,
+          contractType: contractType || "其他",
+          scannedUrl: scannedUrl?.trim() || null,
+          taxRate: taxRate || null,
+          pricingMethod: pricingMethod || null,
+          contractSummary: contractSummary || null,
+          ...(contractItemsData.length > 0 && {
+            items: {
+              create: contractItemsData,
+            },
+          }),
+        },
+        include: {
+          supplier: true,
+          project: true,
+          inquiry: {
+            include: {
+              purchaseRequest: true,
+            },
           },
         },
-      },
+      });
+
+      if (created.inquiry?.purchaseRequestId) {
+        await tx.purchaseRequest.update({
+          where: { id: created.inquiry.purchaseRequestId },
+          data: { status: "已采购" },
+        });
+      }
+
+      return created;
     });
 
     return NextResponse.json({ data: contract }, { status: 201 });

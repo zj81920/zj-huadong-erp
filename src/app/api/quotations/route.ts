@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,6 +55,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const {
       projectSourceId,
       customerId,
@@ -61,6 +63,8 @@ export async function POST(request: NextRequest) {
       totalAmount,
       profitMargin,
       adjustmentReason,
+      quotationLetterUrl,
+      files,
     } = body;
 
     if (!customerId) {
@@ -71,15 +75,33 @@ export async function POST(request: NextRequest) {
     }
 
     if (projectSourceId) {
-      const lead = await prisma.projectLead.findUnique({ where: { projectSourceId } });
+      const lead = await prisma.projectLead.findUnique({
+        where: { projectSourceId },
+        include: { biddings: { select: { id: true } } },
+      });
       if (!lead) {
         return NextResponse.json({ error: "关联的项目线索不存在" }, { status: 400 });
+      }
+      if (lead.biddings.length > 0) {
+        return NextResponse.json({ error: "该线索已有投标记录，无法添加报价" }, { status: 400 });
       }
     }
 
     const customer = await prisma.customer.findUnique({ where: { id: customerId } });
     if (!customer || !customer.isActive) {
       return NextResponse.json({ error: "客户不存在" }, { status: 400 });
+    }
+
+    let nextVersion = 1;
+    if (projectSourceId) {
+      const latestQuotation = await prisma.quotation.findFirst({
+        where: { projectSourceId },
+        orderBy: { version: "desc" },
+        select: { version: true },
+      });
+      if (latestQuotation) {
+        nextVersion = latestQuotation.version + 1;
+      }
     }
 
     const quotation = await prisma.quotation.create({
@@ -90,8 +112,11 @@ export async function POST(request: NextRequest) {
         totalAmount: parseFloat(totalAmount),
         profitMargin: profitMargin ? parseFloat(profitMargin) : null,
         approvalStatus: "草稿",
-        version: 1,
+        version: nextVersion,
         adjustmentReason: adjustmentReason?.trim() || null,
+        quotationLetterUrl: quotationLetterUrl || null,
+        files: files || [],
+        lastModifiedBy: currentUser?.realName || null,
       },
       include: {
         customer: { select: { id: true, name: true, industryType: true } },
@@ -102,7 +127,7 @@ export async function POST(request: NextRequest) {
     if (projectSourceId) {
       await prisma.projectLead.update({
         where: { projectSourceId },
-        data: { currentStatus: "报价中" },
+        data: { currentStatus: "报价中", leadMode: "商务报价" },
       });
     }
 

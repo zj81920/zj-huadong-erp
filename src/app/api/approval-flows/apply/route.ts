@@ -22,6 +22,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "源审批流配置不存在" }, { status: 404 });
     }
 
+    // 检查所有目标模块是否有活跃审批实例
+    const conflictTargets: string[] = [];
+    for (const target of targets) {
+      const activeCount = await prisma.approvalInstance.count({
+        where: {
+          businessType: target.businessType,
+          flowLevel: target.flowLevel,
+          status: "审批中",
+        },
+      });
+      if (activeCount > 0) {
+        conflictTargets.push(`${target.businessType}(${target.flowLevel}) 有 ${activeCount} 个审批中实例`);
+      }
+    }
+    if (conflictTargets.length > 0) {
+      return NextResponse.json(
+        { error: `以下模块无法应用：${conflictTargets.join("；")}。请等待审批完成后再操作。` },
+        { status: 409 }
+      );
+    }
+
     // Apply to each target
     for (const target of targets) {
       // Delete existing nodes for target

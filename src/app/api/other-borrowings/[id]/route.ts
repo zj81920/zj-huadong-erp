@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isAdmin, getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   _request: NextRequest,
@@ -68,6 +69,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const adminUser = await getCurrentUser();
 
     const existing = await prisma.otherBorrowing.findUnique({
       where: { id },
@@ -77,7 +79,7 @@ export async function DELETE(
       return NextResponse.json({ error: "借入款记录不存在" }, { status: 404 });
     }
 
-    if (existing.returns.length > 0) {
+    if (existing.returns.length > 0 && !isAdmin(adminUser)) {
       return NextResponse.json({ error: "该借入款下有归还记录，无法删除" }, { status: 400 });
     }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isAdmin, getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   _request: NextRequest,
@@ -65,6 +66,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const adminUser = await getCurrentUser();
 
     const existing = await prisma.receivable.findUnique({
       where: { id },
@@ -74,11 +76,18 @@ export async function DELETE(
       return NextResponse.json({ error: "应收记录不存在" }, { status: 404 });
     }
 
-    if (existing.receiptVouchers.length > 0) {
+    if (existing.receiptVouchers.length > 0 && !isAdmin(adminUser)) {
       return NextResponse.json({ error: "该应收记录已有收款凭证，无法删除" }, { status: 400 });
     }
 
-    await prisma.receivable.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      if (existing.receiptVouchers.length > 0) {
+        await tx.receiptVoucher.deleteMany({
+          where: { receivableId: id },
+        });
+      }
+      await tx.receivable.delete({ where: { id } });
+    });
 
     return NextResponse.json({ message: "删除成功" });
   } catch (error) {

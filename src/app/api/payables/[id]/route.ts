@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isAdmin, getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
@@ -92,9 +93,15 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const adminUser = await getCurrentUser();
 
     const existing = await prisma.payable.findUnique({
       where: { id },
+      include: {
+        paymentApplications: {
+          include: { paymentVouchers: true },
+        },
+      },
     });
 
     if (!existing) {
@@ -104,15 +111,34 @@ export async function DELETE(
       );
     }
 
-    if (existing.status !== "未付") {
+    if (existing.status !== "未付" && !isAdmin(adminUser)) {
       return NextResponse.json(
         { error: "只有未付状态的记录可以删除" },
         { status: 400 }
       );
     }
 
-    await prisma.payable.delete({
-      where: { id },
+    if (existing.paymentApplications.length > 0 && !isAdmin(adminUser)) {
+      return NextResponse.json(
+        { error: "该应付记录已有付款申请，无法删除" },
+        { status: 400 }
+      );
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const app of existing.paymentApplications) {
+        if (app.paymentVouchers.length > 0) {
+          await tx.paymentVoucher.deleteMany({
+            where: { paymentApplicationId: app.id },
+          });
+        }
+      }
+      if (existing.paymentApplications.length > 0) {
+        await tx.paymentApplication.deleteMany({
+          where: { payableId: id },
+        });
+      }
+      await tx.payable.delete({ where: { id } });
     });
 
     return NextResponse.json({ message: "删除成功" });

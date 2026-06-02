@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -63,11 +64,16 @@ export async function POST(request: NextRequest) {
       contractNo,
       projectSourceId,
       customerId,
-      signedDate,
       totalAmount,
       splitStages,
       scannedUrl,
+      taxRate,
+      pricingMethod,
+      contractSummary,
+      paymentTerms,
     } = body;
+
+    const currentUser = await getCurrentUser();
 
     if (!contractNo || !contractNo.trim()) {
       return NextResponse.json(
@@ -130,10 +136,14 @@ export async function POST(request: NextRequest) {
         contractNo: contractNo.trim(),
         projectSourceId: projectSourceId || null,
         customerId,
-        signedDate: signedDate ? new Date(signedDate) : null,
         totalAmount: parseFloat(totalAmount),
         splitStages: splitStages || [],
         scannedUrl: scannedUrl?.trim() || null,
+        taxRate: taxRate || null,
+        pricingMethod: pricingMethod || null,
+        contractSummary: contractSummary || null,
+        paymentTerms: paymentTerms || null,
+        lastModifiedBy: currentUser?.realName || null,
       },
       include: {
         customer: true,

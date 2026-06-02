@@ -1,12 +1,21 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { resolveUserPermissions, UserModulePermission, MODULE_KEYS, SUB_MODULE_KEYS } from "@/lib/module-permissions";
+
+const defaultPermissions: UserModulePermission = {
+  accessibleModules: [...MODULE_KEYS],
+  accessibleSubModules: [...SUB_MODULE_KEYS],
+  isGlobalVisible: true,
+};
 
 interface UserRole {
   id: string;
   code: string;
   name: string;
   isProjectRole: boolean;
+  accessibleModules: string;
+  isGlobalVisible: boolean;
 }
 
 interface CurrentUser {
@@ -24,6 +33,7 @@ interface AuthContextType {
   loading: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
+  modulePermissions: UserModulePermission;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -31,6 +41,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   refresh: async () => {},
   logout: async () => {},
+  modulePermissions: defaultPermissions,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -66,8 +77,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refresh();
   }, [refresh]);
 
+  const modulePermissions = useMemo(() => {
+    if (!user || !user.roles || user.roles.length === 0) return defaultPermissions;
+    if (user.username === "admin") return defaultPermissions;
+    return resolveUserPermissions(user.roles);
+  }, [user]);
+
   return (
-    <AuthContext.Provider value={{ user, loading, refresh, logout }}>
+    <AuthContext.Provider value={{ user, loading, refresh, logout, modulePermissions }}>
       {children}
     </AuthContext.Provider>
   );

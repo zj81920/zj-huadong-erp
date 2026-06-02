@@ -58,14 +58,17 @@ export async function POST(request: NextRequest) {
     const {
       projectSourceId,
       tenderFileReg,
+      tenderFileUrl,
+      bidFileUrl,
       bidDeadline,
       bondAmount,
       bondPaymentStatus,
-      bidResult,
       bidAmount,
       score,
       failReason,
       attachmentUrl,
+      description,
+      tenderFiles,
     } = body;
 
     if (!projectSourceId) {
@@ -74,24 +77,33 @@ export async function POST(request: NextRequest) {
 
     const lead = await prisma.projectLead.findUnique({
       where: { projectSourceId },
+      include: { quotations: { select: { id: true } } },
     });
 
     if (!lead) {
       return NextResponse.json({ error: "项目线索不存在" }, { status: 400 });
     }
 
+    if (lead.quotations.length > 0) {
+      return NextResponse.json({ error: "该线索已有报价记录，无法添加投标" }, { status: 400 });
+    }
+
     const bidding = await prisma.bidding.create({
       data: {
         projectSourceId,
         tenderFileReg: tenderFileReg?.trim() || null,
+        tenderFileUrl: tenderFileUrl?.trim() || null,
+        bidFileUrl: bidFileUrl?.trim() || null,
         bidDeadline: bidDeadline ? new Date(bidDeadline) : null,
         bondAmount: bondAmount ? parseFloat(bondAmount) : null,
         bondPaymentStatus: bondPaymentStatus || "未付",
-        bidResult: bidResult || null,
+        bidResult: null,
         bidAmount: bidAmount ? parseFloat(bidAmount) : null,
         score: score ? parseFloat(score) : null,
         failReason: failReason?.trim() || null,
         attachmentUrl: attachmentUrl?.trim() || null,
+        description: description?.trim() || null,
+        tenderFiles: tenderFiles || [],
       },
       include: {
         projectLead: {
@@ -102,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.projectLead.update({
       where: { projectSourceId },
-      data: { currentStatus: "投标中" },
+      data: { currentStatus: "投标中", leadMode: "投标" },
     });
 
     return NextResponse.json({ data: bidding }, { status: 201 });

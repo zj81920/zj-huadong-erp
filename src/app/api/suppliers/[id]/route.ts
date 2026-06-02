@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   _request: NextRequest,
@@ -29,11 +30,16 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const { name, supplierType, status, contactPerson, phone, email, address, bankName, bankAccount, remark, attachmentUrl } = body;
 
     const existing = await prisma.supplier.findUnique({ where: { id } });
     if (!existing || !existing.isActive) {
       return NextResponse.json({ error: "供应商不存在" }, { status: 404 });
+    }
+
+    if (existing.approvalStatus === "审批中") {
+      return NextResponse.json({ error: "审批中的供应商不可编辑" }, { status: 403 });
     }
 
     if (name && name.trim() !== existing.name) {
@@ -59,6 +65,8 @@ export async function PUT(
         ...(bankAccount !== undefined && { bankAccount: bankAccount?.trim() || null }),
         ...(remark !== undefined && { remark: remark?.trim() || null }),
         ...(attachmentUrl !== undefined && { attachmentUrl: attachmentUrl?.trim() || null }),
+        ...(existing.approvalStatus === "已驳回" && { approvalStatus: "草稿" }),
+        lastModifiedBy: currentUser?.realName || null,
       },
     });
 

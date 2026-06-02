@@ -21,6 +21,7 @@ interface BankAccount {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
 }
 
 interface BankAccountFormData {
@@ -55,6 +56,11 @@ function maskAccountNo(accountNo: string): string {
   if (accountNo.length <= 4) return accountNo;
   return "****" + accountNo.slice(-4);
 }
+
+const formatDate = (dateStr: string) => {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 export default function BankAccountsPage() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -304,6 +310,7 @@ export default function BankAccountsPage() {
                   <th>账户类型</th>
                   <th>状态</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
@@ -359,6 +366,12 @@ export default function BankAccountsPage() {
                           删除
                         </button>
                       </div>
+                    </td>
+                    <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                      {item.lastModifiedBy && (
+                        <span>{item.lastModifiedBy}</span>
+                      )}
+                      <span className="block text-[11px]">{formatDate(item.updatedAt)}</span>
                     </td>
                   </tr>
                 ))}

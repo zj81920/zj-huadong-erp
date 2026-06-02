@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Search,
   Plus,
@@ -9,6 +9,10 @@ import {
   Eye,
   UserCheck,
   UserX,
+  Upload,
+  FileText,
+  X,
+  Download,
 } from "lucide-react";
 import Modal from "@/components/Modal";
 
@@ -23,6 +27,32 @@ interface Employee {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
+  idNumber: string | null;
+  birthDate: string | null;
+  position: string | null;
+  employmentStatus: string | null;
+  hireDate: string | null;
+  leaveDate: string | null;
+  bankName: string | null;
+  bankAccount: string | null;
+  baseSalary: number | null;
+  socialInsuranceBase: number | null;
+  housingFundBase: number | null;
+  housingFundRate: number | null;
+  socialInsuranceCompanyRate: number | null;
+  housingFundCompanyRate: number | null;
+  taxDeduction: number | null;
+  remark: string | null;
+}
+
+interface EmployeeAttachmentItem {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  createdAt: string;
 }
 
 interface EmployeeFormData {
@@ -32,6 +62,21 @@ interface EmployeeFormData {
   email: string;
   role: string;
   department: string;
+  idNumber: string;
+  birthDate: string;
+  position: string;
+  employmentStatus: string;
+  hireDate: string;
+  bankName: string;
+  bankAccount: string;
+  baseSalary: string;
+  socialInsuranceBase: string;
+  housingFundBase: string;
+  housingFundRate: string;
+  socialInsuranceCompanyRate: string;
+  housingFundCompanyRate: string;
+  taxDeduction: string;
+  remark: string;
 }
 
 interface PaginationInfo {
@@ -48,6 +93,21 @@ const emptyForm: EmployeeFormData = {
   email: "",
   role: "staff",
   department: "",
+  idNumber: "",
+  birthDate: "",
+  position: "",
+  employmentStatus: "active",
+  hireDate: "",
+  bankName: "",
+  bankAccount: "",
+  baseSalary: "",
+  socialInsuranceBase: "",
+  housingFundBase: "",
+  housingFundRate: "",
+  socialInsuranceCompanyRate: "",
+  housingFundCompanyRate: "",
+  taxDeduction: "",
+  remark: "",
 };
 
 const roleOptions = [
@@ -77,6 +137,54 @@ const departmentOptions = [
   "市场部",
 ];
 
+const employmentStatusOptions = [
+  { value: "active", label: "在职", color: "ios-badge-green" },
+  { value: "probation", label: "试用期", color: "ios-badge-blue" },
+  { value: "leave", label: "休假中", color: "ios-badge-orange" },
+  { value: "resigned", label: "已离职", color: "ios-badge-gray" },
+  { value: "dismissed", label: "已辞退", color: "ios-badge-red" },
+  { value: "retired", label: "已退休", color: "ios-badge-gray" },
+];
+
+const employmentStatusLabelMap: Record<string, string> = {};
+const employmentStatusColorMap: Record<string, string> = {};
+employmentStatusOptions.forEach((s) => {
+  employmentStatusLabelMap[s.value] = s.label;
+  employmentStatusColorMap[s.value] = s.color;
+});
+
+const fileTypeOptions = [
+  { value: "id_card_front", label: "身份证正面" },
+  { value: "id_card_back", label: "身份证背面" },
+  { value: "education_cert", label: "学历证明" },
+  { value: "contract", label: "劳动合同" },
+  { value: "bank_card", label: "银行卡照片" },
+  { value: "qualification", label: "资格证书" },
+  { value: "other", label: "其他证件" },
+];
+
+const fileTypeLabelMap: Record<string, string> = {};
+fileTypeOptions.forEach((t) => {
+  fileTypeLabelMap[t.value] = t.label;
+});
+
+function calcAge(birthDate: string | null): string {
+  if (!birthDate) return "-";
+  const birth = new Date(birthDate);
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const m = now.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age >= 0 ? `${age}岁` : "-";
+}
+
+function formatMoney(val: number | null | undefined): string {
+  if (val == null) return "-";
+  return `¥${Number(val).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -91,18 +199,26 @@ export default function EmployeesPage() {
   const [filterRole, setFilterRole] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterEmploymentStatus, setFilterEmploymentStatus] = useState("");
 
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [form, setForm] = useState<EmployeeFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [formTab, setFormTab] = useState<"basic" | "hr">("basic");
 
   const [detailEmployee, setDetailEmployee] = useState<Employee | null>(null);
+  const [detailAttachments, setDetailAttachments] = useState<EmployeeAttachmentItem[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Employee | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadFileType, setUploadFileType] = useState("other");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -112,6 +228,7 @@ export default function EmployeesPage() {
       if (filterRole) params.set("role", filterRole);
       if (filterDepartment) params.set("department", filterDepartment);
       if (filterStatus) params.set("isActive", filterStatus);
+      if (filterEmploymentStatus) params.set("employmentStatus", filterEmploymentStatus);
       params.set("page", pagination.page.toString());
       params.set("pageSize", pagination.pageSize.toString());
 
@@ -127,16 +244,29 @@ export default function EmployeesPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterRole, filterDepartment, filterStatus, pagination.page, pagination.pageSize]);
+  }, [search, filterRole, filterDepartment, filterStatus, filterEmploymentStatus, pagination.page, pagination.pageSize]);
 
   useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
 
+  const fetchDetailAttachments = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/hr/employees/${userId}/attachments`);
+      if (res.ok) {
+        const json = await res.json();
+        setDetailAttachments(json.data || []);
+      }
+    } catch {
+      setDetailAttachments([]);
+    }
+  };
+
   const handleOpenCreate = () => {
     setEditingEmployee(null);
     setForm(emptyForm);
     setFormError("");
+    setFormTab("basic");
     setShowModal(true);
   };
 
@@ -149,8 +279,24 @@ export default function EmployeesPage() {
       email: employee.email || "",
       role: employee.role,
       department: employee.department || "",
+      idNumber: employee.idNumber || "",
+      birthDate: employee.birthDate ? employee.birthDate.split("T")[0] : "",
+      position: employee.position || "",
+      employmentStatus: employee.employmentStatus || "active",
+      hireDate: employee.hireDate ? employee.hireDate.split("T")[0] : "",
+      bankName: employee.bankName || "",
+      bankAccount: employee.bankAccount || "",
+      baseSalary: employee.baseSalary != null ? String(employee.baseSalary) : "",
+      socialInsuranceBase: employee.socialInsuranceBase != null ? String(employee.socialInsuranceBase) : "",
+      housingFundBase: employee.housingFundBase != null ? String(employee.housingFundBase) : "",
+      housingFundRate: employee.housingFundRate != null ? String(employee.housingFundRate) : "",
+      socialInsuranceCompanyRate: employee.socialInsuranceCompanyRate != null ? String(employee.socialInsuranceCompanyRate) : "",
+      housingFundCompanyRate: employee.housingFundCompanyRate != null ? String(employee.housingFundCompanyRate) : "",
+      taxDeduction: employee.taxDeduction != null ? String(employee.taxDeduction) : "",
+      remark: employee.remark || "",
     });
     setFormError("");
+    setFormTab("basic");
     setShowModal(true);
   };
 
@@ -241,14 +387,98 @@ export default function EmployeesPage() {
     }
   };
 
+  const handleOpenDetail = async (employee: Employee) => {
+    setDetailEmployee(employee);
+    setDetailLoading(true);
+    await fetchDetailAttachments(employee.id);
+    setDetailLoading(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!detailEmployee || !e.target.files?.length) return;
+    const file = e.target.files[0];
+    setUploadingFile(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        alert("文件上传失败");
+        return;
+      }
+
+      const uploadJson = await uploadRes.json();
+
+      const saveRes = await fetch(`/api/hr/employees/${detailEmployee.id}/attachments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: uploadJson.filename || file.name,
+          fileUrl: uploadJson.url,
+          fileType: uploadFileType,
+          fileSize: file.size,
+        }),
+      });
+
+      if (saveRes.ok) {
+        await fetchDetailAttachments(detailEmployee.id);
+      } else {
+        alert("保存附件记录失败");
+      }
+    } catch {
+      alert("上传失败");
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (!detailEmployee) return;
+    if (!confirm("确定要删除此附件吗？")) return;
+
+    try {
+      const res = await fetch(`/api/hr/employees/${detailEmployee.id}/attachments/${attachmentId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        await fetchDetailAttachments(detailEmployee.id);
+      } else {
+        alert("删除失败");
+      }
+    } catch {
+      alert("删除失败");
+    }
+  };
+
   const updateForm = (field: keyof EmployeeFormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (formError) setFormError("");
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "-";
     const d = new Date(dateStr);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  const handleIdNumberBlur = () => {
+    const idNum = form.idNumber.trim();
+    if (idNum.length === 18 && !form.birthDate) {
+      const year = idNum.substring(6, 10);
+      const month = idNum.substring(10, 12);
+      const day = idNum.substring(12, 14);
+      const dateStr = `${year}-${month}-${day}`;
+      if (!isNaN(new Date(dateStr).getTime())) {
+        updateForm("birthDate", dateStr);
+      }
+    }
   };
 
   return (
@@ -257,12 +487,11 @@ export default function EmployeesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1>员工档案管理</h1>
-            <p>管理公司员工信息，包括基本信息、角色分配与状态管理</p>
+            <p>管理公司员工人事档案、薪酬社保与附件信息</p>
           </div>
-          <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
-            <Plus className="w-4 h-4" />
-            新增员工
-          </button>
+          <p className="text-[13px] text-[#86868B]">
+            员工账号请在 <span className="font-semibold text-[#1D1D1F]">系统设置 → 用户管理</span> 中创建，此处管理员工人事档案
+          </p>
         </div>
       </div>
 
@@ -281,6 +510,20 @@ export default function EmployeesPage() {
               }}
             />
           </div>
+
+          <select
+            className="ios-select w-[120px]"
+            value={filterEmploymentStatus}
+            onChange={(e) => {
+              setFilterEmploymentStatus(e.target.value);
+              setPagination((prev) => ({ ...prev, page: 1 }));
+            }}
+          >
+            <option value="">在职状态</option>
+            {employmentStatusOptions.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
 
           <select
             className="ios-select w-[140px]"
@@ -318,7 +561,7 @@ export default function EmployeesPage() {
               setPagination((prev) => ({ ...prev, page: 1 }));
             }}
           >
-            <option value="">全部状态</option>
+            <option value="">账号状态</option>
             <option value="true">已启用</option>
             <option value="false">已禁用</option>
           </select>
@@ -338,7 +581,7 @@ export default function EmployeesPage() {
             <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
               <UserX className="w-8 h-8 text-[#86868B]" />
             </div>
-            <p>{search || filterRole || filterDepartment || filterStatus ? "没有匹配的员工记录" : "暂无员工，点击右上角新增"}</p>
+            <p>{search || filterRole || filterDepartment || filterStatus || filterEmploymentStatus ? "没有匹配的员工记录" : "暂无员工记录"}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -346,13 +589,12 @@ export default function EmployeesPage() {
               <thead>
                 <tr>
                   <th>姓名</th>
-                  <th>用户名</th>
-                  <th>手机号</th>
-                  <th>邮箱</th>
-                  <th>角色</th>
                   <th>部门</th>
-                  <th>状态</th>
-                  <th>创建时间</th>
+                  <th>岗位</th>
+                  <th>在职状态</th>
+                  <th>入职日期</th>
+                  <th>手机号</th>
+                  <th>账号状态</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -366,16 +608,11 @@ export default function EmployeesPage() {
                             {employee.realName.charAt(0)}
                           </span>
                         </div>
-                        <span className="font-semibold">{employee.realName}</span>
+                        <div>
+                          <span className="font-semibold block">{employee.realName}</span>
+                          <span className="text-[11px] text-[#86868B]">{employee.username}</span>
+                        </div>
                       </div>
-                    </td>
-                    <td className="text-[#86868B]">{employee.username}</td>
-                    <td>{employee.phone || "-"}</td>
-                    <td>{employee.email || "-"}</td>
-                    <td>
-                      <span className={`ios-badge ${employee.role === "admin" ? "ios-badge-red" : employee.role === "staff" ? "ios-badge-gray" : "ios-badge-blue"}`}>
-                        {roleLabelMap[employee.role] || employee.role}
-                      </span>
                     </td>
                     <td>
                       {employee.department ? (
@@ -384,6 +621,14 @@ export default function EmployeesPage() {
                         <span className="text-[#86868B]">-</span>
                       )}
                     </td>
+                    <td>{employee.position || <span className="text-[#86868B]">-</span>}</td>
+                    <td>
+                      <span className={`ios-badge ${employmentStatusColorMap[employee.employmentStatus || "active"]}`}>
+                        {employmentStatusLabelMap[employee.employmentStatus || "active"] || employee.employmentStatus}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap">{formatDate(employee.hireDate)}</td>
+                    <td>{employee.phone || "-"}</td>
                     <td>
                       <button
                         className="flex items-center gap-1 cursor-pointer"
@@ -393,22 +638,21 @@ export default function EmployeesPage() {
                         {employee.isActive ? (
                           <span className="ios-badge ios-badge-green">
                             <UserCheck className="w-3 h-3" />
-                            已启用
+                            启用
                           </span>
                         ) : (
                           <span className="ios-badge ios-badge-red">
                             <UserX className="w-3 h-3" />
-                            已禁用
+                            禁用
                           </span>
                         )}
                       </button>
                     </td>
-                    <td className="text-[#86868B]">{formatDate(employee.createdAt)}</td>
                     <td>
                       <div className="flex items-center gap-1">
                         <button
                           className="ios-btn ios-btn-ghost ios-btn-sm"
-                          onClick={() => setDetailEmployee(employee)}
+                          onClick={() => handleOpenDetail(employee)}
                         >
                           <Eye className="w-3.5 h-3.5" />
                           详情
@@ -464,8 +708,8 @@ export default function EmployeesPage() {
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title={editingEmployee ? "编辑员工" : "新增员工"}
-        maxWidth="600px"
+        title="编辑员工"
+        maxWidth="720px"
       >
         <div className="space-y-4">
           {formError && (
@@ -474,88 +718,258 @@ export default function EmployeesPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                用户名 <span className="text-[#FF3B30]">*</span>
-              </label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入用户名"
-                value={form.username}
-                onChange={(e) => updateForm("username", e.target.value)}
-                disabled={!!editingEmployee}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                姓名 <span className="text-[#FF3B30]">*</span>
-              </label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入姓名"
-                value={form.realName}
-                onChange={(e) => updateForm("realName", e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">手机号</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入手机号"
-                value={form.phone}
-                onChange={(e) => updateForm("phone", e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">邮箱</label>
-              <input
-                type="email"
-                className="ios-input"
-                placeholder="请输入邮箱"
-                value={form.email}
-                onChange={(e) => updateForm("email", e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">角色</label>
-              <select
-                className="ios-select"
-                value={form.role}
-                onChange={(e) => updateForm("role", e.target.value)}
-              >
-                {roleOptions.map((r) => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">部门</label>
-              <select
-                className="ios-select"
-                value={form.department}
-                onChange={(e) => updateForm("department", e.target.value)}
-              >
-                <option value="">请选择</option>
-                {departmentOptions.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
+          <div className="flex gap-1 bg-[#F5F5F7] rounded-xl p-1">
+            <button
+              className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition-all ${formTab === "basic" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#86868B]"}`}
+              onClick={() => setFormTab("basic")}
+            >
+              基本信息
+            </button>
+            <button
+              className={`flex-1 py-2 text-[13px] font-semibold rounded-lg transition-all ${formTab === "hr" ? "bg-white text-[#1D1D1F] shadow-sm" : "text-[#86868B]"}`}
+              onClick={() => setFormTab("hr")}
+            >
+              人事信息
+            </button>
           </div>
 
-          {!editingEmployee && (
-            <p className="text-[12px] text-[#86868B]">
-              新员工默认密码为 <span className="font-semibold text-[#1D1D1F]">123456</span>，请通知员工登录后及时修改
-            </p>
+          {formTab === "basic" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                  用户名 <span className="text-[#FF3B30]">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="ios-input"
+                  placeholder="请输入用户名"
+                  value={form.username}
+                  onChange={(e) => updateForm("username", e.target.value)}
+                  disabled={!!editingEmployee}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                  姓名 <span className="text-[#FF3B30]">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="ios-input"
+                  placeholder="请输入姓名"
+                  value={form.realName}
+                  onChange={(e) => updateForm("realName", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">手机号</label>
+                <input
+                  type="text"
+                  className="ios-input"
+                  placeholder="请输入手机号"
+                  value={form.phone}
+                  onChange={(e) => updateForm("phone", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">邮箱</label>
+                <input
+                  type="email"
+                  className="ios-input"
+                  placeholder="请输入邮箱"
+                  value={form.email}
+                  onChange={(e) => updateForm("email", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">角色</label>
+                <select
+                  className="ios-select"
+                  value={form.role}
+                  onChange={(e) => updateForm("role", e.target.value)}
+                >
+                  {roleOptions.map((r) => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">部门</label>
+                <select
+                  className="ios-select"
+                  value={form.department}
+                  onChange={(e) => updateForm("department", e.target.value)}
+                >
+                  <option value="">请选择</option>
+                  {departmentOptions.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {formTab === "hr" && (
+            <div className="space-y-5">
+              <div>
+                <p className="text-[12px] font-semibold text-[#86868B] uppercase tracking-wide mb-3">个人信息</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">身份证号</label>
+                    <input
+                      type="text"
+                      className="ios-input"
+                      placeholder="18位身份证号码"
+                      maxLength={18}
+                      value={form.idNumber}
+                      onChange={(e) => updateForm("idNumber", e.target.value)}
+                      onBlur={handleIdNumberBlur}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">出生日期</label>
+                    <input
+                      type="date"
+                      className="ios-input"
+                      value={form.birthDate}
+                      onChange={(e) => updateForm("birthDate", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">岗位/职位</label>
+                    <input
+                      type="text"
+                      className="ios-input"
+                      placeholder="请输入岗位"
+                      value={form.position}
+                      onChange={(e) => updateForm("position", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">在职状态</label>
+                    <select
+                      className="ios-select"
+                      value={form.employmentStatus}
+                      onChange={(e) => updateForm("employmentStatus", e.target.value)}
+                    >
+                      {employmentStatusOptions.map((s) => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">入职日期</label>
+                    <input
+                      type="date"
+                      className="ios-input"
+                      value={form.hireDate}
+                      onChange={(e) => updateForm("hireDate", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[12px] font-semibold text-[#86868B] uppercase tracking-wide mb-3">薪酬社保</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">基本工资（月）</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="ios-input"
+                      placeholder="0.00"
+                      value={form.baseSalary}
+                      onChange={(e) => updateForm("baseSalary", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">社保缴费基数</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="ios-input"
+                      placeholder="0.00"
+                      value={form.socialInsuranceBase}
+                      onChange={(e) => updateForm("socialInsuranceBase", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">公积金缴费基数</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="ios-input"
+                      placeholder="0.00"
+                      value={form.housingFundBase}
+                      onChange={(e) => updateForm("housingFundBase", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">公积金个人比例</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      className="ios-input"
+                      placeholder="如 0.12 代表 12%"
+                      value={form.housingFundRate}
+                      onChange={(e) => updateForm("housingFundRate", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">专项附加扣除/月</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="ios-input"
+                      placeholder="0.00"
+                      value={form.taxDeduction}
+                      onChange={(e) => updateForm("taxDeduction", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[12px] font-semibold text-[#86868B] uppercase tracking-wide mb-3">银行信息</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">开户银行</label>
+                    <input
+                      type="text"
+                      className="ios-input"
+                      placeholder="如 中国工商银行xx支行"
+                      value={form.bankName}
+                      onChange={(e) => updateForm("bankName", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">银行账号</label>
+                    <input
+                      type="text"
+                      className="ios-input"
+                      placeholder="请输入银行账号"
+                      value={form.bankAccount}
+                      onChange={(e) => updateForm("bankAccount", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+                <textarea
+                  className="ios-input min-h-[72px] resize-none"
+                  placeholder="其他备注信息"
+                  value={form.remark}
+                  onChange={(e) => updateForm("remark", e.target.value)}
+                />
+              </div>
+            </div>
           )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
@@ -570,7 +984,7 @@ export default function EmployeesPage() {
               onClick={handleSubmit}
               disabled={saving}
             >
-              {saving ? "保存中..." : editingEmployee ? "保存修改" : "创建员工"}
+              {saving ? "保存中..." : "保存修改"}
             </button>
           </div>
         </div>
@@ -578,71 +992,245 @@ export default function EmployeesPage() {
 
       <Modal
         isOpen={!!detailEmployee}
-        onClose={() => setDetailEmployee(null)}
+        onClose={() => { setDetailEmployee(null); setDetailAttachments([]); }}
         title="员工详情"
-        maxWidth="500px"
+        maxWidth="720px"
       >
         {detailEmployee && (
-          <div className="space-y-4">
+          <div className="space-y-5 -mx-2">
             <div className="flex items-center gap-4 pb-4 border-b border-[#F0F0F0]">
               <div className="w-14 h-14 rounded-full bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
                 <span className="text-[22px] font-bold text-[#007AFF]">
                   {detailEmployee.realName.charAt(0)}
                 </span>
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-[17px] font-bold text-[#1D1D1F]">{detailEmployee.realName}</p>
                 <p className="text-[13px] text-[#86868B]">@{detailEmployee.username}</p>
               </div>
-              <div className="ml-auto">
-                {detailEmployee.isActive ? (
-                  <span className="ios-badge ios-badge-green">
-                    <UserCheck className="w-3 h-3" />
-                    已启用
-                  </span>
-                ) : (
-                  <span className="ios-badge ios-badge-red">
-                    <UserX className="w-3 h-3" />
-                    已禁用
-                  </span>
+              <span className={`ios-badge ${employmentStatusColorMap[detailEmployee.employmentStatus || "active"]}`}>
+                {employmentStatusLabelMap[detailEmployee.employmentStatus || "active"]}
+              </span>
+              <span className={`ios-badge ${detailEmployee.isActive ? "ios-badge-green" : "ios-badge-red"}`}>
+                {detailEmployee.isActive ? "账号启用" : "账号禁用"}
+              </span>
+            </div>
+
+            <div>
+              <p className="text-[12px] font-semibold text-[#86868B] uppercase tracking-wide mb-3">基本信息</p>
+              <div className="grid grid-cols-3 gap-y-3 gap-x-6">
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">部门</p>
+                  <p className="text-[14px] font-medium">
+                    {detailEmployee.department ? (
+                      <span className="ios-badge ios-badge-orange">{detailEmployee.department}</span>
+                    ) : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">岗位</p>
+                  <p className="text-[14px] font-medium">{detailEmployee.position || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">角色</p>
+                  <p className="text-[14px] font-medium">
+                    <span className={`ios-badge ${detailEmployee.role === "admin" ? "ios-badge-red" : "ios-badge-blue"}`}>
+                      {roleLabelMap[detailEmployee.role] || detailEmployee.role}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">手机号</p>
+                  <p className="text-[14px] font-medium">{detailEmployee.phone || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">邮箱</p>
+                  <p className="text-[14px] font-medium">{detailEmployee.email || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">入职日期</p>
+                  <p className="text-[14px] font-medium">{formatDate(detailEmployee.hireDate)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[12px] font-semibold text-[#86868B] uppercase tracking-wide mb-3">身份信息</p>
+              <div className="grid grid-cols-3 gap-y-3 gap-x-6">
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">身份证号</p>
+                  <p className="text-[14px] font-medium">{detailEmployee.idNumber || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">出生日期</p>
+                  <p className="text-[14px] font-medium">
+                    {formatDate(detailEmployee.birthDate)}
+                    {detailEmployee.birthDate && (
+                      <span className="text-[#86868B] text-[12px] ml-1.5">({calcAge(detailEmployee.birthDate)})</span>
+                    )}
+                  </p>
+                </div>
+                {detailEmployee.leaveDate && (
+                  <div>
+                    <p className="text-[12px] text-[#86868B] mb-0.5">离职日期</p>
+                    <p className="text-[14px] font-medium">{formatDate(detailEmployee.leaveDate)}</p>
+                  </div>
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-y-4 gap-x-6">
-              <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">手机号</p>
-                <p className="text-[14px] font-medium">{detailEmployee.phone || "-"}</p>
+            <div>
+              <p className="text-[12px] font-semibold text-[#86868B] uppercase tracking-wide mb-3">薪酬社保</p>
+              <div className="grid grid-cols-3 gap-y-3 gap-x-6">
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">基本工资</p>
+                  <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatMoney(detailEmployee.baseSalary)}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">社保基数</p>
+                  <p className="text-[14px] font-medium">{formatMoney(detailEmployee.socialInsuranceBase)}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">公积金基数</p>
+                  <p className="text-[14px] font-medium">{formatMoney(detailEmployee.housingFundBase)}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">公积金比例</p>
+                  <p className="text-[14px] font-medium">
+                    {detailEmployee.housingFundRate != null
+                      ? `${(Number(detailEmployee.housingFundRate) * 100).toFixed(2)}%`
+                      : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">社保公司比例</p>
+                  <p className="text-[14px] font-medium">
+                    {detailEmployee.socialInsuranceCompanyRate != null
+                      ? `${(Number(detailEmployee.socialInsuranceCompanyRate) * 100).toFixed(2)}%`
+                      : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">公积金公司比例</p>
+                  <p className="text-[14px] font-medium">
+                    {detailEmployee.housingFundCompanyRate != null
+                      ? `${(Number(detailEmployee.housingFundCompanyRate) * 100).toFixed(2)}%`
+                      : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">专项附加扣除</p>
+                  <p className="text-[14px] font-medium">{formatMoney(detailEmployee.taxDeduction)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">邮箱</p>
-                <p className="text-[14px] font-medium">{detailEmployee.email || "-"}</p>
+            </div>
+
+            <div>
+              <p className="text-[12px] font-semibold text-[#86868B] uppercase tracking-wide mb-3">银行信息</p>
+              <div className="grid grid-cols-3 gap-y-3 gap-x-6">
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">开户银行</p>
+                  <p className="text-[14px] font-medium">{detailEmployee.bankName || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">银行账号</p>
+                  <p className="text-[14px] font-medium">{detailEmployee.bankAccount || "-"}</p>
+                </div>
               </div>
+            </div>
+
+            {detailEmployee.remark && (
               <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">角色</p>
-                <p className="text-[14px] font-medium">
-                  <span className={`ios-badge ${detailEmployee.role === "admin" ? "ios-badge-red" : "ios-badge-blue"}`}>
-                    {roleLabelMap[detailEmployee.role] || detailEmployee.role}
-                  </span>
-                </p>
+                <p className="text-[12px] font-semibold text-[#86868B] uppercase tracking-wide mb-3">备注</p>
+                <p className="text-[14px] text-[#1D1D1F] bg-[#F5F5F7] rounded-xl p-3">{detailEmployee.remark}</p>
               </div>
-              <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">部门</p>
-                <p className="text-[14px] font-medium">
-                  {detailEmployee.department ? (
-                    <span className="ios-badge ios-badge-orange">{detailEmployee.department}</span>
-                  ) : (
-                    "-"
-                  )}
-                </p>
+            )}
+
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[12px] font-semibold text-[#86868B] uppercase tracking-wide">证件附件</p>
+                <div className="flex items-center gap-2">
+                  <select
+                    className="ios-select w-[120px] text-[12px] py-1.5"
+                    value={uploadFileType}
+                    onChange={(e) => setUploadFileType(e.target.value)}
+                  >
+                    {fileTypeOptions.map((t) => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    className="ios-btn ios-btn-primary ios-btn-sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingFile}
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    {uploadingFile ? "上传中..." : "上传附件"}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.pdf,.doc,.docx"
+                    onChange={handleFileUpload}
+                  />
+                </div>
               </div>
+
+              {detailLoading ? (
+                <div className="text-center py-6 text-[#86868B] text-[13px]">加载附件...</div>
+              ) : detailAttachments.length === 0 ? (
+                <div className="text-center py-8 bg-[#F5F5F7] rounded-xl">
+                  <FileText className="w-8 h-8 text-[#86868B] mx-auto mb-2" />
+                  <p className="text-[13px] text-[#86868B]">暂无附件</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {detailAttachments.map((att) => (
+                    <div
+                      key={att.id}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-[#F5F5F7] hover:bg-[#E5E5EA] transition-colors"
+                    >
+                      <FileText className="w-5 h-5 text-[#007AFF] flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-[#1D1D1F] truncate">{att.fileName}</p>
+                        <p className="text-[11px] text-[#86868B]">
+                          {fileTypeLabelMap[att.fileType] || att.fileType}
+                          {att.fileSize > 0 && ` · ${(att.fileSize / 1024).toFixed(1)}KB`}
+                          {` · ${formatDate(att.createdAt)}`}
+                        </p>
+                      </div>
+                      <a
+                        href={att.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ios-btn ios-btn-ghost ios-btn-sm"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </a>
+                      <button
+                        className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                        onClick={() => handleDeleteAttachment(att.id)}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#F0F0F0]">
               <div>
                 <p className="text-[12px] text-[#86868B] mb-0.5">创建时间</p>
-                <p className="text-[14px] font-medium">{formatDate(detailEmployee.createdAt)}</p>
+                <p className="text-[13px] font-medium">{formatDate(detailEmployee.createdAt)}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#86868B] mb-0.5">更新时间</p>
-                <p className="text-[14px] font-medium">{formatDate(detailEmployee.updatedAt)}</p>
+                <p className="text-[12px] text-[#86868B] mb-0.5">最后修改</p>
+                <p className="text-[13px] font-medium">
+                  {detailEmployee.lastModifiedBy && <span>{detailEmployee.lastModifiedBy} · </span>}
+                  {formatDate(detailEmployee.updatedAt)}
+                </p>
               </div>
             </div>
           </div>

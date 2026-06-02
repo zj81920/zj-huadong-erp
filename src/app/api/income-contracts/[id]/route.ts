@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isAdmin, getCurrentUser } from "@/lib/auth";
 
 interface SplitStage {
   name: string;
@@ -45,6 +46,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
+    const currentUser = await getCurrentUser();
 
     const existing = await prisma.incomeContract.findUnique({
       where: { id },
@@ -77,15 +79,25 @@ export async function PUT(
       updateData.customerId = body.customerId;
     if (body.totalAmount !== undefined)
       updateData.totalAmount = parseFloat(body.totalAmount);
-    if (body.signedDate !== undefined)
-      updateData.signedDate = body.signedDate ? new Date(body.signedDate) : null;
     if (body.splitStages !== undefined)
       updateData.splitStages = body.splitStages;
     if (body.status !== undefined) updateData.status = body.status;
     if (body.scannedUrl !== undefined)
       updateData.scannedUrl = body.scannedUrl?.trim() || null;
+    if (body.archivedUrl !== undefined)
+      updateData.archivedUrl = body.archivedUrl || null;
     if (body.approvalInstanceId !== undefined)
       updateData.approvalInstanceId = body.approvalInstanceId;
+    if (body.taxRate !== undefined)
+      updateData.taxRate = body.taxRate || null;
+    if (body.pricingMethod !== undefined)
+      updateData.pricingMethod = body.pricingMethod || null;
+    if (body.contractSummary !== undefined)
+      updateData.contractSummary = body.contractSummary || null;
+    if (body.paymentTerms !== undefined)
+      updateData.paymentTerms = body.paymentTerms || null;
+
+    updateData.lastModifiedBy = currentUser?.realName || null;
 
     if (updateData.contractNo) {
       const duplicate = await prisma.incomeContract.findFirst({
@@ -104,6 +116,13 @@ export async function PUT(
 
     const shouldCreateReceivables =
       updateData.status === "已批准" && existing.status !== "已批准";
+
+    const shouldSetSignedDate =
+      updateData.status === "合同归档" && existing.status !== "合同归档";
+
+    if (shouldSetSignedDate) {
+      updateData.signedDate = new Date();
+    }
 
     const contract = await prisma.$transaction(async (tx) => {
       const updated = await tx.incomeContract.update({
@@ -189,6 +208,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const adminUser = await getCurrentUser();
 
     const existing = await prisma.incomeContract.findUnique({
       where: { id },
@@ -201,7 +221,7 @@ export async function DELETE(
       );
     }
 
-    if (existing.status !== "草稿") {
+    if (existing.status !== "草稿" && !isAdmin(adminUser)) {
       return NextResponse.json(
         { error: "只有草稿状态的合同可以删除" },
         { status: 400 }

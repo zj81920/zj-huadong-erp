@@ -23,10 +23,13 @@ interface Role {
   departmentId: string | null;
   departmentName: string | null;
   isProjectRole: boolean;
+  accessibleModules: string | string[];
+  isGlobalVisible: boolean;
   sort: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
   userCount: number;
 }
 
@@ -40,22 +43,88 @@ interface RoleFormData {
   description: string;
   departmentId: string;
   isProjectRole: boolean;
+  accessibleModules: string[];
+  isGlobalVisible: boolean;
   sort: number;
 }
 
+const MODULE_OPTIONS = [
+  { key: "business", label: "商务管理" },
+  { key: "projects", label: "项目管理" },
+  { key: "procurement", label: "项目采购" },
+  { key: "contracts", label: "合同管理" },
+  { key: "finance", label: "财务管理" },
+  { key: "hr", label: "人事行政" },
+  { key: "settings", label: "系统设置" },
+];
+
+const SUB_MODULE_OPTIONS: Record<string, { key: string; label: string }[]> = {
+  business: [
+    { key: "business.customers", label: "客户管理" },
+    { key: "business.suppliers", label: "供应商管理" },
+    { key: "business.project_leads", label: "市场开发" },
+    { key: "business.biddings", label: "投标统计" },
+    { key: "business.quotations", label: "报价统计" },
+  ],
+  projects: [
+    { key: "projects.list", label: "项目立项" },
+    { key: "projects.plans", label: "项目计划" },
+    { key: "projects.progress", label: "项目进度" },
+    { key: "projects.outsourcing", label: "设计外包" },
+  ],
+  procurement: [
+    { key: "procurement.requests", label: "采购需求" },
+    { key: "procurement.inquiries", label: "采购单" },
+    { key: "procurement.deliveries", label: "到货验收" },
+  ],
+  contracts: [
+    { key: "contracts.income", label: "收入合同" },
+    { key: "contracts.expense", label: "支出合同" },
+  ],
+  finance: [
+    { key: "finance.income", label: "财务收入" },
+    { key: "finance.expense", label: "财务支出" },
+    { key: "finance.invoices", label: "发票管理" },
+    { key: "finance.reports", label: "财务报表" },
+    { key: "finance.bank_accounts", label: "银行账户" },
+  ],
+  hr: [
+    { key: "hr.employees", label: "员工档案" },
+    { key: "hr.supplies", label: "办公用品" },
+    { key: "hr.certificates", label: "证照管理" },
+    { key: "hr.seals", label: "印章管理" },
+  ],
+};
+
+const TAB_MODULE_OPTIONS: Record<string, { key: string; label: string }[]> = {
+  "finance.income": [
+    { key: "finance.income.contract", label: "合同收入" },
+    { key: "finance.income.other", label: "其他收入" },
+    { key: "finance.income.shareholder", label: "股东出资" },
+    { key: "finance.income.borrowing", label: "其他借入款" },
+  ],
+  "finance.expense": [
+    { key: "finance.expense.contract", label: "合同支出" },
+    { key: "finance.expense.other", label: "其他支出" },
+    { key: "finance.expense.lending", label: "借出款" },
+    { key: "finance.expense.report", label: "费用报销" },
+    { key: "finance.expense.salary", label: "工资发放" },
+    { key: "finance.expense.return", label: "借入资金归还" },
+  ],
+};
+
 const DEFAULT_ROLES: { name: string; isProjectRole: boolean; sort: number }[] = [
-  { name: "经办人", isProjectRole: false, sort: 1 },
-  { name: "部门负责人", isProjectRole: false, sort: 2 },
-  { name: "项目经理", isProjectRole: true, sort: 3 },
-  { name: "项目管理部", isProjectRole: false, sort: 4 },
-  { name: "行政", isProjectRole: false, sort: 5 },
-  { name: "采购部", isProjectRole: false, sort: 6 },
-  { name: "设计负责人/生产经理", isProjectRole: true, sort: 7 },
-  { name: "财务", isProjectRole: false, sort: 8 },
-  { name: "出纳", isProjectRole: false, sort: 9 },
-  { name: "副总经理", isProjectRole: false, sort: 10 },
-  { name: "总经理", isProjectRole: false, sort: 11 },
-  { name: "董事长", isProjectRole: false, sort: 12 },
+  { name: "部门负责人", isProjectRole: false, sort: 1 },
+  { name: "项目经理", isProjectRole: true, sort: 2 },
+  { name: "项目管理部", isProjectRole: false, sort: 3 },
+  { name: "行政", isProjectRole: false, sort: 4 },
+  { name: "采购部", isProjectRole: false, sort: 5 },
+  { name: "设计负责人/生产经理", isProjectRole: true, sort: 6 },
+  { name: "财务", isProjectRole: false, sort: 7 },
+  { name: "出纳", isProjectRole: false, sort: 8 },
+  { name: "副总经理", isProjectRole: false, sort: 9 },
+  { name: "总经理", isProjectRole: false, sort: 10 },
+  { name: "董事长", isProjectRole: false, sort: 11 },
 ];
 
 const emptyForm: RoleFormData = {
@@ -63,7 +132,14 @@ const emptyForm: RoleFormData = {
   description: "",
   departmentId: "",
   isProjectRole: false,
+  accessibleModules: [],
+  isGlobalVisible: false,
   sort: 0,
+};
+
+const formatDate = (dateStr: string) => {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
 export default function RolesPage() {
@@ -154,6 +230,8 @@ export default function RolesPage() {
       description: role.description || "",
       departmentId: role.departmentId || "",
       isProjectRole: role.isProjectRole,
+      accessibleModules: typeof role.accessibleModules === "string" ? JSON.parse(role.accessibleModules || "[]") : (role.accessibleModules || []),
+      isGlobalVisible: role.isGlobalVisible || false,
       sort: role.sort,
     });
     setFormError("");
@@ -175,6 +253,8 @@ export default function RolesPage() {
         description: form.description.trim() || null,
         departmentId: form.departmentId || null,
         isProjectRole: form.isProjectRole,
+        accessibleModules: form.accessibleModules,
+        isGlobalVisible: form.isGlobalVisible,
         sort: form.sort,
       };
 
@@ -313,9 +393,12 @@ export default function RolesPage() {
                   <th>角色名称</th>
                   <th>所属部门</th>
                   <th>描述</th>
+                  <th>模块权限</th>
+                  <th>全局可见</th>
                   <th>属性</th>
                   <th>用户数</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
@@ -347,6 +430,21 @@ export default function RolesPage() {
                       {role.description || "-"}
                     </td>
                     <td>
+                      <span className="ios-badge ios-badge-gray gap-1">
+                        {(typeof role.accessibleModules === "string"
+                          ? JSON.parse(role.accessibleModules || "[]")
+                          : role.accessibleModules || []
+                        ).length} 个模块
+                      </span>
+                    </td>
+                    <td className="text-center">
+                      {role.isGlobalVisible ? (
+                        <Check className="w-4 h-4 text-[#34C759] mx-auto" />
+                      ) : (
+                        <span className="text-[#86868B]">-</span>
+                      )}
+                    </td>
+                    <td>
                       <div className="flex items-center gap-2">
                         {role.isProjectRole && (
                           <span className="ios-badge ios-badge-blue gap-1">
@@ -364,24 +462,41 @@ export default function RolesPage() {
                     </td>
                     <td>
                       <div className="flex items-center gap-1">
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm"
-                          onClick={() => handleOpenEdit(role)}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                          编辑
-                        </button>
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                          onClick={() => {
-                            setDeleteConfirm(role);
-                            setDeleteError("");
-                          }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          删除
-                        </button>
+                        {(() => {
+                          if (role.code === "admin") {
+                            return <span className="ios-badge ios-badge-gray text-[11px]">系统内定</span>;
+                          }
+                          return (
+                            <>
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm"
+                                onClick={() => handleOpenEdit(role)}
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                                编辑
+                              </button>
+                              {role.code !== "finance" && (
+                                <button
+                                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                  onClick={() => {
+                                    setDeleteConfirm(role);
+                                    setDeleteError("");
+                                  }}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  删除
+                                </button>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
+                    </td>
+                    <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                      {role.lastModifiedBy && (
+                        <span>{role.lastModifiedBy}</span>
+                      )}
+                      <span className="block text-[11px]">{formatDate(role.updatedAt)}</span>
                     </td>
                   </tr>
                 ))}
@@ -420,14 +535,18 @@ export default function RolesPage() {
             </label>
             <input
               type="text"
-              className="ios-input"
+              className={editingRole?.code === "finance" ? "ios-input !bg-[#F5F5F7] !cursor-not-allowed !text-[#86868B]" : "ios-input"}
               placeholder="如：部门负责人"
               value={form.name}
+              disabled={editingRole?.code === "finance"}
               onChange={(e) => {
                 setForm((prev) => ({ ...prev, name: e.target.value }));
                 if (formError) setFormError("");
               }}
             />
+            {editingRole?.code === "finance" && (
+              <p className="text-[11px] text-[#86868B] mt-1">系统角色名称不可修改</p>
+            )}
           </div>
 
           <div>
@@ -475,6 +594,215 @@ export default function RolesPage() {
               <span
                 className={`inline-block h-[26px] w-[26px] rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
                   form.isProjectRole ? "translate-x-[23px]" : "translate-x-[1px]"
+                }`}
+              />
+            </button>
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-2">
+              可访问模块
+            </label>
+            <div className="space-y-2">
+              {MODULE_OPTIONS.map((mod) => {
+                const subOptions = SUB_MODULE_OPTIONS[mod.key] || [];
+                const checked = form.accessibleModules.includes(mod.key);
+                const selectedSubs = subOptions.filter((s) => form.accessibleModules.includes(s.key));
+                return (
+                  <div key={mod.key} className="rounded-xl border border-[#F0F0F0] overflow-hidden">
+                    <label
+                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150 ${
+                        checked ? "bg-[#007AFF]/6" : "bg-white hover:bg-[#FAFAFA]"
+                      }`}
+                    >
+                      <span
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
+                          checked ? "border-[#007AFF] bg-[#007AFF]" : "border-[#D1D1D6] bg-white"
+                        }`}
+                      >
+                        {checked && <span className="w-2 h-2 rounded-full bg-white" />}
+                      </span>
+                      <span className={`text-[14px] font-semibold flex-1 ${checked ? "text-[#007AFF]" : "text-[#1D1D1F]"}`}>
+                        {mod.label}
+                      </span>
+                      {checked && subOptions.length > 0 && (
+                        <span className="text-[11px] text-[#86868B]">
+                          {selectedSubs.length}/{subOptions.length}
+                        </span>
+                      )}
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={checked}
+                        onChange={() => {
+                          const newChecked = !checked;
+                          setForm((prev) => {
+                            let newModules = [...prev.accessibleModules];
+                            if (newChecked) {
+                              if (!newModules.includes(mod.key)) newModules.push(mod.key);
+                            } else {
+                              newModules = newModules.filter((m) => m !== mod.key);
+                              if (subOptions.length > 0) {
+                                const subKeys = subOptions.map((s) => s.key);
+                                newModules = newModules.filter((m) => !subKeys.includes(m));
+                              }
+                            }
+                            return { ...prev, accessibleModules: newModules };
+                          });
+                        }}
+                      />
+                    </label>
+                    {checked && subOptions.length > 0 && (
+                      <div className="px-4 pb-3 pt-1 border-t border-[#F0F0F0] bg-[#FAFAFA]">
+                        <div className="space-y-1.5">
+                          {subOptions.map((sub) => {
+                            const subChecked = form.accessibleModules.includes(sub.key);
+                            const tabOptions = TAB_MODULE_OPTIONS[sub.key] || [];
+                            const selectedTabs = tabOptions.filter((t) => form.accessibleModules.includes(t.key));
+                            const allTabsSelected = tabOptions.length > 0 && selectedTabs.length === tabOptions.length;
+                            return (
+                              <div key={sub.key}>
+                                <label className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-150 text-[13px] ${
+                                  subChecked
+                                    ? "bg-[#007AFF]/10 text-[#007AFF] font-medium"
+                                    : "bg-white text-[#6E6E73] hover:bg-[#F0F0F0]"
+                                }`}>
+                                  <span
+                                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
+                                      subChecked ? "border-[#007AFF] bg-[#007AFF]" : "border-[#D1D1D6] bg-white"
+                                    }`}
+                                  >
+                                    {subChecked && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                  </span>
+                                  <span className="flex-1">{sub.label}</span>
+                                  <input
+                                    type="checkbox"
+                                    className="hidden"
+                                    checked={subChecked}
+                                    onChange={() => {
+                                      setForm((prev) => {
+                                        let newModules = [...prev.accessibleModules];
+                                        if (subChecked) {
+                                          newModules = newModules.filter((m) => m !== sub.key);
+                                          if (tabOptions.length > 0) {
+                                            const tabKeys = tabOptions.map((t) => t.key);
+                                            newModules = newModules.filter((m) => !tabKeys.includes(m));
+                                          }
+                                          const remainingSubs = subOptions.filter(
+                                            (s) => s.key !== sub.key && newModules.includes(s.key)
+                                          );
+                                          if (remainingSubs.length === 0) {
+                                            newModules = newModules.filter((m) => m !== mod.key);
+                                          }
+                                        } else {
+                                          if (!newModules.includes(sub.key)) newModules.push(sub.key);
+                                          if (!newModules.includes(mod.key)) newModules.push(mod.key);
+                                        }
+                                        return { ...prev, accessibleModules: newModules };
+                                      });
+                                    }}
+                                  />
+                                  {subChecked && tabOptions.length > 0 && (
+                                    <span className="text-[11px] text-[#86868B]">
+                                      {selectedTabs.length}/{tabOptions.length}
+                                    </span>
+                                  )}
+                                  {subChecked && tabOptions.length > 0 && (
+                                    <button
+                                      type="button"
+                                      className="text-[11px] text-[#007AFF] hover:underline"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setForm((prev) => {
+                                          let newModules = [...prev.accessibleModules];
+                                          const tabKeys = tabOptions.map((t) => t.key);
+                                          if (allTabsSelected) {
+                                            newModules = newModules.filter((m) => !tabKeys.includes(m));
+                                          } else {
+                                            for (const tk of tabKeys) {
+                                              if (!newModules.includes(tk)) newModules.push(tk);
+                                            }
+                                          }
+                                          return { ...prev, accessibleModules: newModules };
+                                        });
+                                      }}
+                                    >
+                                      {allTabsSelected ? "取消全选" : "全选"}
+                                    </button>
+                                  )}
+                                </label>
+                                {subChecked && tabOptions.length > 0 && (
+                                  <div className="ml-6 mt-1 flex flex-wrap gap-1">
+                                    {tabOptions.map((tab) => {
+                                      const tabChecked = form.accessibleModules.includes(tab.key);
+                                      return (
+                                        <label
+                                          key={tab.key}
+                                          className={`flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer transition-all duration-150 text-[12px] ${
+                                            tabChecked
+                                              ? "bg-[#007AFF]/8 text-[#007AFF] font-medium"
+                                              : "bg-white text-[#86868B] hover:bg-[#F0F0F0]"
+                                          }`}
+                                        >
+                                          <span
+                                            className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
+                                              tabChecked ? "border-[#007AFF] bg-[#007AFF]" : "border-[#D1D1D6] bg-white"
+                                            }`}
+                                          >
+                                            {tabChecked && <span className="w-1 h-1 rounded-full bg-white" />}
+                                          </span>
+                                          <span>{tab.label}</span>
+                                          <input
+                                            type="checkbox"
+                                            className="hidden"
+                                            checked={tabChecked}
+                                            onChange={() => {
+                                              setForm((prev) => {
+                                                let newModules = [...prev.accessibleModules];
+                                                if (tabChecked) {
+                                                  newModules = newModules.filter((m) => m !== tab.key);
+                                                } else {
+                                                  if (!newModules.includes(tab.key)) newModules.push(tab.key);
+                                                }
+                                                return { ...prev, accessibleModules: newModules };
+                                              });
+                                            }}
+                                          />
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-xl bg-[#F5F5F7]">
+            <div>
+              <p className="text-[14px] font-semibold text-[#1D1D1F]">全局可见</p>
+              <p className="text-[12px] text-[#86868B] mt-0.5">开启后该角色可查看所有模块、所有项目数据</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.isGlobalVisible}
+              onClick={() => setForm((prev) => ({ ...prev, isGlobalVisible: !prev.isGlobalVisible }))}
+              className={`relative inline-flex h-[30px] w-[51px] flex-shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out ${
+                form.isGlobalVisible ? "bg-[#007AFF]" : "bg-[#E5E5EA]"
+              }`}
+            >
+              <span
+                className={`inline-block h-[26px] w-[26px] rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                  form.isGlobalVisible ? "translate-x-[23px]" : "translate-x-[1px]"
                 }`}
               />
             </button>

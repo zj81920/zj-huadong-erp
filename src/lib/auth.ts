@@ -10,7 +10,7 @@ export interface CurrentUser {
   phone: string | null;
   email: string | null;
   department: string | null;
-  roles: { id: string; code: string; name: string; isProjectRole: boolean }[];
+  roles: { id: string; code: string; name: string; isProjectRole: boolean; accessibleModules: string; isGlobalVisible: boolean }[];
 }
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -34,6 +34,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
                 code: true,
                 name: true,
                 isProjectRole: true,
+                accessibleModules: true,
+                isGlobalVisible: true,
               },
             },
           },
@@ -55,6 +57,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
         code: ur.role.code,
         name: ur.role.name,
         isProjectRole: ur.role.isProjectRole,
+        accessibleModules: ur.role.accessibleModules,
+        isGlobalVisible: ur.role.isGlobalVisible,
       })),
     };
   } catch {
@@ -77,6 +81,11 @@ export function parseSessionToken(token: string): string | null {
   } catch {
     return null;
   }
+}
+
+export function isAdmin(user: CurrentUser | null): boolean {
+  if (!user) return false;
+  return user.username === "admin";
 }
 
 export { SESSION_COOKIE };

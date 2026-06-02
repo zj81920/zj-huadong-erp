@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isAdmin, getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   _request: NextRequest,
@@ -28,6 +29,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+    const currentUser = await getCurrentUser();
     const body = await request.json();
     const { name, address, contactPerson, phone, email, maintainer, industryType, customerGrade } = body;
 
@@ -56,6 +58,7 @@ export async function PUT(
         ...(maintainer !== undefined && { maintainer: maintainer?.trim() || null }),
         ...(industryType !== undefined && { industryType: industryType || null }),
         ...(customerGrade !== undefined && { customerGrade: customerGrade || "C" }),
+        lastModifiedBy: currentUser?.realName || null,
       },
     });
 
@@ -72,6 +75,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const adminUser = await getCurrentUser();
 
     const existing = await prisma.customer.findUnique({ where: { id } });
     if (!existing || !existing.isActive) {
@@ -82,7 +86,7 @@ export async function DELETE(
       where: { customerId: id },
     });
 
-    if (projectLeadsCount > 0) {
+    if (projectLeadsCount > 0 && !isAdmin(adminUser)) {
       return NextResponse.json(
         { error: `该客户下有 ${projectLeadsCount} 条项目线索，无法删除` },
         { status: 400 }

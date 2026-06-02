@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import {
   Search,
   Plus,
@@ -12,8 +12,24 @@ import {
   Calendar,
   CheckCircle,
   AlertCircle,
+  Link2,
+  Copy,
+  Globe,
+  Check,
+  Paperclip,
+  File,
+  Upload,
+  X,
+  ChevronDown,
+  ChevronRight,
+  Package,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFlowConfigured } from "@/hooks/useFlowConfigured";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 
 interface PurchaseRequestItem {
   id: string;
@@ -26,6 +42,8 @@ interface PurchaseRequestItem {
   quantity: number | string | null;
   remark: string | null;
   sortOrder: number;
+  unitPrice?: number | null;
+  totalPrice?: number | null;
 }
 
 interface PurchaseRequest {
@@ -34,6 +52,7 @@ interface PurchaseRequest {
   requestNo: string;
   status: string;
   items: PurchaseRequestItem[];
+  project?: { projectSourceId: string; name: string; projectCode?: string };
 }
 
 interface Supplier {
@@ -52,6 +71,8 @@ interface Inquiry {
   id: string;
   purchaseRequestId: string;
   projectSourceId: string;
+  projectName: string;
+  projectCode: string;
   supplierIds: string[];
   inquiryDate: string;
   closingDate: string | null;
@@ -61,15 +82,27 @@ interface Inquiry {
   singleSourceReason: string | null;
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
   hasContract: boolean;
   purchaseRequest: PurchaseRequest;
   supplierNames: SupplierName[];
   recommendedSupplierName: string | null;
+  inquiryMode: string;
+  onlineStatus: string;
+  onlineToken: string | null;
+  onlineDeadline: string | null;
+  currentRound: number;
+  confirmedSupplierId: string | null;
+  confirmedRound: number | null;
+  inquiryStatus: string;
+  approvalInstanceId: string | null;
+  attachments?: { name: string; url: string }[];
 }
 
 interface InquiryDetail extends Inquiry {
   supplierDetails: { id: string; name: string; contactPerson: string | null; phone: string | null }[];
-  purchaseContract: { id: string; contractNo: string } | null;
+  expenseContract: { id: string; contractNo: string } | null;
+  supplierQuotes: { id: string; supplierId: string; supplier: { name: string }; quoteMode: string; totalPrice: number | null; deliveryDays: number | null; remark: string | null; quotedAt: string | null; isValid: boolean; round: number; items: { id: string; purchaseRequestItemId: string; unitPrice: number | null; quantity: number | null; totalPrice: number | null; deliveryDays: number | null; remark: string | null; purchaseRequestItem: { id: string; materialName: string; spec: string | null; unit: string | null; quantity: number | null } }[] }[];
 }
 
 interface PaginationInfo {
@@ -85,9 +118,11 @@ interface FormData {
   supplierIds: string[];
   closingDate: string;
   quoteSummary: Record<string, { price: number; deliveryDays: number; remark: string }>;
-  recommendedSupplierId: string;
-  isSingleSource: boolean;
-  singleSourceReason: string;
+  inquiryMode: string;
+  onlineDeadline: string;
+  attachments: { name: string; url: string }[];
+  confirmedSupplierId: string;
+  confirmedRound: number | null;
 }
 
 const emptyForm: FormData = {
@@ -96,12 +131,17 @@ const emptyForm: FormData = {
   supplierIds: [],
   closingDate: "",
   quoteSummary: {},
-  recommendedSupplierId: "",
-  isSingleSource: false,
-  singleSourceReason: "",
+  inquiryMode: "offline",
+  onlineDeadline: "",
+  attachments: [],
+  confirmedSupplierId: "",
+  confirmedRound: null,
 };
 
 export default function InquiriesPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin";
+  const { configured: flowConfigured } = useFlowConfigured("quotation");
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1, pageSize: 20, total: 0, totalPages: 0,
@@ -121,8 +161,30 @@ export default function InquiriesPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
   const [detailInquiry, setDetailInquiry] = useState<InquiryDetail | null>(null);
+  const [approvalInstance, setApprovalInstance] = useState<any>(null);
+  const [approvalLoading, setApprovalLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Inquiry | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [itemPrices, setItemPrices] = useState<Record<string, string>>({});
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [viewingRound, setViewingRound] = useState(1);
+  const [supplierSearch, setSupplierSearch] = useState("");
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const toggleRowExpand = (id: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const [quoteItems, setQuoteItems] = useState<Record<string, { unitPrice: string; quantity: string; totalPrice: string }>>({});
+  const [projects, setProjects] = useState<{ id: string; name: string; projectCode?: string }[]>([]);
+
+  const {
+    toggleSelect, selectAll, clearSelection, isAllSelected, selectedCount, isSelected,
+  } = useBatchSelection(inquiries.map((i) => i.id));
 
   const fetchPurchaseRequests = useCallback(async () => {
     try {
@@ -134,9 +196,17 @@ export default function InquiriesPage() {
 
   const fetchSuppliers = useCallback(async () => {
     try {
-      const res = await fetch("/api/suppliers?pageSize=200");
+      const res = await fetch("/api/suppliers?status=当前有效&pageSize=200");
       const json = await res.json();
       if (res.ok) setSuppliers(json.data || []);
+    } catch {}
+  }, []);
+
+  const fetchProjects = useCallback(async () => {
+    try {
+      const res = await fetch("/api/projects?pageSize=200");
+      const json = await res.json();
+      if (res.ok) setProjects(json.data || []);
     } catch {}
   }, []);
 
@@ -161,10 +231,25 @@ export default function InquiriesPage() {
     }
   }, [search, filterProjectSourceId, pagination.page, pagination.pageSize]);
 
+  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
+    setApprovalLoading(true);
+    try {
+      const res = await fetch(`/api/approval-instances/${instanceId}`);
+      const json = await res.json();
+      if (res.ok) {
+        setApprovalInstance(json.data);
+      }
+    } catch {
+    } finally {
+      setApprovalLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPurchaseRequests();
     fetchSuppliers();
-  }, [fetchPurchaseRequests, fetchSuppliers]);
+    fetchProjects();
+  }, [fetchPurchaseRequests, fetchSuppliers, fetchProjects]);
 
   useEffect(() => {
     fetchInquiries();
@@ -173,11 +258,13 @@ export default function InquiriesPage() {
   const handleOpenCreate = () => {
     setEditingInquiry(null);
     setForm(emptyForm);
+    setItemPrices({});
+    setQuoteItems({});
     setFormError("");
     setShowModal(true);
   };
 
-  const handleOpenEdit = (inquiry: Inquiry) => {
+  const handleOpenEdit = async (inquiry: Inquiry) => {
     setEditingInquiry(inquiry);
     const qs = inquiry.quoteSummary || {};
     const parsedQuoteSummary: Record<string, { price: number; deliveryDays: number; remark: string }> = {};
@@ -190,12 +277,37 @@ export default function InquiriesPage() {
       supplierIds: [...inquiry.supplierIds],
       closingDate: inquiry.closingDate ? inquiry.closingDate.split("T")[0] : "",
       quoteSummary: parsedQuoteSummary,
-      recommendedSupplierId: inquiry.recommendedSupplierId || "",
-      isSingleSource: inquiry.isSingleSource,
-      singleSourceReason: inquiry.singleSourceReason || "",
+      inquiryMode: inquiry.inquiryMode || "offline",
+      onlineDeadline: inquiry.onlineDeadline ? new Date(inquiry.onlineDeadline).toISOString().slice(0, 16) : "",
+      attachments: inquiry.attachments && Array.isArray(inquiry.attachments) ? [...inquiry.attachments] : [],
+      confirmedSupplierId: inquiry.confirmedSupplierId || "",
+      confirmedRound: inquiry.confirmedRound || null,
     });
+    setItemPrices({});
+    setQuoteItems({});
     setFormError("");
     setShowModal(true);
+
+    try {
+      const detailRes = await fetch(`/api/inquiries/${inquiry.id}`);
+      const detailJson = await detailRes.json();
+      if (detailRes.ok && detailJson.data?.supplierQuotes) {
+        const initialQuoteItems: Record<string, { unitPrice: string; quantity: string; totalPrice: string }> = {};
+        for (const sq of detailJson.data.supplierQuotes) {
+          if (sq.items) {
+            for (const qi of sq.items) {
+              const key = `${sq.supplierId}_${qi.purchaseRequestItemId}`;
+              initialQuoteItems[key] = {
+                unitPrice: qi.unitPrice != null ? String(qi.unitPrice) : "",
+                quantity: qi.quantity != null ? String(qi.quantity) : "",
+                totalPrice: qi.totalPrice != null ? String(qi.totalPrice) : "",
+              };
+            }
+          }
+        }
+        setQuoteItems(initialQuoteItems);
+      }
+    } catch {}
   };
 
   const handleSubmit = async () => {
@@ -205,10 +317,6 @@ export default function InquiriesPage() {
     }
     if (form.supplierIds.length === 0) {
       setFormError("请至少选择一个供应商");
-      return;
-    }
-    if (form.isSingleSource && !form.singleSourceReason.trim()) {
-      setFormError("单一来源采购需填写原因");
       return;
     }
 
@@ -221,14 +329,44 @@ export default function InquiriesPage() {
         : "/api/inquiries";
       const method = editingInquiry ? "PUT" : "POST";
 
+      const selectedPrItems = editingInquiry
+        ? (editingInquiry.purchaseRequest?.items || [])
+        : (purchaseRequests.find((p) => p.id === form.purchaseRequestId)?.items || []);
+
       const body: Record<string, unknown> = {
         supplierIds: form.supplierIds,
         closingDate: form.closingDate || null,
         quoteSummary: form.quoteSummary,
-        recommendedSupplierId: form.recommendedSupplierId || null,
-        isSingleSource: form.isSingleSource,
-        singleSourceReason: form.isSingleSource ? form.singleSourceReason.trim() : null,
+        inquiryMode: form.inquiryMode,
+        onlineDeadline: form.onlineDeadline || null,
+        attachments: form.attachments,
+        confirmedSupplierId: form.confirmedSupplierId || null,
+        confirmedRound: form.confirmedRound || null,
       };
+
+      if (form.inquiryMode === "offline" && form.supplierIds.length > 0 && selectedPrItems.length > 0) {
+        body.supplierQuotes = form.supplierIds.map((sid) => {
+          const items = selectedPrItems.map((item) => {
+            const key = `${sid}_${item.id}`;
+            const qi = quoteItems[key];
+            return {
+              purchaseRequestItemId: item.id,
+              unitPrice: qi?.unitPrice ? parseFloat(qi.unitPrice) : null,
+              quantity: qi?.quantity ? parseFloat(qi.quantity) : null,
+              totalPrice: qi?.totalPrice ? parseFloat(qi.totalPrice) : null,
+            };
+          }).filter((i) => i.unitPrice || i.quantity);
+          return {
+            supplierId: sid,
+            round: 1,
+            quoteMode: "offline",
+            totalPrice: items.reduce((sum, i) => sum + (i.totalPrice || 0), 0),
+            deliveryDays: form.quoteSummary[sid]?.deliveryDays || null,
+            remark: form.quoteSummary[sid]?.remark || null,
+            items,
+          };
+        }).filter((sq) => sq.items.length > 0);
+      }
 
       if (!editingInquiry) {
         body.purchaseRequestId = form.purchaseRequestId;
@@ -245,11 +383,7 @@ export default function InquiriesPage() {
       if (res.ok) {
         setShowModal(false);
         fetchInquiries();
-        if (editingInquiry) {
-          fetchPurchaseRequests();
-        } else {
-          fetchPurchaseRequests();
-        }
+        fetchPurchaseRequests();
       } else {
         setFormError(json.error || "操作失败");
       }
@@ -261,11 +395,16 @@ export default function InquiriesPage() {
   };
 
   const handleViewDetail = async (inquiry: Inquiry) => {
+    setApprovalInstance(null);
     try {
       const res = await fetch(`/api/inquiries/${inquiry.id}`);
       const json = await res.json();
       if (res.ok) {
         setDetailInquiry(json.data);
+        setViewingRound(json.data.currentRound || 1);
+        if (json.data.approvalInstanceId) {
+          fetchApprovalInstance(json.data.approvalInstanceId);
+        }
       }
     } catch {
       setDetailInquiry(inquiry as unknown as InquiryDetail);
@@ -274,6 +413,11 @@ export default function InquiriesPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
+    if (deleteConfirm.inquiryStatus !== "草稿" && deleteConfirm.inquiryStatus !== "已驳回" && !isAdminUser) {
+      alert("该记录已进入审批流程，仅管理员可删除");
+      setDeleteConfirm(null);
+      return;
+    }
     setDeleting(true);
     try {
       const res = await fetch(`/api/inquiries/${deleteConfirm.id}`, { method: "DELETE" });
@@ -294,13 +438,22 @@ export default function InquiriesPage() {
     }
   };
 
-  const handleSelectPurchaseRequest = (prId: string) => {
+  const handleSelectPurchaseRequest = async (prId: string) => {
     const pr = purchaseRequests.find((p) => p.id === prId);
     if (pr) {
+      let prAttachments: { name: string; url: string }[] = [];
+      try {
+        const detailRes = await fetch(`/api/purchase-requests/${prId}`);
+        const detailJson = await detailRes.json();
+        if (detailRes.ok && detailJson.data.attachments && Array.isArray(detailJson.data.attachments)) {
+          prAttachments = detailJson.data.attachments;
+        }
+      } catch {}
       setForm((prev) => ({
         ...prev,
         purchaseRequestId: prId,
         projectSourceId: pr.projectSourceId,
+        attachments: prAttachments.length > 0 ? prAttachments : prev.attachments,
       }));
     }
     if (formError) setFormError("");
@@ -320,15 +473,10 @@ export default function InquiriesPage() {
         delete newQuoteSummary[supplierId];
       }
 
-      const newRecommendedId = isSelected && prev.recommendedSupplierId === supplierId
-        ? ""
-        : prev.recommendedSupplierId;
-
       return {
         ...prev,
         supplierIds: newIds,
         quoteSummary: newQuoteSummary,
-        recommendedSupplierId: newRecommendedId,
       };
     });
     if (formError) setFormError("");
@@ -347,6 +495,39 @@ export default function InquiriesPage() {
     }));
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    setUploadingFile(true);
+    try {
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const json = await res.json();
+        if (res.ok) {
+          setForm((prev) => ({
+            ...prev,
+            attachments: [...prev.attachments, { name: json.filename || file.name, url: json.url }],
+          }));
+        } else {
+          alert(json.error || "上传失败");
+        }
+      }
+    } catch {
+      alert("上传失败");
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleRemoveAttachment = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index),
+    }));
+  };
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "-";
     const d = new Date(dateStr);
@@ -355,8 +536,8 @@ export default function InquiriesPage() {
 
   const stats = {
     total: pagination.total,
-    singleSource: inquiries.filter((i) => i.isSingleSource).length,
-    withRecommendation: inquiries.filter((i) => i.recommendedSupplierId).length,
+    onlinePending: inquiries.filter((i) => i.inquiryMode === "online" && !i.confirmedSupplierId).length,
+    confirmed: inquiries.filter((i) => i.confirmedSupplierId).length,
   };
 
   return (
@@ -364,12 +545,12 @@ export default function InquiriesPage() {
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div>
-            <h1>询价管理</h1>
-            <p>管理采购询价流程，对比供应商报价</p>
+            <h1>采购单</h1>
+            <p>管理采购流程，对比供应商报价</p>
           </div>
-          <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
+          <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate} disabled={!flowConfigured} title={!flowConfigured ? "请先在流程设置中配置采购单审批流程" : undefined}>
             <Plus className="w-4 h-4" />
-            新增询价
+            新增采购单
           </button>
         </div>
       </div>
@@ -380,17 +561,17 @@ export default function InquiriesPage() {
             <HelpCircle className="w-5 h-5 text-[#007AFF]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">询价总数</p>
+            <p className="text-[13px] text-[#86868B]">采购单总数</p>
             <p className="text-[24px] font-bold text-[#1D1D1F] leading-tight">{stats.total}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
           <div className="w-11 h-11 rounded-2xl bg-[#FF9500]/10 flex items-center justify-center">
-            <Send className="w-5 h-5 text-[#FF9500]" />
+            <Globe className="w-5 h-5 text-[#FF9500]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">单一来源</p>
-            <p className="text-[24px] font-bold text-[#FF9500] leading-tight">{stats.singleSource}</p>
+            <p className="text-[13px] text-[#86868B]">线上询价中</p>
+            <p className="text-[24px] font-bold text-[#FF9500] leading-tight">{stats.onlinePending}</p>
           </div>
         </div>
         <div className="bento-card-static flex items-center gap-4">
@@ -398,8 +579,8 @@ export default function InquiriesPage() {
             <CheckCircle className="w-5 h-5 text-[#34C759]" />
           </div>
           <div>
-            <p className="text-[13px] text-[#86868B]">已推荐供应商</p>
-            <p className="text-[24px] font-bold text-[#34C759] leading-tight">{stats.withRecommendation}</p>
+            <p className="text-[13px] text-[#86868B]">已确认供应商</p>
+            <p className="text-[24px] font-bold text-[#34C759] leading-tight">{stats.confirmed}</p>
           </div>
         </div>
       </div>
@@ -411,7 +592,7 @@ export default function InquiriesPage() {
             <input
               type="text"
               className="ios-input pl-10"
-              placeholder="搜索项目源ID、计划单号..."
+              placeholder="搜索项目名称、计划单号..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -420,19 +601,24 @@ export default function InquiriesPage() {
             />
           </div>
 
-          <input
-            type="text"
+          <select
             className="ios-select w-[180px]"
-            placeholder="筛选项目源ID"
             value={filterProjectSourceId}
             onChange={(e) => {
               setFilterProjectSourceId(e.target.value);
               setPagination((prev) => ({ ...prev, page: 1 }));
             }}
-          />
+          >
+            <option value="">全部项目</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.projectCode ? `${project.projectCode} - ${project.name}` : project.name}
+              </option>
+            ))}
+          </select>
 
           <div className="ml-auto text-[13px] text-[#86868B]">
-            共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 条询价
+            共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 条采购单
           </div>
         </div>
 
@@ -446,92 +632,215 @@ export default function InquiriesPage() {
             <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
               <HelpCircle className="w-8 h-8 text-[#86868B]" />
             </div>
-            <p>{search || filterProjectSourceId ? "没有匹配的询价记录" : "暂无询价记录，点击右上角新增"}</p>
+            <p>{search || filterProjectSourceId ? "没有匹配的采购单记录" : "暂无采购单记录，点击右上角新增"}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="ios-table">
               <thead>
                 <tr>
-                  <th>项目源ID</th>
-                  <th>采购需求(计划单号)</th>
-                  <th>物资明细</th>
+                  {isAdminUser && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
+                  <th>项目名称</th>
+                  <th>采购需求</th>
                   <th>询价日期</th>
-                  <th>截止日期</th>
+                  <th>要求交货日期</th>
                   <th>供应商数量</th>
-                  <th>推荐供应商</th>
-                  <th>单一来源</th>
+                  <th>询价方式</th>
+                  <th>状态</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
-                {inquiries.map((inquiry) => (
-                  <tr key={inquiry.id}>
-                    <td>
-                      <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
-                        {inquiry.projectSourceId}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="font-mono text-[13px] font-semibold">
-                        {inquiry.purchaseRequest.requestNo}
-                      </span>
-                    </td>
-                    <td>
-                      {inquiry.purchaseRequest.items && inquiry.purchaseRequest.items.length > 0 ? (
-                        <div className="max-w-[200px]">
-                          <p className="text-[13px] font-semibold truncate">
-                            {inquiry.purchaseRequest.items[0].materialName}
-                          </p>
-                          {inquiry.purchaseRequest.items.length > 1 && (
-                            <p className="text-[11px] text-[#86868B]">
-                              +{inquiry.purchaseRequest.items.length - 1} 项物资
-                            </p>
+                {inquiries.map((inquiry) => {
+                  const isExpanded = expandedRows.has(inquiry.id);
+                  return (
+                    <Fragment key={inquiry.id}>
+                      <tr className={`${isExpanded ? "bg-[#F5F5F7]/60" : ""} ${isSelected(inquiry.id) ? "bg-[#007AFF]/5" : ""}`}>
+                        {isAdminUser && (
+                          <td className="w-10">
+                            <input type="checkbox" className="ios-checkbox" checked={isSelected(inquiry.id)} onChange={() => toggleSelect(inquiry.id)} />
+                          </td>
+                        )}
+                        <td>
+                          <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
+                            {inquiry.projectCode ? `${inquiry.projectCode} - ${inquiry.projectName}` : (inquiry.projectName || inquiry.projectSourceId)}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              className="w-6 h-6 rounded-md hover:bg-[#E5E5EA] flex items-center justify-center transition-colors"
+                              onClick={() => toggleRowExpand(inquiry.id)}
+                              title={isExpanded ? "收起明细" : "展开明细"}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4 text-[#007AFF]" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-[#86868B]" />
+                              )}
+                            </button>
+                            <span className="font-mono text-[13px] font-semibold">
+                              {inquiry.purchaseRequest?.requestNo}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="text-[#86868B]">{formatDate(inquiry.inquiryDate)}</td>
+                        <td className="text-[#86868B]">{formatDate(inquiry.closingDate)}</td>
+                        <td>
+                          <span className="ios-badge ios-badge-blue">{inquiry.supplierIds.length}</span>
+                        </td>
+                        <td>
+                          {inquiry.inquiryMode === "online" ? (
+                            <span className="ios-badge ios-badge-blue">线上</span>
+                          ) : (
+                            <span className="ios-badge ios-badge-gray">线下</span>
                           )}
-                        </div>
-                      ) : (
-                        <span className="text-[#86868B]">-</span>
+                        </td>
+                        <td>
+                          <select
+                            className="text-[12px] py-1 px-2 rounded-lg border border-[#D1D1D6] bg-white focus:outline-none focus:ring-1 focus:ring-[#007AFF]"
+                            value={inquiry.inquiryStatus || "草稿"}
+                            onChange={async (e) => {
+                              const newStatus = e.target.value;
+                              if (newStatus === "审批中" && inquiry.inquiryMode === "online" && !inquiry.confirmedSupplierId) {
+                                alert("线上询价需先确认供应商报价才能提交审批");
+                                return;
+                              }
+                              const res = await fetch(`/api/inquiries/${inquiry.id}`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ status: newStatus }),
+                              });
+                              if (res.ok) fetchInquiries();
+                              else {
+                                const json = await res.json();
+                                alert(json.error || "操作失败");
+                              }
+                            }}
+                          >
+                            <option value="草稿">草稿</option>
+                            <option value="审批中">提交审批</option>
+                          </select>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-1">
+                            <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(inquiry)}>
+                              <Eye className="w-3.5 h-3.5" />
+                              详情
+                            </button>
+                            {((inquiry.inquiryStatus === "草稿" || inquiry.inquiryStatus === "已驳回") && !inquiry.hasContract || isAdminUser) && (
+                              <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(inquiry)}>
+                                <Pencil className="w-3.5 h-3.5" />
+                                编辑
+                              </button>
+                            )}
+                            {(inquiry.inquiryStatus === "草稿" || inquiry.inquiryStatus === "已驳回" || isAdminUser) && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                onClick={() => setDeleteConfirm(inquiry)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            {inquiry.inquiryMode === "online" && inquiry.onlineToken && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                                onClick={() => {
+                                  const url = `${window.location.origin}/inquiry/quote?token=${inquiry.onlineToken}`;
+                                  navigator.clipboard.writeText(url);
+                                  alert("报价链接已复制到剪贴板");
+                                }}
+                                title="复制供应商报价链接"
+                              >
+                                <Link2 className="w-3.5 h-3.5" />
+                                链接
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                        <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                          {inquiry.lastModifiedBy && (
+                            <span>{inquiry.lastModifiedBy}</span>
+                          )}
+                          <span className="block text-[11px]">{formatDate(inquiry.updatedAt)}</span>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={10} className="p-0">
+                            <div className="px-10 py-4 bg-[#FAFAFA] border-t border-b border-[#E5E5EA]">
+                              <div className="flex items-center gap-2 mb-3">
+                                <Package className="w-4 h-4 text-[#007AFF]" />
+                                <span className="text-[13px] font-semibold text-[#1D1D1F]">
+                                  物资明细（{inquiry.purchaseRequest?.items?.length || 0} 项）
+                                </span>
+                              </div>
+                              {inquiry.purchaseRequest?.items && inquiry.purchaseRequest.items.length > 0 ? (
+                                <div className="overflow-x-auto border border-[#E5E5EA] rounded-xl bg-white">
+                                  <table className="w-full text-[13px]">
+                                    <thead className="bg-[#F5F5F7]">
+                                      <tr>
+                                        <th className="py-2 px-3 text-center font-semibold text-[#86868B] w-[44px]">序号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">物资名称</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">规格型号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">材质</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">品牌</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">标准号</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">单位</th>
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">数量</th>
+                                        {inquiry.confirmedSupplierId && <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">单价(元)</th>}
+                                        {inquiry.confirmedSupplierId && <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">明细总价(元)</th>}
+                                        <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F]">备注</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {inquiry.purchaseRequest.items.map((item, index) => (
+                                        <tr key={item.id} className="border-t border-[#F0F0F0]">
+                                          <td className="py-2 px-3 text-center text-[#86868B]">{index + 1}</td>
+                                          <td className="py-2 px-3 font-semibold">{item.materialName}</td>
+                                          <td className="py-2 px-3">{item.spec || "-"}</td>
+                                          <td className="py-2 px-3">{item.material || "-"}</td>
+                                          <td className="py-2 px-3">{item.brand || "-"}</td>
+                                          <td className="py-2 px-3">{item.standardNo || "-"}</td>
+                                          <td className="py-2 px-3">{item.unit || "-"}</td>
+                                          <td className="py-2 px-3 font-mono">{item.quantity ?? "-"}</td>
+                                          {inquiry.confirmedSupplierId && (
+                                            <td className="py-2 px-3 font-mono text-[#1D1D1F]">
+                                              {item.unitPrice != null ? `¥${Number(item.unitPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
+                                            </td>
+                                          )}
+                                          {inquiry.confirmedSupplierId && (
+                                            <td className="py-2 px-3 font-mono font-semibold text-[#007AFF]">
+                                              {item.totalPrice != null ? `¥${Number(item.totalPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
+                                            </td>
+                                          )}
+                                          <td className="py-2 px-3 text-[#86868B] max-w-[120px] truncate" title={item.remark || undefined}>{item.remark || "-"}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                <p className="text-[13px] text-[#86868B] text-center py-4">暂无物资明细</p>
+                              )}
+                              {inquiry.inquiryStatus === "已批准" && inquiry.recommendedSupplierName && (
+                                <div className="mt-3 p-3 rounded-xl bg-[#34C759]/5 border border-[#34C759]/20">
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4 text-[#34C759]" />
+                                    <span className="text-[13px] font-semibold text-[#34C759]">
+                                      已确认供应商：{inquiry.recommendedSupplierName}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td className="text-[#86868B]">{formatDate(inquiry.inquiryDate)}</td>
-                    <td className="text-[#86868B]">{formatDate(inquiry.closingDate)}</td>
-                    <td>
-                      <span className="ios-badge ios-badge-blue">{inquiry.supplierIds.length}</span>
-                    </td>
-                    <td>
-                      {inquiry.recommendedSupplierName ? (
-                        <span className="font-semibold text-[#34C759]">{inquiry.recommendedSupplierName}</span>
-                      ) : (
-                        <span className="text-[#86868B]">-</span>
-                      )}
-                    </td>
-                    <td>
-                      {inquiry.isSingleSource ? (
-                        <span className="ios-badge ios-badge-orange">是</span>
-                      ) : (
-                        <span className="ios-badge ios-badge-gray">否</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-1">
-                        <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(inquiry)}>
-                          <Eye className="w-3.5 h-3.5" />
-                          详情
-                        </button>
-                        <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(inquiry)}>
-                          <Pencil className="w-3.5 h-3.5" />
-                          编辑
-                        </button>
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                          onClick={() => setDeleteConfirm(inquiry)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
 
@@ -560,10 +869,19 @@ export default function InquiriesPage() {
         )}
       </div>
 
+      {isAdminUser && (
+        <BatchDeleteBar
+          businessType="inquiry"
+          selectedIds={inquiries.filter((d) => isSelected(d.id)).map((d) => d.id)}
+          onDeleteSuccess={fetchInquiries}
+          onClear={clearSelection}
+        />
+      )}
+
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title={editingInquiry ? "编辑询价" : "新增询价"}
+        title={editingInquiry ? "编辑采购单" : "新增采购单"}
         maxWidth="720px"
       >
         <div className="space-y-4">
@@ -582,7 +900,7 @@ export default function InquiriesPage() {
                 <input
                   type="text"
                   className="ios-input bg-[#F5F5F7]"
-                  value={`${editingInquiry.purchaseRequest.requestNo} (${editingInquiry.projectSourceId})`}
+                  value={`${editingInquiry.purchaseRequest?.requestNo} (${editingInquiry.projectCode ? `${editingInquiry.projectCode} - ${editingInquiry.projectName}` : (editingInquiry.projectName || editingInquiry.projectSourceId)})`}
                   readOnly
                 />
               ) : (
@@ -594,8 +912,7 @@ export default function InquiriesPage() {
                   <option value="">请选择已批准的采购需求</option>
                   {purchaseRequests.map((pr) => (
                     <option key={pr.id} value={pr.id}>
-                      [{pr.requestNo}] {pr.items?.[0]?.materialName || "无物资"}
-                      {pr.items && pr.items.length > 1 ? ` +${pr.items.length - 1}项` : ""}
+                      {pr.requestNo}
                     </option>
                   ))}
                 </select>
@@ -603,11 +920,14 @@ export default function InquiriesPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目源ID</label>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">项目名称</label>
               <input
                 type="text"
                 className="ios-input bg-[#F5F5F7]"
-                value={form.projectSourceId || "选择采购需求后自动填充"}
+                value={(() => {
+                  const pr = purchaseRequests.find(p => p.id === form.purchaseRequestId);
+                  return pr ? (pr.project ? `${pr.project.projectSourceId} - ${pr.project.name}` : pr.projectSourceId) : (form.projectSourceId || "选择采购需求后自动填充");
+                })()}
                 readOnly
               />
             </div>
@@ -615,7 +935,7 @@ export default function InquiriesPage() {
             <div>
               <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
                 <Calendar className="w-3.5 h-3.5 inline mr-1" />
-                截止日期
+                要求交货日期
               </label>
               <input
                 type="date"
@@ -627,199 +947,327 @@ export default function InquiriesPage() {
                 }}
               />
             </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+                询价方式
+              </label>
+              <select
+                className="ios-select"
+                value={form.inquiryMode}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, inquiryMode: e.target.value }));
+                  if (formError) setFormError("");
+                }}
+              >
+                <option value="offline">线下询价</option>
+                <option value="online">线上询价</option>
+              </select>
+            </div>
           </div>
 
-          {!editingInquiry && form.purchaseRequestId && (() => {
-            const selectedPr = purchaseRequests.find((p) => p.id === form.purchaseRequestId);
-            return selectedPr && selectedPr.items && selectedPr.items.length > 0 ? (
+          {form.inquiryMode === "online" && (
+            <div className="p-3 rounded-xl bg-[#007AFF]/5 border border-[#007AFF]/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Globe className="w-4 h-4 text-[#007AFF]" />
+                <span className="text-[13px] font-semibold text-[#007AFF]">线上询价模式</span>
+              </div>
+              <p className="text-[12px] text-[#86868B] mb-2">
+                创建后将生成报价链接，供应商可通过链接在线提交报价
+              </p>
+              <div>
+                <label className="block text-[12px] text-[#1D1D1F] mb-1">线上报价截止时间</label>
+                <input
+                  type="datetime-local"
+                  className="ios-input text-[13px]"
+                  value={form.onlineDeadline}
+                  onChange={(e) => {
+                    setForm((prev) => ({ ...prev, onlineDeadline: e.target.value }));
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {form.purchaseRequestId && (() => {
+            const selectedPrItems = editingInquiry
+              ? (editingInquiry.purchaseRequest?.items || [])
+              : (purchaseRequests.find((p) => p.id === form.purchaseRequestId)?.items || []);
+            const isOnline = form.inquiryMode === "online";
+            return selectedPrItems && selectedPrItems.length > 0 ? (
               <div>
                 <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-2">物资明细</label>
-                <div className="max-h-[180px] overflow-y-auto border border-[#E5E5EA] rounded-xl">
+                <div className="max-h-[240px] overflow-y-auto border border-[#E5E5EA] rounded-xl">
                   <table className="ios-table text-[12px]">
                     <thead>
                       <tr>
                         <th>物资名称</th>
-                        <th>规格</th>
-                        <th>数量</th>
+                        <th>规格型号</th>
+                        <th>材质</th>
+                        <th>品牌</th>
+                        <th>标准号</th>
                         <th>单位</th>
+                        <th>数量</th>
+                        {!isOnline && <th>单价(元)</th>}
+                        {!isOnline && <th>总价(元)</th>}
+                        <th>备注</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedPr.items.map((item) => (
+                      {selectedPrItems.map((item) => (
                         <tr key={item.id}>
                           <td className="font-semibold">{item.materialName}</td>
                           <td className="text-[#86868B]">{item.spec || "-"}</td>
-                          <td>{item.quantity ?? "-"}</td>
+                          <td className="text-[#86868B]">{item.material || "-"}</td>
+                          <td className="text-[#86868B]">{item.brand || "-"}</td>
+                          <td className="text-[#86868B]">{item.standardNo || "-"}</td>
                           <td>{item.unit || "-"}</td>
+                          <td className="font-mono">{item.quantity ?? "-"}</td>
+                          {!isOnline && (
+                            <td>
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="ios-input text-[12px] py-1 w-[80px]"
+                                placeholder="0"
+                                value={itemPrices[item.id] || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setItemPrices((prev) => ({ ...prev, [item.id]: val }));
+                                }}
+                              />
+                            </td>
+                          )}
+                          {!isOnline && (
+                            <td className="font-semibold text-[#007AFF]">
+                              {itemPrices[item.id] && item.quantity
+                                ? `¥${(parseFloat(itemPrices[item.id]) * parseFloat(String(item.quantity))).toFixed(2)}`
+                                : "-"}
+                            </td>
+                          )}
+                          <td className="text-[#86868B] max-w-[120px] truncate" title={item.remark || undefined}>{item.remark || "-"}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+                {isOnline && (
+                  <p className="text-[11px] text-[#86868B] mt-1.5">线上询价模式下物资明细不可修改，供应商将在报价页面查看完整物资信息</p>
+                )}
               </div>
             ) : null;
           })()}
 
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-[13px] font-semibold text-[#1D1D1F]">
-                选择供应商 <span className="text-[#FF3B30]">*</span>
-              </label>
-              <span className="text-[12px] text-[#86868B]">
-                已选 {form.supplierIds.length} 家
-              </span>
-            </div>
-            {suppliers.length === 0 ? (
-              <div className="p-3 rounded-xl bg-[#F5F5F7] text-[13px] text-[#86868B]">
-                暂无供应商数据，请先在系统中添加供应商
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto p-2 border border-[#E5E5EA] rounded-xl">
-                {suppliers.map((supplier) => {
-                  const selected = form.supplierIds.includes(supplier.id);
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
+              选择供应商 <span className="text-[#FF3B30]">*</span>
+            </label>
+            <select
+              className="ios-select"
+              value=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleToggleSupplier(e.target.value);
+                }
+              }}
+            >
+              <option value="">-- 点击选择供应商 --</option>
+              {suppliers
+                .filter((s) => !supplierSearch || s.name.toLowerCase().includes(supplierSearch.toLowerCase()))
+                .map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.name}{supplier.contactPerson ? ` (${supplier.contactPerson})` : ""}
+                  </option>
+                ))}
+            </select>
+            {form.supplierIds.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {form.supplierIds.map((sid) => {
+                  const supplier = suppliers.find((s) => s.id === sid);
                   return (
-                    <button
-                      key={supplier.id}
-                      type="button"
-                      className={`p-2 rounded-lg text-[12px] text-left transition-all duration-150 ${
-                        selected
-                          ? "bg-[#007AFF]/10 border-2 border-[#007AFF] text-[#007AFF]"
-                          : "bg-[#F5F5F7] border-2 border-transparent text-[#1D1D1F] hover:bg-[#E5E5EA]"
-                      }`}
-                      onClick={() => handleToggleSupplier(supplier.id)}
-                    >
-                      <p className="font-semibold truncate">{supplier.name}</p>
-                      {supplier.contactPerson && (
-                        <p className="text-[11px] opacity-70 truncate">{supplier.contactPerson}</p>
-                      )}
-                    </button>
+                    <span key={sid} className="inline-flex items-center gap-1 px-2 py-1 bg-[#007AFF]/10 text-[#007AFF] rounded-lg text-[12px] font-medium">
+                      {supplier?.name || "未知"}
+                      <button
+                        type="button"
+                        className="w-4 h-4 rounded-full hover:bg-[#007AFF]/20 flex items-center justify-center"
+                        onClick={() => handleToggleSupplier(sid)}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
                   );
                 })}
               </div>
             )}
           </div>
 
-          {form.supplierIds.length > 0 && (
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-2">报价汇总</label>
-              <div className="space-y-2 max-h-[240px] overflow-y-auto">
-                {form.supplierIds.map((sid) => {
-                  const supplier = suppliers.find((s) => s.id === sid);
-                  const quote = form.quoteSummary[sid] || { price: 0, deliveryDays: 0, remark: "" };
-                  return (
-                    <div key={sid} className="p-3 rounded-xl border border-[#E5E5EA] bg-[#FAFAFA]">
-                      <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">
-                        {supplier?.name || "未知供应商"}
-                      </p>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
-                          <label className="block text-[11px] text-[#86868B] mb-1">报价(元)</label>
-                          <input
-                            type="number"
-                            className="ios-input text-[13px] py-1.5"
-                            placeholder="0"
-                            value={quote.price || ""}
-                            onChange={(e) => updateQuoteField(sid, "price", parseFloat(e.target.value) || 0)}
-                          />
+          {form.inquiryMode === "offline" && form.supplierIds.length > 0 && (() => {
+            const selectedPrItems = editingInquiry
+              ? (editingInquiry.purchaseRequest?.items || [])
+              : (purchaseRequests.find((p) => p.id === form.purchaseRequestId)?.items || []);
+            if (selectedPrItems.length === 0) return null;
+            return (
+              <div>
+                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-2">报价汇总（线下逐项录入）</label>
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {form.supplierIds.map((sid) => {
+                    const supplier = suppliers.find((s) => s.id === sid);
+                    const quote = form.quoteSummary[sid] || { price: 0, deliveryDays: 0, remark: "" };
+                    const supplierTotal = selectedPrItems.reduce((sum, item) => {
+                      const key = `${sid}_${item.id}`;
+                      const qi = quoteItems[key];
+                      return sum + (qi?.totalPrice ? parseFloat(qi.totalPrice) : 0);
+                    }, 0);
+                    return (
+                      <div key={sid} className="p-3 rounded-xl border border-[#E5E5EA] bg-[#FAFAFA]">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                            {supplier?.name || "未知供应商"}
+                          </p>
+                          <p className="text-[14px] font-bold text-[#007AFF]">
+                            总报价: ¥{supplierTotal.toFixed(2)}
+                          </p>
                         </div>
-                        <div>
-                          <label className="block text-[11px] text-[#86868B] mb-1">交货天数</label>
-                          <input
-                            type="number"
-                            className="ios-input text-[13px] py-1.5"
-                            placeholder="0"
-                            value={quote.deliveryDays || ""}
-                            onChange={(e) => updateQuoteField(sid, "deliveryDays", parseInt(e.target.value) || 0)}
-                          />
+                        <div className="overflow-x-auto border border-[#E5E5EA] rounded-lg bg-white">
+                          <table className="w-full text-[12px]">
+                            <thead className="bg-[#F5F5F7]">
+                              <tr>
+                                <th className="py-1.5 px-2 text-left font-semibold min-w-[100px]">物资名称</th>
+                                <th className="py-1.5 px-2 text-left font-semibold">规格</th>
+                                <th className="py-1.5 px-2 text-left font-semibold w-[80px]">需求数量</th>
+                                <th className="py-1.5 px-2 text-left font-semibold w-[90px]">单价(元)</th>
+                                <th className="py-1.5 px-2 text-left font-semibold w-[90px]">数量</th>
+                                <th className="py-1.5 px-2 text-left font-semibold w-[90px]">小计(元)</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedPrItems.map((item) => {
+                                const key = `${sid}_${item.id}`;
+                                const qi = quoteItems[key] || { unitPrice: "", quantity: "", totalPrice: "" };
+                                return (
+                                  <tr key={item.id} className="border-t border-[#F0F0F0]">
+                                    <td className="py-1.5 px-2 font-semibold">{item.materialName}</td>
+                                    <td className="py-1.5 px-2 text-[#86868B]">{item.spec || "-"}</td>
+                                    <td className="py-1.5 px-2">{item.quantity ?? "-"}</td>
+                                    <td className="py-1.5 px-2">
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        className="ios-input text-[12px] py-1 w-full"
+                                        placeholder="0"
+                                        value={qi.unitPrice}
+                                        onChange={(e) => {
+                                          const up = e.target.value;
+                                          const qty = qi.quantity;
+                                          const total = up && qty ? (parseFloat(up) * parseFloat(qty)).toFixed(2) : "";
+                                          setQuoteItems((prev) => ({
+                                            ...prev,
+                                            [key]: { unitPrice: up, quantity: qty, totalPrice: total },
+                                          }));
+                                        }}
+                                      />
+                                    </td>
+                                    <td className="py-1.5 px-2">
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        className="ios-input text-[12px] py-1 w-full"
+                                        placeholder="0"
+                                        value={qi.quantity}
+                                        onChange={(e) => {
+                                          const qty = e.target.value;
+                                          const up = qi.unitPrice;
+                                          const total = up && qty ? (parseFloat(up) * parseFloat(qty)).toFixed(2) : "";
+                                          setQuoteItems((prev) => ({
+                                            ...prev,
+                                            [key]: { unitPrice: up, quantity: qty, totalPrice: total },
+                                          }));
+                                        }}
+                                      />
+                                    </td>
+                                    <td className="py-1.5 px-2 font-semibold text-[#007AFF]">
+                                      {qi.totalPrice ? `¥${qi.totalPrice}` : "-"}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
                         </div>
-                        <div>
-                          <label className="block text-[11px] text-[#86868B] mb-1">备注</label>
-                          <input
-                            type="text"
-                            className="ios-input text-[13px] py-1.5"
-                            placeholder="备注"
-                            value={quote.remark}
-                            onChange={(e) => updateQuoteField(sid, "remark", e.target.value)}
-                          />
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <div>
+                            <label className="block text-[11px] text-[#86868B] mb-1">交货天数</label>
+                            <input
+                              type="number"
+                              className="ios-input text-[13px] py-1.5"
+                              placeholder="0"
+                              value={quote.deliveryDays || ""}
+                              onChange={(e) => updateQuoteField(sid, "deliveryDays", parseInt(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-[#86868B] mb-1">备注</label>
+                            <input
+                              type="text"
+                              className="ios-input text-[13px] py-1.5"
+                              placeholder="备注"
+                              value={quote.remark}
+                              onChange={(e) => updateQuoteField(sid, "remark", e.target.value)}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">推荐供应商</label>
-              <select
-                className="ios-select"
-                value={form.recommendedSupplierId}
-                onChange={(e) => {
-                  setForm((prev) => ({ ...prev, recommendedSupplierId: e.target.value }));
-                  if (formError) setFormError("");
-                }}
-              >
-                <option value="">请选择推荐供应商</option>
-                {form.supplierIds.map((sid) => {
-                  const supplier = suppliers.find((s) => s.id === sid);
-                  return (
-                    <option key={sid} value={sid}>
-                      {supplier?.name || "未知供应商"}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">单一来源采购</label>
-              <div className="flex items-center gap-3 h-[38px]">
-                <button
-                  type="button"
-                  className={`relative w-[44px] h-[26px] rounded-full transition-colors duration-200 ${
-                    form.isSingleSource ? "bg-[#007AFF]" : "bg-[#E5E5EA]"
-                  }`}
-                  onClick={() => {
-                    setForm((prev) => ({ ...prev, isSingleSource: !prev.isSingleSource }));
-                    if (formError) setFormError("");
-                  }}
-                >
-                  <span
-                    className={`absolute top-[3px] w-[20px] h-[20px] bg-white rounded-full shadow-sm transition-transform duration-200 ${
-                      form.isSingleSource ? "translate-x-[21px]" : "translate-x-[3px]"
-                    }`}
-                  />
-                </button>
-                <span className="text-[13px] text-[#86868B]">
-                  {form.isSingleSource ? "是" : "否"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {form.isSingleSource && (
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                单一来源原因 <span className="text-[#FF3B30]">*</span>
+          <div className="pt-2">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-[13px] font-semibold text-[#1D1D1F]">
+                <Paperclip className="w-4 h-4 inline mr-1.5 -mt-0.5" />
+                附件
               </label>
-              <textarea
-                className="ios-input min-h-[80px] resize-y"
-                placeholder="请说明单一来源采购的原因"
-                value={form.singleSourceReason}
-                onChange={(e) => {
-                  setForm((prev) => ({ ...prev, singleSourceReason: e.target.value }));
-                  if (formError) setFormError("");
+              <button
+                className="ios-btn ios-btn-secondary ios-btn-sm"
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.multiple = true;
+                  input.accept = ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip,.rar";
+                  input.onchange = (e) => handleFileUpload(e as any);
+                  input.click();
                 }}
-              />
+                disabled={uploadingFile}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                {uploadingFile ? "上传中..." : "上传附件"}
+              </button>
             </div>
-          )}
+            {form.attachments.length > 0 ? (
+              <div className="space-y-1.5">
+                {form.attachments.map((att, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#F5F5F7]">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <File className="w-3.5 h-3.5 text-[#86868B] flex-shrink-0" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#007AFF] truncate hover:underline">{att.name}</a>
+                    </div>
+                    <button className="w-6 h-6 rounded-full hover:bg-[#E5E5EA] flex items-center justify-center flex-shrink-0" onClick={() => handleRemoveAttachment(idx)}>
+                      <X className="w-3 h-3 text-[#86868B]" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12px] text-[#86868B] text-center py-3">暂无附件</p>
+            )}
+          </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0] mt-2">
             <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmit} disabled={saving}>
-              {saving ? "保存中..." : editingInquiry ? "保存修改" : "创建询价"}
+              {saving ? "保存中..." : editingInquiry ? "保存修改" : "创建采购单"}
             </button>
           </div>
         </div>
@@ -827,8 +1275,8 @@ export default function InquiriesPage() {
 
       <Modal
         isOpen={!!detailInquiry}
-        onClose={() => setDetailInquiry(null)}
-        title="询价详情"
+        onClose={() => { setDetailInquiry(null); setApprovalInstance(null); }}
+        title="采购单详情"
         maxWidth="680px"
       >
         {detailInquiry && (
@@ -838,11 +1286,11 @@ export default function InquiriesPage() {
                 <HelpCircle className="w-6 h-6 text-[#007AFF]" />
               </div>
               <div>
-                <p className="text-[17px] font-bold text-[#1D1D1F]">{detailInquiry.purchaseRequest.requestNo}</p>
-                <p className="text-[13px] text-[#007AFF] font-mono font-semibold">{detailInquiry.projectSourceId}</p>
+                <p className="text-[17px] font-bold text-[#1D1D1F]">{detailInquiry.purchaseRequest?.requestNo}</p>
+                <p className="text-[13px] text-[#007AFF] font-mono font-semibold">{detailInquiry.projectCode ? `${detailInquiry.projectCode} - ${detailInquiry.projectName}` : (detailInquiry.projectName || detailInquiry.projectSourceId)}</p>
               </div>
-              {detailInquiry.isSingleSource && (
-                <span className="ios-badge ios-badge-orange ml-auto">单一来源</span>
+              {detailInquiry.inquiryMode === "online" && (
+                <span className="ios-badge ios-badge-blue ml-auto mr-2">线上询价</span>
               )}
             </div>
 
@@ -850,7 +1298,7 @@ export default function InquiriesPage() {
               <div className="p-3 rounded-xl bg-[#F5F5F7]">
                 <p className="text-[12px] text-[#86868B] mb-1">物资数量</p>
                 <p className="text-[14px] font-semibold text-[#1D1D1F]">
-                  {detailInquiry.purchaseRequest.items?.length || 0} 项
+                  {detailInquiry.purchaseRequest?.items?.length || 0} 项
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-[#F5F5F7]">
@@ -863,46 +1311,71 @@ export default function InquiriesPage() {
               <div className="p-3 rounded-xl bg-[#F5F5F7]">
                 <p className="text-[12px] text-[#86868B] mb-1">
                   <Calendar className="w-3 h-3 inline mr-1" />
-                  截止日期
+                  要求交货日期
                 </p>
                 <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailInquiry.closingDate)}</p>
               </div>
               <div className="p-3 rounded-xl bg-[#F5F5F7]">
-                <p className="text-[12px] text-[#86868B] mb-1">推荐供应商</p>
-                <p className="text-[14px] font-semibold text-[#34C759]">
-                  {detailInquiry.recommendedSupplierName || "-"}
+                <p className="text-[12px] text-[#86868B] mb-1">项目名称</p>
+                <p className="text-[14px] font-semibold text-[#1D1D1F] font-mono">
+                  {detailInquiry.projectCode ? `${detailInquiry.projectCode} - ${detailInquiry.projectName}` : (detailInquiry.projectName || detailInquiry.projectSourceId) || "-"}
                 </p>
               </div>
+              {detailInquiry.onlineDeadline && (
+                <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                  <p className="text-[12px] text-[#86868B] mb-1">
+                    <Globe className="w-3 h-3 inline mr-1" />
+                    线上截止时间
+                  </p>
+                  <p className="text-[14px] font-semibold text-[#1D1D1F]">
+                    {new Date(detailInquiry.onlineDeadline).toLocaleString("zh-CN")}
+                  </p>
+                </div>
+              )}
             </div>
 
-            {detailInquiry.purchaseRequest.items && detailInquiry.purchaseRequest.items.length > 0 && (
+            {detailInquiry.purchaseRequest?.items && detailInquiry.purchaseRequest?.items?.length > 0 && (
               <div>
                 <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">
                   采购需求物资明细
                 </p>
-                <div className="max-h-[200px] overflow-y-auto border border-[#E5E5EA] rounded-xl">
+                <div className="max-h-[260px] overflow-y-auto border border-[#E5E5EA] rounded-xl">
                   <table className="ios-table text-[12px]">
                     <thead>
                       <tr>
                         <th>物资名称</th>
-                        <th>规格</th>
+                        <th>规格型号</th>
                         <th>材质</th>
                         <th>品牌</th>
+                        <th>标准号</th>
                         <th>数量</th>
                         <th>单位</th>
+                        {detailInquiry.confirmedSupplierId && <th>单价(元)</th>}
+                        {detailInquiry.confirmedSupplierId && <th>明细总价(元)</th>}
                         <th>备注</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {detailInquiry.purchaseRequest.items.map((item: PurchaseRequestItem) => (
+                      {detailInquiry.purchaseRequest?.items?.map((item: PurchaseRequestItem) => (
                         <tr key={item.id}>
                           <td className="font-semibold">{item.materialName}</td>
                           <td className="text-[#86868B]">{item.spec || "-"}</td>
                           <td className="text-[#86868B]">{item.material || "-"}</td>
                           <td className="text-[#86868B]">{item.brand || "-"}</td>
+                          <td className="text-[#86868B]">{item.standardNo || "-"}</td>
                           <td>{item.quantity ?? "-"}</td>
                           <td>{item.unit || "-"}</td>
-                          <td className="text-[#86868B]">{item.remark || "-"}</td>
+                          {detailInquiry.confirmedSupplierId && (
+                            <td className="font-mono">
+                              {item.unitPrice != null ? `¥${Number(item.unitPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
+                            </td>
+                          )}
+                          {detailInquiry.confirmedSupplierId && (
+                            <td className="font-mono font-semibold text-[#007AFF]">
+                              {item.totalPrice != null ? `¥${Number(item.totalPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
+                            </td>
+                          )}
+                          <td className="text-[#86868B] max-w-[120px] truncate" title={item.remark || undefined}>{item.remark || "-"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -911,13 +1384,39 @@ export default function InquiriesPage() {
               </div>
             )}
 
-            {detailInquiry.isSingleSource && detailInquiry.singleSourceReason && (
-              <div className="p-3 rounded-xl bg-[#FF9500]/8 border border-[#FF9500]/20">
-                <p className="text-[12px] text-[#FF9500] font-semibold mb-1">
-                  <AlertCircle className="w-3 h-3 inline mr-1" />
-                  单一来源原因
+            {detailInquiry.attachments && detailInquiry.attachments.length > 0 && (
+              <div>
+                <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">
+                  <Paperclip className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
+                  采购附件
                 </p>
-                <p className="text-[13px] text-[#1D1D1F]">{detailInquiry.singleSourceReason}</p>
+                <div className="space-y-1.5">
+                  {detailInquiry.attachments.map((att, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-[#F5F5F7]">
+                      <File className="w-3.5 h-3.5 text-[#86868B] flex-shrink-0" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#007AFF] truncate hover:underline">{att.name}</a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {detailInquiry.confirmedSupplierId && detailInquiry.supplierQuotes && detailInquiry.supplierQuotes.some((sq: any) => sq.attachments && Array.isArray(sq.attachments) && sq.attachments.length > 0) && (
+              <div>
+                <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">
+                  <Paperclip className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
+                  供应商报价附件
+                </p>
+                <div className="space-y-1.5">
+                  {detailInquiry.supplierQuotes
+                    .filter((sq: any) => sq.supplierId === detailInquiry.confirmedSupplierId)
+                    .flatMap((sq: any) => (sq.attachments || []).map((att: { name: string; url: string }, idx: number) => (
+                      <div key={`sq-att-${idx}`} className="flex items-center gap-2 p-2 rounded-lg bg-[#F5F5F7]">
+                        <File className="w-3.5 h-3.5 text-[#86868B] flex-shrink-0" />
+                        <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#007AFF] truncate hover:underline">{att.name}</a>
+                      </div>
+                    )))}
+                </div>
               </div>
             )}
 
@@ -929,21 +1428,13 @@ export default function InquiriesPage() {
                 <div className="space-y-2">
                   {detailInquiry.supplierDetails.map((sd) => {
                     const quote = (detailInquiry.quoteSummary as Record<string, { price: number; deliveryDays: number; remark: string }>)?.[sd.id];
-                    const isRecommended = detailInquiry.recommendedSupplierId === sd.id;
                     return (
                       <div
                         key={sd.id}
-                        className={`p-3 rounded-xl border ${
-                          isRecommended
-                            ? "border-[#34C759]/40 bg-[#34C759]/5"
-                            : "border-[#E5E5EA] bg-[#FAFAFA]"
-                        }`}
+                        className="p-3 rounded-xl border border-[#E5E5EA] bg-[#FAFAFA]"
                       >
                         <div className="flex items-center gap-2 mb-2">
                           <p className="text-[13px] font-semibold text-[#1D1D1F]">{sd.name}</p>
-                          {isRecommended && (
-                            <span className="ios-badge ios-badge-green text-[10px]">推荐</span>
-                          )}
                           {sd.contactPerson && (
                             <span className="text-[11px] text-[#86868B]">
                               {sd.contactPerson} {sd.phone || ""}
@@ -977,7 +1468,264 @@ export default function InquiriesPage() {
               ) : (
                 <p className="text-[13px] text-[#86868B]">暂无供应商信息</p>
               )}
+              {detailInquiry.supplierQuotes && detailInquiry.supplierQuotes.length > 0 && (
+                <div className="pt-3 border-t border-[#F0F0F0]">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[13px] font-semibold text-[#1D1D1F]">
+                      比价窗口
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: detailInquiry.currentRound || 1 }, (_, i) => i + 1).map((r) => (
+                        <button
+                          key={r}
+                          className={`px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${
+                            viewingRound === r
+                              ? "bg-[#007AFF] text-white"
+                              : "bg-[#F5F5F7] text-[#86868B] hover:bg-[#E5E5EA]"
+                          }`}
+                          onClick={() => setViewingRound(r)}
+                        >
+                          第{r}轮
+                        </button>
+                      ))}
+                      {!detailInquiry.confirmedSupplierId && (
+                        <button
+                          className="ios-btn ios-btn-secondary ios-btn-sm ml-2"
+                          onClick={async () => {
+                            const newRound = (detailInquiry.currentRound || 1) + 1;
+                            const res = await fetch(`/api/inquiries/${detailInquiry.id}`, {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ currentRound: newRound }),
+                              currentRound: newRound,
+                            } as any);
+                            if (res.ok) {
+                              const detailRes = await fetch(`/api/inquiries/${detailInquiry.id}`);
+                              if (detailRes.ok) {
+                                const detailJson = await detailRes.json();
+                                setDetailInquiry(detailJson.data);
+                                setViewingRound(newRound);
+                              }
+                            }
+                          }}
+                        >
+                          开启新一轮
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {(() => {
+                    const roundQuotes = detailInquiry.supplierQuotes.filter((sq: any) => sq.round === viewingRound);
+                    const uniqueSupplierIds = [...new Set(roundQuotes.map((sq: any) => sq.supplierId))];
+                    if (uniqueSupplierIds.length === 0) {
+                      return <p className="text-[12px] text-[#86868B] text-center py-4">本轮暂无报价</p>;
+                    }
+                    const allPrices = uniqueSupplierIds.map((sid: string) => {
+                      const sq = roundQuotes.find((q: any) => q.supplierId === sid);
+                      return sq?.totalPrice ? Number(sq.totalPrice) : Infinity;
+                    });
+                    const minPrice = Math.min(...allPrices.filter((p) => p !== Infinity));
+
+                    const hasItems = roundQuotes.some((sq: any) => sq.items && sq.items.length > 0);
+
+                    const allItemIds = hasItems
+                      ? (detailInquiry.purchaseRequest?.items || []).map((item: PurchaseRequestItem) => item.id)
+                      : [];
+
+                    return (
+                      <div className="overflow-x-auto border border-[#E5E5EA] rounded-xl">
+                        <table className="w-full text-[12px]">
+                          <thead className="bg-[#F5F5F7]">
+                            <tr>
+                              <th className="py-2 px-3 text-left font-semibold text-[#1D1D1F] min-w-[80px]">项目</th>
+                              {uniqueSupplierIds.map((sid: string) => {
+                                const sq = roundQuotes.find((q: any) => q.supplierId === sid);
+                                return (
+                                  <th key={sid} className="py-2 px-3 text-left font-semibold min-w-[120px]">
+                                    {sq?.supplier?.name || "未知"}
+                                  </th>
+                                );
+                              })}
+                              {!detailInquiry.confirmedSupplierId && (
+                                <th className="py-2 px-3 text-center font-semibold w-[80px]">操作</th>
+                              )}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {hasItems && allItemIds.map((itemId: string) => {
+                              const prItem = (detailInquiry.purchaseRequest?.items || []).find((i: PurchaseRequestItem) => i.id === itemId);
+                              const itemName = prItem?.materialName || itemId;
+                              const itemSpec = prItem?.spec || "";
+
+                              const cellItemPrices = uniqueSupplierIds.map((sid: string) => {
+                                const sq = roundQuotes.find((q: any) => q.supplierId === sid);
+                                const qi = sq?.items?.find((i: any) => i.purchaseRequestItemId === itemId);
+                                return qi?.unitPrice ? Number(qi.unitPrice) : Infinity;
+                              });
+                              const minItemPrice = Math.min(...cellItemPrices.filter((p) => p !== Infinity));
+
+                              return (
+                                <tr key={itemId} className="border-t border-[#F0F0F0]">
+                                  <td className="py-2.5 px-3">
+                                    <p className="font-semibold text-[#1D1D1F]">{itemName}</p>
+                                    {itemSpec && <p className="text-[10px] text-[#86868B]">{itemSpec}</p>}
+                                  </td>
+                                  {uniqueSupplierIds.map((sid: string) => {
+                                    const sq = roundQuotes.find((q: any) => q.supplierId === sid);
+                                    const qi = sq?.items?.find((i: any) => i.purchaseRequestItemId === itemId);
+                                    const unitPrice = qi?.unitPrice ? Number(qi.unitPrice) : 0;
+                                    const quantity = qi?.quantity ? Number(qi.quantity) : 0;
+                                    const totalPrice = qi?.totalPrice ? Number(qi.totalPrice) : 0;
+                                    const isMin = unitPrice > 0 && unitPrice === minItemPrice;
+                                    return (
+                                      <td key={sid} className="py-2.5 px-3">
+                                        {unitPrice > 0 ? (
+                                          <div>
+                                            <p className={`font-bold ${isMin ? "text-[#34C759]" : "text-[#1D1D1F]"}`}>
+                                              ¥{unitPrice.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}/单价
+                                              {isMin && <span className="ml-1 text-[10px] font-normal">最低</span>}
+                                            </p>
+                                            {quantity > 0 && (
+                                              <p className="text-[11px] text-[#86868B]">
+                                                数量: {quantity}
+                                              </p>
+                                            )}
+                                            <p className="text-[11px] text-[#86868B]">
+                                              小计: ¥{totalPrice.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}
+                                            </p>
+                                          </div>
+                                        ) : (
+                                          <span className="text-[#86868B]">-</span>
+                                        )}
+                                      </td>
+                                    );
+                                  })}
+                                  {!detailInquiry.confirmedSupplierId && <td className="py-2.5 px-3 text-center">-</td>}
+                                </tr>
+                              );
+                            })}
+                            <tr className="border-t border-[#F0F0F0]">
+                              <td className="py-2.5 px-3 font-semibold text-[#1D1D1F]">总报价</td>
+                              {uniqueSupplierIds.map((sid: string) => {
+                                const sq = roundQuotes.find((q: any) => q.supplierId === sid);
+                                const totalPrice = sq?.totalPrice ? Number(sq.totalPrice) : 0;
+                                const isMin = totalPrice > 0 && totalPrice === minPrice;
+                                const isConfirmed = detailInquiry.confirmedSupplierId === sid;
+                                return (
+                                  <td key={sid} className={`py-2.5 px-3 font-bold ${isConfirmed ? "text-[#007AFF]" : isMin ? "text-[#34C759]" : "text-[#1D1D1F]"}`}>
+                                    {totalPrice > 0 ? `¥${totalPrice.toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
+                                    {isMin && !isConfirmed && <span className="ml-1 text-[10px] font-normal">最低</span>}
+                                    {isConfirmed && <span className="ml-1 text-[10px] font-normal">已确认</span>}
+                                  </td>
+                                );
+                              })}
+                              {!detailInquiry.confirmedSupplierId && <td className="py-2.5 px-3 text-center">-</td>}
+                            </tr>
+                            <tr className="border-t border-[#F0F0F0]">
+                              <td className="py-2.5 px-3 text-[#86868B]">交货天数</td>
+                              {uniqueSupplierIds.map((sid: string) => {
+                                const sq = roundQuotes.find((q: any) => q.supplierId === sid);
+                                return <td key={sid} className="py-2.5 px-3">{sq?.deliveryDays ? `${sq.deliveryDays}天` : "-"}</td>;
+                              })}
+                              {!detailInquiry.confirmedSupplierId && <td className="py-2.5 px-3 text-center">-</td>}
+                            </tr>
+                            <tr className="border-t border-[#F0F0F0]">
+                              <td className="py-2.5 px-3 text-[#86868B]">报价时间</td>
+                              {uniqueSupplierIds.map((sid: string) => {
+                                const sq = roundQuotes.find((q: any) => q.supplierId === sid);
+                                return <td key={sid} className="py-2.5 px-3 text-[#86868B]">{sq?.quotedAt ? new Date(sq.quotedAt).toLocaleString("zh-CN") : "-"}</td>;
+                              })}
+                              {!detailInquiry.confirmedSupplierId && <td className="py-2.5 px-3 text-center">-</td>}
+                            </tr>
+                            <tr className="border-t border-[#F0F0F0]">
+                              <td className="py-2.5 px-3 text-[#86868B]">备注</td>
+                              {uniqueSupplierIds.map((sid: string) => {
+                                const sq = roundQuotes.find((q: any) => q.supplierId === sid);
+                                return <td key={sid} className="py-2.5 px-3">{sq?.remark || "-"}</td>;
+                              })}
+                              {!detailInquiry.confirmedSupplierId && <td className="py-2.5 px-3 text-center">-</td>}
+                            </tr>
+                            {!detailInquiry.confirmedSupplierId && (
+                              <tr className="border-t border-[#F0F0F0] bg-[#FAFAFA]">
+                                <td className="py-2.5 px-3 font-semibold">操作</td>
+                                {uniqueSupplierIds.map((sid: string) => {
+                                  const sq = roundQuotes.find((q: any) => q.supplierId === sid);
+                                  return (
+                                    <td key={sid} className="py-2.5 px-3">
+                                      {sq?.totalPrice ? (
+                                        <button
+                                          className="ios-btn ios-btn-primary ios-btn-sm text-[11px] py-1 px-2"
+                                          onClick={async () => {
+                                            if (!confirm("确认选择该供应商的报价？确认后将自动填充物资明细价格。")) return;
+                                            const res = await fetch(`/api/inquiries/${detailInquiry.id}`, {
+                                              method: "PUT",
+                                              headers: { "Content-Type": "application/json" },
+                                              body: JSON.stringify({
+                                                confirmedSupplierId: sid,
+                                                confirmedRound: viewingRound,
+                                              }),
+                                            });
+                                            if (res.ok) {
+                                              const updated = await res.json();
+                                              setDetailInquiry(updated.data);
+                                              fetchInquiries();
+                                            }
+                                          }}
+                                        >
+                                          确认此供应商
+                                        </button>
+                                      ) : (
+                                        <span className="text-[#86868B] text-[11px]">未报价</span>
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                                <td className="py-2.5 px-3 text-center">-</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
+
+            {detailInquiry.confirmedSupplierId && !detailInquiry.expenseContract && detailInquiry.inquiryStatus === "已批准" && (
+              <button
+                className="ios-btn ios-btn-primary mt-4 w-full"
+                onClick={() => {
+                  window.location.href = `/contracts/expense?fromInquiry=${detailInquiry.id}`;
+                }}
+              >
+                生成采购合同
+              </button>
+            )}
+
+            {detailInquiry.inquiryMode === "online" && detailInquiry.onlineToken && (
+              <div className="p-3 rounded-xl bg-[#007AFF]/5 border border-[#007AFF]/20 flex items-center justify-between">
+                <div>
+                  <p className="text-[13px] font-semibold text-[#007AFF]">供应商报价链接</p>
+                  <p className="text-[12px] text-[#86868B] truncate max-w-[400px]">
+                    {`${window.location.origin}/inquiry/quote?token=${detailInquiry.onlineToken}`}
+                  </p>
+                </div>
+                <button
+                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                  onClick={() => {
+                    const url = `${window.location.origin}/inquiry/quote?token=${detailInquiry.onlineToken}`;
+                    navigator.clipboard.writeText(url);
+                    alert("链接已复制");
+                  }}
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  复制
+                </button>
+              </div>
+            )}
+
+            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
           </div>
         )}
       </Modal>
@@ -993,21 +1741,21 @@ export default function InquiriesPage() {
             <Trash2 className="w-7 h-7 text-[#FF3B30]" />
           </div>
           <p className="text-[15px] text-[#1D1D1F] mb-1">
-            确定要删除此询价记录吗？
+            确定要删除此采购单吗？
           </p>
           {deleteConfirm && (
             <p className="text-[13px] text-[#86868B] mb-1">
-              项目源: {deleteConfirm.projectSourceId} | 计划单号: {deleteConfirm.purchaseRequest.requestNo}
+              项目名称: {deleteConfirm.projectCode ? `${deleteConfirm.projectCode} - ${deleteConfirm.projectName}` : (deleteConfirm.projectName || deleteConfirm.projectSourceId)} | 计划单号: {deleteConfirm.purchaseRequest?.requestNo}
             </p>
           )}
-          {deleteConfirm?.hasContract ? (
-            <p className="text-[13px] text-[#FF3B30] mb-4">该询价已生成采购合同，无法删除</p>
+          {deleteConfirm?.hasContract && !isAdminUser ? (
+            <p className="text-[13px] text-[#FF3B30] mb-4">该采购单已生成采购合同，无法删除</p>
           ) : (
             <p className="text-[13px] text-[#86868B] mb-6">删除后采购需求将恢复为"已批准"状态</p>
           )}
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
-            {deleteConfirm && !deleteConfirm.hasContract && (
+            {deleteConfirm && (!deleteConfirm.hasContract || isAdminUser) && (
               <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>
                 {deleting ? "删除中..." : "确认删除"}
               </button>

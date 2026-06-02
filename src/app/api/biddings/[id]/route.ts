@@ -42,12 +42,15 @@ export async function PUT(
 
     const updateData: Record<string, unknown> = {};
     const fields = [
-      "tenderFileReg", "bondPaymentStatus", "bidResult",
-      "failReason", "attachmentUrl",
+      "tenderFileReg", "tenderFileUrl", "bidFileUrl",
+      "bondPaymentStatus", "bidResult",
+      "failReason", "attachmentUrl", "description",
     ];
     fields.forEach((f) => {
-      if (body[f] !== undefined) updateData[f] = body[f]?.trim() || null;
+      if (body[f] !== undefined) updateData[f] = body[f]?.trim?.() || null;
     });
+
+    if (body.tenderFiles !== undefined) updateData.tenderFiles = body.tenderFiles;
 
     if (body.bidDeadline !== undefined)
       updateData.bidDeadline = body.bidDeadline ? new Date(body.bidDeadline) : null;

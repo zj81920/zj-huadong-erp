@@ -18,8 +18,16 @@ import {
   X,
   MinusCircle,
   Building2,
+  Paperclip,
+  RotateCcw,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import AdminStatusOverride from "@/components/AdminStatusOverride";
+import ProjectPicker from "@/components/ProjectPicker";
+import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 
 interface ExpenseContract {
   id: string;
@@ -65,9 +73,20 @@ interface PaymentApplication {
   applicantId: string;
   amount: number;
   approvalStatus: string;
+  paymentReason: string | null;
   createdAt: string;
+  approvalInstanceId: string | null;
   payable: Payable;
   applicant: { id: string; realName: string };
+  paymentVouchers: {
+    id: string;
+    amount: number;
+    paymentDate: string;
+    bankAccount: string | null;
+    paymentMethod: string | null;
+    paymentReason: string | null;
+    remark: string | null;
+  }[];
 }
 
 interface PaymentVoucher {
@@ -87,7 +106,12 @@ interface NonContractExpense {
   counterparty: string | null;
   description: string | null;
   status: string;
+  approvalInstanceId: string | null;
   project: { name: string } | null;
+  bankAccountId: string | null;
+  paymentMethod: string | null;
+  paidAt: string | null;
+  bankAccount: { id: string; accountName: string; bankName: string; accountNo: string } | null;
 }
 
 interface LendingOut {
@@ -103,7 +127,12 @@ interface LendingOut {
   expectedReturnDate: string | null;
   description: string | null;
   status: string;
+  approvalInstanceId: string | null;
   returns?: { id: string; amount: number; returnDate: string; remark: string | null }[];
+  bankAccountId: string | null;
+  paymentMethod: string | null;
+  paidAt: string | null;
+  bankAccount: { id: string; accountName: string; bankName: string; accountNo: string } | null;
 }
 
 interface LendingReturn {
@@ -130,27 +159,92 @@ interface ExpenseReport {
   amount: number;
   description: string | null;
   status: string;
+  approvalInstanceId: string | null;
   loanOffsetAmount: number;
   createdAt: string;
+  updatedAt: string;
+  lastModifiedBy: string | null;
   applicant: { id: string; realName: string };
   project: { name: string } | null;
-  items: { id: string; expenseType: string; amount: number; description: string | null; projectSourceId: string | null }[];
+  items: {
+    id: string;
+    expenseType: string;
+    amount: number;
+    description: string | null;
+    projectSourceId: string | null;
+    invoiceAttachments: string[];
+    project?: { name: string } | null;
+  }[];
+  bankAccountId: string | null;
+  paymentMethod: string | null;
+  paidAt: string | null;
+  bankAccount: { id: string; accountName: string; bankName: string; accountNo: string } | null;
 }
 
-interface SalaryPayment {
+interface SalaryBatchItem {
   id: string;
   employeeId: string;
-  period: string;
   baseSalary: number;
   bonus: number;
   allowance: number;
-  deduction: number;
+  grossSalary: number;
+  socialInsurancePersonal: number;
+  socialInsuranceCompany: number;
+  housingFundPersonal: number;
+  housingFundCompany: number;
+  incomeTax: number;
+  otherDeduction: number;
+  totalDeduction: number;
   netSalary: number;
-  paymentDate: string | null;
+  remark: string | null;
+  employee: { id: string; realName: string; username: string };
+}
+
+interface SalaryBatch {
+  id: string;
+  batchNo: string;
+  period: string;
+  title: string;
+  employeeCount: number;
+  totalGrossSalary: number;
+  totalSocialInsurancePersonal: number;
+  totalSocialInsuranceCompany: number;
+  totalHousingFundPersonal: number;
+  totalHousingFundCompany: number;
+  totalIncomeTax: number;
+  totalOtherDeduction: number;
+  totalNetSalary: number;
+  totalBankOutflow: number;
   status: string;
+  approvalInstanceId: string | null;
+  bankAccountId: string | null;
+  paymentMethod: string | null;
+  paidAt: string | null;
   remark: string | null;
   createdAt: string;
-  employee: { id: string; realName: string; username: string };
+  updatedAt: string;
+  lastModifiedBy: string | null;
+  items: SalaryBatchItem[];
+  bankAccount: { id: string; accountName: string; bankName: string; accountNo: string } | null;
+}
+
+interface BorrowingReturnApplication {
+  id: string;
+  sourceType: string;
+  sourceId: string;
+  sourceName: string;
+  sourceAmount: string;
+  returnAmount: string;
+  returnDate: string;
+  remark: string | null;
+  status: string;
+  approvalInstanceId: string | null;
+  executedAt: string | null;
+  createdAt: string;
+  bankAccountId: string | null;
+  paymentMethod: string | null;
+  paidAt: string | null;
+  bankAccount: { id: string; accountName: string; bankName: string; accountNo: string } | null;
 }
 
 interface User {
@@ -159,11 +253,13 @@ interface User {
   username: string;
 }
 
-interface Project {
-  id: string;
+interface ProjectLeadItem {
   projectSourceId: string;
-  name: string;
-  projectCode: string;
+  projectName: string;
+  customerId: string;
+  customer: { id: string; name: string };
+  currentStatus: string;
+  project: { id: string; projectCode: string; name: string; status: string } | null;
 }
 
 interface BankAccount {
@@ -182,7 +278,7 @@ interface PaginationInfo {
   totalPages: number;
 }
 
-type TabType = "contractExpense" | "otherExpense" | "lendingOut" | "expenseReport" | "salaryPayment";
+type TabType = "contractExpense" | "otherExpense" | "lendingOut" | "expenseReport" | "salaryPayment" | "borrowingReturn";
 
 type ModalType =
   | "paymentApplication"
@@ -190,9 +286,14 @@ type ModalType =
   | "lendingOutForm"
   | "lendingReturnForm"
   | "expenseReportForm"
-  | "salaryPaymentForm"
+  | "salaryBatchEdit"
   | "deleteConfirm"
   | "statusFlow"
+  | "borrowingReturnDetail"
+  | "otherExpenseDetail"
+  | "lendingOutDetail"
+  | "expenseReportDetail"
+  | "salaryPaymentDetail"
   | null;
 
 const sourceTypeMap: Record<string, string> = {
@@ -212,18 +313,21 @@ const appStatusConfig: Record<string, { color: string; label: string }> = {
   已付款: { color: "ios-badge-blue", label: "已付款" },
   未还清: { color: "ios-badge-orange", label: "未还清" },
   已还清: { color: "ios-badge-green", label: "已还清" },
+  未付: { color: "ios-badge-orange", label: "未付" },
+  部分付款: { color: "ios-badge-blue", label: "部分付款" },
+  已付: { color: "ios-badge-green", label: "已付" },
 };
 
 const appStatusFlow: Record<string, string[]> = {
   草稿: ["审批中"],
-  审批中: ["已批准", "已驳回"],
+  审批中: [],
   已批准: [],
   已驳回: [],
 };
 
 const lendingStatusFlow: Record<string, string[]> = {
   草稿: ["审批中"],
-  审批中: ["已批准", "已驳回"],
+  审批中: [],
   已批准: [],
   已驳回: [],
   未还清: [],
@@ -274,28 +378,16 @@ const emptyExpenseItem = {
   description: "",
   relateProject: false,
   projectSourceId: "",
+  invoiceAttachments: [] as string[],
 };
 
 const emptyExpenseReportForm = {
   applicantId: "",
-  expenseType: "其他",
-  description: "",
   items: [{ ...emptyExpenseItem }],
 };
 
-const emptySalaryPaymentForm = {
-  employeeId: "",
-  period: "",
-  baseSalary: "",
-  bonus: "",
-  allowance: "",
-  deduction: "",
-  paymentDate: "",
-  remark: "",
-};
-
 export default function FinanceExpensePage() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, modulePermissions } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("contractExpense");
 
   const [payables, setPayables] = useState<Payable[]>([]);
@@ -304,11 +396,36 @@ export default function FinanceExpensePage() {
   const [nonContractExpenses, setNonContractExpenses] = useState<NonContractExpense[]>([]);
   const [lendingOuts, setLendingOuts] = useState<LendingOut[]>([]);
   const [expenseReports, setExpenseReports] = useState<ExpenseReport[]>([]);
-  const [salaryPayments, setSalaryPayments] = useState<SalaryPayment[]>([]);
+  const [salaryBatches, setSalaryBatches] = useState<SalaryBatch[]>([]);
+  const [borrowingReturnApps, setBorrowingReturnApps] = useState<BorrowingReturnApplication[]>([]);
+
+  const [detailBorrowingReturnApp, setDetailBorrowingReturnApp] = useState<BorrowingReturnApplication | null>(null);
+  const [detailOtherExpense, setDetailOtherExpense] = useState<NonContractExpense | null>(null);
+  const [detailLendingOut, setDetailLendingOut] = useState<LendingOut | null>(null);
+  const [detailExpenseReport, setDetailExpenseReport] = useState<ExpenseReport | null>(null);
+  const [salaryBatchDetail, setSalaryBatchDetail] = useState<SalaryBatch | null>(null);
+  const [approvalInstance, setApprovalInstance] = useState<any>(null);
+  const [approvalLoading, setApprovalLoading] = useState(false);
+
+  const { configured: nonContractExpenseFlowConfigured } = useFlowConfigured("non_contract_expense");
+  const { configured: paymentAppFlowConfigured } = useFlowConfigured("payment_application");
+  const { configured: lendingOutFlowConfigured } = useFlowConfigured("lending_out");
+  const { configured: expenseReportFlowConfigured } = useFlowConfigured("expense_report");
+  const { configured: salaryPaymentFlowConfigured } = useFlowConfigured("salary_payment");
+  const { configured: borrowingReturnFlowConfigured } = useFlowConfigured("borrowing_return_application");
+
+  const flowConfigMap: Record<string, boolean> = {
+    contractExpense: paymentAppFlowConfigured,
+    otherExpense: nonContractExpenseFlowConfigured,
+    lendingOut: lendingOutFlowConfigured,
+    expenseReport: expenseReportFlowConfigured,
+    salaryPayment: salaryPaymentFlowConfigured,
+    borrowingReturn: borrowingReturnFlowConfigured,
+  };
 
   const [users, setUsers] = useState<User[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
   const [biddings, setBiddings] = useState<Bidding[]>([]);
 
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -322,23 +439,74 @@ export default function FinanceExpensePage() {
 
   const [modalType, setModalType] = useState<ModalType>(null);
   const [editingOtherExpense, setEditingOtherExpense] = useState<NonContractExpense | null>(null);
-  const [editingSalaryPayment, setEditingSalaryPayment] = useState<SalaryPayment | null>(null);
+  const [showBatchForm, setShowBatchForm] = useState(false);
+  const [batchFormPeriod, setBatchFormPeriod] = useState("");
+  const [batchFormTitle, setBatchFormTitle] = useState("");
+  const [batchFormEmployees, setBatchFormEmployees] = useState<string[]>([]);
+  const [batchFormRemark, setBatchFormRemark] = useState("");
+  const [editingBatchItems, setEditingBatchItems] = useState<SalaryBatchItem[]>([]);
+  const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
 
   const [paymentAppForm, setPaymentAppForm] = useState(emptyPaymentAppForm);
   const [otherExpenseForm, setOtherExpenseForm] = useState(emptyOtherExpenseForm);
   const [lendingOutForm, setLendingOutForm] = useState(emptyLendingOutForm);
   const [lendingReturnForm, setLendingReturnForm] = useState(emptyLendingReturnForm);
   const [expenseReportForm, setExpenseReportForm] = useState(emptyExpenseReportForm);
-  const [salaryPaymentForm, setSalaryPaymentForm] = useState(emptySalaryPaymentForm);
 
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string; status: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const [returnTargetLending, setReturnTargetLending] = useState<LendingOut | null>(null);
   const [statusFlowTarget, setStatusFlowTarget] = useState<{ type: string; id: string; status: string } | null>(null);
+  const [payableAppInstances, setPayableAppInstances] = useState<Record<string, any>>({});
+  const [payableAppInstancesLoading, setPayableAppInstancesLoading] = useState(false);
+
+  const [editingPaymentAppId, setEditingPaymentAppId] = useState<string | null>(null);
+  const [editingPaymentAppForm, setEditingPaymentAppForm] = useState({ amount: "", paymentReason: "", applicantId: "" });
+  const [reSubmitting, setReSubmitting] = useState(false);
+
+  const {
+    toggleSelect: toggleSelectOtherExpense,
+    selectAll: selectAllOtherExpense,
+    clearSelection: clearSelectionOtherExpense,
+    isAllSelected: isAllSelectedOtherExpense,
+    isSelected: isSelectedOtherExpense,
+  } = useBatchSelection(nonContractExpenses.map((d) => d.id));
+
+  const {
+    toggleSelect: toggleSelectLendingOut,
+    selectAll: selectAllLendingOut,
+    clearSelection: clearSelectionLendingOut,
+    isAllSelected: isAllSelectedLendingOut,
+    isSelected: isSelectedLendingOut,
+  } = useBatchSelection(lendingOuts.map((d) => d.id));
+
+  const {
+    toggleSelect: toggleSelectExpenseReport,
+    selectAll: selectAllExpenseReport,
+    clearSelection: clearSelectionExpenseReport,
+    isAllSelected: isAllSelectedExpenseReport,
+    isSelected: isSelectedExpenseReport,
+  } = useBatchSelection(expenseReports.map((d) => d.id));
+
+  const {
+    toggleSelect: toggleSelectSalary,
+    selectAll: selectAllSalary,
+    clearSelection: clearSelectionSalary,
+    isAllSelected: isAllSelectedSalary,
+    isSelected: isSelectedSalary,
+  } = useBatchSelection(salaryBatches.map((d) => d.id));
+
+  const {
+    toggleSelect: toggleSelectBorrowReturn,
+    selectAll: selectAllBorrowReturn,
+    clearSelection: clearSelectionBorrowReturn,
+    isAllSelected: isAllSelectedBorrowReturn,
+    isSelected: isSelectedBorrowReturn,
+  } = useBatchSelection(borrowingReturnApps.map((d) => d.id));
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "-";
@@ -461,32 +629,61 @@ export default function FinanceExpensePage() {
     }
   }, [search, pagination.page, pagination.pageSize]);
 
-  const fetchSalaryPayments = useCallback(async () => {
+  const fetchSalaryBatches = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      params.set("include", "employee");
       params.set("page", pagination.page.toString());
       params.set("pageSize", pagination.pageSize.toString());
-      const res = await fetch(`/api/salary-payments?${params}`);
+      const res = await fetch(`/api/salary-batches?${params}`);
       const json = await res.json();
       if (res.ok) {
-        setSalaryPayments(json.data || []);
+        setSalaryBatches(json.data || []);
         if (json.pagination) setPagination(json.pagination);
       }
     } catch (err) {
-      console.error("获取工资发放失败:", err);
+      console.error("获取工资批次失败:", err);
     } finally {
       setLoading(false);
     }
   }, [search, pagination.page, pagination.pageSize]);
 
+  const fetchBorrowingReturnApps = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/borrowing-return-applications?pageSize=200");
+      const json = await res.json();
+      if (res.ok) setBorrowingReturnApps(json.data || []);
+    } catch (err) {
+      console.error("获取借入资金归还失败:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
+    setApprovalLoading(true);
+    try {
+      const res = await fetch(`/api/approval-instances/${instanceId}`);
+      if (res.ok) {
+        const json = await res.json();
+        setApprovalInstance(json.data);
+      } else {
+        setApprovalInstance(null);
+      }
+    } catch {
+      setApprovalInstance(null);
+    } finally {
+      setApprovalLoading(false);
+    }
+  }, []);
+
   const fetchReferenceData = useCallback(async () => {
     try {
-      const [usersRes, projectsRes, bankAccountsRes] = await Promise.all([
+      const [usersRes, leadsRes, bankAccountsRes] = await Promise.all([
         fetch("/api/users?pageSize=200"),
-        fetch("/api/projects?pageSize=200"),
+        fetch("/api/project-leads?pageSize=200"),
         fetch("/api/bank-accounts?isActive=true&pageSize=200"),
       ]);
       if (usersRes.ok) {
@@ -497,9 +694,9 @@ export default function FinanceExpensePage() {
           setExpenseReportForm((prev) => ({ ...prev, applicantId: currentUser.id }));
         }
       }
-      if (projectsRes.ok) {
-        const j = await projectsRes.json();
-        setProjects(j.data || []);
+      if (leadsRes.ok) {
+        const j = await leadsRes.json();
+        setProjectLeads((j.data || []).filter((l: { currentStatus: string }) => l.currentStatus !== "放弃"));
       }
       if (bankAccountsRes.ok) {
         const j = await bankAccountsRes.json();
@@ -527,9 +724,43 @@ export default function FinanceExpensePage() {
     } else if (activeTab === "expenseReport") {
       fetchExpenseReports();
     } else if (activeTab === "salaryPayment") {
-      fetchSalaryPayments();
+      fetchSalaryBatches();
+    } else if (activeTab === "borrowingReturn") {
+      fetchBorrowingReturnApps();
     }
-  }, [activeTab, fetchPayables, fetchPaymentApplications, fetchPaymentVouchers, fetchNonContractExpenses, fetchLendingOuts, fetchExpenseReports, fetchSalaryPayments]);
+  }, [activeTab, fetchPayables, fetchPaymentApplications, fetchPaymentVouchers, fetchNonContractExpenses, fetchLendingOuts, fetchExpenseReports, fetchSalaryBatches, fetchBorrowingReturnApps]);
+
+  useEffect(() => {
+    if (!statusFlowTarget || statusFlowTarget.type !== "payableApps") {
+      setPayableAppInstances({});
+      return;
+    }
+    const apps = getPayableApplications(statusFlowTarget.id);
+    const instanceIds = apps.map((a) => a.approvalInstanceId).filter(Boolean) as string[];
+    if (instanceIds.length === 0) return;
+
+    setPayableAppInstancesLoading(true);
+    Promise.all(
+      instanceIds.map(async (id) => {
+        try {
+          const res = await fetch(`/api/approval-instances/${id}`);
+          if (res.ok) {
+            const json = await res.json();
+            return { id, data: json.data };
+          }
+        } catch {}
+        return { id, data: null };
+      })
+    ).then((results) => {
+      const map: Record<string, any> = {};
+      results.forEach((r) => {
+        if (r.data) map[r.id] = r.data;
+      });
+      setPayableAppInstances(map);
+    }).finally(() => {
+      setPayableAppInstancesLoading(false);
+    });
+  }, [statusFlowTarget]);
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
@@ -565,6 +796,30 @@ export default function FinanceExpensePage() {
       });
       const json = await res.json();
       if (res.ok) {
+        const appId = json.data?.id;
+        if (appId) {
+          const approvalRes = await fetch("/api/approval-instances", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              businessType: "payment_application",
+              businessId: appId,
+              flowLevel: "common",
+            }),
+          });
+          if (approvalRes.ok) {
+            await fetch(`/api/payment-applications/${appId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ approvalStatus: "审批中" }),
+            });
+          } else {
+            const errJson = await approvalRes.json();
+            setFormError(errJson.error || "发起审批失败");
+            setSaving(false);
+            return;
+          }
+        }
         setModalType(null);
         setPaymentAppForm(emptyPaymentAppForm);
         fetchPayables();
@@ -641,6 +896,12 @@ export default function FinanceExpensePage() {
 
   const handleDeleteOtherExpense = async () => {
     if (!deleteTarget || deleteTarget.type !== "otherExpense") return;
+    if (deleteTarget.status !== "草稿" && deleteTarget.status !== "已驳回" && !isAdmin) {
+      alert("该记录已进入审批流程，仅管理员可删除");
+      setDeleteTarget(null);
+      setModalType(null);
+      return;
+    }
     setDeleting(true);
     try {
       const res = await fetch(`/api/non-contract-expenses/${deleteTarget.id}`, { method: "DELETE" });
@@ -756,9 +1017,7 @@ export default function FinanceExpensePage() {
 
   const openExpenseReportModal = () => {
     setExpenseReportForm({
-      applicantId: "",
-      expenseType: "其他",
-      description: "",
+      applicantId: currentUser?.id || "",
       items: [{ ...emptyExpenseItem }],
     });
     setFormError("");
@@ -794,39 +1053,79 @@ export default function FinanceExpensePage() {
     return expenseReportForm.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   };
 
+  const handleInvoiceUpload = async (index: number, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const json = await res.json();
+        setExpenseReportForm((prev) => {
+          const items = [...prev.items];
+          const attachments = items[index].invoiceAttachments || [];
+          items[index] = {
+            ...items[index],
+            invoiceAttachments: [...attachments, json.url],
+          };
+          return { ...prev, items };
+        });
+      } else {
+        const json = await res.json();
+        alert(json.error || "上传失败");
+      }
+    } catch {
+      alert("上传失败，请重试");
+    }
+  };
+
+  const removeAttachment = (itemIndex: number, attachIndex: number) => {
+    setExpenseReportForm((prev) => {
+      const items = [...prev.items];
+      const attachments = items[itemIndex].invoiceAttachments || [];
+      items[itemIndex] = {
+        ...items[itemIndex],
+        invoiceAttachments: attachments.filter((_: string, i: number) => i !== attachIndex),
+      };
+      return { ...prev, items };
+    });
+  };
+
   const handleSubmitExpenseReport = async () => {
-    if (!expenseReportForm.applicantId) { setFormError("请选择报销人"); return; }
+    if (!expenseReportForm.applicantId) { setFormError("报销人信息缺失"); return; }
     if (expenseReportForm.items.length === 0) { setFormError("请至少添加一条明细"); return; }
     for (let i = 0; i < expenseReportForm.items.length; i++) {
       const item = expenseReportForm.items[i];
+      if (!item.description || !item.description.trim()) { setFormError(`第${i + 1}行费用说明必填`); return; }
+      if (!item.amount || Number(item.amount) <= 0) { setFormError(`第${i + 1}行报销金额无效`); return; }
       if (!item.expenseType) { setFormError(`第${i + 1}行费用类型必填`); return; }
-      if (!item.amount || Number(item.amount) <= 0) { setFormError(`第${i + 1}行金额无效`); return; }
+      if (!item.invoiceAttachments || item.invoiceAttachments.length === 0) { setFormError(`第${i + 1}行请上传发票`); return; }
     }
     setSaving(true);
     setFormError("");
     try {
       const total = getExpenseTotal();
+      const firstExpenseType = expenseReportForm.items[0]?.expenseType || "其他";
       const res = await fetch("/api/expense-reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           applicantId: expenseReportForm.applicantId,
-          expenseType: expenseReportForm.expenseType,
+          expenseType: firstExpenseType,
           amount: total,
-          description: expenseReportForm.description.trim() || null,
           status: "草稿",
           items: expenseReportForm.items.map((item) => ({
             expenseType: item.expenseType,
             amount: Number(item.amount),
             description: item.description.trim() || null,
             projectSourceId: item.relateProject ? item.projectSourceId || null : null,
+            invoiceAttachments: item.invoiceAttachments || [],
           })),
         }),
       });
       const json = await res.json();
       if (res.ok) {
         setModalType(null);
-        setExpenseReportForm({ applicantId: "", expenseType: "其他", description: "", items: [{ ...emptyExpenseItem }] });
+        setExpenseReportForm({ applicantId: currentUser?.id || "", items: [{ ...emptyExpenseItem }] });
         fetchExpenseReports();
       } else {
         setFormError(json.error || "操作失败");
@@ -838,72 +1137,41 @@ export default function FinanceExpensePage() {
     }
   };
 
-  const openSalaryPaymentModal = () => {
-    setEditingSalaryPayment(null);
-    setSalaryPaymentForm(emptySalaryPaymentForm);
+  const handleOpenBatchForm = async () => {
+    const now = new Date();
+    const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    setBatchFormPeriod(defaultPeriod);
+    setBatchFormTitle(`${defaultPeriod}月工资发放`);
+    setBatchFormEmployees([]);
+    setBatchFormRemark("");
+    setEditingBatchId(null);
     setFormError("");
-    setModalType("salaryPaymentForm");
+    setShowBatchForm(true);
   };
 
-  const openEditSalaryPayment = (item: SalaryPayment) => {
-    setEditingSalaryPayment(item);
-    setSalaryPaymentForm({
-      employeeId: item.employeeId,
-      period: item.period,
-      baseSalary: String(item.baseSalary),
-      bonus: String(item.bonus),
-      allowance: String(item.allowance),
-      deduction: String(item.deduction),
-      paymentDate: item.paymentDate ? formatDate(item.paymentDate) : "",
-      remark: item.remark || "",
-    });
-    setFormError("");
-    setModalType("salaryPaymentForm");
-  };
-
-  const calcNetSalary = () => {
-    const base = Number(salaryPaymentForm.baseSalary) || 0;
-    const bonus = Number(salaryPaymentForm.bonus) || 0;
-    const allowance = Number(salaryPaymentForm.allowance) || 0;
-    const deduction = Number(salaryPaymentForm.deduction) || 0;
-    return base + bonus + allowance - deduction;
-  };
-
-  const handleSubmitSalaryPayment = async () => {
-    if (!salaryPaymentForm.employeeId) { setFormError("请选择员工"); return; }
-    if (!salaryPaymentForm.period) { setFormError("请选择工资周期"); return; }
-    if (!salaryPaymentForm.baseSalary || Number(salaryPaymentForm.baseSalary) < 0) { setFormError("请输入有效基本工资"); return; }
+  const handleCreateBatch = async () => {
+    if (!batchFormPeriod) { setFormError("请选择工资周期"); return; }
+    if (!batchFormTitle) { setFormError("请输入批次名称"); return; }
+    if (batchFormEmployees.length === 0) { setFormError("请选择发放员工"); return; }
     setSaving(true);
     setFormError("");
     try {
-      const body = {
-        employeeId: salaryPaymentForm.employeeId,
-        period: salaryPaymentForm.period,
-        baseSalary: Number(salaryPaymentForm.baseSalary) || 0,
-        bonus: Number(salaryPaymentForm.bonus) || 0,
-        allowance: Number(salaryPaymentForm.allowance) || 0,
-        deduction: Number(salaryPaymentForm.deduction) || 0,
-        netSalary: calcNetSalary(),
-        paymentDate: salaryPaymentForm.paymentDate || null,
-        remark: salaryPaymentForm.remark.trim() || null,
-      };
-      const url = editingSalaryPayment
-        ? `/api/salary-payments/${editingSalaryPayment.id}`
-        : "/api/salary-payments";
-      const method = editingSalaryPayment ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
+      const res = await fetch("/api/salary-batches", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          period: batchFormPeriod,
+          title: batchFormTitle,
+          employeeIds: batchFormEmployees,
+          remark: batchFormRemark,
+        }),
       });
-      const json = await res.json();
       if (res.ok) {
-        setModalType(null);
-        setSalaryPaymentForm(emptySalaryPaymentForm);
-        setEditingSalaryPayment(null);
-        fetchSalaryPayments();
+        setShowBatchForm(false);
+        fetchSalaryBatches();
       } else {
-        setFormError(json.error || "操作失败");
+        const json = await res.json();
+        setFormError(json.error || "创建失败");
       }
     } catch {
       setFormError("网络错误");
@@ -912,35 +1180,192 @@ export default function FinanceExpensePage() {
     }
   };
 
-  const handleDeleteSalaryPayment = async () => {
-    if (!deleteTarget || deleteTarget.type !== "salaryPayment") return;
-    setDeleting(true);
+  const handleEditBatch = async (batch: SalaryBatch) => {
+    setEditingBatchId(batch.id);
+    setEditingBatchItems(batch.items);
+    setBatchFormPeriod(batch.period);
+    setBatchFormTitle(batch.title);
+    setBatchFormRemark(batch.remark || "");
+    setFormError("");
+    setModalType("salaryBatchEdit");
+  };
+
+  const handleSaveBatchItems = async () => {
+    if (!editingBatchId) return;
+    setSaving(true);
+    setFormError("");
     try {
-      const res = await fetch(`/api/salary-payments/${deleteTarget.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/salary-batches/${editingBatchId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: batchFormTitle,
+          remark: batchFormRemark,
+          items: editingBatchItems.map(item => ({
+            id: item.id,
+            baseSalary: item.baseSalary,
+            bonus: item.bonus,
+            allowance: item.allowance,
+            socialInsurancePersonal: item.socialInsurancePersonal,
+            housingFundPersonal: item.housingFundPersonal,
+            incomeTax: item.incomeTax,
+            otherDeduction: item.otherDeduction,
+            remark: item.remark,
+          })),
+        }),
+      });
       if (res.ok) {
-        setDeleteTarget(null);
         setModalType(null);
-        fetchSalaryPayments();
+        fetchSalaryBatches();
+      } else {
+        const json = await res.json();
+        setFormError(json.error || "保存失败");
+      }
+    } catch {
+      setFormError("网络错误");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteBatch = async (batchId: string, status: string) => {
+    if (!confirm("确定删除此批次？")) return;
+    if (status !== "草稿" && status !== "已驳回" && !isAdmin) {
+      alert("该记录已进入审批流程，仅管理员可删除");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/salary-batches/${batchId}`, { method: "DELETE" });
+      if (res.ok) fetchSalaryBatches();
+      else {
+        const json = await res.json();
+        alert(json.error || "删除失败");
+      }
+    } catch {
+      alert("删除失败");
+    }
+  };
+
+  const handleDeletePayable = async (id: string) => {
+    if (!confirm("确定要删除该应付记录吗？此操作不可撤销。")) return;
+    try {
+      const res = await fetch(`/api/payables/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchPayables();
       } else {
         const json = await res.json();
         alert(json.error || "删除失败");
-        setDeleteTarget(null);
-        setModalType(null);
       }
     } catch {
-      alert("网络错误");
-      setDeleteTarget(null);
-      setModalType(null);
-    } finally {
-      setDeleting(false);
+      alert("删除失败");
     }
+  };
+
+  const handleDeleteLendingOut = async (id: string) => {
+    if (!confirm("确定要删除该借出款记录吗？此操作不可撤销。")) return;
+    try {
+      const res = await fetch(`/api/lending-outs/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchLendingOuts();
+      } else {
+        const json = await res.json();
+        alert(json.error || "删除失败");
+      }
+    } catch {
+      alert("删除失败");
+    }
+  };
+
+  const handleDeleteExpenseReport = async (id: string) => {
+    if (!confirm("确定要删除该费用报销记录吗？此操作不可撤销。")) return;
+    try {
+      const res = await fetch(`/api/expense-reports/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchExpenseReports();
+      } else {
+        const json = await res.json();
+        alert(json.error || "删除失败");
+      }
+    } catch {
+      alert("删除失败");
+    }
+  };
+
+  const handleSubmitBatchApproval = async (batch: SalaryBatch) => {
+    try {
+      const res = await fetch("/api/approval-instances", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessType: "salary_payment",
+          businessId: batch.id,
+          flowLevel: "common",
+        }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        await fetch(`/api/salary-batches/${batch.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "审批中" }),
+        });
+        fetchSalaryBatches();
+      } else {
+        alert(json.error || "提交审批失败");
+      }
+    } catch {
+      alert("提交审批失败");
+    }
+  };
+
+  const updateBatchItem = (idx: number, field: string, value: string) => {
+    setEditingBatchItems(prev => {
+      const items = [...prev];
+      const item = { ...items[idx], [field]: Number(value) || 0 };
+      item.grossSalary = item.baseSalary + item.bonus + item.allowance;
+      item.totalDeduction = item.socialInsurancePersonal + item.housingFundPersonal + item.incomeTax + item.otherDeduction;
+      item.netSalary = Math.round((item.grossSalary - item.totalDeduction) * 100) / 100;
+      items[idx] = item;
+      return items;
+    });
   };
 
   const handleStatusChange = async (type: string, id: string, newStatus: string) => {
     try {
+      // 对于需要审批的业务类型，从草稿/已驳回提交到审批中时，需要创建审批实例
+      if (newStatus === "审批中") {
+        const businessTypeMap: Record<string, string> = {
+          nonContractExpense: "non_contract_expense",
+          lendingOut: "lending_out",
+          expenseReport: "expense_report",
+        };
+        const businessType = businessTypeMap[type];
+        if (businessType) {
+          const res = await fetch("/api/approval-instances", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              businessType,
+              businessId: id,
+              flowLevel: "common",
+            }),
+          });
+          const json = await res.json();
+          if (res.ok) {
+            if (type === "nonContractExpense") fetchNonContractExpenses();
+            else if (type === "lendingOut") fetchLendingOuts();
+            else if (type === "expenseReport") fetchExpenseReports();
+            return;
+          } else {
+            alert(json.error || "提交审批失败");
+            return;
+          }
+        }
+      }
+
       let url = "";
       if (type === "expenseReport") url = `/api/expense-reports/${id}`;
-      else if (type === "salaryPayment") url = `/api/salary-payments/${id}`;
+      else if (type === "salaryPayment") url = `/api/salary-batches/${id}`;
       else if (type === "nonContractExpense") url = `/api/non-contract-expenses/${id}`;
       else if (type === "lendingOut") url = `/api/lending-outs/${id}`;
       else if (type === "paymentApplication") url = `/api/payment-applications/${id}`;
@@ -952,7 +1377,7 @@ export default function FinanceExpensePage() {
       });
       if (res.ok) {
         if (type === "expenseReport") fetchExpenseReports();
-        else if (type === "salaryPayment") fetchSalaryPayments();
+        else if (type === "salaryPayment") fetchSalaryBatches();
         else if (type === "nonContractExpense") fetchNonContractExpenses();
         else if (type === "lendingOut") fetchLendingOuts();
         else if (type === "paymentApplication") fetchPaymentApplications();
@@ -965,28 +1390,44 @@ export default function FinanceExpensePage() {
     }
   };
 
-  const tabs = [
+  const TAB_PERMISSION_MAP: Record<string, string> = {
+    contractExpense: "finance.expense.contract",
+    otherExpense: "finance.expense.other",
+    lendingOut: "finance.expense.lending",
+    expenseReport: "finance.expense.report",
+    salaryPayment: "finance.expense.salary",
+    borrowingReturn: "finance.expense.return",
+  };
+
+  const allTabs = [
     { key: "contractExpense" as TabType, label: "合同支出", icon: <ArrowDownCircle className="w-4 h-4" /> },
     { key: "otherExpense" as TabType, label: "其他支出", icon: <DollarSign className="w-4 h-4" /> },
     { key: "lendingOut" as TabType, label: "借出款", icon: <Landmark className="w-4 h-4" /> },
     { key: "expenseReport" as TabType, label: "费用报销", icon: <FileText className="w-4 h-4" /> },
     { key: "salaryPayment" as TabType, label: "工资发放", icon: <CreditCard className="w-4 h-4" /> },
+    { key: "borrowingReturn" as TabType, label: "借入资金归还", icon: <RotateCcw className="w-4 h-4" /> },
   ];
 
+  const userModules: string[] = [...modulePermissions.accessibleSubModules];
+  const tabPermValues = Object.values(TAB_PERMISSION_MAP);
+  const hasTabPermissions = userModules.some((m) => tabPermValues.includes(m));
+  const isAdmin = currentUser?.roles?.some((r: any) => r.code === "admin");
+  const tabs = (!hasTabPermissions || isAdmin) ? allTabs : allTabs.filter((tab) => userModules.includes(TAB_PERMISSION_MAP[tab.key]));
+
   const getPrimaryBtnLabel = () => {
-    if (activeTab === "contractExpense") return "付款申请";
     if (activeTab === "otherExpense") return "新增支出";
     if (activeTab === "lendingOut") return "新增借出";
     if (activeTab === "expenseReport") return "新增报销";
-    return "新增工资";
+    if (activeTab === "borrowingReturn") return "";
+    return "新建批次";
   };
 
   const handlePrimaryAction = () => {
-    if (activeTab === "contractExpense") openPaymentAppModal();
-    else if (activeTab === "otherExpense") openCreateOtherExpense();
+    if (activeTab === "otherExpense") openCreateOtherExpense();
     else if (activeTab === "lendingOut") openLendingOutModal();
     else if (activeTab === "expenseReport") openExpenseReportModal();
-    else openSalaryPaymentModal();
+    else if (activeTab === "borrowingReturn") return;
+    else handleOpenBatchForm();
   };
 
   const getPayableApplications = (payableId: string) => {
@@ -1005,7 +1446,13 @@ export default function FinanceExpensePage() {
             <h1>财务支出</h1>
             <p>管理合同支出、其他支出、借出款、费用报销与工资发放</p>
           </div>
-          <button className="ios-btn ios-btn-primary" onClick={handlePrimaryAction}>
+          <button
+            className="ios-btn ios-btn-primary"
+            onClick={handlePrimaryAction}
+            style={activeTab === "borrowingReturn" || activeTab === "contractExpense" ? { display: "none" } : undefined}
+            disabled={!flowConfigMap[activeTab]}
+            title={!flowConfigMap[activeTab] ? "请先在流程设置中配置审批流程" : undefined}
+          >
             <Plus className="w-4 h-4" />
             {getPrimaryBtnLabel()}
           </button>
@@ -1116,7 +1563,7 @@ export default function FinanceExpensePage() {
                                 记录
                               </button>
                             )}
-                            {unpaid > 0 && (
+                            {unpaid > 0 && !apps.some((a) => a.approvalStatus === "草稿" || a.approvalStatus === "审批中") && (
                               <button
                                 className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
                                 onClick={() => {
@@ -1127,6 +1574,14 @@ export default function FinanceExpensePage() {
                               >
                                 <Wallet className="w-3.5 h-3.5" />
                                 付款
+                              </button>
+                            )}
+                            {isAdmin && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                onClick={() => handleDeletePayable(p.id)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             )}
                           </div>
@@ -1142,6 +1597,7 @@ export default function FinanceExpensePage() {
       )}
 
       {activeTab === "otherExpense" && (
+        <>
         <div className="bento-card-static">
           <div className="filter-bar">
             <div className="relative flex-1 min-w-[200px] max-w-[360px]">
@@ -1179,6 +1635,16 @@ export default function FinanceExpensePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
+                    {isAdmin && (
+                      <th className="w-10">
+                        <input
+                          type="checkbox"
+                          className="ios-checkbox"
+                          checked={isAllSelectedOtherExpense}
+                          onChange={() => isAllSelectedOtherExpense ? clearSelectionOtherExpense() : selectAllOtherExpense()}
+                        />
+                      </th>
+                    )}
                     <th>交易对方</th>
                     <th>金额</th>
                     <th>日期</th>
@@ -1192,32 +1658,70 @@ export default function FinanceExpensePage() {
                   {nonContractExpenses.map((item) => {
                     const nextStatuses = appStatusFlow[item.status] || [];
                     return (
-                      <tr key={item.id}>
+                      <tr key={item.id} className={isSelectedOtherExpense(item.id) ? "bg-[#007AFF]/5" : ""}>
+                        {isAdmin && (
+                          <td className="w-10">
+                            <input
+                              type="checkbox"
+                              className="ios-checkbox"
+                              checked={isSelectedOtherExpense(item.id)}
+                              onChange={() => toggleSelectOtherExpense(item.id)}
+                            />
+                          </td>
+                        )}
                         <td className="font-semibold">{item.counterparty || "-"}</td>
                         <td className="text-[#FF3B30] font-semibold">{formatAmount(item.amount)}</td>
                         <td className="text-[#86868B]">{formatDate(item.transactionDate)}</td>
                         <td className="text-[#86868B] max-w-[200px] truncate">{item.description || "-"}</td>
                         <td className="text-[#86868B]">{item.project?.name || item.projectSourceId || "-"}</td>
-                        <td>{getStatusBadge(item.status)}</td>
+                        <td>
+                          <AdminStatusOverride
+                            businessType="non_contract_expense"
+                            businessId={item.id}
+                            currentStatus={item.status}
+                            onStatusChanged={(newStatus) => {
+                              setNonContractExpenses((prev) =>
+                                prev.map((e) =>
+                                  e.id === item.id ? { ...e, status: newStatus } : e
+                                )
+                              );
+                            }}
+                          />
+                        </td>
                         <td>
                           <div className="flex items-center gap-1 flex-wrap">
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm"
+                              onClick={() => {
+                                setDetailOtherExpense(item);
+                                setApprovalInstance(null);
+                                if (item.approvalInstanceId) {
+                                  fetchApprovalInstance(item.approvalInstanceId);
+                                }
+                                setModalType("otherExpenseDetail");
+                              }}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              查看
+                            </button>
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm"
                               onClick={() => openEditOtherExpense(item)}
-                              disabled={item.status !== "草稿"}
+                              disabled={item.status !== "草稿" && item.status !== "已驳回"}
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
-                            <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                              onClick={() => {
-                                setDeleteTarget({ type: "otherExpense", id: item.id });
-                                setModalType("deleteConfirm");
-                              }}
-                              disabled={item.status !== "草稿"}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {(item.status === "草稿" || item.status === "已驳回" || isAdmin) && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                onClick={() => {
+                                  setDeleteTarget({ type: "otherExpense", id: item.id, status: item.status });
+                                  setModalType("deleteConfirm");
+                                }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                             {nextStatuses.map((ns) => (
                               <button
                                 key={ns}
@@ -1257,9 +1761,20 @@ export default function FinanceExpensePage() {
             </div>
           )}
         </div>
+
+        {isAdmin && (
+          <BatchDeleteBar
+            businessType="non_contract_expense"
+            selectedIds={nonContractExpenses.filter((d) => isSelectedOtherExpense(d.id)).map((d) => d.id)}
+            onDeleteSuccess={fetchNonContractExpenses}
+            onClear={clearSelectionOtherExpense}
+          />
+        )}
+        </>
       )}
 
       {activeTab === "lendingOut" && (
+        <>
         <div className="bento-card-static">
           {loading ? (
             <div className="empty-state">
@@ -1278,6 +1793,16 @@ export default function FinanceExpensePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
+                    {isAdmin && (
+                      <th className="w-10">
+                        <input
+                          type="checkbox"
+                          className="ios-checkbox"
+                          checked={isAllSelectedLendingOut}
+                          onChange={() => isAllSelectedLendingOut ? clearSelectionLendingOut() : selectAllLendingOut()}
+                        />
+                      </th>
+                    )}
                     <th>借出类型</th>
                     <th>借入方</th>
                     <th>借出金额</th>
@@ -1292,7 +1817,17 @@ export default function FinanceExpensePage() {
                   {lendingOuts.map((item) => {
                     const nextStatuses = lendingStatusFlow[item.status] || [];
                     return (
-                      <tr key={item.id}>
+                      <tr key={item.id} className={isSelectedLendingOut(item.id) ? "bg-[#007AFF]/5" : ""}>
+                        {isAdmin && (
+                          <td className="w-10">
+                            <input
+                              type="checkbox"
+                              className="ios-checkbox"
+                              checked={isSelectedLendingOut(item.id)}
+                              onChange={() => toggleSelectLendingOut(item.id)}
+                            />
+                          </td>
+                        )}
                         <td>
                           <span className="ios-badge ios-badge-blue">{item.lendingType}</span>
                         </td>
@@ -1301,9 +1836,36 @@ export default function FinanceExpensePage() {
                         <td className="font-semibold">{formatAmount(item.returnedAmount)}</td>
                         <td className="font-semibold text-[#FF9500]">{formatAmount(item.remainingAmount)}</td>
                         <td className="text-[#86868B]">{formatDate(item.lendingDate)}</td>
-                        <td>{getStatusBadge(item.status)}</td>
+                        <td>
+                          <AdminStatusOverride
+                            businessType="lending_out"
+                            businessId={item.id}
+                            currentStatus={item.status}
+                            onStatusChanged={(newStatus) => {
+                              setLendingOuts((prev) =>
+                                prev.map((l) =>
+                                  l.id === item.id ? { ...l, status: newStatus } : l
+                                )
+                              );
+                            }}
+                          />
+                        </td>
                         <td>
                           <div className="flex items-center gap-1 flex-wrap">
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm"
+                              onClick={() => {
+                                setDetailLendingOut(item);
+                                setApprovalInstance(null);
+                                if (item.approvalInstanceId) {
+                                  fetchApprovalInstance(item.approvalInstanceId);
+                                }
+                                setModalType("lendingOutDetail");
+                              }}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              查看
+                            </button>
                             {item.remainingAmount > 0 && (
                               <button
                                 className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
@@ -1311,6 +1873,14 @@ export default function FinanceExpensePage() {
                               >
                                 <Wallet className="w-3.5 h-3.5" />
                                 收回
+                              </button>
+                            )}
+                            {isAdmin && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                onClick={() => handleDeleteLendingOut(item.id)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             )}
                             {nextStatuses.map((ns) => (
@@ -1333,9 +1903,20 @@ export default function FinanceExpensePage() {
             </div>
           )}
         </div>
+
+        {isAdmin && (
+          <BatchDeleteBar
+            businessType="lending_out"
+            selectedIds={lendingOuts.filter((d) => isSelectedLendingOut(d.id)).map((d) => d.id)}
+            onDeleteSuccess={fetchLendingOuts}
+            onClear={clearSelectionLendingOut}
+          />
+        )}
+        </>
       )}
 
       {activeTab === "expenseReport" && (
+        <>
         <div className="bento-card-static">
           <div className="filter-bar">
             <div className="relative flex-1 min-w-[200px] max-w-[360px]">
@@ -1373,38 +1954,82 @@ export default function FinanceExpensePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
+                    {isAdmin && (
+                      <th className="w-10">
+                        <input
+                          type="checkbox"
+                          className="ios-checkbox"
+                          checked={isAllSelectedExpenseReport}
+                          onChange={() => isAllSelectedExpenseReport ? clearSelectionExpenseReport() : selectAllExpenseReport()}
+                        />
+                      </th>
+                    )}
                     <th>申请人</th>
                     <th>报销类型</th>
                     <th>总金额</th>
                     <th>状态</th>
-                    <th>申请时间</th>
                     <th>操作</th>
+                    <th>最后修改</th>
                   </tr>
                 </thead>
                 <tbody>
                   {expenseReports.map((item) => {
                     const nextStatuses = appStatusFlow[item.status] || [];
                     return (
-                      <tr key={item.id}>
+                      <tr key={item.id} className={isSelectedExpenseReport(item.id) ? "bg-[#007AFF]/5" : ""}>
+                        {isAdmin && (
+                          <td className="w-10">
+                            <input
+                              type="checkbox"
+                              className="ios-checkbox"
+                              checked={isSelectedExpenseReport(item.id)}
+                              onChange={() => toggleSelectExpenseReport(item.id)}
+                            />
+                          </td>
+                        )}
                         <td className="font-semibold">{item.applicant?.realName || "-"}</td>
                         <td>
                           <span className="ios-badge ios-badge-blue">{item.expenseType}</span>
                         </td>
                         <td className="text-[#FF3B30] font-semibold">{formatAmount(item.amount)}</td>
-                        <td>{getStatusBadge(item.status)}</td>
-                        <td className="text-[#86868B]">{formatDate(item.createdAt)}</td>
+                        <td>
+                          <AdminStatusOverride
+                            businessType="expense_report"
+                            businessId={item.id}
+                            currentStatus={item.status}
+                            onStatusChanged={(newStatus) => {
+                              setExpenseReports((prev) =>
+                                prev.map((r) =>
+                                  r.id === item.id ? { ...r, status: newStatus } : r
+                                )
+                              );
+                            }}
+                          />
+                        </td>
                         <td>
                           <div className="flex items-center gap-1 flex-wrap">
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm"
                               onClick={() => {
-                                setStatusFlowTarget({ type: "expenseReport", id: item.id, status: item.status });
-                                setModalType("statusFlow");
+                                setDetailExpenseReport(item);
+                                setApprovalInstance(null);
+                                if (item.approvalInstanceId) {
+                                  fetchApprovalInstance(item.approvalInstanceId);
+                                }
+                                setModalType("expenseReportDetail");
                               }}
-                              title="查看明细"
                             >
                               <Eye className="w-3.5 h-3.5" />
+                              查看
                             </button>
+                            {isAdmin && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                onClick={() => handleDeleteExpenseReport(item.id)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                             {nextStatuses.map((ns) => (
                               <button
                                 key={ns}
@@ -1416,6 +2041,12 @@ export default function FinanceExpensePage() {
                               </button>
                             ))}
                           </div>
+                        </td>
+                        <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                          {item.lastModifiedBy && (
+                            <span>{item.lastModifiedBy}</span>
+                          )}
+                          <span className="block text-[11px]">{formatDate(item.updatedAt)}</span>
                         </td>
                       </tr>
                     );
@@ -1444,9 +2075,20 @@ export default function FinanceExpensePage() {
             </div>
           )}
         </div>
+
+        {isAdmin && (
+          <BatchDeleteBar
+            businessType="expense_report"
+            selectedIds={expenseReports.filter((d) => isSelectedExpenseReport(d.id)).map((d) => d.id)}
+            onDeleteSuccess={fetchExpenseReports}
+            onClear={clearSelectionExpenseReport}
+          />
+        )}
+        </>
       )}
 
       {activeTab === "salaryPayment" && (
+        <>
         <div className="bento-card-static">
           <div className="filter-bar">
             <div className="relative flex-1 min-w-[200px] max-w-[360px]">
@@ -1454,7 +2096,7 @@ export default function FinanceExpensePage() {
               <input
                 type="text"
                 className="ios-input pl-10"
-                placeholder="搜索员工、工资周期..."
+                placeholder="搜索批次号、批次名称..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -1472,78 +2114,115 @@ export default function FinanceExpensePage() {
               <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
               <p>加载中...</p>
             </div>
-          ) : salaryPayments.length === 0 ? (
+          ) : salaryBatches.length === 0 ? (
             <div className="empty-state">
               <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
                 <CreditCard className="w-8 h-8 text-[#86868B]" />
               </div>
-              <p>{search ? "没有匹配的工资记录" : "暂无工资发放记录"}</p>
+              <p>{search ? "没有匹配的工资批次" : "暂无工资发放批次"}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="ios-table">
                 <thead>
                   <tr>
-                    <th>员工</th>
+                    {isAdmin && (
+                      <th className="w-10">
+                        <input
+                          type="checkbox"
+                          className="ios-checkbox"
+                          checked={isAllSelectedSalary}
+                          onChange={() => isAllSelectedSalary ? clearSelectionSalary() : selectAllSalary()}
+                        />
+                      </th>
+                    )}
+                    <th>批次号</th>
+                    <th>批次名称</th>
                     <th>工资周期</th>
-                    <th>基本工资</th>
-                    <th>奖金</th>
-                    <th>补贴</th>
-                    <th>扣款</th>
-                    <th>实发工资</th>
-                    <th>发放日期</th>
+                    <th>人数</th>
+                    <th>应发总额</th>
+                    <th>实发总额</th>
+                    <th>银行总支出</th>
                     <th>状态</th>
                     <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {salaryPayments.map((item) => {
-                    const nextStatuses = appStatusFlow[item.status] || [];
-                    return (
-                      <tr key={item.id}>
-                        <td className="font-semibold">{item.employee?.realName || "-"}</td>
-                        <td className="font-mono text-[13px]">{item.period}</td>
-                        <td className="text-[#86868B]">{formatAmount(item.baseSalary)}</td>
-                        <td className="text-[#86868B]">{formatAmount(item.bonus)}</td>
-                        <td className="text-[#86868B]">{formatAmount(item.allowance)}</td>
-                        <td className="text-[#86868B]">{formatAmount(item.deduction)}</td>
-                        <td className="text-[#FF3B30] font-semibold">{formatAmount(item.netSalary)}</td>
-                        <td className="text-[#86868B]">{formatDate(item.paymentDate)}</td>
-                        <td>{getStatusBadge(item.status)}</td>
-                        <td>
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm"
-                              onClick={() => openEditSalaryPayment(item)}
-                              disabled={item.status !== "草稿"}
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                              onClick={() => {
-                                setDeleteTarget({ type: "salaryPayment", id: item.id });
-                                setModalType("deleteConfirm");
-                              }}
-                              disabled={item.status !== "草稿"}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                            {nextStatuses.map((ns) => (
-                              <button
-                                key={ns}
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
-                                onClick={() => handleStatusChange("salaryPayment", item.id, ns)}
-                              >
-                                <ChevronRight className="w-3.5 h-3.5" />
-                                {ns}
-                              </button>
-                            ))}
-                          </div>
+                  {salaryBatches.map((batch) => (
+                    <tr key={batch.id} className={isSelectedSalary(batch.id) ? "bg-[#007AFF]/5" : ""}>
+                      {isAdmin && (
+                        <td className="w-10">
+                          <input
+                            type="checkbox"
+                            className="ios-checkbox"
+                            checked={isSelectedSalary(batch.id)}
+                            onChange={() => toggleSelectSalary(batch.id)}
+                          />
                         </td>
-                      </tr>
-                    );
-                  })}
+                      )}
+                      <td className="font-mono text-[13px]">{batch.batchNo}</td>
+                      <td className="font-semibold">{batch.title}</td>
+                      <td className="font-mono text-[13px]">{batch.period}</td>
+                      <td>{batch.employeeCount}</td>
+                      <td>{formatAmount(batch.totalGrossSalary)}</td>
+                      <td className="font-semibold">{formatAmount(batch.totalNetSalary)}</td>
+                      <td className="text-[#FF3B30]">{formatAmount(batch.totalBankOutflow)}</td>
+                      <td>
+                        <AdminStatusOverride
+                          businessType="salary_payment"
+                          businessId={batch.id}
+                          currentStatus={batch.status}
+                          onStatusChanged={(newStatus) => {
+                            setSalaryBatches((prev) =>
+                              prev.map((b) => b.id === batch.id ? { ...b, status: newStatus } : b)
+                            );
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm"
+                            onClick={() => {
+                              setSalaryBatchDetail(batch);
+                              setApprovalInstance(null);
+                              if (batch.approvalInstanceId) fetchApprovalInstance(batch.approvalInstanceId);
+                              setModalType("salaryPaymentDetail");
+                            }}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            查看
+                          </button>
+                          {(batch.status === "草稿" || batch.status === "已驳回" || isAdmin) && (
+                            <>
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm"
+                                onClick={() => handleEditBatch(batch)}
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                                编辑
+                              </button>
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                onClick={() => handleDeleteBatch(batch.id, batch.status)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                删除
+                              </button>
+                            </>
+                          )}
+                          {batch.status === "草稿" && salaryPaymentFlowConfigured && (
+                            <button
+                              className="ios-btn ios-btn-primary ios-btn-sm"
+                              onClick={() => handleSubmitBatchApproval(batch)}
+                            >
+                              提交审批
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
               {pagination.totalPages > 1 && (
@@ -1568,6 +2247,126 @@ export default function FinanceExpensePage() {
             </div>
           )}
         </div>
+
+        {isAdmin && (
+          <BatchDeleteBar
+            businessType="salary_payment"
+            selectedIds={salaryBatches.filter((d) => isSelectedSalary(d.id)).map((d) => d.id)}
+            onDeleteSuccess={fetchSalaryBatches}
+            onClear={clearSelectionSalary}
+          />
+        )}
+        </>
+      )}
+
+      {activeTab === "borrowingReturn" && (
+        <>
+        <div className="bento-card-static">
+          {loading ? (
+            <div className="empty-state">
+              <div className="w-10 h-10 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin" />
+              <p>加载中...</p>
+            </div>
+          ) : borrowingReturnApps.length === 0 ? (
+            <div className="empty-state">
+              <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
+                <RotateCcw className="w-8 h-8 text-[#86868B]" />
+              </div>
+              <p>暂无借入资金归还记录</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="ios-table">
+                <thead>
+                  <tr>
+                    {isAdmin && (
+                      <th className="w-10">
+                        <input
+                          type="checkbox"
+                          className="ios-checkbox"
+                          checked={isAllSelectedBorrowReturn}
+                          onChange={() => isAllSelectedBorrowReturn ? clearSelectionBorrowReturn() : selectAllBorrowReturn()}
+                        />
+                      </th>
+                    )}
+                    <th>来源类型</th>
+                    <th>来源名称</th>
+                    <th>原始金额</th>
+                    <th>归还金额</th>
+                    <th>归还日期</th>
+                    <th>状态</th>
+                    <th>审批状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {borrowingReturnApps.map((item) => (
+                    <tr key={item.id} className={isSelectedBorrowReturn(item.id) ? "bg-[#007AFF]/5" : ""}>
+                      {isAdmin && (
+                        <td className="w-10">
+                          <input
+                            type="checkbox"
+                            className="ios-checkbox"
+                            checked={isSelectedBorrowReturn(item.id)}
+                            onChange={() => toggleSelectBorrowReturn(item.id)}
+                          />
+                        </td>
+                      )}
+                      <td>
+                        <span className="ios-badge ios-badge-blue">{sourceTypeMap[item.sourceType] || item.sourceType}</span>
+                      </td>
+                      <td className="font-semibold">{item.sourceName}</td>
+                      <td className="text-[#86868B]">{formatAmount(parseFloat(item.sourceAmount))}</td>
+                      <td className="text-[#FF3B30] font-semibold">{formatAmount(parseFloat(item.returnAmount))}</td>
+                      <td className="text-[#86868B]">{formatDate(item.returnDate)}</td>
+                      <td>{getStatusBadge(item.status)}</td>
+                      <td>
+                        <AdminStatusOverride
+                          businessType="borrowing_return_application"
+                          businessId={item.id}
+                          currentStatus={item.status}
+                          onStatusChanged={(newStatus) => {
+                            setBorrowingReturnApps((prev) =>
+                              prev.map((a) =>
+                                a.id === item.id ? { ...a, status: newStatus } : a
+                              )
+                            );
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <button
+                          className="ios-btn ios-btn-ghost ios-btn-sm"
+                          onClick={() => {
+                            setDetailBorrowingReturnApp(item);
+                            setApprovalInstance(null);
+                            if (item.approvalInstanceId) {
+                              fetchApprovalInstance(item.approvalInstanceId);
+                            }
+                            setModalType("borrowingReturnDetail");
+                          }}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          详情
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {isAdmin && (
+          <BatchDeleteBar
+            businessType="borrowing_return_application"
+            selectedIds={borrowingReturnApps.filter((d) => isSelectedBorrowReturn(d.id)).map((d) => d.id)}
+            onDeleteSuccess={fetchBorrowingReturnApps}
+            onClear={clearSelectionBorrowReturn}
+          />
+        )}
+        </>
       )}
 
       <Modal
@@ -1657,39 +2456,6 @@ export default function FinanceExpensePage() {
                   value={paymentAppForm.amount}
                   onChange={(e) => setPaymentAppForm((p) => ({ ...p, amount: e.target.value }))}
                 />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">付款方式</label>
-                <select
-                  className="ios-select"
-                  value={paymentAppForm.paymentMethod}
-                  onChange={(e) => setPaymentAppForm((p) => ({ ...p, paymentMethod: e.target.value }))}
-                >
-                  <option value="">请选择</option>
-                  <option value="银行转账">银行转账</option>
-                  <option value="现金">现金</option>
-                  <option value="支票">支票</option>
-                  <option value="汇票">汇票</option>
-                  <option value="其他">其他</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">付款账户</label>
-                <select
-                  className="ios-select"
-                  value={paymentAppForm.bankAccount}
-                  onChange={(e) => setPaymentAppForm((p) => ({ ...p, bankAccount: e.target.value }))}
-                >
-                  <option value="">请选择银行账户</option>
-                  {bankAccounts.map((ba) => (
-                    <option key={ba.id} value={`${ba.bankName} ${ba.accountNo}`}>
-                      {ba.accountName} - {ba.bankName} (****{ba.accountNo.slice(-4)})
-                    </option>
-                  ))}
-                </select>
               </div>
             </div>
 
@@ -1793,19 +2559,12 @@ export default function FinanceExpensePage() {
             />
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">关联项目</label>
-            <select
-              className="ios-select"
+            <ProjectPicker
+              projectLeads={projectLeads}
               value={otherExpenseForm.projectSourceId}
-              onChange={(e) => setOtherExpenseForm((p) => ({ ...p, projectSourceId: e.target.value }))}
-            >
-              <option value="">不关联项目</option>
-              {projects.map((p) => (
-                <option key={p.projectSourceId} value={p.projectSourceId}>
-                  {p.projectSourceId} - {p.name}
-                </option>
-              ))}
-            </select>
+              onChange={(id) => setOtherExpenseForm((p) => ({ ...p, projectSourceId: id }))}
+              label="关联项目"
+            />
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setModalType(null)}>取消</button>
@@ -1982,33 +2741,15 @@ export default function FinanceExpensePage() {
         isOpen={modalType === "expenseReportForm"}
         onClose={() => setModalType(null)}
         title="新增费用报销"
-        maxWidth="720px"
+        maxWidth="960px"
       >
         <div className="space-y-4">
           {formError && (
             <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{formError}</div>
           )}
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">报销人 <span className="text-[#FF3B30]">*</span></label>
-            <select
-              className="ios-select"
-              value={expenseReportForm.applicantId}
-              onChange={(e) => setExpenseReportForm((p) => ({ ...p, applicantId: e.target.value }))}
-            >
-              <option value="">请选择报销人</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>{u.realName}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">说明</label>
-            <textarea
-              className="ios-textarea"
-              placeholder="请输入报销说明"
-              value={expenseReportForm.description}
-              onChange={(e) => setExpenseReportForm((p) => ({ ...p, description: e.target.value }))}
-            />
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">报销人</label>
+            <input readOnly value={currentUser?.realName || ""} className="ios-input bg-[#F5F5F7]" />
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -2018,85 +2759,127 @@ export default function FinanceExpensePage() {
                 添加行
               </button>
             </div>
-            <div className="space-y-3">
-              {expenseReportForm.items.map((item, index) => (
-                <div key={index} className="p-3 rounded-xl border border-[#E5E5EA] bg-[#FAFAFA]">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[12px] font-semibold text-[#86868B]">第 {index + 1} 行</span>
-                    {expenseReportForm.items.length > 1 && (
-                      <button
-                        className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                        onClick={() => removeExpenseItem(index)}
-                      >
-                        <MinusCircle className="w-3.5 h-3.5" />
-                        删除
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[12px] font-medium text-[#1D1D1F] mb-1">费用类型 <span className="text-[#FF3B30]">*</span></label>
-                      <select
-                        className="ios-select"
-                        value={item.expenseType}
-                        onChange={(e) => updateExpenseItem(index, "expenseType", e.target.value)}
-                      >
-                        <option value="">请选择</option>
-                        {expenseItemTypes.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[12px] font-medium text-[#1D1D1F] mb-1">金额（元） <span className="text-[#FF3B30]">*</span></label>
-                      <input
-                        type="number"
-                        className="ios-input"
-                        placeholder="请输入金额"
-                        min="0"
-                        step="0.01"
-                        value={item.amount}
-                        onChange={(e) => updateExpenseItem(index, "amount", e.target.value)}
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block text-[12px] font-medium text-[#1D1D1F] mb-1">说明</label>
-                      <input
-                        type="text"
-                        className="ios-input"
-                        placeholder="请输入说明"
-                        value={item.description}
-                        onChange={(e) => updateExpenseItem(index, "description", e.target.value)}
-                      />
-                    </div>
-                    <div className="col-span-2 flex items-center gap-3">
-                      <label className="flex items-center gap-2 text-[13px] text-[#1D1D1F] cursor-pointer">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-[#E5E5EA]">
+                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#86868B]">费用说明 *</th>
+                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#86868B]">关联项目</th>
+                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#86868B]">报销金额 *</th>
+                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#86868B]">费用类型 *</th>
+                    <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#86868B]">上传发票 *</th>
+                    <th className="w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenseReportForm.items.map((item, index) => (
+                    <tr key={index} className="border-b border-[#F0F0F0]">
+                      <td className="py-2 px-2">
                         <input
-                          type="checkbox"
-                          className="w-4 h-4 rounded border-[#C7C7CC] accent-[#007AFF]"
-                          checked={item.relateProject}
-                          onChange={(e) => updateExpenseItem(index, "relateProject", e.target.checked)}
+                          type="text"
+                          className="ios-input w-full !py-1.5 !text-[13px]"
+                          placeholder="费用说明"
+                          value={item.description}
+                          onChange={(e) => updateExpenseItem(index, "description", e.target.value)}
                         />
-                        关联项目
-                      </label>
-                      {item.relateProject && (
+                      </td>
+                      <td className="py-2 px-2">
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="checkbox"
+                            className="w-3.5 h-3.5 rounded border-[#C7C7CC] accent-[#007AFF] shrink-0"
+                            checked={item.relateProject}
+                            onChange={(e) => updateExpenseItem(index, "relateProject", e.target.checked)}
+                          />
+                          {item.relateProject ? (
+                            <ProjectPicker
+                              projectLeads={projectLeads}
+                              value={item.projectSourceId}
+                              onChange={(id) => updateExpenseItem(index, "projectSourceId", id)}
+                              label=""
+                              placeholder="选择项目"
+                            />
+                          ) : (
+                            <span className="text-[12px] text-[#86868B]">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 px-2">
+                        <input
+                          type="number"
+                          className="ios-input w-full !py-1.5 !text-[13px]"
+                          placeholder="金额"
+                          min="0"
+                          step="0.01"
+                          value={item.amount}
+                          onChange={(e) => updateExpenseItem(index, "amount", e.target.value)}
+                        />
+                      </td>
+                      <td className="py-2 px-2">
                         <select
-                          className="ios-select flex-1"
-                          value={item.projectSourceId}
-                          onChange={(e) => updateExpenseItem(index, "projectSourceId", e.target.value)}
+                          className="ios-select w-full !py-1.5 !text-[13px]"
+                          value={item.expenseType}
+                          onChange={(e) => updateExpenseItem(index, "expenseType", e.target.value)}
                         >
-                          <option value="">请选择项目</option>
-                          {projects.map((p) => (
-                            <option key={p.projectSourceId} value={p.projectSourceId}>
-                              {p.projectSourceId} - {p.name}
-                            </option>
+                          <option value="">请选择</option>
+                          {expenseItemTypes.map((t) => (
+                            <option key={t} value={t}>{t}</option>
                           ))}
                         </select>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                      </td>
+                      <td className="py-2 px-2">
+                        <div className="space-y-1">
+                          <button
+                            type="button"
+                            className="ios-btn ios-btn-secondary ios-btn-sm text-[11px]! gap-1"
+                            onClick={() => {
+                              const input = document.createElement("input");
+                              input.type = "file";
+                              input.accept = ".jpg,.jpeg,.png,.pdf";
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (file) handleInvoiceUpload(index, file);
+                              };
+                              input.click();
+                            }}
+                          >
+                            <Paperclip className="w-3 h-3" />
+                            上传
+                          </button>
+                          {item.invoiceAttachments && item.invoiceAttachments.length > 0 && (
+                            <div className="flex flex-col gap-0.5">
+                              {item.invoiceAttachments.map((url: string, idx: number) => (
+                                <div key={idx} className="flex items-center gap-1">
+                                  <a href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#007AFF] hover:underline truncate max-w-[80px]">
+                                    发票{idx + 1}
+                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeAttachment(index, idx)}
+                                    className="text-[#FF3B30] text-[10px] hover:opacity-70 shrink-0"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 px-1">
+                        {expenseReportForm.items.length > 1 && (
+                          <button
+                            className="p-1 text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-lg"
+                            onClick={() => removeExpenseItem(index)}
+                          >
+                            <MinusCircle className="w-4 h-4" />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
             <div className="mt-3 p-3 rounded-xl bg-[#F5F5F7] flex items-center justify-between">
               <span className="text-[13px] font-semibold text-[#1D1D1F]">总金额</span>
@@ -2113,113 +2896,145 @@ export default function FinanceExpensePage() {
       </Modal>
 
       <Modal
-        isOpen={modalType === "salaryPaymentForm"}
-        onClose={() => setModalType(null)}
-        title={editingSalaryPayment ? "编辑工资发放" : "新增工资发放"}
-        maxWidth="520px"
+        isOpen={showBatchForm && !editingBatchId}
+        onClose={() => setShowBatchForm(false)}
+        title="新建工资批次"
+        maxWidth="720px"
       >
         <div className="space-y-4">
           {formError && (
             <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{formError}</div>
           )}
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">员工 <span className="text-[#FF3B30]">*</span></label>
-            <select
-              className="ios-select"
-              value={salaryPaymentForm.employeeId}
-              onChange={(e) => setSalaryPaymentForm((p) => ({ ...p, employeeId: e.target.value }))}
-            >
-              <option value="">请选择员工</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>{u.realName}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">工资周期 <span className="text-[#FF3B30]">*</span></label>
-            <input
-              type="month"
-              className="ios-input"
-              value={salaryPaymentForm.period}
-              onChange={(e) => setSalaryPaymentForm((p) => ({ ...p, period: e.target.value }))}
-            />
-          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">基本工资（元） <span className="text-[#FF3B30]">*</span></label>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">工资周期 <span className="text-[#FF3B30]">*</span></label>
               <input
-                type="number"
+                type="month"
                 className="ios-input"
-                placeholder="请输入基本工资"
-                min="0"
-                step="0.01"
-                value={salaryPaymentForm.baseSalary}
-                onChange={(e) => setSalaryPaymentForm((p) => ({ ...p, baseSalary: e.target.value }))}
+                value={batchFormPeriod}
+                onChange={(e) => setBatchFormPeriod(e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">奖金（元）</label>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">批次名称 <span className="text-[#FF3B30]">*</span></label>
               <input
-                type="number"
+                type="text"
                 className="ios-input"
-                placeholder="请输入奖金"
-                min="0"
-                step="0.01"
-                value={salaryPaymentForm.bonus}
-                onChange={(e) => setSalaryPaymentForm((p) => ({ ...p, bonus: e.target.value }))}
+                value={batchFormTitle}
+                onChange={(e) => setBatchFormTitle(e.target.value)}
               />
             </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">补贴（元）</label>
-              <input
-                type="number"
-                className="ios-input"
-                placeholder="请输入补贴"
-                min="0"
-                step="0.01"
-                value={salaryPaymentForm.allowance}
-                onChange={(e) => setSalaryPaymentForm((p) => ({ ...p, allowance: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">扣款（元）</label>
-              <input
-                type="number"
-                className="ios-input"
-                placeholder="请输入扣款"
-                min="0"
-                step="0.01"
-                value={salaryPaymentForm.deduction}
-                onChange={(e) => setSalaryPaymentForm((p) => ({ ...p, deduction: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div className="p-3 rounded-xl bg-[#F5F5F7] flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-[#1D1D1F]">实发工资</span>
-            <span className="text-[15px] font-bold text-[#FF3B30]">{formatAmount(calcNetSalary())}</span>
           </div>
           <div>
-            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">发放日期</label>
-            <input
-              type="date"
-              className="ios-input"
-              value={salaryPaymentForm.paymentDate}
-              onChange={(e) => setSalaryPaymentForm((p) => ({ ...p, paymentDate: e.target.value }))}
-            />
+            <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">选择发放员工 <span className="text-[#FF3B30]">*</span>（在职员工）</label>
+            <div className="max-h-[300px] overflow-y-auto border rounded-xl p-3 space-y-2">
+              {users.map((u) => (
+                <label key={u.id} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="w-3.5 h-3.5 rounded border-[#C7C7CC] accent-[#007AFF]"
+                    checked={batchFormEmployees.includes(u.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) setBatchFormEmployees((prev) => [...prev, u.id]);
+                      else setBatchFormEmployees((prev) => prev.filter((id) => id !== u.id));
+                    }}
+                  />
+                  <span className="text-[13px] text-[#1D1D1F]">{u.realName}</span>
+                </label>
+              ))}
+            </div>
+            {batchFormEmployees.length > 0 && (
+              <p className="text-[12px] text-[#86868B] mt-1">已选 {batchFormEmployees.length} 人</p>
+            )}
           </div>
           <div>
             <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
             <textarea
               className="ios-textarea"
               placeholder="请输入备注"
-              value={salaryPaymentForm.remark}
-              onChange={(e) => setSalaryPaymentForm((p) => ({ ...p, remark: e.target.value }))}
+              value={batchFormRemark}
+              onChange={(e) => setBatchFormRemark(e.target.value)}
             />
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+            <button className="ios-btn ios-btn-secondary" onClick={() => setShowBatchForm(false)}>取消</button>
+            <button className="ios-btn ios-btn-primary" onClick={handleCreateBatch} disabled={saving}>
+              {saving ? "创建中..." : "创建批次"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={modalType === "salaryBatchEdit"}
+        onClose={() => setModalType(null)}
+        title="编辑工资明细"
+        maxWidth="95vw"
+      >
+        <div className="space-y-4">
+          {formError && (
+            <div className="p-3 rounded-xl bg-[#FF3B30]/8 text-[#FF3B30] text-[13px] font-medium">{formError}</div>
+          )}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">批次名称</label>
+              <input
+                type="text"
+                className="ios-input"
+                value={batchFormTitle}
+                onChange={(e) => setBatchFormTitle(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">备注</label>
+              <input
+                type="text"
+                className="ios-input"
+                value={batchFormRemark}
+                onChange={(e) => setBatchFormRemark(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="ios-table text-[12px]">
+              <thead>
+                <tr>
+                  <th className="min-w-[60px]">员工</th>
+                  <th className="min-w-[80px]">基本工资</th>
+                  <th className="min-w-[60px]">奖金</th>
+                  <th className="min-w-[60px]">补贴</th>
+                  <th className="min-w-[80px]">应发合计</th>
+                  <th className="min-w-[70px]">社保个人</th>
+                  <th className="min-w-[70px]">公积金个人</th>
+                  <th className="min-w-[60px]">个税</th>
+                  <th className="min-w-[60px]">其他扣款</th>
+                  <th className="min-w-[80px]">扣款合计</th>
+                  <th className="min-w-[80px]">实发工资</th>
+                </tr>
+              </thead>
+              <tbody>
+                {editingBatchItems.map((item, idx) => (
+                  <tr key={item.id}>
+                    <td className="font-semibold whitespace-nowrap">{item.employee?.realName}</td>
+                    <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.baseSalary} onChange={(e) => updateBatchItem(idx, "baseSalary", e.target.value)} /></td>
+                    <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.bonus} onChange={(e) => updateBatchItem(idx, "bonus", e.target.value)} /></td>
+                    <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.allowance} onChange={(e) => updateBatchItem(idx, "allowance", e.target.value)} /></td>
+                    <td className="font-semibold text-[#007AFF]">{formatAmount(item.grossSalary)}</td>
+                    <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.socialInsurancePersonal} onChange={(e) => updateBatchItem(idx, "socialInsurancePersonal", e.target.value)} /></td>
+                    <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.housingFundPersonal} onChange={(e) => updateBatchItem(idx, "housingFundPersonal", e.target.value)} /></td>
+                    <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.incomeTax} onChange={(e) => updateBatchItem(idx, "incomeTax", e.target.value)} /></td>
+                    <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.otherDeduction} onChange={(e) => updateBatchItem(idx, "otherDeduction", e.target.value)} /></td>
+                    <td className="text-[#FF3B30]">{formatAmount(item.totalDeduction)}</td>
+                    <td className="font-semibold text-[#34C759]">{formatAmount(item.netSalary)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setModalType(null)}>取消</button>
-            <button className="ios-btn ios-btn-primary" onClick={handleSubmitSalaryPayment} disabled={saving}>
-              {saving ? "保存中..." : editingSalaryPayment ? "保存修改" : "创建工资"}
+            <button className="ios-btn ios-btn-primary" onClick={handleSaveBatchItems} disabled={saving}>
+              {saving ? "保存中..." : "保存明细"}
             </button>
           </div>
         </div>
@@ -2243,7 +3058,6 @@ export default function FinanceExpensePage() {
               className="ios-btn ios-btn-danger"
               onClick={() => {
                 if (deleteTarget?.type === "otherExpense") handleDeleteOtherExpense();
-                else if (deleteTarget?.type === "salaryPayment") handleDeleteSalaryPayment();
               }}
               disabled={deleting}
             >
@@ -2254,12 +3068,747 @@ export default function FinanceExpensePage() {
       </Modal>
 
       <Modal
+        isOpen={modalType === "otherExpenseDetail" && !!detailOtherExpense}
+        onClose={() => { setModalType(null); setDetailOtherExpense(null); setApprovalInstance(null); }}
+        title="其他支出详情"
+        maxWidth="640px"
+      >
+        {detailOtherExpense && (
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#FF3B30]/10 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-[#FF3B30]" />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-bold text-[#1D1D1F]">{detailOtherExpense.counterparty || "未指定交易对方"}</h3>
+                  <p className="text-[13px] text-[#86868B]">非合同支出</p>
+                </div>
+              </div>
+              <AdminStatusOverride
+                businessType="non_contract_expense"
+                businessId={detailOtherExpense.id}
+                currentStatus={detailOtherExpense.status}
+                onStatusChanged={(newStatus) => {
+                  setDetailOtherExpense((prev) => prev ? { ...prev, status: newStatus } : prev);
+                  setNonContractExpenses((prev) =>
+                    prev.map((e) => e.id === detailOtherExpense.id ? { ...e, status: newStatus } : e)
+                  );
+                }}
+                size="md"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">支出金额</p>
+                <p className="text-[14px] font-bold text-[#FF3B30]">{formatAmount(detailOtherExpense.amount)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">交易日期</p>
+                <p className="text-[14px] text-[#1D1D1F]">{formatDate(detailOtherExpense.transactionDate)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">关联项目</p>
+                <p className="text-[14px] text-[#1D1D1F]">{detailOtherExpense.project?.name || detailOtherExpense.projectSourceId || "-"}</p>
+              </div>
+            </div>
+
+            {detailOtherExpense.description && (
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">说明</p>
+                <p className="text-[14px] text-[#1D1D1F] whitespace-pre-wrap leading-relaxed bg-[#F5F5F7] p-3 rounded-xl">{detailOtherExpense.description}</p>
+              </div>
+            )}
+
+            {detailOtherExpense.bankAccountId && (
+              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#007AFF]/10">
+                <p className="text-[12px] font-semibold text-[#007AFF] mb-1">支付信息</p>
+                <div className="flex items-center gap-4 text-[13px]">
+                  <span>支付方式：{detailOtherExpense.paymentMethod || "-"}</span>
+                  {detailOtherExpense.bankAccount && (
+                    <span>银行账户：{detailOtherExpense.bankAccount.accountName} - {detailOtherExpense.bankAccount.bankName} (****{detailOtherExpense.bankAccount.accountNo.slice(-4)})</span>
+                  )}
+                  {detailOtherExpense.paidAt && (
+                    <span>支付时间：{formatDate(detailOtherExpense.paidAt)}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={modalType === "lendingOutDetail" && !!detailLendingOut}
+        onClose={() => { setModalType(null); setDetailLendingOut(null); setApprovalInstance(null); }}
+        title="借出款详情"
+        maxWidth="640px"
+      >
+        {detailLendingOut && (
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#FF9500]/10 flex items-center justify-center">
+                  <Landmark className="w-5 h-5 text-[#FF9500]" />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-bold text-[#1D1D1F]">{detailLendingOut.borrowerName}</h3>
+                  <p className="text-[13px] text-[#86868B]">{detailLendingOut.lendingType}</p>
+                </div>
+              </div>
+              <AdminStatusOverride
+                businessType="lending_out"
+                businessId={detailLendingOut.id}
+                currentStatus={detailLendingOut.status}
+                onStatusChanged={(newStatus) => {
+                  setDetailLendingOut((prev) => prev ? { ...prev, status: newStatus } : prev);
+                  setLendingOuts((prev) =>
+                    prev.map((l) => l.id === detailLendingOut.id ? { ...l, status: newStatus } : l)
+                  );
+                }}
+                size="md"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">借出金额</p>
+                <p className="text-[14px] font-bold text-[#FF3B30]">{formatAmount(detailLendingOut.amount)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">已收回</p>
+                <p className="text-[14px] font-medium text-[#1D1D1F]">{formatAmount(detailLendingOut.returnedAmount)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">未收回</p>
+                <p className="text-[14px] font-bold text-[#FF9500]">{formatAmount(detailLendingOut.remainingAmount)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">借出日期</p>
+                <p className="text-[14px] text-[#1D1D1F]">{formatDate(detailLendingOut.lendingDate)}</p>
+              </div>
+              {detailLendingOut.expectedReturnDate && (
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">预计归还日期</p>
+                  <p className="text-[14px] text-[#1D1D1F]">{formatDate(detailLendingOut.expectedReturnDate)}</p>
+                </div>
+              )}
+            </div>
+
+            {detailLendingOut.description && (
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">说明</p>
+                <p className="text-[14px] text-[#1D1D1F] whitespace-pre-wrap leading-relaxed bg-[#F5F5F7] p-3 rounded-xl">{detailLendingOut.description}</p>
+              </div>
+            )}
+
+            {detailLendingOut.returns && detailLendingOut.returns.length > 0 && (
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-2">归还记录</p>
+                <div className="space-y-2">
+                  {detailLendingOut.returns.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between p-2.5 bg-[#F5F5F7] rounded-xl">
+                      <div>
+                        <p className="text-[13px] font-medium text-[#1D1D1F]">{formatAmount(r.amount)}</p>
+                        <p className="text-[12px] text-[#86868B]">{formatDate(r.returnDate)}</p>
+                      </div>
+                      {r.remark && <p className="text-[12px] text-[#86868B]">{r.remark}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {detailLendingOut.bankAccountId && (
+              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#007AFF]/10">
+                <p className="text-[12px] font-semibold text-[#007AFF] mb-1">支付信息</p>
+                <div className="flex items-center gap-4 text-[13px]">
+                  <span>支付方式：{detailLendingOut.paymentMethod || "-"}</span>
+                  {detailLendingOut.bankAccount && (
+                    <span>银行账户：{detailLendingOut.bankAccount.accountName} - {detailLendingOut.bankAccount.bankName} (****{detailLendingOut.bankAccount.accountNo.slice(-4)})</span>
+                  )}
+                  {detailLendingOut.paidAt && (
+                    <span>支付时间：{formatDate(detailLendingOut.paidAt)}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={modalType === "expenseReportDetail" && !!detailExpenseReport}
+        onClose={() => { setModalType(null); setDetailExpenseReport(null); setApprovalInstance(null); }}
+        title="费用报销详情"
+        maxWidth="960px"
+      >
+        {detailExpenseReport && (
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#5856D6]/10 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-[#5856D6]" />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-bold text-[#1D1D1F]">{detailExpenseReport.applicant?.realName || "-"}</h3>
+                  <p className="text-[13px] text-[#86868B]">{detailExpenseReport.expenseType}</p>
+                </div>
+              </div>
+              <AdminStatusOverride
+                businessType="expense_report"
+                businessId={detailExpenseReport.id}
+                currentStatus={detailExpenseReport.status}
+                onStatusChanged={(newStatus) => {
+                  setDetailExpenseReport((prev) => prev ? { ...prev, status: newStatus } : prev);
+                  setExpenseReports((prev) =>
+                    prev.map((r) => r.id === detailExpenseReport.id ? { ...r, status: newStatus } : r)
+                  );
+                }}
+                size="md"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">报销总金额</p>
+                <p className="text-[14px] font-bold text-[#FF3B30]">{formatAmount(detailExpenseReport.amount)}</p>
+              </div>
+              {detailExpenseReport.loanOffsetAmount > 0 && (
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">借款抵扣</p>
+                  <p className="text-[14px] text-[#FF9500]">{formatAmount(detailExpenseReport.loanOffsetAmount)}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">创建时间</p>
+                <p className="text-[14px] text-[#1D1D1F]">{formatDate(detailExpenseReport.createdAt)}</p>
+              </div>
+            </div>
+
+            {detailExpenseReport.items && detailExpenseReport.items.length > 0 && (
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-2">报销明细</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[600px]">
+                    <thead>
+                      <tr className="border-b border-[#E5E5EA]">
+                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#86868B]">费用说明</th>
+                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#86868B]">关联项目</th>
+                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#86868B]">报销金额</th>
+                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#86868B]">费用类型</th>
+                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#86868B]">发票附件</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailExpenseReport.items.map((it) => (
+                        <tr key={it.id} className="border-b border-[#F0F0F0]">
+                          <td className="py-2 px-2 text-[13px] text-[#1D1D1F]">{it.description || "-"}</td>
+                          <td className="py-2 px-2 text-[13px] text-[#1D1D1F]">{it.project?.name || it.projectSourceId || "-"}</td>
+                          <td className="py-2 px-2 text-[13px] font-medium text-[#FF3B30]">{formatAmount(it.amount)}</td>
+                          <td className="py-2 px-2">
+                            <span className="ios-badge ios-badge-blue text-[11px]">{it.expenseType}</span>
+                          </td>
+                          <td className="py-2 px-2">
+                            {it.invoiceAttachments && it.invoiceAttachments.length > 0 ? (
+                              <div className="flex flex-col gap-0.5">
+                                {it.invoiceAttachments.map((url: string, idx: number) => (
+                                  <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#007AFF] hover:underline">
+                                    发票{idx + 1}
+                                  </a>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-[12px] text-[#86868B]">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {detailExpenseReport.bankAccountId && (
+              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#007AFF]/10">
+                <p className="text-[12px] font-semibold text-[#007AFF] mb-1">支付信息</p>
+                <div className="flex items-center gap-4 text-[13px]">
+                  <span>支付方式：{detailExpenseReport.paymentMethod || "-"}</span>
+                  {detailExpenseReport.bankAccount && (
+                    <span>银行账户：{detailExpenseReport.bankAccount.accountName} - {detailExpenseReport.bankAccount.bankName} (****{detailExpenseReport.bankAccount.accountNo.slice(-4)})</span>
+                  )}
+                  {detailExpenseReport.paidAt && (
+                    <span>支付时间：{formatDate(detailExpenseReport.paidAt)}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={modalType === "salaryPaymentDetail" && !!salaryBatchDetail}
+        onClose={() => { setModalType(null); setSalaryBatchDetail(null); setApprovalInstance(null); }}
+        title="工资批次详情"
+        maxWidth="95vw"
+      >
+        {salaryBatchDetail && (
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#34C759]/10 flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-[#34C759]" />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-bold text-[#1D1D1F]">{salaryBatchDetail.title}</h3>
+                  <p className="text-[13px] text-[#86868B]">{salaryBatchDetail.batchNo} · {salaryBatchDetail.period}</p>
+                </div>
+              </div>
+              <AdminStatusOverride
+                businessType="salary_payment"
+                businessId={salaryBatchDetail.id}
+                currentStatus={salaryBatchDetail.status}
+                onStatusChanged={(newStatus) => {
+                  setSalaryBatchDetail((prev) => prev ? { ...prev, status: newStatus } : prev);
+                  setSalaryBatches((prev) =>
+                    prev.map((b) => b.id === salaryBatchDetail.id ? { ...b, status: newStatus } : b)
+                  );
+                }}
+                size="md"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-x-6 gap-y-3">
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">人数</p>
+                <p className="text-[14px] text-[#1D1D1F]">{salaryBatchDetail.employeeCount}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">应发总额</p>
+                <p className="text-[14px] font-medium text-[#1D1D1F]">{formatAmount(salaryBatchDetail.totalGrossSalary)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">实发总额</p>
+                <p className="text-[14px] font-bold text-[#FF3B30]">{formatAmount(salaryBatchDetail.totalNetSalary)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">社保个人合计</p>
+                <p className="text-[14px] text-[#1D1D1F]">{formatAmount(salaryBatchDetail.totalSocialInsurancePersonal)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">公积金个人合计</p>
+                <p className="text-[14px] text-[#1D1D1F]">{formatAmount(salaryBatchDetail.totalHousingFundPersonal)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">个税合计</p>
+                <p className="text-[14px] text-[#1D1D1F]">{formatAmount(salaryBatchDetail.totalIncomeTax)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">银行总支出</p>
+                <p className="text-[14px] font-bold text-[#FF3B30]">{formatAmount(salaryBatchDetail.totalBankOutflow)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">创建时间</p>
+                <p className="text-[14px] text-[#1D1D1F]">{formatDate(salaryBatchDetail.createdAt)}</p>
+              </div>
+            </div>
+
+            {salaryBatchDetail.remark && (
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">备注</p>
+                <p className="text-[14px] text-[#1D1D1F] whitespace-pre-wrap leading-relaxed bg-[#F5F5F7] p-3 rounded-xl">{salaryBatchDetail.remark}</p>
+              </div>
+            )}
+
+            {salaryBatchDetail.items && salaryBatchDetail.items.length > 0 && (
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-2">工资明细</p>
+                <div className="overflow-x-auto">
+                  <table className="ios-table text-[12px]">
+                    <thead>
+                      <tr>
+                        <th>员工</th>
+                        <th>基本工资</th>
+                        <th>奖金</th>
+                        <th>补贴</th>
+                        <th>应发合计</th>
+                        <th>社保个人</th>
+                        <th>公积金个人</th>
+                        <th>个税</th>
+                        <th>其他扣款</th>
+                        <th>扣款合计</th>
+                        <th>实发工资</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {salaryBatchDetail.items.map((item) => (
+                        <tr key={item.id}>
+                          <td className="font-semibold">{item.employee?.realName || "-"}</td>
+                          <td>{formatAmount(item.baseSalary)}</td>
+                          <td>{formatAmount(item.bonus)}</td>
+                          <td>{formatAmount(item.allowance)}</td>
+                          <td className="font-medium text-[#007AFF]">{formatAmount(item.grossSalary)}</td>
+                          <td>{formatAmount(item.socialInsurancePersonal)}</td>
+                          <td>{formatAmount(item.housingFundPersonal)}</td>
+                          <td>{formatAmount(item.incomeTax)}</td>
+                          <td>{formatAmount(item.otherDeduction)}</td>
+                          <td className="text-[#FF3B30]">{formatAmount(item.totalDeduction)}</td>
+                          <td className="font-semibold text-[#34C759]">{formatAmount(item.netSalary)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {salaryBatchDetail.bankAccountId && (
+              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#007AFF]/10">
+                <p className="text-[12px] font-semibold text-[#007AFF] mb-1">支付信息</p>
+                <div className="flex items-center gap-4 text-[13px]">
+                  <span>支付方式：{salaryBatchDetail.paymentMethod || "-"}</span>
+                  {salaryBatchDetail.bankAccount && (
+                    <span>银行账户：{salaryBatchDetail.bankAccount.accountName} - {salaryBatchDetail.bankAccount.bankName} (****{salaryBatchDetail.bankAccount.accountNo.slice(-4)})</span>
+                  )}
+                  {salaryBatchDetail.paidAt && (
+                    <span>支付时间：{formatDate(salaryBatchDetail.paidAt)}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={modalType === "borrowingReturnDetail" && !!detailBorrowingReturnApp}
+        onClose={() => { setModalType(null); setDetailBorrowingReturnApp(null); setApprovalInstance(null); }}
+        title="借入资金归还详情"
+        maxWidth="640px"
+      >
+        {detailBorrowingReturnApp && (
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#007AFF]/10 flex items-center justify-center">
+                  <RotateCcw className="w-5 h-5 text-[#007AFF]" />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-bold text-[#1D1D1F]">{detailBorrowingReturnApp.sourceName}</h3>
+                  <p className="text-[13px] text-[#86868B]">{sourceTypeMap[detailBorrowingReturnApp.sourceType] || detailBorrowingReturnApp.sourceType}</p>
+                </div>
+              </div>
+              <AdminStatusOverride
+                businessType="borrowing_return_application"
+                businessId={detailBorrowingReturnApp.id}
+                currentStatus={detailBorrowingReturnApp.status}
+                onStatusChanged={(newStatus) => {
+                  setDetailBorrowingReturnApp((prev) => prev ? { ...prev, status: newStatus } : prev);
+                  setBorrowingReturnApps((prev) =>
+                    prev.map((a) =>
+                      a.id === detailBorrowingReturnApp.id ? { ...a, status: newStatus } : a
+                    )
+                  );
+                }}
+                size="md"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">原始金额</p>
+                <p className="text-[14px] font-medium text-[#1D1D1F]">{formatAmount(parseFloat(detailBorrowingReturnApp.sourceAmount))}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">归还金额</p>
+                <p className="text-[14px] font-bold text-[#FF3B30]">{formatAmount(parseFloat(detailBorrowingReturnApp.returnAmount))}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">归还日期</p>
+                <p className="text-[14px] text-[#1D1D1F]">{formatDate(detailBorrowingReturnApp.returnDate)}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">创建时间</p>
+                <p className="text-[14px] text-[#1D1D1F]">{formatDate(detailBorrowingReturnApp.createdAt)}</p>
+              </div>
+              {detailBorrowingReturnApp.executedAt && (
+                <div>
+                  <p className="text-[12px] text-[#86868B] mb-0.5">执行时间</p>
+                  <p className="text-[14px] text-[#1D1D1F]">{formatDate(detailBorrowingReturnApp.executedAt)}</p>
+                </div>
+              )}
+            </div>
+
+            {detailBorrowingReturnApp.remark && (
+              <div>
+                <p className="text-[12px] text-[#86868B] mb-0.5">备注</p>
+                <p className="text-[14px] text-[#1D1D1F] whitespace-pre-wrap leading-relaxed bg-[#F5F5F7] p-3 rounded-xl">{detailBorrowingReturnApp.remark}</p>
+              </div>
+            )}
+
+            {detailBorrowingReturnApp.bankAccountId && (
+              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#007AFF]/10">
+                <p className="text-[12px] font-semibold text-[#007AFF] mb-1">支付信息</p>
+                <div className="flex items-center gap-4 text-[13px]">
+                  <span>支付方式：{detailBorrowingReturnApp.paymentMethod || "-"}</span>
+                  {detailBorrowingReturnApp.bankAccount && (
+                    <span>银行账户：{detailBorrowingReturnApp.bankAccount.accountName} - {detailBorrowingReturnApp.bankAccount.bankName} (****{detailBorrowingReturnApp.bankAccount.accountNo.slice(-4)})</span>
+                  )}
+                  {detailBorrowingReturnApp.paidAt && (
+                    <span>支付时间：{formatDate(detailBorrowingReturnApp.paidAt)}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
+          </div>
+        )}
+      </Modal>
+
+      <Modal
         isOpen={modalType === "statusFlow" && !!statusFlowTarget}
         onClose={() => { setModalType(null); setStatusFlowTarget(null); }}
-        title="状态流转"
-        maxWidth="400px"
+        title={statusFlowTarget?.type === "payableApps" ? "支付记录" : "状态流转"}
+        maxWidth={statusFlowTarget?.type === "payableApps" ? "640px" : "400px"}
       >
-        {statusFlowTarget && (
+        {statusFlowTarget && statusFlowTarget.type === "payableApps" && (
+          <div className="space-y-4">
+            <div className="p-3 rounded-xl bg-[#F5F5F7]">
+              <p className="text-[13px] text-[#86868B] mb-1">应付状态</p>
+              <div>{getStatusBadge(statusFlowTarget.status)}</div>
+            </div>
+
+            {(() => {
+              const apps = getPayableApplications(statusFlowTarget.id);
+              if (apps.length === 0) {
+                return (
+                  <div className="text-center py-6 text-[#86868B] text-[13px] rounded-xl bg-[#F5F5F7]">
+                    暂无付款申请记录
+                  </div>
+                );
+              }
+              return (
+                <div className="space-y-4">
+                  {apps.map((app) => {
+                    const instance = app.approvalInstanceId ? payableAppInstances[app.approvalInstanceId] : null;
+                    const isRejected = app.approvalStatus === "已驳回";
+                    const isEditing = editingPaymentAppId === app.id;
+                    return (
+                      <div key={app.id} className="rounded-xl border border-[#E5E5EA] overflow-hidden">
+                        <div className="p-3 bg-[#F5F5F7]">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[13px] font-semibold text-[#1D1D1F]">
+                                {app.applicant?.realName || "-"}
+                              </span>
+                              <span className="text-[12px] text-[#86868B]">
+                                {formatDate(app.createdAt)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(app.approvalStatus)}
+                              {isRejected && (
+                                <button
+                                  className="ios-btn ios-btn-primary ios-btn-sm"
+                                  onClick={() => {
+                                    setEditingPaymentAppId(app.id);
+                                    setEditingPaymentAppForm({
+                                      amount: String(app.amount),
+                                      paymentReason: app.paymentReason || "",
+                                      applicantId: app.applicantId || "",
+                                    });
+                                  }}
+                                >
+                                  编辑并重新发起
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 text-[12px]">
+                            <span className="text-[#86868B]">
+                              申请金额 <span className="font-semibold text-[#1D1D1F]">{formatAmount(app.amount)}</span>
+                            </span>
+                            {app.paymentReason && (
+                              <span className="text-[#86868B] truncate max-w-[200px]">
+                                事由：{app.paymentReason}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {isEditing && (
+                          <div className="p-3 space-y-3 border-t border-[#E5E5EA]">
+                            <div>
+                              <label className="block text-[12px] font-semibold text-[#1D1D1F] mb-1">本次付款金额</label>
+                              <input
+                                type="number"
+                                className="ios-input"
+                                step="0.01"
+                                min="0"
+                                value={editingPaymentAppForm.amount}
+                                onChange={(e) => setEditingPaymentAppForm((prev) => ({ ...prev, amount: e.target.value }))}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[12px] font-semibold text-[#1D1D1F] mb-1">付款事由</label>
+                              <input
+                                type="text"
+                                className="ios-input"
+                                value={editingPaymentAppForm.paymentReason}
+                                onChange={(e) => setEditingPaymentAppForm((prev) => ({ ...prev, paymentReason: e.target.value }))}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[12px] font-semibold text-[#1D1D1F] mb-1">申请人</label>
+                              <select
+                                className="ios-select"
+                                value={editingPaymentAppForm.applicantId}
+                                onChange={(e) => setEditingPaymentAppForm((prev) => ({ ...prev, applicantId: e.target.value }))}
+                              >
+                                <option value="">请选择申请人</option>
+                                {users.map((u) => (
+                                  <option key={u.id} value={u.id}>{u.realName}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                              <button
+                                className="ios-btn ios-btn-secondary ios-btn-sm"
+                                onClick={() => { setEditingPaymentAppId(null); setEditingPaymentAppForm({ amount: "", paymentReason: "", applicantId: "" }); }}
+                              >
+                                取消
+                              </button>
+                              <button
+                                className="ios-btn ios-btn-primary ios-btn-sm"
+                                disabled={reSubmitting || !editingPaymentAppForm.amount || Number(editingPaymentAppForm.amount) <= 0 || !editingPaymentAppForm.applicantId}
+                                onClick={async () => {
+                                  setReSubmitting(true);
+                                  try {
+                                    const updateRes = await fetch(`/api/payment-applications/${app.id}`, {
+                                      method: "PUT",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({
+                                        amount: editingPaymentAppForm.amount,
+                                        paymentReason: editingPaymentAppForm.paymentReason || null,
+                                        applicantId: editingPaymentAppForm.applicantId,
+                                        approvalStatus: "草稿",
+                                        approvalInstanceId: null,
+                                      }),
+                                    });
+                                    if (!updateRes.ok) {
+                                      const err = await updateRes.json();
+                                      alert(err.error || "更新失败");
+                                      setReSubmitting(false);
+                                      return;
+                                    }
+
+                                    const startRes = await fetch("/api/approval-instances", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({
+                                        businessType: "payment_application",
+                                        businessId: app.id,
+                                        flowLevel: "common",
+                                      }),
+                                    });
+                                    if (!startRes.ok) {
+                                      const err = await startRes.json();
+                                      alert(err.error || "发起审批失败");
+                                      setReSubmitting(false);
+                                      return;
+                                    }
+
+                                    setEditingPaymentAppId(null);
+                                    setEditingPaymentAppForm({ amount: "", paymentReason: "", applicantId: "" });
+                                    fetchPaymentApplications();
+                                    fetchPayables();
+                                    const apps = getPayableApplications(statusFlowTarget.id);
+                                    const instanceIds = apps.map((a) => a.approvalInstanceId).filter(Boolean) as string[];
+                                    if (instanceIds.length > 0) {
+                                      setPayableAppInstancesLoading(true);
+                                      Promise.all(
+                                        instanceIds.map(async (id) => {
+                                          try {
+                                            const res = await fetch(`/api/approval-instances/${id}`);
+                                            if (res.ok) {
+                                              const json = await res.json();
+                                              return { id, data: json.data };
+                                            }
+                                          } catch {}
+                                          return { id, data: null };
+                                        })
+                                      ).then((results) => {
+                                        const map: Record<string, any> = {};
+                                        results.forEach((r) => {
+                                          if (r.data) map[r.id] = r.data;
+                                        });
+                                        setPayableAppInstances(map);
+                                      }).finally(() => setPayableAppInstancesLoading(false));
+                                    }
+                                  } catch {
+                                    alert("网络错误");
+                                  } finally {
+                                    setReSubmitting(false);
+                                  }
+                                }}
+                              >
+                                {reSubmitting ? "处理中..." : "保存并重新发起"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {app.paymentVouchers && app.paymentVouchers.length > 0 && (
+                          <div className="p-3">
+                            <p className="text-[12px] font-semibold text-[#1D1D1F] mb-2">支付凭据</p>
+                            <div className="space-y-2">
+                              {app.paymentVouchers.map((v) => (
+                                <div key={v.id} className="flex items-center justify-between p-2.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0]">
+                                  <div className="text-[12px]">
+                                    <span className="font-semibold text-[#1D1D1F]">{formatAmount(v.amount)}</span>
+                                    <span className="text-[#86868B] ml-2">{formatDate(v.paymentDate)}</span>
+                                    {v.paymentMethod && <span className="text-[#86868B] ml-2">{v.paymentMethod}</span>}
+                                  </div>
+                                  {v.bankAccount && (
+                                    <span className="text-[11px] text-[#86868B]">{v.bankAccount}</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {app.approvalInstanceId && (
+                          <div className="px-3 pb-3">
+                            <ApprovalTimeline instance={instance} loading={payableAppInstancesLoading && !instance} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-[#F0F0F0]">
+              <button className="ios-btn ios-btn-secondary" onClick={() => { setModalType(null); setStatusFlowTarget(null); }}>关闭</button>
+            </div>
+          </div>
+        )}
+
+        {statusFlowTarget && statusFlowTarget.type !== "payableApps" && (
           <div className="space-y-4">
             <div className="p-3 rounded-xl bg-[#F5F5F7]">
               <p className="text-[13px] text-[#86868B] mb-1">当前状态</p>

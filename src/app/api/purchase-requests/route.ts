@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectSourceId, requestType, requiredDate, items } = body;
+    const { projectSourceId, requestType, requiredDate, items, attachments } = body;
 
     if (!projectSourceId || !projectSourceId.trim()) {
       return NextResponse.json({ error: "项目不能为空" }, { status: 400 });

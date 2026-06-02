@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isAdmin, getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   _request: NextRequest,
@@ -40,6 +41,8 @@ export async function PUT(
     }
 
     const updateData: Record<string, unknown> = {};
+    const currentUser = await getCurrentUser();
+    updateData.lastModifiedBy = currentUser?.realName || null;
 
     if (body.estimatedCost !== undefined) updateData.estimatedCost = body.estimatedCost;
     if (body.totalAmount !== undefined) updateData.totalAmount = parseFloat(body.totalAmount);
@@ -49,6 +52,8 @@ export async function PUT(
     if (body.status !== undefined) updateData.status = body.status;
     if (body.projectSourceId !== undefined) updateData.projectSourceId = body.projectSourceId || null;
     if (body.customerId !== undefined) updateData.customerId = body.customerId;
+    if (body.quotationLetterUrl !== undefined) updateData.quotationLetterUrl = body.quotationLetterUrl || null;
+    if (body.files !== undefined) updateData.files = body.files;
 
     const quotation = await prisma.quotation.update({
       where: { id },
@@ -84,13 +89,14 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const adminUser = await getCurrentUser();
 
     const existing = await prisma.quotation.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "报价单不存在" }, { status: 404 });
     }
 
-    if (existing.approvalStatus === "已批准") {
+    if (existing.approvalStatus === "已批准" && !isAdmin(adminUser)) {
       return NextResponse.json({ error: "已批准的报价单不能删除" }, { status: 400 });
     }
 

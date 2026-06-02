@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 async function generateProjectSourceId(): Promise<string> {
   const year = new Date().getFullYear();
@@ -90,6 +91,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const {
       projectCode,
       name,
@@ -159,7 +161,7 @@ export async function POST(request: NextRequest) {
 
       await prisma.projectLead.update({
         where: { projectSourceId: leadSourceId },
-        data: { currentStatus: "已立项" },
+        data: { currentStatus: "已立项", projectName: name.trim() },
       });
     } else if (projectSource === "直接委托") {
       const lastLead = await prisma.projectLead.findFirst({
@@ -192,9 +194,7 @@ export async function POST(request: NextRequest) {
           customerId,
           projectName: name.trim(),
           location: body.location?.trim() || null,
-          estimatedInvestment: body.estimatedInvestment ? parseFloat(body.estimatedInvestment) : null,
-          bidReleaseTime: null,
-          infoSource: body.infoSource?.trim() || null,
+          implementationEntity: body.implementationEntity?.trim() || "华东工程",
           currentStatus: "已立项",
         },
       });
@@ -213,12 +213,13 @@ export async function POST(request: NextRequest) {
         projectCategory: projectCategory?.trim() || null,
         source: projectSource,
         sourceRefId: sourceRefId || null,
-        status: status || "筹备",
+        status: status || "执行",
         designManagerId: designManagerId || null,
         supervisorLeaderId: supervisorLeaderId || null,
         startDate: startDate ? new Date(startDate) : null,
         plannedEndDate: plannedEndDate ? new Date(plannedEndDate) : null,
         actualCloseDate: actualCloseDate ? new Date(actualCloseDate) : null,
+        lastModifiedBy: currentUser?.realName || null,
       },
       include: {
         customer: { select: { id: true, name: true, industryType: true } },

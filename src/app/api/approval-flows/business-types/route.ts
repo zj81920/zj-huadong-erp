@@ -4,8 +4,6 @@ import prisma from "@/lib/prisma";
 interface BusinessType {
   key: string;
   label: string;
-  hasFlowLevel: boolean;
-  defaultFlow: string;
 }
 
 interface ApproverRole {
@@ -14,18 +12,20 @@ interface ApproverRole {
 }
 
 const businessTypes: BusinessType[] = [
-  { key: "quotation", label: "商务报价", hasFlowLevel: false, defaultFlow: "common" },
-  { key: "outsourcing", label: "外包任务", hasFlowLevel: false, defaultFlow: "common" },
-  { key: "purchase_request", label: "采购需求", hasFlowLevel: false, defaultFlow: "common" },
-  { key: "income_contract", label: "收入合同", hasFlowLevel: true, defaultFlow: "project" },
-  { key: "expense_contract", label: "支出合同", hasFlowLevel: true, defaultFlow: "project" },
-  { key: "non_contract_income", label: "非合同收入", hasFlowLevel: true, defaultFlow: "project" },
-  { key: "non_contract_expense", label: "非合同支出", hasFlowLevel: true, defaultFlow: "project" },
-  { key: "payment_application", label: "付款申请", hasFlowLevel: false, defaultFlow: "common" },
-  { key: "expense_report", label: "费用报销", hasFlowLevel: true, defaultFlow: "project" },
-  { key: "other_borrowing", label: "其他借入款", hasFlowLevel: false, defaultFlow: "common" },
-  { key: "lending_out", label: "借出款", hasFlowLevel: false, defaultFlow: "common" },
-  { key: "salary_payment", label: "工资发放", hasFlowLevel: false, defaultFlow: "common" },
+  { key: "quotation", label: "商务报价" },
+  { key: "outsourcing", label: "外包任务" },
+  { key: "purchase_request", label: "采购需求" },
+  { key: "income_contract", label: "收入合同" },
+  { key: "expense_contract", label: "支出合同" },
+  { key: "non_contract_income", label: "非合同收入" },
+  { key: "non_contract_expense", label: "其他支付" },
+  { key: "payment_application", label: "合同支付" },
+  { key: "expense_report", label: "费用报销" },
+  { key: "other_borrowing", label: "其他借入款" },
+  { key: "lending_out", label: "借出款" },
+  { key: "salary_payment", label: "工资发放" },
+  { key: "borrowing_return_application", label: "借入资金归还" },
+  { key: "delivery_receipt", label: "到货验收" },
 ];
 
 const approverRoles: ApproverRole[] = [
@@ -43,22 +43,12 @@ const approverRoles: ApproverRole[] = [
   { key: "cashier", label: "出纳" },
 ];
 
-const defaultFlows: Record<string, Array<{ nodeOrder: number; nodeName: string; approverRole: string }>> = {
-  common: [
-    { nodeOrder: 1, nodeName: "发起", approverRole: "initiator" },
-    { nodeOrder: 2, nodeName: "部门负责人审批", approverRole: "dept_head" },
-    { nodeOrder: 3, nodeName: "副总经理审批", approverRole: "vice_gm" },
-    { nodeOrder: 4, nodeName: "总经理审批", approverRole: "gm" },
-  ],
-  project: [
-    { nodeOrder: 1, nodeName: "发起", approverRole: "initiator" },
-    { nodeOrder: 2, nodeName: "项目经理审批", approverRole: "project_manager" },
-    { nodeOrder: 3, nodeName: "部门负责人审批", approverRole: "dept_head" },
-    { nodeOrder: 4, nodeName: "项目管理部审批", approverRole: "pmo" },
-    { nodeOrder: 5, nodeName: "副总经理审批", approverRole: "vice_gm" },
-    { nodeOrder: 6, nodeName: "总经理审批", approverRole: "gm" },
-  ],
-};
+const defaultFlows: Array<{ nodeOrder: number; nodeName: string; approverRole: string }> = [
+  { nodeOrder: 1, nodeName: "发起", approverRole: "initiator" },
+  { nodeOrder: 2, nodeName: "部门负责人审批", approverRole: "dept_head" },
+  { nodeOrder: 3, nodeName: "副总经理审批", approverRole: "vice_gm" },
+  { nodeOrder: 4, nodeName: "总经理审批", approverRole: "gm" },
+];
 
 export async function GET() {
   return NextResponse.json({
@@ -75,12 +65,9 @@ export async function POST() {
 
     await prisma.$transaction(async (tx) => {
       for (const bt of businessTypes) {
-        const flowLevel = bt.defaultFlow;
-        const nodes = defaultFlows[flowLevel];
+        const flowLevel = "common";
 
-        if (!nodes) continue;
-
-        for (const node of nodes) {
+        for (const node of defaultFlows) {
           const existing = await tx.approvalFlowDefinition.findFirst({
             where: {
               businessType: bt.key,

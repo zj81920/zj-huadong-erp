@@ -14,8 +14,14 @@ import {
   Upload,
   FileCheck,
   X,
+  Send,
+  Eye,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useAuth } from "@/contexts/AuthContext";
+import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 
 interface Supplier {
   id: string;
@@ -30,8 +36,11 @@ interface Supplier {
   bankAccount: string | null;
   remark: string | null;
   attachmentUrl: string | null;
+  approvalStatus: string;
+  approvalInstanceId?: string | null;
   createdAt: string;
   updatedAt: string;
+  lastModifiedBy: string | null;
 }
 
 interface SupplierFormData {
@@ -83,9 +92,19 @@ const statusColorMap: Record<string, string> = {
   已失效: "ios-badge-gray",
 };
 
+const approvalStatusConfig: Record<string, { color: string; label: string }> = {
+  草稿: { color: "ios-badge-gray", label: "草稿" },
+  审批中: { color: "ios-badge-orange", label: "审批中" },
+  已批准: { color: "ios-badge-green", label: "已批准" },
+  已驳回: { color: "ios-badge-red", label: "已驳回" },
+};
+
 const supplierTypeOptions = ["企业", "政府", "银行", "税务", "政务机构", "个人"];
 
 export default function SuppliersPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -98,6 +117,7 @@ export default function SuppliersPage() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterApproval, setFilterApproval] = useState("");
 
   const [showModal, setShowModal] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -107,6 +127,20 @@ export default function SuppliersPage() {
 
   const [deleteConfirm, setDeleteConfirm] = useState<Supplier | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [detailSupplier, setDetailSupplier] = useState<Supplier | null>(null);
+  const [approvalInstance, setApprovalInstance] = useState<any>(null);
+  const [approvalLoading, setApprovalLoading] = useState(false);
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+
+  const {
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isAllSelected,
+    selectedCount,
+    isSelected,
+  } = useBatchSelection(suppliers.map((s) => s.id));
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -119,6 +153,7 @@ export default function SuppliersPage() {
       if (search) params.set("search", search);
       if (filterType) params.set("supplierType", filterType);
       if (filterStatus) params.set("status", filterStatus);
+      if (filterApproval) params.set("approvalStatus", filterApproval);
       params.set("page", pagination.page.toString());
       params.set("pageSize", pagination.pageSize.toString());
 
@@ -134,11 +169,28 @@ export default function SuppliersPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterType, filterStatus, pagination.page, pagination.pageSize]);
+  }, [search, filterType, filterStatus, filterApproval, pagination.page, pagination.pageSize]);
 
   useEffect(() => {
     fetchSuppliers();
   }, [fetchSuppliers]);
+
+  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
+    setApprovalLoading(true);
+    try {
+      const res = await fetch(`/api/approval-instances/${instanceId}`);
+      if (res.ok) {
+        const json = await res.json();
+        setApprovalInstance(json.data);
+      } else {
+        setApprovalInstance(null);
+      }
+    } catch {
+      setApprovalInstance(null);
+    } finally {
+      setApprovalLoading(false);
+    }
+  }, []);
 
   const handleOpenCreate = () => {
     setEditingSupplier(null);
@@ -206,6 +258,11 @@ export default function SuppliersPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
+    if ((deleteConfirm.approvalStatus === "审批中" || deleteConfirm.approvalStatus === "已批准") && !isAdminUser) {
+      alert("该记录已进入审批流程，仅管理员可删除");
+      setDeleteConfirm(null);
+      return;
+    }
 
     setDeleting(true);
     try {
@@ -226,6 +283,82 @@ export default function SuppliersPage() {
       setDeleteConfirm(null);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleSubmitApproval = async (supplierId: string) => {
+    setSubmittingId(supplierId);
+    try {
+      const res = await fetch("/api/approval-instances", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessType: "supplier",
+          businessId: supplierId,
+          flowLevel: "common",
+        }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        const instanceId = json.data.instanceId;
+        const supplier = suppliers.find((s) => s.id === supplierId);
+        if (supplier) {
+          setDetailSupplier({ ...supplier, approvalStatus: "审批中" });
+          setApprovalLoading(true);
+          try {
+            const instRes = await fetch(`/api/approval-instances/${instanceId}`);
+            const instJson = await instRes.json();
+            if (instJson.data) setApprovalInstance(instJson.data);
+          } catch {
+          } finally {
+            setApprovalLoading(false);
+          }
+        }
+        fetchSuppliers();
+      } else {
+        alert(json.error || "提交审批失败");
+      }
+    } catch {
+      alert("网络错误，请重试");
+    } finally {
+      setSubmittingId(null);
+    }
+  };
+
+  const handleStatusChange = (newStatus: string, _instanceId: string | null) => {
+    fetchSuppliers();
+    if (detailSupplier && detailSupplier.id) {
+      setDetailSupplier((prev) => prev ? { ...prev, approvalStatus: newStatus } : null);
+      if (_instanceId) {
+        setApprovalLoading(true);
+        fetch(`/api/approval-instances/${_instanceId}`)
+          .then((r) => r.json())
+          .then((json) => { if (json.data) setApprovalInstance(json.data); })
+          .catch(() => {})
+          .finally(() => setApprovalLoading(false));
+      }
+    }
+  };
+
+  const openDetail = async (supplier: Supplier) => {
+    setDetailSupplier(supplier);
+    setApprovalInstance(null);
+    setApprovalLoading(true);
+    try {
+      const detailRes = await fetch(`/api/suppliers/${supplier.id}`);
+      if (detailRes.ok) {
+        const json = await detailRes.json();
+        setDetailSupplier(json.data);
+        if (json.data.approvalInstanceId) {
+          fetchApprovalInstance(json.data.approvalInstanceId);
+        } else {
+          setApprovalLoading(false);
+        }
+      } else {
+        setApprovalLoading(false);
+      }
+    } catch {
+      setApprovalLoading(false);
     }
   };
 
@@ -329,6 +462,21 @@ export default function SuppliersPage() {
             <option value="已失效">已失效</option>
           </select>
 
+          <select
+            className="ios-select w-[130px]"
+            value={filterApproval}
+            onChange={(e) => {
+              setFilterApproval(e.target.value);
+              setPagination((prev) => ({ ...prev, page: 1 }));
+            }}
+          >
+            <option value="">全部审批</option>
+            <option value="草稿">草稿</option>
+            <option value="审批中">审批中</option>
+            <option value="已批准">已批准</option>
+            <option value="已驳回">已驳回</option>
+          </select>
+
           <div className="ml-auto text-[13px] text-[#86868B]">
             共 <span className="font-semibold text-[#1D1D1F]">{pagination.total}</span> 条记录
           </div>
@@ -344,26 +492,46 @@ export default function SuppliersPage() {
             <div className="w-16 h-16 rounded-full bg-[#F5F5F7] flex items-center justify-center">
               <Users className="w-8 h-8 text-[#86868B]" />
             </div>
-            <p>{search || filterType || filterStatus ? "没有匹配的供应商记录" : "暂无供应商，点击右上角新增"}</p>
+            <p>{search || filterType || filterStatus || filterApproval ? "没有匹配的供应商记录" : "暂无供应商，点击右上角新增"}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="ios-table">
               <thead>
                 <tr>
+                  {isAdminUser && (
+                    <th className="w-10">
+                      <input
+                        type="checkbox"
+                        className="ios-checkbox"
+                        checked={isAllSelected}
+                        onChange={() => isAllSelected ? clearSelection() : selectAll()}
+                      />
+                    </th>
+                  )}
                   <th>供应商名称</th>
                   <th>供应商性质</th>
                   <th>状态</th>
+                  <th>审批状态</th>
                   <th>联系人</th>
                   <th>电话</th>
-                  <th>开户行</th>
-                  <th>银行账号</th>
                   <th>操作</th>
+                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
                 {suppliers.map((supplier) => (
-                  <tr key={supplier.id}>
+                  <tr key={supplier.id} className={isSelected(supplier.id) ? "bg-[#007AFF]/5" : ""}>
+                    {isAdminUser && (
+                      <td className="w-10">
+                        <input
+                          type="checkbox"
+                          className="ios-checkbox"
+                          checked={isSelected(supplier.id)}
+                          onChange={() => toggleSelect(supplier.id)}
+                        />
+                      </td>
+                    )}
                     <td>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center flex-shrink-0">
@@ -386,6 +554,11 @@ export default function SuppliersPage() {
                         {supplier.status || "当前有效"}
                       </span>
                     </td>
+                    <td>
+                      <span className={`ios-badge ${approvalStatusConfig[supplier.approvalStatus]?.color || "ios-badge-gray"}`}>
+                        {approvalStatusConfig[supplier.approvalStatus]?.label || supplier.approvalStatus}
+                      </span>
+                    </td>
                     <td>{supplier.contactPerson || "-"}</td>
                     <td>
                       {supplier.phone ? (
@@ -397,25 +570,79 @@ export default function SuppliersPage() {
                         "-"
                       )}
                     </td>
-                    <td>{supplier.bankName || "-"}</td>
-                    <td>{supplier.bankAccount || "-"}</td>
                     <td>
                       <div className="flex items-center gap-1">
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm"
-                          onClick={() => handleOpenEdit(supplier)}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                          编辑
-                        </button>
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                          onClick={() => setDeleteConfirm(supplier)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          删除
-                        </button>
+                        {supplier.approvalStatus === "草稿" || supplier.approvalStatus === "已驳回" ? (
+                          <>
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm"
+                              onClick={() => handleOpenEdit(supplier)}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                              编辑
+                            </button>
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              onClick={() => setDeleteConfirm(supplier)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              删除
+                            </button>
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#007AFF]!"
+                              disabled={submittingId === supplier.id}
+                              onClick={() => handleSubmitApproval(supplier.id)}
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                              {submittingId === supplier.id ? "提交中..." : "提交审批"}
+                            </button>
+                          </>
+                        ) : supplier.approvalStatus === "审批中" ? (
+                          <>
+                            {isAdminUser && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                onClick={() => setDeleteConfirm(supplier)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                删除
+                              </button>
+                            )}
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm"
+                              onClick={() => openDetail(supplier)}
+                              title="查看详情"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        ) : supplier.approvalStatus === "已批准" ? (
+                          <>
+                            {isAdminUser && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                                onClick={() => setDeleteConfirm(supplier)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                删除
+                              </button>
+                            )}
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm"
+                              onClick={() => openDetail(supplier)}
+                              title="查看详情"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        ) : null}
                       </div>
+                    </td>
+                    <td className="text-[#86868B] text-[12px] whitespace-nowrap">
+                      {supplier.lastModifiedBy && (
+                        <span>{supplier.lastModifiedBy}</span>
+                      )}
+                      <span className="block text-[11px]">{formatDate(supplier.updatedAt)}</span>
                     </td>
                   </tr>
                 ))}
@@ -444,6 +671,15 @@ export default function SuppliersPage() {
               </div>
             )}
           </div>
+        )}
+
+        {isAdminUser && (
+          <BatchDeleteBar
+            businessType="supplier"
+            selectedIds={suppliers.filter((s) => isSelected(s.id)).map((s) => s.id)}
+            onDeleteSuccess={fetchSuppliers}
+            onClear={clearSelection}
+          />
         )}
       </div>
 
@@ -682,6 +918,53 @@ export default function SuppliersPage() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!detailSupplier}
+        onClose={() => { setDetailSupplier(null); setApprovalInstance(null); }}
+        title="供应商审批详情"
+        maxWidth="700px"
+      >
+        {detailSupplier && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">供应商名称</p>
+                <p className="text-[14px] font-semibold">{detailSupplier.name}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">供应商性质</p>
+                <p className="text-[14px] font-semibold">{detailSupplier.supplierType || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">审批状态</p>
+                <span className={`ios-badge ${approvalStatusConfig[detailSupplier.approvalStatus]?.color || "ios-badge-gray"}`}>
+                  {approvalStatusConfig[detailSupplier.approvalStatus]?.label || detailSupplier.approvalStatus}
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">供应商状态</p>
+                <span className={`ios-badge ${statusColorMap[detailSupplier.status || "当前有效"]}`}>
+                  {detailSupplier.status || "当前有效"}
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">联系人</p>
+                <p className="text-[14px] font-semibold">{detailSupplier.contactPerson || "-"}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-[#F5F5F7]">
+                <p className="text-[12px] text-[#86868B] mb-1">电话</p>
+                <p className="text-[14px] font-semibold">{detailSupplier.phone || "-"}</p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-[#F0F0F0]">
+              <h4 className="text-[13px] font-bold text-[#1D1D1F] mb-3">审批流程</h4>
+              <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
+            </div>
+          </div>
+        )}
       </Modal>
     </>
   );

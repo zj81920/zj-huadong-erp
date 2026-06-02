@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isAdmin, getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   _request: NextRequest,
@@ -74,7 +75,7 @@ export async function PUT(
       return NextResponse.json({ error: "只有草稿状态的需求才能编辑" }, { status: 400 });
     }
 
-    const { projectSourceId, requestType, requiredDate, items } = body;
+    const { projectSourceId, requestType, requiredDate, items, attachments } = body;
 
     if (projectSourceId !== undefined && projectSourceId.trim()) {
       const project = await prisma.project.findUnique({
@@ -105,6 +106,7 @@ export async function PUT(
     if (projectSourceId !== undefined) updateData.projectSourceId = projectSourceId.trim();
     if (requestType !== undefined) updateData.requestType = requestType;
     if (requiredDate !== undefined) updateData.requiredDate = requiredDate ? new Date(requiredDate) : null;
+    if (attachments !== undefined) updateData.attachments = attachments;
 
     if (items && Array.isArray(items)) {
       updateData.items = {
@@ -145,6 +147,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const adminUser = await getCurrentUser();
 
     const existing = await prisma.purchaseRequest.findUnique({
       where: { id },
@@ -154,11 +157,11 @@ export async function DELETE(
       return NextResponse.json({ error: "采购需求不存在" }, { status: 404 });
     }
 
-    if (existing.status !== "草稿") {
+    if (existing.status !== "草稿" && !isAdmin(adminUser)) {
       return NextResponse.json({ error: "只有草稿状态的需求才能删除" }, { status: 400 });
     }
 
-    if (existing.inquiry) {
+    if (existing.inquiry && !isAdmin(adminUser)) {
       return NextResponse.json({ error: "该需求已关联询价，无法删除" }, { status: 400 });
     }
 

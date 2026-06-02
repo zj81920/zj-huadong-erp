@@ -37,6 +37,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
     }
 
+    // 检查是否有活跃的审批实例
+    const activeCount = await prisma.approvalInstance.count({
+      where: {
+        businessType,
+        flowLevel,
+        status: "审批中",
+      },
+    });
+    if (activeCount > 0) {
+      return NextResponse.json(
+        { error: `该流程下有 ${activeCount} 个正在审批中的实例，无法修改。请等待所有审批完成后再修改流程配置。` },
+        { status: 409 }
+      );
+    }
+
     // Delete existing nodes for this businessType+flowLevel
     await prisma.approvalFlowDefinition.deleteMany({
       where: { businessType, flowLevel },
@@ -44,12 +59,13 @@ export async function POST(request: NextRequest) {
 
     // Create new nodes
     const created = await prisma.approvalFlowDefinition.createMany({
-      data: nodes.map((node: { nodeOrder: number; nodeName: string; approverRole: string }) => ({
+      data: nodes.map((node: { nodeOrder: number; nodeName: string; approverRole: string; nodeType?: string }) => ({
         businessType,
         flowLevel,
         nodeOrder: node.nodeOrder,
         nodeName: node.nodeName,
         approverRole: node.approverRole,
+        nodeType: node.nodeType || "approval",
         isActive: true,
       })),
     });

@@ -15,6 +15,13 @@ import {
   Upload,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import AdminStatusOverride from "@/components/AdminStatusOverride";
+import ProjectPicker, { ProjectLeadItem } from "@/components/ProjectPicker";
+import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFlowConfigured } from "@/hooks/useFlowConfigured";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 
 interface Project {
   id: string;
@@ -115,6 +122,9 @@ const typeConfig: Record<string, { color: string; label: string }> = {
 };
 
 export default function OutsourcingPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const { configured: flowConfigured } = useFlowConfigured("outsourcing");
   const [tasks, setTasks] = useState<OutsourcingTask[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1, pageSize: 20, total: 0, totalPages: 0,
@@ -134,6 +144,7 @@ export default function OutsourcingPage() {
   const [formError, setFormError] = useState("");
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
   const [showSupplierModal, setShowSupplierModal] = useState(false);
@@ -149,11 +160,44 @@ export default function OutsourcingPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<OutsourcingTask | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const [approvalInstance, setApprovalInstance] = useState<any>(null);
+  const [approvalLoading, setApprovalLoading] = useState(false);
+
+  const {
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isAllSelected,
+    isSelected,
+  } = useBatchSelection(tasks.map((d) => d.id));
+
+  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
+    setApprovalLoading(true);
+    try {
+      const res = await fetch(`/api/approval-instances/${instanceId}`);
+      if (res.ok) {
+        const json = await res.json();
+        setApprovalInstance(json.data);
+      } else {
+        setApprovalInstance(null);
+      }
+    } catch {
+      setApprovalInstance(null);
+    } finally {
+      setApprovalLoading(false);
+    }
+  }, []);
+
   const fetchProjects = useCallback(async () => {
     try {
       const res = await fetch("/api/projects?pageSize=200");
       const json = await res.json();
       if (res.ok) setProjects(json.data);
+      const leadsRes = await fetch("/api/project-leads?pageSize=200");
+      if (leadsRes.ok) {
+        const lj = await leadsRes.json();
+        setProjectLeads((lj.data || []).filter((l: { currentStatus: string }) => l.currentStatus !== "放弃"));
+      }
     } catch (err) {
       console.error("获取项目列表失败:", err);
     }
@@ -351,19 +395,31 @@ export default function OutsourcingPage() {
   };
 
   const handleViewDetail = async (task: OutsourcingTask) => {
+    setApprovalInstance(null);
     try {
       const res = await fetch(`/api/projects/outsourcing/${task.id}`);
       const json = await res.json();
       if (res.ok) {
         setDetailTask(json.data);
+        if (json.data.approvalInstanceId) {
+          fetchApprovalInstance(json.data.approvalInstanceId);
+        }
       }
     } catch {
       setDetailTask(task);
+      if (task.approvalInstanceId) {
+        fetchApprovalInstance(task.approvalInstanceId);
+      }
     }
   };
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
+    if (deleteConfirm.approvalStatus !== "草稿" && deleteConfirm.approvalStatus !== "已驳回" && !isAdmin) {
+      alert("该记录已进入审批流程，仅管理员可删除");
+      setDeleteConfirm(null);
+      return;
+    }
     setDeleting(true);
     try {
       const res = await fetch(`/api/projects/outsourcing/${deleteConfirm.id}`, { method: "DELETE" });
@@ -423,7 +479,7 @@ export default function OutsourcingPage() {
             <h1>设计外包</h1>
             <p>管理设计分包任务，跟踪验收与审批流程</p>
           </div>
-          <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
+          <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate} disabled={!flowConfigured} title={!flowConfigured ? "请先在流程设置中配置外包任务审批流程" : undefined}>
             <Plus className="w-4 h-4" />
             新增外包
           </button>
@@ -554,6 +610,16 @@ export default function OutsourcingPage() {
             <table className="ios-table">
               <thead>
                 <tr>
+                  {isAdmin && (
+                    <th className="w-10">
+                      <input
+                        type="checkbox"
+                        className="ios-checkbox"
+                        checked={isAllSelected}
+                        onChange={() => isAllSelected ? clearSelection() : selectAll()}
+                      />
+                    </th>
+                  )}
                   <th>项目源ID</th>
                   <th>项目名称</th>
                   <th>类型</th>
@@ -576,7 +642,17 @@ export default function OutsourcingPage() {
                   const isCompany = task.type === "to_company";
                   const supplier = task.supplier;
                   return (
-                    <tr key={task.id}>
+                    <tr key={task.id} className={isSelected(task.id) ? "bg-[#007AFF]/5" : ""}>
+                      {isAdmin && (
+                        <td className="w-10">
+                          <input
+                            type="checkbox"
+                            className="ios-checkbox"
+                            checked={isSelected(task.id)}
+                            onChange={() => toggleSelect(task.id)}
+                          />
+                        </td>
+                      )}
                       <td>
                         <span className="font-mono text-[13px] font-semibold text-[#007AFF]">
                           {task.projectSourceId}
@@ -619,7 +695,18 @@ export default function OutsourcingPage() {
                         <span className={`ios-badge ${asc.color}`}>{asc.label}</span>
                       </td>
                       <td>
-                        <span className={`ios-badge ${apsc.color}`}>{apsc.label}</span>
+                        <AdminStatusOverride
+                          businessType="outsourcing"
+                          businessId={task.id}
+                          currentStatus={task.approvalStatus}
+                          onStatusChanged={(newStatus) => {
+                            setTasks((prev) =>
+                              prev.map((t) =>
+                                t.id === task.id ? { ...t, approvalStatus: newStatus } : t
+                              )
+                            );
+                          }}
+                        />
                       </td>
                       <td>
                         <div className="flex items-center gap-1">
@@ -631,12 +718,14 @@ export default function OutsourcingPage() {
                             <Pencil className="w-3.5 h-3.5" />
                             编辑
                           </button>
-                          <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
-                            onClick={() => setDeleteConfirm(task)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {(task.approvalStatus === "草稿" || task.approvalStatus === "已驳回" || isAdmin) && (
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#FF3B30]!"
+                              onClick={() => setDeleteConfirm(task)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -670,6 +759,15 @@ export default function OutsourcingPage() {
         )}
       </div>
 
+      {isAdmin && (
+        <BatchDeleteBar
+          businessType="outsourcing"
+          selectedIds={tasks.filter((d) => isSelected(d.id)).map((d) => d.id)}
+          onDeleteSuccess={fetchTasks}
+          onClear={clearSelection}
+        />
+      )}
+
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -685,19 +783,15 @@ export default function OutsourcingPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[13px] font-semibold text-[#1D1D1F] mb-1.5">
-                项目 <span className="text-[#FF3B30]">*</span>
-              </label>
-              <select
-                className="ios-select"
+              <ProjectPicker
+                projectLeads={projectLeads}
                 value={form.projectSourceId}
-                onChange={(e) => updateForm("projectSourceId", e.target.value)}
-              >
-                <option value="">请选择项目</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.projectSourceId}>{p.name}</option>
-                ))}
-              </select>
+                onChange={(id) => updateForm("projectSourceId", id)}
+                label="项目"
+                placeholder="请选择项目"
+                required
+                showCustomer={false}
+              />
             </div>
 
             <div>
@@ -1077,9 +1171,21 @@ export default function OutsourcingPage() {
               </div>
               <div className="p-3 rounded-xl bg-[#F5F5F7]">
                 <p className="text-[12px] text-[#86868B] mb-1">审批状态</p>
-                <span className={`ios-badge ${approvalStatusConfig[detailTask.approvalStatus]?.color || "ios-badge-gray"}`}>
-                  {detailTask.approvalStatus}
-                </span>
+                <AdminStatusOverride
+                  businessType="outsourcing"
+                  businessId={detailTask.id}
+                  currentStatus={detailTask.approvalStatus}
+                  onStatusChanged={(newStatus) => {
+                    setDetailTask((prev) =>
+                      prev ? { ...prev, approvalStatus: newStatus } : prev
+                    );
+                    setTasks((prev) =>
+                      prev.map((t) =>
+                        t.id === detailTask.id ? { ...t, approvalStatus: newStatus } : t
+                      )
+                    );
+                  }}
+                />
               </div>
               <div className="p-3 rounded-xl bg-[#F5F5F7]">
                 <p className="text-[12px] text-[#86868B] mb-1">创建时间</p>
@@ -1090,6 +1196,8 @@ export default function OutsourcingPage() {
                 <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatDate(detailTask.updatedAt)}</p>
               </div>
             </div>
+
+            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
           </div>
         )}
       </Modal>
