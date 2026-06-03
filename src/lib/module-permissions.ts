@@ -186,7 +186,7 @@ export interface UserModulePermission {
 }
 
 export function resolveUserPermissions(
-  roles: { accessibleModules: string | string[]; isGlobalVisible: boolean }[]
+  roles: { modulePermissions: string; isGlobalVisible: boolean }[]
 ): UserModulePermission {
   const moduleSet = new Set<ModuleKey>();
   const subModuleSet = new Set<SubModuleKey>();
@@ -197,18 +197,15 @@ export function resolveUserPermissions(
       isGlobalVisible = true;
     }
 
-    let modules: string[];
-    if (Array.isArray(role.accessibleModules)) {
-      modules = role.accessibleModules;
-    } else {
-      try {
-        modules = JSON.parse(role.accessibleModules || "[]");
-      } catch {
-        modules = [];
-      }
+    let moduleKeys: string[];
+    try {
+      const perms = JSON.parse(role.modulePermissions || "{}");
+      moduleKeys = Object.keys(perms);
+    } catch {
+      moduleKeys = [];
     }
 
-    for (const m of modules) {
+    for (const m of moduleKeys) {
       if (MODULE_KEYS.includes(m as ModuleKey)) {
         moduleSet.add(m as ModuleKey);
       }

@@ -95,14 +95,20 @@ model Role {
   name          String
   description   String?
   departmentId  String?     @map("department_id")
-  isProjectRole      Boolean     @default(false) @map("is_project_role")
-  accessibleModules  String      @default("[]") @map("accessible_modules")
+
+  // accessibleModules replaced with CRUD permissions
+  modulePermissions    String   @default("{}") @map("module_permissions")
+  subModuleOverrides   String   @default("{}") @map("sub_module_overrides")
+
   isGlobalVisible    Boolean     @default(false) @map("is_global_visible")
-  sort               Int         @default(0)
+
+  // sort replaced with level (used for role list ordering only)
+  level              Int         @default(0)
+
   isActive           Boolean     @default(true) @map("is_active")
   createdAt          DateTime    @default(now()) @map("created_at")
   updatedAt          DateTime    @updatedAt @map("updated_at")
-  lastModifiedBy     String?   @map("last_modified_by")
+  lastModifiedBy     String?     @map("last_modified_by")
 
   department Department? @relation(fields: [departmentId], references: [id])
   users      UserRole[]

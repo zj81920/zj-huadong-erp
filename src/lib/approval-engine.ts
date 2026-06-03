@@ -70,7 +70,7 @@ async function resolveSingleRoleApproverIds(
     return [];
   }
 
-  if (role.isProjectRole && projectSourceId) {
+  if (["project_manager", "production"].includes(roleCode) && projectSourceId) {
     if (roleCode === "project_manager") {
       return await resolveProjectManager(projectSourceId);
     }
@@ -955,7 +955,7 @@ export async function getPendingApprovals(userId: string) {
   // 获取用户角色
   const userRoles = await prisma.userRole.findMany({
     where: { userId },
-    include: { role: { select: { code: true, isProjectRole: true } } },
+    include: { role: { select: { code: true } } },
   });
 
   const roleCodes = userRoles.map((ur) => ur.role.code).filter((code) => code !== "admin");

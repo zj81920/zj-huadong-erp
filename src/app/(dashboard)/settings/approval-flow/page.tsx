@@ -136,10 +136,9 @@ export default function ApprovalFlowPage() {
         if (res.ok) {
           const { data } = await res.json();
           if (data) {
-            setApproverRoles(data.map((r: { code: string; name: string; isProjectRole: boolean }) => ({
+            setApproverRoles(data.map((r: { code: string; name: string }) => ({
               value: r.code,
               label: r.name,
-              isProjectRole: r.isProjectRole,
             })));
           }
         }

@@ -10,7 +10,7 @@ export interface CurrentUser {
   phone: string | null;
   email: string | null;
   department: string | null;
-  roles: { id: string; code: string; name: string; isProjectRole: boolean }[];
+  roles: { id: string; code: string; name: string; modulePermissions: string }[];
 }
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -33,7 +33,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
                 id: true,
                 code: true,
                 name: true,
-                isProjectRole: true,
+                modulePermissions: true,
               },
             },
           },
@@ -54,7 +54,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
         id: ur.role.id,
         code: ur.role.code,
         name: ur.role.name,
-        isProjectRole: ur.role.isProjectRole,
+        modulePermissions: ur.role.modulePermissions,
       })),
     };
   } catch {

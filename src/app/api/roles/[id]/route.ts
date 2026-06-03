@@ -8,7 +8,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, description, departmentId, isProjectRole, sort, isActive, accessibleModules, isGlobalVisible } = body;
+    const { name, description, departmentId, level, isActive, modulePermissions, subModuleOverrides, isGlobalVisible } = body;
 
     const existing = await prisma.role.findUnique({ where: { id } });
     if (!existing) {
@@ -38,10 +38,10 @@ export async function PUT(
         ...(name !== undefined && { name: name.trim() }),
         ...(description !== undefined && { description: description || null }),
         ...(departmentId !== undefined && { departmentId: departmentId || null }),
-        ...(isProjectRole !== undefined && { isProjectRole }),
-        ...(sort !== undefined && { sort }),
+        ...(level !== undefined && { level }),
         ...(isActive !== undefined && { isActive }),
-        ...(accessibleModules !== undefined && { accessibleModules: typeof accessibleModules === "string" ? accessibleModules : JSON.stringify(accessibleModules) }),
+        ...(modulePermissions !== undefined && { modulePermissions: typeof modulePermissions === "string" ? modulePermissions : JSON.stringify(modulePermissions) }),
+        ...(subModuleOverrides !== undefined && { subModuleOverrides: typeof subModuleOverrides === "string" ? subModuleOverrides : JSON.stringify(subModuleOverrides) }),
         ...(isGlobalVisible !== undefined && { isGlobalVisible }),
       },
     });

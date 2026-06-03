@@ -16,7 +16,7 @@ export async function GET() {
   try {
     const roles = await prisma.role.findMany({
       where: { isActive: true },
-      orderBy: { sort: "asc" },
+      orderBy: { level: "asc" },
       include: {
         department: { select: { id: true, name: true } },
         users: {
@@ -33,10 +33,10 @@ export async function GET() {
       description: r.description,
       departmentId: r.departmentId,
       departmentName: r.department?.name || null,
-      isProjectRole: r.isProjectRole,
-      accessibleModules: r.accessibleModules,
+      modulePermissions: r.modulePermissions,
+      subModuleOverrides: r.subModuleOverrides,
       isGlobalVisible: r.isGlobalVisible,
-      sort: r.sort,
+      level: r.level,
       isActive: r.isActive,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -52,7 +52,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, departmentId, isProjectRole, sort, accessibleModules, isGlobalVisible } = body;
+    const { name, description, departmentId, level, modulePermissions, subModuleOverrides, isGlobalVisible } = body;
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "角色名称不能为空" }, { status: 400 });
     }
@@ -79,9 +79,9 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         description: description || null,
         departmentId: departmentId || null,
-        isProjectRole: isProjectRole || false,
-        sort: sort || 0,
-        accessibleModules: typeof accessibleModules === "string" ? accessibleModules : JSON.stringify(accessibleModules || []),
+        modulePermissions: typeof modulePermissions === "string" ? modulePermissions : JSON.stringify(modulePermissions || {}),
+        subModuleOverrides: typeof subModuleOverrides === "string" ? subModuleOverrides : JSON.stringify(subModuleOverrides || {}),
+        level: level || 0,
         isGlobalVisible: isGlobalVisible || false,
       },
     });

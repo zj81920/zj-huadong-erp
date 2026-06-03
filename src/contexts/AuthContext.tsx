@@ -13,8 +13,7 @@ interface UserRole {
   id: string;
   code: string;
   name: string;
-  isProjectRole: boolean;
-  accessibleModules: string;
+  modulePermissions: string;
   isGlobalVisible: boolean;
 }
 

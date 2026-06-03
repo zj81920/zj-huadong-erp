@@ -11,7 +11,6 @@ import {
   Loader2,
   AlertCircle,
   Check,
-  Link2,
 } from "lucide-react";
 import Modal from "@/components/Modal";
 
@@ -22,10 +21,10 @@ interface Role {
   description: string | null;
   departmentId: string | null;
   departmentName: string | null;
-  isProjectRole: boolean;
-  accessibleModules: string | string[];
+  modulePermissions: string;
+  subModuleOverrides: string;
   isGlobalVisible: boolean;
-  sort: number;
+  level: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -42,10 +41,9 @@ interface RoleFormData {
   name: string;
   description: string;
   departmentId: string;
-  isProjectRole: boolean;
   accessibleModules: string[];
   isGlobalVisible: boolean;
-  sort: number;
+  level: number;
 }
 
 const MODULE_OPTIONS = [
@@ -113,28 +111,27 @@ const TAB_MODULE_OPTIONS: Record<string, { key: string; label: string }[]> = {
   ],
 };
 
-const DEFAULT_ROLES: { name: string; isProjectRole: boolean; sort: number }[] = [
-  { name: "部门负责人", isProjectRole: false, sort: 1 },
-  { name: "项目经理", isProjectRole: true, sort: 2 },
-  { name: "项目管理部", isProjectRole: false, sort: 3 },
-  { name: "行政", isProjectRole: false, sort: 4 },
-  { name: "采购部", isProjectRole: false, sort: 5 },
-  { name: "设计负责人/生产经理", isProjectRole: true, sort: 6 },
-  { name: "财务", isProjectRole: false, sort: 7 },
-  { name: "出纳", isProjectRole: false, sort: 8 },
-  { name: "副总经理", isProjectRole: false, sort: 9 },
-  { name: "总经理", isProjectRole: false, sort: 10 },
-  { name: "董事长", isProjectRole: false, sort: 11 },
+const DEFAULT_ROLES: { name: string; level: number }[] = [
+  { name: "部门负责人", level: 1 },
+  { name: "项目经理", level: 2 },
+  { name: "项目管理部", level: 3 },
+  { name: "行政", level: 4 },
+  { name: "采购部", level: 5 },
+  { name: "设计负责人/生产经理", level: 6 },
+  { name: "财务", level: 7 },
+  { name: "出纳", level: 8 },
+  { name: "副总经理", level: 9 },
+  { name: "总经理", level: 10 },
+  { name: "董事长", level: 11 },
 ];
 
 const emptyForm: RoleFormData = {
   name: "",
   description: "",
   departmentId: "",
-  isProjectRole: false,
   accessibleModules: [],
   isGlobalVisible: false,
-  sort: 0,
+  level: 0,
 };
 
 const formatDate = (dateStr: string) => {
@@ -218,7 +215,7 @@ export default function RolesPage() {
 
   const handleOpenCreate = () => {
     setEditingRole(null);
-    setForm({ ...emptyForm, sort: roles.length + 1 });
+    setForm({ ...emptyForm, level: roles.length + 1 });
     setFormError("");
     setShowModal(true);
   };
@@ -229,10 +226,9 @@ export default function RolesPage() {
       name: role.name,
       description: role.description || "",
       departmentId: role.departmentId || "",
-      isProjectRole: role.isProjectRole,
-      accessibleModules: typeof role.accessibleModules === "string" ? JSON.parse(role.accessibleModules || "[]") : (role.accessibleModules || []),
+      accessibleModules: (() => { try { return Object.keys(JSON.parse(role.modulePermissions || "{}")); } catch { return []; } })(),
       isGlobalVisible: role.isGlobalVisible || false,
-      sort: role.sort,
+      level: role.level,
     });
     setFormError("");
     setShowModal(true);
@@ -252,10 +248,16 @@ export default function RolesPage() {
         name: form.name.trim(),
         description: form.description.trim() || null,
         departmentId: form.departmentId || null,
-        isProjectRole: form.isProjectRole,
-        accessibleModules: form.accessibleModules,
+        modulePermissions: (() => {
+          const perms: Record<string, { create: boolean; read: boolean; update: boolean; delete: boolean }> = {};
+          for (const mod of form.accessibleModules) {
+            perms[mod] = { create: true, read: true, update: true, delete: true };
+          }
+          return perms;
+        })(),
+        subModuleOverrides: {},
         isGlobalVisible: form.isGlobalVisible,
-        sort: form.sort,
+        level: form.level,
       };
 
       const url = editingRole
@@ -395,7 +397,6 @@ export default function RolesPage() {
                   <th>描述</th>
                   <th>模块权限</th>
                   <th>全局可见</th>
-                  <th>属性</th>
                   <th>用户数</th>
                   <th>操作</th>
                   <th>最后修改</th>
@@ -406,7 +407,7 @@ export default function RolesPage() {
                   <tr key={role.id}>
                     <td className="text-center">
                       <span className="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-[#FAFAF9] text-[13px] font-semibold text-[#78716C]">
-                        {role.sort}
+                        {role.level}
                       </span>
                     </td>
                     <td>
@@ -431,10 +432,7 @@ export default function RolesPage() {
                     </td>
                     <td>
                       <span className="ios-badge ios-badge-gray gap-1">
-                        {(typeof role.accessibleModules === "string"
-                          ? JSON.parse(role.accessibleModules || "[]")
-                          : role.accessibleModules || []
-                        ).length} 个模块
+                        {(() => { try { return Object.keys(JSON.parse(role.modulePermissions || "{}")).length; } catch { return 0; } })()} 个模块
                       </span>
                     </td>
                     <td className="text-center">
@@ -443,16 +441,6 @@ export default function RolesPage() {
                       ) : (
                         <span className="text-[#78716C]">-</span>
                       )}
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        {role.isProjectRole && (
-                          <span className="ios-badge ios-badge-blue gap-1">
-                            <Link2 className="w-3 h-3" />
-                            项目关联
-                          </span>
-                        )}
-                      </div>
                     </td>
                     <td>
                       <span className="ios-badge ios-badge-gray gap-1">
@@ -575,28 +563,6 @@ export default function RolesPage() {
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
             />
-          </div>
-
-          <div className="flex items-center justify-between p-4 rounded-xl bg-[#FAFAF9]">
-            <div>
-              <p className="text-[14px] font-semibold text-[#1C1917]">项目关联角色</p>
-              <p className="text-[12px] text-[#78716C] mt-0.5">开启后该角色将关联项目维度</p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={form.isProjectRole}
-              onClick={() => setForm((prev) => ({ ...prev, isProjectRole: !prev.isProjectRole }))}
-              className={`relative inline-flex h-[30px] w-[51px] flex-shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out ${
-                form.isProjectRole ? "bg-[#1C1917]" : "bg-[#E7E5E4]"
-              }`}
-            >
-              <span
-                className={`inline-block h-[26px] w-[26px] rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
-                  form.isProjectRole ? "translate-x-[23px]" : "translate-x-[1px]"
-                }`}
-              />
-            </button>
           </div>
 
           <div>
@@ -816,8 +782,8 @@ export default function RolesPage() {
               type="number"
               className="ios-input w-[120px]"
               placeholder="0"
-              value={form.sort}
-              onChange={(e) => setForm((prev) => ({ ...prev, sort: parseInt(e.target.value) || 0 }))}
+              value={form.level}
+              onChange={(e) => setForm((prev) => ({ ...prev, level: parseInt(e.target.value) || 0 }))}
               min={0}
             />
           </div>

@@ -23,7 +23,6 @@ interface Role {
   id: string;
   name: string;
   description?: string;
-  isProjectRole?: boolean;
 }
 
 interface UserItem {
@@ -646,11 +645,6 @@ export default function UsersSettingsPage() {
                       <span className={`text-[14px] font-semibold flex-1 ${checked ? "text-[#1C1917]" : "text-[#1C1917]"}`}>
                         {role.name}
                       </span>
-                      {role.isProjectRole && (
-                        <span className="ios-badge ios-badge-orange !text-[10px] !px-1.5 !py-0">
-                          项目关联
-                        </span>
-                      )}
                       <input
                         type="checkbox"
                         className="hidden"
