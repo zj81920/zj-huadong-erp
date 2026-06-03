@@ -256,3 +256,59 @@ export function needsProjectIsolation(
   if (permissions.isGlobalVisible) return false;
   return (moduleKey === "projects" || moduleKey === "procurement");
 }
+
+// === 业务模块定义（供流程设置页面使用）===
+export interface BusinessModule {
+  type: string;       // 模块 key
+  name: string;       // 显示名称
+}
+
+export interface BusinessModuleGroup {
+  label: string;      // 分组名称（如"商务管理"）
+  modules: BusinessModule[];
+}
+
+// 流程设置页面需要的业务模块分组
+// 有审批流需求的模块列表
+export const BUSINESS_MODULE_GROUPS: BusinessModuleGroup[] = [
+  {
+    label: "商务管理",
+    modules: [
+      { type: "quotation", name: "商务报价" },
+      { type: "supplier", name: "供应商审批" },
+    ],
+  },
+  {
+    label: "项目管理",
+    modules: [
+      { type: "outsourcing", name: "外包任务" },
+    ],
+  },
+  {
+    label: "项目采购",
+    modules: [
+      { type: "purchase_request", name: "采购需求" },
+      { type: "delivery_receipt", name: "到货验收" },
+    ],
+  },
+  {
+    label: "合同管理",
+    modules: [
+      { type: "income_contract", name: "收入合同" },
+      { type: "expense_contract", name: "支出合同" },
+    ],
+  },
+  {
+    label: "财务管理 · 支出",
+    modules: [
+      { type: "non_contract_expense", name: "其他支付" },
+      { type: "payment_application", name: "合同支付" },
+      { type: "lending_out", name: "借出款" },
+      { type: "expense_report", name: "费用报销" },
+      { type: "salary_payment", name: "工资发放" },
+      { type: "borrowing_return_application", name: "借入资金归还" },
+    ],
+  },
+];
+
+export const BUSINESS_MODULES = BUSINESS_MODULE_GROUPS.flatMap((g) => g.modules);
