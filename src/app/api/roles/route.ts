@@ -33,8 +33,14 @@ export async function GET() {
       description: r.description,
       departmentId: r.departmentId,
       departmentName: r.department?.name || null,
-      modulePermissions: r.modulePermissions,
-      subModuleOverrides: r.subModuleOverrides,
+      modulePermissions:
+        typeof r.modulePermissions === "string"
+          ? JSON.parse(r.modulePermissions)
+          : r.modulePermissions,
+      subModuleOverrides:
+        typeof r.subModuleOverrides === "string"
+          ? JSON.parse(r.subModuleOverrides)
+          : r.subModuleOverrides,
       isGlobalVisible: r.isGlobalVisible,
       level: r.level,
       isActive: r.isActive,
