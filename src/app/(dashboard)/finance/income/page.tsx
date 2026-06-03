@@ -780,10 +780,12 @@ export default function FinanceIncomePage() {
             <h1>财务收入</h1>
             <p>管理合同收入、其他收入、股东出资与其他借入款</p>
           </div>
-          <button className="ios-btn ios-btn-primary" onClick={handlePrimaryAction}>
-            <Plus className="w-4 h-4" />
-            {getPrimaryBtnLabel()}
-          </button>
+          {activeTab !== "contractIncome" && (
+            <button className="ios-btn ios-btn-primary" onClick={handlePrimaryAction}>
+              <Plus className="w-4 h-4" />
+              {getPrimaryBtnLabel()}
+            </button>
+          )}
         </div>
       </div>
 
@@ -874,7 +876,7 @@ export default function FinanceIncomePage() {
                             onClick={() => fetchReceiptHistory(r)}
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            记录
+                            详情
                           </button>
                           {r.status !== "已收" && (
                             <button
@@ -1342,9 +1344,44 @@ export default function FinanceIncomePage() {
       <Modal
         isOpen={showReceiptHistory}
         onClose={() => { setShowReceiptHistory(false); setReceiptHistoryReceivable(null); }}
-        title={receiptHistoryReceivable ? `收款记录 - ${receiptHistoryReceivable.sourceContract?.contractNo || receiptHistoryReceivable.sourceId}` : "收款记录"}
+        title="详情"
         maxWidth="720px"
       >
+        {receiptHistoryReceivable && (() => {
+          const r = receiptHistoryReceivable;
+          const contract = r.sourceContract;
+          const totalAmount = contract ? parseFloat(contract.totalAmount) : 0;
+          return (
+            <div className="p-4 rounded-xl bg-[#FAFAF9] space-y-3 mb-4">
+              <div className="flex items-center gap-2 text-[13px]">
+                <FileText className="w-3.5 h-3.5 text-[#1C1917] shrink-0" />
+                <span className="font-mono font-semibold text-[#1C1917]">{contract?.contractNo || r.sourceId}</span>
+                <span className="text-[#A8A29E]">|</span>
+                <Building2 className="w-3.5 h-3.5 text-[#78716C] shrink-0" />
+                <span className="truncate">{contract?.customer?.name || "-"}</span>
+              </div>
+              <div className="grid grid-cols-4 gap-3 pt-2 border-t border-[#E7E5E4]">
+                <div className="text-center">
+                  <p className="text-[11px] text-[#78716C] mb-0.5">合同金额</p>
+                  <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(totalAmount)}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[11px] text-[#78716C] mb-0.5">已开票</p>
+                  <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(r.invoicedAmount)}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[11px] text-[#78716C] mb-0.5">已收</p>
+                  <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(r.paidAmount)}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[11px] text-[#78716C] mb-0.5">未收</p>
+                  <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(r.amount - r.paidAmount)}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {receiptHistoryLoading ? (
           <div className="flex items-center justify-center py-10">
             <div className="w-8 h-8 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />

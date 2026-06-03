@@ -101,6 +101,7 @@ const navSections: NavSection[] = [
       { label: "角色设置", href: "/settings/roles" },
       { label: "用户设置", href: "/settings/users" },
       { label: "流程设置", href: "/settings/approval-flow" },
+      { label: "往来信息管理", href: "/settings/counterparty" },
       { label: "审批调试", href: "/settings/approval-debug" },
       { label: "AI 模型配置", href: "/settings/ai-model" },
     ],
@@ -230,16 +231,16 @@ export default function Sidebar() {
             <div key={section.title} className="mb-1">
               <button
                 onClick={() => toggleSection(section.title)}
-                className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-semibold text-text-tertiary hover:text-text-primary transition-colors duration-150 rounded uppercase tracking-wider"
+                className="flex items-center justify-between w-full px-3 py-2 text-[13px] font-semibold text-text-primary hover:text-accent transition-colors duration-150 rounded"
               >
                 <div className="flex items-center gap-2">
                   {section.icon}
                   <span>{section.title}</span>
                 </div>
                 {isExpanded ? (
-                  <ChevronDown className="w-3.5 h-3.5" />
+                  <ChevronDown className="w-3.5 h-3.5 text-text-tertiary" />
                 ) : (
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight className="w-3.5 h-3.5 text-text-tertiary" />
                 )}
               </button>
 
@@ -258,7 +259,7 @@ export default function Sidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`nav-item w-full ${isActive(item.href) ? "active" : ""}`}
+                      className={`nav-item w-full text-[13px] ${isActive(item.href) ? "active" : ""}`}
                     >
                       <span className="ml-4">{item.label}</span>
                     </Link>

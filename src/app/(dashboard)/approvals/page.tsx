@@ -187,6 +187,8 @@ function NonContractExpenseDetailCard({ data }: { data: any }) {
     { label: "金额", value: data?.amount ? `¥${Number(data.amount).toLocaleString()}` : "-" },
     { label: "交易日期", value: data?.transactionDate ? formatDate(data.transactionDate) : "-" },
     { label: "对方单位", value: data?.counterparty },
+    { label: "开户行", value: data?.counterpartyBankName || "-" },
+    { label: "银行账号", value: data?.counterpartyBankAccount ? `****${String(data.counterpartyBankAccount).slice(-4)}` : "-" },
   ];
   return <DetailGrid fields={fields} />;
 }

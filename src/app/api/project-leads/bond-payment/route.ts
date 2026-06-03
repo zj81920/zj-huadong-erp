@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未登录" }, { status: 403 });
     }
 
-    const { leadId, projectSourceId, borrowerName, amount, description } =
+    const { leadId, projectSourceId, borrowerName, amount, description, bankName, bankAccount } =
       await request.json();
 
     if (!leadId || !projectSourceId) {
@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
         lendingType: "投标保证金",
         projectSourceId,
         borrowerName: borrowerName || "",
+        borrowerBankName: bankName?.trim() || null,
+        borrowerBankAccount: bankAccount?.trim() || null,
         amount: parsedAmount,
         returnedAmount: 0,
         remainingAmount: parsedAmount,
@@ -47,6 +49,25 @@ export async function POST(request: NextRequest) {
         status: "审批中",
       },
     });
+
+    if (borrowerName && (bankName || bankAccount)) {
+      const existingCounterparty = await prisma.counterpartyInfo.findFirst({
+        where: {
+          name: borrowerName.trim(),
+          bankName: bankName?.trim() || null,
+          bankAccount: bankAccount?.trim() || null,
+        },
+      });
+      if (!existingCounterparty) {
+        await prisma.counterpartyInfo.create({
+          data: {
+            name: borrowerName.trim(),
+            bankName: bankName?.trim() || null,
+            bankAccount: bankAccount?.trim() || null,
+          },
+        });
+      }
+    }
 
     try {
       await startApprovalFlow({

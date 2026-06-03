@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import CounterpartySearch from "@/components/CounterpartySearch";
 import {
   Plus,
   Pencil,
@@ -148,6 +149,11 @@ export default function BiddingSection({
 
   const [showBondModal, setShowBondModal] = useState(false);
   const [bondSaving, setBondSaving] = useState(false);
+  const [bondForm, setBondForm] = useState({
+    counterpartyName: "",
+    bankName: "",
+    bankAccount: "",
+  });
 
   const [showBidModal, setShowBidModal] = useState(false);
   const [editingBid, setEditingBid] = useState<Bidding | null>(null);
@@ -281,9 +287,11 @@ export default function BiddingSection({
         body: JSON.stringify({
           leadId: lead.id,
           projectSourceId: lead.projectSourceId,
-          borrowerName: lead.customer?.name || "",
+          borrowerName: bondForm.counterpartyName || lead.customer?.name || "",
           amount: lead.bondAmount ? Number(lead.bondAmount) : 0,
           description: `${lead.projectName} - 投标保证金`,
+          bankName: bondForm.bankName || null,
+          bankAccount: bondForm.bankAccount || null,
         }),
       });
       const json = await res.json();
@@ -486,7 +494,7 @@ export default function BiddingSection({
                   lead.bondPaymentStatus === "未付" && (
                     <button
                       className="mt-2 ios-btn ios-btn-primary ios-btn-sm"
-                      onClick={() => setShowBondModal(true)}
+                      onClick={() => { setBondForm({ counterpartyName: lead.customer?.name || "", bankName: "", bankAccount: "" }); setShowBondModal(true); }}
                     >
                       <Send className="w-3 h-3" />
                       发起保证金支付
@@ -831,6 +839,35 @@ export default function BiddingSection({
             <p className="text-[20px] font-bold text-[#1C1917]">
               {formatMoney(lead.bondAmount)}
             </p>
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">交易对方名称 <span className="text-[#78716C]">*</span></label>
+            <CounterpartySearch
+              value={bondForm.counterpartyName}
+              onChange={(name) => setBondForm((p) => ({ ...p, counterpartyName: name }))}
+              onSelect={(bank) => setBondForm((p) => ({ ...p, bankName: bank.bankName, bankAccount: bank.bankAccount }))}
+              placeholder="请输入收款方名称"
+            />
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行</label>
+            <input
+              type="text"
+              className="ios-input"
+              placeholder="请输入开户行"
+              value={bondForm.bankName}
+              onChange={(e) => setBondForm((p) => ({ ...p, bankName: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">银行账号</label>
+            <input
+              type="text"
+              className="ios-input"
+              placeholder="请输入银行账号"
+              value={bondForm.bankAccount}
+              onChange={(e) => setBondForm((p) => ({ ...p, bankAccount: e.target.value }))}
+            />
           </div>
           <p className="text-[13px] text-[#78716C]">
             点击确认后将自动创建借出款记录并提交审批流程。审批通过后保证金状态将自动更新为「已付」；如被驳回则显示「已退回」，可重新发起。

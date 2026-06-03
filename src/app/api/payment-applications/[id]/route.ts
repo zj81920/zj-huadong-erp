@@ -52,6 +52,7 @@ export async function PUT(
     if (body.paymentReason !== undefined) updateData.paymentReason = body.paymentReason ?? null;
     if (body.paymentMethod !== undefined) updateData.paymentMethod = body.paymentMethod ?? null;
     if (body.bankAccount !== undefined) updateData.bankAccount = body.bankAccount ?? null;
+    if (body.bankName !== undefined) updateData.bankName = body.bankName ?? null;
     if (body.remark !== undefined) updateData.remark = body.remark ?? null;
     if (body.approvalInstanceId !== undefined) updateData.approvalInstanceId = body.approvalInstanceId ?? null;
 
