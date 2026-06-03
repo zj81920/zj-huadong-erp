@@ -1,5 +1,27 @@
 import prisma from "./prisma";
 
+const BUSINESS_TYPE_LABELS: Record<string, string> = {
+  quotation: "商务报价",
+  supplier: "供应商审批",
+  outsourcing: "外包任务",
+  purchase_request: "采购需求",
+  delivery_receipt: "到货验收",
+  income_contract: "收入合同",
+  expense_contract: "支出合同",
+  non_contract_income: "非合同收入",
+  non_contract_expense: "其他支付",
+  payment_application: "合同支付",
+  expense_report: "费用报销",
+  other_borrowing: "其他借入款",
+  lending_out: "借出款",
+  salary_payment: "工资发放",
+  borrowing_return_application: "借入资金归还",
+};
+
+function getBusinessTypeLabel(type: string): string {
+  return BUSINESS_TYPE_LABELS[type] || type;
+}
+
 interface SplitStage {
   name: string;
   amount: number | string;
@@ -372,6 +394,23 @@ export async function processApprovalAction(params: {
     // 更新业务单据状态为"已归档"并保存扫描件
     await updateBusinessStatus(instance.businessType, instance.businessId, "已归档", archivedUrl);
 
+    // 通知发起人审批已完成
+    const archiveInitiator = await prisma.approvalAction.findFirst({
+      where: { instanceId, action: "initiate" },
+      select: { approverId: true },
+    });
+    if (archiveInitiator) {
+      await prisma.notification.create({
+        data: {
+          userId: archiveInitiator.approverId,
+          title: `${getBusinessTypeLabel(instance.businessType)} 审批已完成`,
+          description: "您的审批申请已全部通过并归档",
+          type: "approval_completed",
+          relatedId: instanceId,
+        },
+      });
+    }
+
     return { status: "已批准", currentNode: currentNode.nodeOrder };
   }
 
@@ -422,6 +461,23 @@ export async function processApprovalAction(params: {
     });
 
     await updateBusinessStatus(instance.businessType, instance.businessId, "已驳回");
+
+    // 通知发起人审批被驳回
+    const rejectInitiator = await prisma.approvalAction.findFirst({
+      where: { instanceId, action: "initiate" },
+      select: { approverId: true },
+    });
+    if (rejectInitiator) {
+      await prisma.notification.create({
+        data: {
+          userId: rejectInitiator.approverId,
+          title: `${getBusinessTypeLabel(instance.businessType)} 审批被驳回`,
+          description: comment ? `原因：${comment}` : "您的审批申请已被驳回",
+          type: "approval_rejected",
+          relatedId: instanceId,
+        },
+      });
+    }
 
     return { status: "已驳回", currentNode: currentNode.nodeOrder };
   }
@@ -478,6 +534,19 @@ export async function processApprovalAction(params: {
       return { nextApproverIds };
     });
 
+    // 通知下一节点审批人
+    if (result.nextApproverIds && result.nextApproverIds.length > 0) {
+      await prisma.notification.createMany({
+        data: result.nextApproverIds.map((approverId: string) => ({
+          userId: approverId,
+          title: `${getBusinessTypeLabel(instance.businessType)} 待审批`,
+          description: `${getBusinessTypeLabel(instance.businessType)} 流程已到达您这里，请及时处理`,
+          type: "approval_pending",
+          relatedId: instanceId,
+        })),
+      });
+    }
+
     return {
       status: "待归档",
       currentNode: nextNode.nodeOrder,
@@ -500,6 +569,19 @@ export async function processApprovalAction(params: {
       return { nextApproverIds };
     });
 
+    // 通知下一节点审批人
+    if (result.nextApproverIds && result.nextApproverIds.length > 0) {
+      await prisma.notification.createMany({
+        data: result.nextApproverIds.map((approverId: string) => ({
+          userId: approverId,
+          title: `${getBusinessTypeLabel(instance.businessType)} 待审批`,
+          description: `${getBusinessTypeLabel(instance.businessType)} 流程已到达您这里，请及时处理`,
+          type: "approval_pending",
+          relatedId: instanceId,
+        })),
+      });
+    }
+
     return {
       status: "待支付",
       currentNode: nextNode.nodeOrder,
@@ -519,6 +601,19 @@ export async function processApprovalAction(params: {
       status: "审批中",
     },
   });
+
+  // 通知下一节点审批人
+  if (nextApproverIds && nextApproverIds.length > 0) {
+    await prisma.notification.createMany({
+      data: nextApproverIds.map((approverId) => ({
+        userId: approverId,
+        title: `${getBusinessTypeLabel(instance.businessType)} 待审批`,
+        description: `${getBusinessTypeLabel(instance.businessType)} 流程已到达您这里，请及时处理`,
+        type: "approval_pending",
+        relatedId: instanceId,
+      })),
+    });
+  }
 
   return {
     status: "审批中",
@@ -868,7 +963,13 @@ export async function getPendingApprovals(userId: string) {
   // 获取所有审批中/待归档的实例
   const instances = await prisma.approvalInstance.findMany({
     where: { status: { in: ["审批中", "待归档"] } },
-    include: { actions: true },
+    include: {
+      actions: {
+        include: {
+          approver: { select: { realName: true } },
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -901,6 +1002,9 @@ export async function getPendingApprovals(userId: string) {
     const nodeRoles = flowNode.approverRole.split(",").map((r) => r.trim()).filter(Boolean);
     const hasMatch = nodeRoles.some((r) => roleCodes.includes(r));
     if (hasMatch) {
+      // 获取发起人姓名
+      const initiateAction = inst.actions.find((a) => a.action === "initiate");
+      const initiatorName = initiateAction?.approver?.realName || "未知";
       pending.push({
         id: inst.id,
         businessType: inst.businessType,
@@ -910,6 +1014,7 @@ export async function getPendingApprovals(userId: string) {
         nodeName: flowNode.nodeName,
         nodeType: flowNode.nodeType || "approval",
         createdAt: inst.createdAt,
+        initiatorName,
       });
     }
   }

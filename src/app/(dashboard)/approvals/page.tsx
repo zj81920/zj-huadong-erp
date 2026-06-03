@@ -59,6 +59,30 @@ interface PendingApproval {
   nodeName: string;
   nodeType: string;
   createdAt: string;
+  initiatorName: string;
+}
+
+/** 根据等待时间计算优先级标签 */
+function getPriorityInfo(createdAt: string): { label: string; className: string } {
+  const diff = Date.now() - new Date(createdAt).getTime();
+  const hours = Math.floor(diff / 3600000);
+  if (hours >= 48) {
+    return { label: "紧急", className: "ios-badge ios-badge-red" };
+  }
+  if (hours >= 24) {
+    return { label: "重要", className: "ios-badge ios-badge-yellow" };
+  }
+  return { label: "普通", className: "ios-badge ios-badge-gray" };
+}
+
+interface ApprovalInstanceItem {
+  id: string;
+  businessType: string;
+  businessId: string;
+  status: string;
+  currentNode: number;
+  flowLevel: string;
+  createdAt: string;
 }
 
 interface ApprovalDetail {
@@ -326,6 +350,11 @@ export default function ApprovalsPage() {
   const [pendingList, setPendingList] = useState<PendingApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState<"pending" | "processed" | "initiated">("pending");
+  const [processedList, setProcessedList] = useState<ApprovalInstanceItem[]>([]);
+  const [initiatedList, setInitiatedList] = useState<ApprovalInstanceItem[]>([]);
+  const [processedLoading, setProcessedLoading] = useState(false);
+  const [initiatedLoading, setInitiatedLoading] = useState(false);
 
   const [selectedApproval, setSelectedApproval] = useState<PendingApproval | null>(null);
   const [approvalDetail, setApprovalDetail] = useState<ApprovalDetail | null>(null);
@@ -353,6 +382,33 @@ export default function ApprovalsPage() {
     }
     return [];
   };
+
+  const fetchProcessed = async () => {
+    setProcessedLoading(true);
+    try {
+      const res = await fetch("/api/approval-instances?type=processed");
+      if (res.ok) {
+        const json = await res.json();
+        setProcessedList(json.data || []);
+      }
+    } catch {} finally { setProcessedLoading(false); }
+  };
+
+  const fetchInitiated = async () => {
+    setInitiatedLoading(true);
+    try {
+      const res = await fetch("/api/approval-instances?type=initiated");
+      if (res.ok) {
+        const json = await res.json();
+        setInitiatedList(json.data || []);
+      }
+    } catch {} finally { setInitiatedLoading(false); }
+  };
+
+  useEffect(() => {
+    if (activeTab === "processed" && processedList.length === 0) fetchProcessed();
+    if (activeTab === "initiated" && initiatedList.length === 0) fetchInitiated();
+  }, [activeTab]);
 
   useEffect(() => {
     fetchPending();
@@ -414,10 +470,24 @@ export default function ApprovalsPage() {
   return (
     <>
       <div className="page-header">
-        <h1>待审批</h1>
-        <p>您需要处理的审批事项</p>
+        <h1>{activeTab === "pending" ? "待审批" : activeTab === "processed" ? "已处理" : "已发起"}</h1>
+        <p>{activeTab === "pending" ? "您需要处理的审批事项" : activeTab === "processed" ? "您已处理过的审批记录" : "您发起的审批流程"}</p>
       </div>
 
+      <div className="flex items-center gap-1 mb-4 border-b border-gray-200">
+        <button onClick={() => setActiveTab("pending")} className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${activeTab === "pending" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          <Clock className="w-4 h-4 inline mr-1.5 -mt-0.5" />待处理
+          {pendingList.length > 0 && <span className="ml-1.5 bg-blue-100 text-blue-600 text-[11px] px-1.5 py-0.5 rounded-full">{pendingList.length}</span>}
+        </button>
+        <button onClick={() => setActiveTab("processed")} className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${activeTab === "processed" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          <CheckCircle className="w-4 h-4 inline mr-1.5 -mt-0.5" />已处理
+        </button>
+        <button onClick={() => setActiveTab("initiated")} className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${activeTab === "initiated" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          <Send className="w-4 h-4 inline mr-1.5 -mt-0.5" />已发起
+        </button>
+      </div>
+
+      {activeTab === "pending" && (
       <div className="bento-card-static">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -471,13 +541,17 @@ export default function ApprovalsPage() {
                 <tr>
                   <th>业务类型</th>
                   <th>当前节点</th>
+                  <th>提交人</th>
+                  <th>优先级</th>
                   <th>节点类型</th>
                   <th>提交时间</th>
                   <th>操作</th>
                 </tr>
               </thead>
               <tbody>
-                {pendingList.map((item) => (
+                {pendingList.map((item) => {
+                  const priority = getPriorityInfo(item.createdAt);
+                  return (
                   <tr key={item.id}>
                     <td>
                       <div className="flex items-center gap-2">
@@ -493,6 +567,12 @@ export default function ApprovalsPage() {
                       <span className="text-[#1C1917]">{item.nodeName}</span>
                     </td>
                     <td>
+                      <span className="text-[#1C1917] text-[13px]">{item.initiatorName}</span>
+                    </td>
+                    <td>
+                      <span className={priority.className}>{priority.label}</span>
+                    </td>
+                    <td>
                       {item.nodeType === "archive" ? (
                         <span className="ios-badge ios-badge-purple">归档</span>
                       ) : item.nodeType === "payment" ? (
@@ -506,7 +586,7 @@ export default function ApprovalsPage() {
                     </td>
                     <td>
                       <button
-                        className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
+                        className="ios-btn !bg-[#2563EB] !text-white ios-btn-sm"
                         onClick={() => openApprovalDetail(item)}
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -514,12 +594,68 @@ export default function ApprovalsPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
+      )}
+      {activeTab === "processed" && (
+        <div className="bento-card-static">
+          {processedLoading ? (
+            <div className="flex items-center justify-center py-16"><div className="w-10 h-10 border-2 border-[#78716C] border-t-transparent rounded-full animate-spin" /></div>
+          ) : processedList.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <CheckCircle className="w-8 h-8 text-[#78716C] mb-3" />
+              <p className="text-[14px] font-medium text-[#1C1917]">暂无已处理事项</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="ios-table">
+                <thead><tr><th>业务类型</th><th>状态</th><th>提交时间</th></tr></thead>
+                <tbody>
+                  {processedList.map((item) => (
+                    <tr key={item.id}>
+                      <td><span className="font-semibold">{BUSINESS_TYPE_LABELS[item.businessType] || item.businessType}</span></td>
+                      <td><span className="ios-badge ios-badge-green">{item.status}</span></td>
+                      <td className="text-[#78716C] text-[13px] whitespace-nowrap">{formatDate(item.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+      {activeTab === "initiated" && (
+        <div className="bento-card-static">
+          {initiatedLoading ? (
+            <div className="flex items-center justify-center py-16"><div className="w-10 h-10 border-2 border-[#78716C] border-t-transparent rounded-full animate-spin" /></div>
+          ) : initiatedList.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <Send className="w-8 h-8 text-[#78716C] mb-3" />
+              <p className="text-[14px] font-medium text-[#1C1917]">暂无已发起事项</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="ios-table">
+                <thead><tr><th>业务类型</th><th>状态</th><th>提交时间</th></tr></thead>
+                <tbody>
+                  {initiatedList.map((item) => (
+                    <tr key={item.id}>
+                      <td><span className="font-semibold">{BUSINESS_TYPE_LABELS[item.businessType] || item.businessType}</span></td>
+                      <td><span className={`ios-badge ${item.status === "审批中" ? "ios-badge-blue" : item.status === "已批准" ? "ios-badge-green" : "ios-badge-red"}`}>{item.status}</span></td>
+                      <td className="text-[#78716C] text-[13px] whitespace-nowrap">{formatDate(item.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       <Modal
         isOpen={!!selectedApproval}

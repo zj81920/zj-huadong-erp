@@ -771,7 +771,7 @@ export function ApprovalActionButton({
           <button
             onClick={() => openConfirm("approve")}
             disabled={loading}
-            className="ios-btn !bg-[#78716C] !text-white text-sm hover:!bg-[#2DB84E] disabled:opacity-50 flex items-center gap-1"
+            className="ios-btn !bg-[#2DB84E] !text-white text-sm hover:!bg-[#26A044] disabled:opacity-50 flex items-center gap-1"
           >
             <CheckCircle className="w-3.5 h-3.5" />
             {loading ? "处理中..." : "通过"}
@@ -779,7 +779,7 @@ export function ApprovalActionButton({
           <button
             onClick={() => openConfirm("reject")}
             disabled={loading}
-            className="ios-btn !bg-[#78716C] !text-white text-sm hover:!bg-[#E0342B] disabled:opacity-50 flex items-center gap-1"
+            className="ios-btn !bg-[#E0342B] !text-white text-sm hover:!bg-[#C02D25] disabled:opacity-50 flex items-center gap-1"
           >
             <XCircle className="w-3.5 h-3.5" />
             驳回
@@ -857,8 +857,8 @@ export function ApprovalActionButton({
                 <button
                   className={`ios-btn text-white text-sm flex items-center gap-1 ${
                     confirmAction === "approve"
-                      ? "!bg-[#78716C] hover:!bg-[#2DB84E]"
-                      : "!bg-[#78716C] hover:!bg-[#E0342B]"
+                      ? "!bg-[#2DB84E] hover:!bg-[#26A044]"
+                      : "!bg-[#E0342B] hover:!bg-[#C02D25]"
                   }`}
                   onClick={handleConfirmAction}
                 >
@@ -936,7 +936,7 @@ export function ApprovalActionButton({
                   取消
                 </button>
                 <button
-                  className="ios-btn !bg-[#78716C] !text-white text-sm hover:!bg-[#2DB84E] disabled:opacity-50 flex items-center gap-1"
+                  className="ios-btn !bg-[#2DB84E] !text-white text-sm hover:!bg-[#26A044] disabled:opacity-50 flex items-center gap-1"
                   disabled={loading || !selectedBankAccountId}
                   onClick={handleFinanceApprove}
                 >

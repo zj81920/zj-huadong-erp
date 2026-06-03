@@ -10,6 +10,7 @@ export interface CurrentUser {
   phone: string | null;
   email: string | null;
   department: string | null;
+  avatarUrl: string | null;
   roles: { id: string; code: string; name: string; isProjectRole: boolean; accessibleModules: string; isGlobalVisible: boolean }[];
 }
 
@@ -52,6 +53,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       phone: user.phone,
       email: user.email,
       department: user.department,
+      avatarUrl: user.avatarUrl,
       roles: user.userRoles.map((ur) => ({
         id: ur.role.id,
         code: ur.role.code,

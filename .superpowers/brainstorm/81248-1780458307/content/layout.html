@@ -1,0 +1,101 @@
+<h2>当前界面布局（Dashboard）</h2>
+<p class="subtitle">侧边栏 + 主内容区，无顶栏、无通知、待办仅审批</p>
+
+<div class="mockup">
+  <div class="mockup-header">当前 Dashboard 布局</div>
+  <div class="mockup-body">
+    <div style="display:flex;min-height:300px;border:1px solid #e0e0e0;border-radius:4px;">
+      <!-- Sidebar -->
+      <div style="width:180px;background:#1a1a2e;color:white;padding:12px;display:flex;flex-direction:column;">
+        <div style="font-weight:bold;font-size:14px;padding:8px 0;border-bottom:1px solid #333;margin-bottom:8px;">华东工程 ERP</div>
+        <div style="font-size:11px;padding:4px 0;color:#aaa;">📊 总览</div>
+        <div style="font-size:11px;padding:4px 0;color:#4fc3f7;">📋 待审批 ← 当前</div>
+        <div style="font-size:11px;padding:4px 0;color:#aaa;">🏗️ 项目管理</div>
+        <div style="font-size:11px;padding:4px 0;color:#aaa;">📦 项目采购</div>
+        <div style="font-size:11px;padding:4px 0;color:#aaa;">📄 合同管理</div>
+        <div style="font-size:11px;padding:4px 0;color:#aaa;">💰 财务管理</div>
+        <div style="font-size:11px;padding:4px 0;color:#aaa;">👥 人事行政</div>
+        <div style="font-size:11px;padding:4px 0;color:#aaa;">⚙️ 系统设置</div>
+        <div style="margin-top:auto;border-top:1px solid #333;padding-top:8px;">
+          <div style="font-size:11px;color:#aaa;">👤 张三</div>
+          <div style="font-size:10px;color:#888;">技术部</div>
+          <div style="font-size:10px;color:#888;margin-top:4px;">🔑 修改密码</div>
+          <div style="font-size:10px;color:#888;">🚪 退出登录</div>
+        </div>
+      </div>
+      <!-- Main Content -->
+      <div style="flex:1;padding:16px;background:#f5f5f5;">
+        <div style="font-size:16px;font-weight:bold;color:#333;margin-bottom:16px;">待审批</div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <span style="background:#e3f2fd;padding:4px 12px;border-radius:12px;font-size:12px;color:#1976d2;">待处理</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="padding:12px;background:white;border-radius:6px;border:1px solid #e0e0e0;font-size:12px;">
+            <span style="color:#1976d2;">采购申请 #2024-001</span>
+            <span style="float:right;color:#f57c00;">待审批</span>
+          </div>
+          <div style="padding:12px;background:white;border-radius:6px;border:1px solid #e0e0e0;font-size:12px;">
+            <span style="color:#1976d2;">费用报销 #2024-002</span>
+            <span style="float:right;color:#f57c00;">待审批</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 style="margin-top:32px;">优化后布局（方案 A：顶部新增 Header）</h2>
+<p class="subtitle">建议方案：增加顶栏放置通知 + 用户头像菜单，取代侧边栏底部用户区域</p>
+
+<div class="mockup">
+  <div class="mockup-header">优化后 Dashboard 布局</div>
+  <div class="mockup-body">
+    <div style="display:flex;flex-direction:column;min-height:360px;border:1px solid #e0e0e0;border-radius:4px;">
+      <!-- Top Header Bar (NEW) -->
+      <div style="display:flex;align-items:center;height:48px;background:#1a1a2e;color:white;padding:0 16px;">
+        <div style="font-weight:bold;font-size:14px;">华东工程 ERP</div>
+        <div style="flex:1;"></div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="position:relative;cursor:pointer;">
+            🔔
+            <span style="position:absolute;top:-4px;right:-6px;background:#f44336;color:white;font-size:9px;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;">3</span>
+          </div>
+          <div style="cursor:pointer;display:flex;align-items:center;gap:4px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#4fc3f7;display:flex;align-items:center;justify-content:center;font-size:12px;color:white;">张</div>
+            <span style="font-size:12px;">张三 ▼</span>
+          </div>
+        </div>
+      </div>
+      <!-- Body -->
+      <div style="display:flex;flex:1;">
+        <!-- Sidebar (simplified) -->
+        <div style="width:160px;background:#f8f9fa;padding:12px;border-right:1px solid #e0e0e0;">
+          <div style="font-size:11px;padding:6px 0;color:#333;">📊 总览</div>
+          <div style="font-size:11px;padding:6px 0;color:#1976d2;font-weight:bold;">📋 待审批</div>
+          <div style="font-size:11px;padding:6px 0;color:#333;">🏗️ 项目管理</div>
+          <div style="font-size:11px;padding:6px 0;color:#333;">📦 项目采购</div>
+        </div>
+        <!-- Content -->
+        <div style="flex:1;padding:16px;background:#f5f5f5;">
+          <div style="font-size:16px;font-weight:bold;color:#333;margin-bottom:16px;">待审批</div>
+          <!-- Tabs (NEW) -->
+          <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid #e0e0e0;padding-bottom:8px;">
+            <span style="background:#1976d2;color:white;padding:4px 14px;border-radius:4px;font-size:12px;cursor:pointer;">待处理</span>
+            <span style="background:#f0f0f0;color:#666;padding:4px 14px;border-radius:4px;font-size:12px;cursor:pointer;">已处理</span>
+            <span style="background:#f0f0f0;color:#666;padding:4px 14px;border-radius:4px;font-size:12px;cursor:pointer;">已发起</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="padding:12px;background:white;border-radius:6px;border:1px solid #e0e0e0;font-size:12px;">
+              <span style="color:#1976d2;">采购申请 #2024-001</span>
+              <span style="float:right;color:#f57c00;">待审批</span>
+            </div>
+            <div style="padding:12px;background:white;border-radius:6px;border:1px solid #e0e0e0;font-size:12px;">
+              <span style="color:#1976d2;">费用报销 #2024-002</span>
+              <span style="float:right;color:#f57c00;">待审批</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

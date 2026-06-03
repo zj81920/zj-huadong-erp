@@ -1,0 +1,108 @@
+<h2>角色列表页 — 改造方案</h2>
+<p class="subtitle">当前：表格 + 大模态框编辑 → 改为：列表 + 跳转详情页分 Tab 编辑</p>
+
+<div class="mockup">
+  <div class="mockup-header">角色列表（改造后）</div>
+  <div class="mockup-body" style="padding:20px;text-align:left">
+    <!-- 页面头部 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <span style="font-size:18px;font-weight:700">角色设置</span>
+        <span style="font-size:13px;color:#78716C;margin-left:8px">管理审批流程中的角色及其模块访问权限</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="mock-button" style="font-size:13px;padding:6px 16px">+ 新增角色</button>
+      </div>
+    </div>
+
+    <!-- 搜索栏 -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <input class="mock-input" placeholder="搜索角色名称..." style="max-width:280px;font-size:13px;padding:8px 12px">
+      <span style="font-size:13px;color:#78716C">共 <strong>11</strong> 个角色</span>
+    </div>
+
+    <!-- 角色列表（卡片模式） -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+      <!-- 角色卡片 1 -->
+      <div style="border:1px solid #E7E5E4;border-radius:12px;padding:16px;background:white">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#1C1917/10;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">01</div>
+            <div>
+              <span style="font-size:15px;font-weight:600">部门负责人</span>
+              <span style="font-size:11px;color:#78716C;display:block">工程部 · 排序 1</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <button style="border:none;background:#f5f5f4;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">编辑</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;background:#FAFAF9;border-radius:4px;padding:2px 8px;color:#78716C">商务管理 ③</span>
+          <span style="font-size:11px;background:#FAFAF9;border-radius:4px;padding:2px 8px;color:#78716C">项目管理 ④</span>
+          <span style="font-size:11px;background:#FAFAF9;border-radius:4px;padding:2px 8px;color:#78716C">+3 模块</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #F5F5F4">
+          <span style="font-size:12px;color:#78716C"><strong>3</strong> 位用户</span>
+          <span style="font-size:12px;color:#78716C">2026-06-01</span>
+        </div>
+      </div>
+
+      <!-- 角色卡片 2 - 项目关联角色 -->
+      <div style="border:1px solid #E7E5E4;border-radius:12px;padding:16px;background:white;border-left:3px solid #1C1917">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#1C1917/10;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">02</div>
+            <div>
+              <span style="font-size:15px;font-weight:600">项目经理</span>
+              <span style="display:inline-block;font-size:10px;background:#1C1917;color:white;border-radius:4px;padding:1px 6px;margin-top:2px">项目关联</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <button style="border:none;background:#f5f5f4;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">编辑</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;background:#FAFAF9;border-radius:4px;padding:2px 8px;color:#78716C">商务管理 ①</span>
+          <span style="font-size:11px;background:#FAFAF9;border-radius:4px;padding:2px 8px;color:#78716C">项目管理 ④</span>
+          <span style="font-size:11px;background:#FAFAF9;border-radius:4px;padding:2px 8px;color:#78716C">项目采购 ③</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #F5F5F4">
+          <span style="font-size:12px;color:#78716C"><strong>5</strong> 位用户</span>
+          <span style="font-size:12px;color:#78716C">2026-06-02</span>
+        </div>
+      </div>
+
+      <!-- 角色卡片 3 - admin系统内定 -->
+      <div style="border:1px solid #E7E5E4;border-radius:12px;padding:16px;background:#FAFAF9">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#E7E5E4;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">—</div>
+            <div>
+              <span style="font-size:15px;font-weight:600">系统管理员</span>
+              <span style="display:inline-block;font-size:10px;background:#78716C;color:white;border-radius:4px;padding:1px 6px;margin-top:2px">系统内定</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;background:#E7E5E4;border-radius:4px;padding:2px 8px;color:#78716C">全部模块</span>
+          <span style="font-size:11px;background:#E7E5E4;border-radius:4px;padding:2px 8px;color:#78716C">全局可见</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #E7E5E4">
+          <span style="font-size:12px;color:#78716C"><strong>1</strong> 位用户</span>
+          <span style="font-size:12px;color:#78716C">系统</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:16px">
+  <h3>改动要点</h3>
+  <ul>
+    <li>表格 → <strong>卡片布局</strong>，每张卡片展示角色核心信息（名称、部门、权限标签、用户数）</li>
+    <li>项目关联角色用<strong>左侧色条</strong>标记，一眼区分</li>
+    <li>系统内定角色（admin）用<strong>灰色背景</strong>表示不可编辑</li>
+    <li>点击「编辑」→ <strong>跳转到详情页</strong>（分 Tab），替代当前的大模态框</li>
+  </ul>
+</div>

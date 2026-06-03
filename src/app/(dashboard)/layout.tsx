@@ -1,6 +1,7 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
 import AISearchBar from "@/components/AISearchBar";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -24,13 +25,16 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-bg-primary">
-      <Sidebar />
-      <main className="ml-[240px] min-h-screen p-6">
-        <div className="mb-6 -mt-2">
-          <AISearchBar />
-        </div>
-        {children}
-      </main>
+      <Header />
+      <div className="flex pt-14">
+        <Sidebar />
+        <main className="ml-[240px] flex-1 min-h-[calc(100vh-56px)] p-6">
+          <div className="mb-6 -mt-2">
+            <AISearchBar />
+          </div>
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

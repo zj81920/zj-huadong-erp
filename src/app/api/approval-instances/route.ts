@@ -56,6 +56,45 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: pending });
     }
 
+    if (type === "processed") {
+      const { prisma } = await import("@/lib/prisma");
+      const actionInstances = await prisma.approvalAction.findMany({
+        where: {
+          approverId: user.id,
+          action: { in: ["approve", "reject", "archive", "payment"] },
+        },
+        select: { instanceId: true },
+        distinct: ["instanceId"],
+        orderBy: { actedAt: "desc" },
+        take: 50,
+      });
+      const instanceIds = actionInstances.map((a) => a.instanceId);
+      const instances = instanceIds.length > 0
+        ? await prisma.approvalInstance.findMany({
+            where: { id: { in: instanceIds } },
+            orderBy: { createdAt: "desc" },
+          })
+        : [];
+      return NextResponse.json({ data: instances });
+    }
+
+    if (type === "initiated") {
+      const { prisma } = await import("@/lib/prisma");
+      const instances = await prisma.approvalInstance.findMany({
+        where: {
+          actions: {
+            some: {
+              approverId: user.id,
+              action: "initiate",
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      });
+      return NextResponse.json({ data: instances });
+    }
+
     if (type === "my-initiated") {
       const { prisma } = await import("@/lib/prisma");
       const instances = await prisma.approvalInstance.findMany({

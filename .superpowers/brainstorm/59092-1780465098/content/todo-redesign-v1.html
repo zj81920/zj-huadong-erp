@@ -1,0 +1,93 @@
+<h2>待办列表优化方案</h2>
+<p class="subtitle">增加"提交人"和"优先级标签"</p>
+
+<div class="mockup" style="max-width:560px">
+  <div class="mockup-header">优化后的待办列表（待处理标签页）</div>
+  <div class="mockup-body" style="padding:0;font-size:13px">
+
+    <!-- 高优先级 -->
+    <div style="border-bottom:1px solid #e5e5e5;padding:12px 14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-weight:600;color:#1C1917">商务报价 - 项目经理审批</span>
+            <span style="background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:500">紧急</span>
+          </div>
+          <div style="color:#78716C;font-size:12px">
+            <span>提交人：张三</span>
+            <span style="margin:0 6px">·</span>
+            <span>2026-06-03 14:30</span>
+          </div>
+        </div>
+        <button style="background:#2563EB;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap">处理审批</button>
+      </div>
+    </div>
+
+    <!-- 中优先级 -->
+    <div style="border-bottom:1px solid #e5e5e5;padding:12px 14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-weight:600;color:#1C1917">费用报销 - 财务审批</span>
+            <span style="background:#FFFBEB;color:#D97706;border:1px solid #FDE68A;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:500">重要</span>
+          </div>
+          <div style="color:#78716C;font-size:12px">
+            <span>提交人：李四</span>
+            <span style="margin:0 6px">·</span>
+            <span>2026-06-02 09:15</span>
+          </div>
+        </div>
+        <button style="background:#2563EB;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap">处理审批</button>
+      </div>
+    </div>
+
+    <!-- 普通优先级 -->
+    <div style="border-bottom:1px solid #e5e5e5;padding:12px 14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-weight:600;color:#1C1917">供应商审批 - 采购经理审批</span>
+            <span style="background:#F5F5F4;color:#78716C;border:1px solid #E7E5E4;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:500">普通</span>
+          </div>
+          <div style="color:#78716C;font-size:12px">
+            <span>提交人：王五</span>
+            <span style="margin:0 6px">·</span>
+            <span>2026-06-01 16:45</span>
+          </div>
+        </div>
+        <button style="background:#2563EB;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap">处理审批</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" style="margin-top:16px">
+  <h3>关于优先级怎么确定？</h3>
+  <p>优先级标签可以基于不同维度，你觉得哪种方式合理？</p>
+  <div class="options">
+    <div class="option" data-choice="a" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>按金额大小</h3>
+        <p>涉及金额越大的业务自动标记为"紧急"或"重要"，比如合同支付、收入合同等大额单据</p>
+      </div>
+    </div>
+    <div class="option" data-choice="b" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>按等待天数</h3>
+        <p>超过24小时未处理标"重要"，超过48小时标"紧急"，推动用户及时处理</p>
+      </div>
+    </div>
+    <div class="option" data-choice="c" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>按业务类型预设</h3>
+        <p>由管理员为每种业务类型预设优先级等级，如合同支付=紧急，费用报销=普通</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="color:#78716C;font-size:13px">另外按钮颜色我改成了蓝色 #2563EB，你觉得这个方向怎么样？还是更倾向其他颜色？</p>

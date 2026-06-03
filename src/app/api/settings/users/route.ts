@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       role: u.role,
       department: u.department,
       signatureUrl: u.signatureUrl,
+      avatarUrl: u.avatarUrl,
       isActive: u.isActive,
       createdAt: u.createdAt,
       updatedAt: u.updatedAt,
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, realName, password, phone, email, department, roleIds, signatureUrl } = body;
+    const { username, realName, password, phone, email, department, roleIds, signatureUrl, avatarUrl } = body;
 
     if (!username || !realName) {
       return NextResponse.json({ error: "用户名和姓名不能为空" }, { status: 400 });
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
         email: email?.trim() || null,
         department: department?.trim() || null,
         signatureUrl: signatureUrl || null,
+        avatarUrl: avatarUrl || null,
         role: roleIds && roleIds.length > 0 ? "custom" : "staff",
         userRoles: {
           create: (roleIds || []).map((roleId: string) => ({ roleId })),

@@ -1,0 +1,57 @@
+<h2>审批流程 UI 优化讨论</h2>
+<p class="subtitle">先看看当前的两个问题，我们一起讨论优化方向</p>
+
+<div class="section">
+  <h3>问题 1：通知栏缺少流程名称</h3>
+  <div class="mockup" style="max-width:400px">
+    <div class="mockup-header">当前通知栏展示</div>
+    <div class="mockup-body" style="padding:0;font-size:13px">
+      <div style="border-bottom:1px solid #e5e5e5;padding:10px 12px;">
+        <div style="font-weight:600;color:#1C1917">商务报价 待审批</div>
+        <div style="color:#78716C;font-size:11px;margin-top:2px">商务报价 流程已到达您这里，请及时处理</div>
+      </div>
+      <div style="border-bottom:1px solid #e5e5e5;padding:10px 12px;">
+        <div style="font-weight:600;color:#1C1917">供应商审批 待审批</div>
+        <div style="color:#78716C;font-size:11px;margin-top:2px">供应商审批 流程已到达您这里，请及时处理</div>
+      </div>
+      <div style="padding:10px 12px;">
+        <div style="font-weight:600;color:#1C1917">费用报销 待审批</div>
+        <div style="color:#78716C;font-size:11px;margin-top:2px">费用报销 流程已到达您这里，请及时处理</div>
+      </div>
+    </div>
+  </div>
+  <p style="color:#E0342B;font-size:13px;margin-top:8px">只有业务类型，看不出是哪个节点、谁提交的，用户无法判断紧急程度</p>
+</div>
+
+<div class="section">
+  <h3>问题 2：待办列表中审批按钮是灰色</h3>
+  <div class="mockup" style="max-width:500px">
+    <div class="mockup-header">当前待办列表按钮样式</div>
+    <div class="mockup-body" style="padding:12px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e5e5;padding-bottom:10px;margin-bottom:10px">
+        <div>
+          <div style="font-weight:600;color:#1C1917">商务报价 - 项目经理审批</div>
+          <div style="color:#78716C;font-size:11px">提交人：张三 · 2026-06-03</div>
+        </div>
+        <button style="background:#78716C;color:white;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer">处理审批</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e5e5;padding-bottom:10px;margin-bottom:10px">
+        <div>
+          <div style="font-weight:600;color:#1C1917">费用报销 - 财务审批</div>
+          <div style="color:#78716C;font-size:11px">提交人：李四 · 2026-06-02</div>
+        </div>
+        <button style="background:#78716C;color:white;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;opacity:0.5">处理审批</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e5e5;padding-bottom:10px;margin-bottom:10px">
+        <div>
+          <div style="font-weight:600;color:#1C1917">收入合同 - 法务审批</div>
+          <div style="color:#78716C;font-size:11px">提交人：王五 · 2026-06-01</div>
+        </div>
+        <button style="background:#78716C;color:white;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;opacity:0.5">处理审批</button>
+      </div>
+      <div style="color:#E0342B;font-size:11px;margin-top:8px">灰色按钮看起来像"禁用"状态，用户容易忽略</div>
+    </div>
+  </div>
+</div>
+
+<p style="color:#78716C;font-size:13px">请在终端中回复，我们先聊第一个问题：关于通知栏，你希望它展示哪些信息？</p>

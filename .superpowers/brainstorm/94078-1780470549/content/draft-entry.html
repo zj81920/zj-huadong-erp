@@ -1,0 +1,151 @@
+<h2>业务表单草稿 — 三种入口方案</h2>
+<p class="subtitle">发起人填写表单可保存草稿，下次继续编辑，填完再提交审批</p>
+
+<h3 style="margin-top:24px">方案 A：列表页加「草稿」Tab</h3>
+<p class="subtitle">在每个业务模块的列表页顶部加 Tab，区分「全部 / 进行中 / 已结束 / 草稿」</p>
+<div class="mockup">
+  <div class="mockup-header">示例：采购需求列表</div>
+  <div class="mockup-body" style="padding:16px;text-align:left">
+    <div style="display:flex;gap:0;border-bottom:1px solid #E7E5E4;margin-bottom:16px">
+      <span style="padding:8px 16px;font-size:13px;color:#78716C;cursor:pointer">全部</span>
+      <span style="padding:8px 16px;font-size:13px;color:#78716C;cursor:pointer">进行中</span>
+      <span style="padding:8px 16px;font-size:13px;color:#78716C;cursor:pointer">已结束</span>
+      <span style="padding:8px 16px;font-size:13px;font-weight:600;border-bottom:2px solid #1C1917;cursor:pointer">草稿 <span style="font-size:11px;color:#78716C;font-weight:400">(3)</span></span>
+    </div>
+    <!-- 草稿列表 -->
+    <div style="border:1px solid #E7E5E4;border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <span style="font-size:14px;font-weight:600">采购需求 #DRAFT-003</span>
+        <span style="font-size:12px;color:#B45309;background:#FBBF24/20;border-radius:4px;padding:1px 6px;margin-left:8px">草稿</span>
+        <div style="font-size:12px;color:#78716C;margin-top:2px">上次编辑：2026-06-02 14:30 · 保存了 3/8 项</div>
+      </div>
+      <button class="mock-button" style="font-size:12px;padding:6px 14px">继续填写</button>
+    </div>
+    <div style="border:1px solid #E7E5E4;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <span style="font-size:14px;font-weight:600">采购需求 #DRAFT-002</span>
+        <span style="font-size:12px;color:#B45309;background:#FBBF24/20;border-radius:4px;padding:1px 6px;margin-left:8px">草稿</span>
+        <div style="font-size:12px;color:#78716C;margin-top:2px">上次编辑：2026-06-01 10:15 · 保存了 5/8 项</div>
+      </div>
+      <button class="mock-button" style="font-size:12px;padding:6px 14px">继续填写</button>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top:24px">方案 B：集中在「审批中心」</h3>
+<p class="subtitle">审批中心增加一个「我的草稿」Tab，集中显示所有业务类型未提交的草稿</p>
+<div class="mockup">
+  <div class="mockup-header">审批中心</div>
+  <div class="mockup-body" style="padding:16px;text-align:left">
+    <div style="display:flex;gap:0;border-bottom:1px solid #E7E5E4;margin-bottom:16px">
+      <span style="padding:8px 16px;font-size:13px;color:#78716C;cursor:pointer">待处理</span>
+      <span style="padding:8px 16px;font-size:13px;color:#78716C;cursor:pointer">已处理</span>
+      <span style="padding:8px 16px;font-size:13px;color:#78716C;cursor:pointer">已发起</span>
+      <span style="padding:8px 16px;font-size:13px;font-weight:600;border-bottom:2px solid #1C1917;cursor:pointer">我的草稿 <span style="font-size:11px;color:#78716C;font-weight:400">(5)</span></span>
+    </div>
+    <div style="border:1px solid #E7E5E4;border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;background:#1C1917/10;border-radius:4px;padding:2px 8px;color:#444;white-space:nowrap">采购需求</span>
+        <span style="font-size:14px;font-weight:600">#DRAFT-003</span>
+        <span style="font-size:12px;color:#B45309;background:#FBBF24/20;border-radius:4px;padding:1px 6px">草稿</span>
+        <span style="font-size:12px;color:#78716C">保存了 3/8 项</span>
+      </div>
+      <button class="mock-button" style="font-size:12px;padding:6px 14px">继续填写</button>
+    </div>
+    <div style="border:1px solid #E7E5E4;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;background:#9333EA/10;border-radius:4px;padding:2px 8px;color:#9333EA;white-space:nowrap">费用报销</span>
+        <span style="font-size:14px;font-weight:600">2026-06 差旅费</span>
+        <span style="font-size:12px;color:#B45309;background:#FBBF24/20;border-radius:4px;padding:1px 6px">草稿</span>
+        <span style="font-size:12px;color:#78716C">保存了 2/5 项</span>
+      </div>
+      <button class="mock-button" style="font-size:12px;padding:6px 14px">继续填写</button>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top:24px">方案 C：独立「我的草稿」页面</h3>
+<p class="subtitle">在侧边栏加一个独立入口，集中展示所有业务类型的草稿，支持批量操作</p>
+<div class="mockup">
+  <div class="mockup-header">我的草稿</div>
+  <div class="mockup-body" style="padding:16px;text-align:left">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-size:15px;font-weight:600">共 5 份草稿</span>
+      <div>
+        <select style="font-size:12px;padding:4px 8px;border:1px solid #E7E5E4;border-radius:6px">
+          <option>全部类型</option>
+          <option>采购需求</option>
+          <option>费用报销</option>
+          <option>合同</option>
+        </select>
+      </div>
+    </div>
+    <!-- 按业务类型分组 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:600;color:#78716C;margin-bottom:6px">采购需求 (2)</div>
+      <div style="border:1px solid #E7E5E4;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <span style="font-size:14px;font-weight:600">#DRAFT-003</span>
+          <span style="font-size:12px;color:#78716C;margin-left:8px">3/8 项 · 2026-06-02 14:30</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="mock-button" style="font-size:12px;padding:4px 12px;background:#F5F5F4">删除</button>
+          <button class="mock-button" style="font-size:12px;padding:4px 12px">继续填写</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:600;color:#78716C;margin-bottom:6px">费用报销 (3)</div>
+      <div style="border:1px solid #E7E5E4;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div>
+          <span style="font-size:14px;font-weight:600">6月差旅费报销</span>
+          <span style="font-size:12px;color:#78716C;margin-left:8px">2/5 项 · 2026-06-01 10:00</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="mock-button" style="font-size:12px;padding:4px 12px;background:#F5F5F4">删除</button>
+          <button class="mock-button" style="font-size:12px;padding:4px 12px">继续填写</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px">
+  <h3>三种方案对比</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead>
+      <tr style="border-bottom:2px solid #E7E5E4">
+        <th style="text-align:left;padding:8px 12px"></th>
+        <th style="text-align:center;padding:8px 12px">方案A：模块列表加Tab</th>
+        <th style="text-align:center;padding:8px 12px">方案B：审批中心加Tab</th>
+        <th style="text-align:center;padding:8px 12px">方案C：独立页面</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #F5F5F4">
+        <td style="padding:8px 12px;font-weight:500">访问路径</td>
+        <td style="text-align:center;padding:8px 12px;color:#444">进入各模块 → 切 Tab</td>
+        <td style="text-align:center;padding:8px 12px;color:#444">进入审批中心 → 切 Tab</td>
+        <td style="text-align:center;padding:8px 12px;color:#444">侧边栏直接点</td>
+      </tr>
+      <tr style="border-bottom:1px solid #F5F5F4">
+        <td style="padding:8px 12px;font-weight:500">跨模块查看</td>
+        <td style="text-align:center;padding:8px 12px;color:#78716C">✗ 只能看当前模块</td>
+        <td style="text-align:center;padding:8px 12px;color:#444">✓ 可看所有类型</td>
+        <td style="text-align:center;padding:8px 12px;color:#444">✓ 可看所有类型</td>
+      </tr>
+      <tr style="border-bottom:1px solid #F5F5F4">
+        <td style="padding:8px 12px;font-weight:500">实现成本</td>
+        <td style="text-align:center;padding:8px 12px;color:#444">低，每个模块加个 Tab</td>
+        <td style="text-align:center;padding:8px 12px;color:#444">中，审批中心加 Tab</td>
+        <td style="text-align:center;padding:8px 12px;color:#78716C">高，新页面+侧边栏入口</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;font-weight:500">推荐度</td>
+        <td style="text-align:center;padding:8px 12px;color:#78716C">一般<br><span style="font-size:11px">草稿散在各模块不好找</span></td>
+        <td style="text-align:center;padding:8px 12px;font-weight:600;color:#1C1917">推荐<br><span style="font-size:11px">跟发起/审批联动最自然</span></td>
+        <td style="text-align:center;padding:8px 12px;color:#78716C">一般<br><span style="font-size:11px">独立页面增加导航层级</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

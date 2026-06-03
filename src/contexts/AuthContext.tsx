@@ -25,6 +25,7 @@ interface CurrentUser {
   phone: string | null;
   email: string | null;
   department: string | null;
+  avatarUrl: string | null;
   roles: UserRole[];
 }
 

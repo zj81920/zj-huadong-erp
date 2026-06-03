@@ -1,0 +1,70 @@
+<h2>审批按钮颜色优化方案</h2>
+<p class="subtitle">两处按钮统一优化，让操作入口更醒目</p>
+
+<div class="section">
+  <h3>改动 1：待办列表「处理审批」按钮</h3>
+  <p class="subtitle">灰色文字 → 蓝色实心按钮</p>
+
+  <div style="display:flex;gap:24px;flex-wrap:wrap">
+    <div class="mockup" style="max-width:320px;flex:1">
+      <div class="mockup-header">修改前</div>
+      <div class="mockup-body" style="padding:12px;display:flex;justify-content:space-between;align-items:center;font-size:13px">
+        <div>
+          <div style="font-weight:600;color:#1C1917">商务报价 - 项目经理审批</div>
+          <div style="color:#78716C;font-size:11px">提交人：张三 · 3小时前</div>
+        </div>
+        <button style="background:transparent;color:#78716C;border:1px solid #D4D4D4;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer">处理审批</button>
+      </div>
+    </div>
+
+    <div class="mockup" style="max-width:320px;flex:1">
+      <div class="mockup-header">修改后</div>
+      <div class="mockup-body" style="padding:12px;display:flex;justify-content:space-between;align-items:center;font-size:13px">
+        <div>
+          <div style="font-weight:600;color:#1C1917">商务报价 - 项目经理审批</div>
+          <div style="color:#78716C;font-size:11px">提交人：张三 · 3小时前</div>
+        </div>
+        <button style="background:#2563EB;color:white;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer">处理审批</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>改动 2：弹窗内「通过/驳回」按钮</h3>
+  <p class="subtitle">灰色（hover变绿/红）→ 直接显示绿/红色，一眼识别操作意图</p>
+
+  <div style="display:flex;gap:24px;flex-wrap:wrap">
+    <div class="mockup" style="max-width:360px;flex:1">
+      <div class="mockup-header">修改前（灰色，hover才变色）</div>
+      <div class="mockup-body" style="padding:16px;font-size:13px">
+        <div style="display:flex;gap:8px">
+          <button style="background:#78716C;color:white;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span>✓</span> 通过
+          </button>
+          <button style="background:#78716C;color:white;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span>✕</span> 驳回
+          </button>
+        </div>
+        <div style="color:#78716C;font-size:11px;margin-top:6px">两个按钮一模一样，用户需要hover才知道哪个是哪个</div>
+      </div>
+    </div>
+
+    <div class="mockup" style="max-width:360px;flex:1">
+      <div class="mockup-header">修改后（直接显色，语义明确）</div>
+      <div class="mockup-body" style="padding:16px;font-size:13px">
+        <div style="display:flex;gap:8px">
+          <button style="background:#2DB84E;color:white;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span>✓</span> 通过
+          </button>
+          <button style="background:#E0342B;color:white;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <span>✕</span> 驳回
+          </button>
+        </div>
+        <div style="color:#2DB84E;font-size:11px;margin-top:6px">绿色=通过 | 红色=驳回，一目了然</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="color:#78716C;font-size:13px">这个方案你觉得怎么样？如果 OK 我就进入下一步，出完整的设计文档。</p>

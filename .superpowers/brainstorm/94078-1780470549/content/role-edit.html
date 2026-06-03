@@ -1,0 +1,167 @@
+<h2>角色编辑详情页 — CRUD 权限矩阵</h2>
+<p class="subtitle">点击角色列表的「编辑」→ 跳转到此页面，分 Tab 配置</p>
+
+<div class="mockup">
+  <div class="mockup-header">编辑角色：项目经理</div>
+  <div class="mockup-body" style="padding:0;text-align:left">
+
+    <!-- Tab 栏 -->
+    <div style="display:flex;border-bottom:1px solid #E7E5E4;background:#FAFAF9;padding:0 20px">
+      <div style="padding:12px 20px;font-size:14px;font-weight:600;border-bottom:2px solid #1C1917;cursor:pointer;color:#1C1917">权限配置</div>
+      <div style="padding:12px 20px;font-size:14px;color:#78716C;cursor:pointer">基本信息</div>
+      <div style="padding:12px 20px;font-size:14px;color:#78716C;cursor:pointer">审批引用</div>
+    </div>
+
+    <!-- 权限配置 Tab 内容 -->
+    <div style="padding:20px">
+
+      <!-- 操作提示 -->
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#F5F5F4;border-radius:8px;margin-bottom:16px;font-size:13px;color:#444">
+        <span>💡</span>
+        <span>模块级设置 CRUD 权限，子模块默认继承。点击子模块的任一操即可独立覆写。</span>
+      </div>
+
+      <!-- 权限矩阵表格 -->
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <!-- 表头 -->
+        <thead>
+          <tr style="border-bottom:2px solid #E7E5E4">
+            <th style="text-align:left;padding:10px 12px;font-weight:600;width:260px">模块 / 子模块</th>
+            <th style="text-align:center;padding:10px 12px;font-weight:600;width:80px">查看</th>
+            <th style="text-align:center;padding:10px 12px;font-weight:600;width:80px">新增</th>
+            <th style="text-align:center;padding:10px 12px;font-weight:600;width:80px">编辑</th>
+            <th style="text-align:center;padding:10px 12px;font-weight:600;width:80px">删除</th>
+            <th style="text-align:right;padding:10px 12px;font-weight:400;color:#78716C;width:80px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 模块级行 -->
+          <tr style="border-bottom:1px solid #F5F5F4;background:#FAFAF9">
+            <td style="padding:12px;font-weight:600;font-size:14px">商务管理</td>
+            <td style="text-align:center;padding:8px">
+              <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#1C1917;color:white;font-size:12px;line-height:22px">✓</span>
+            </td>
+            <td style="text-align:center;padding:8px">
+              <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#1C1917;color:white;font-size:12px;line-height:22px">✓</span>
+            </td>
+            <td style="text-align:center;padding:8px">
+              <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#1C1917;color:white;font-size:12px;line-height:22px">✓</span>
+            </td>
+            <td style="text-align:center;padding:8px">
+              <span style="display:inline-block;width:22px;height:22px;border-radius:50%;border:1px solid #D1D5DB;color:#ccc;font-size:12px;line-height:22px">✗</span>
+            </td>
+            <td style="text-align:right;padding:8px">
+              <span style="font-size:11px;color:#78716C;background:#E7E5E4;border-radius:4px;padding:2px 8px">模块级默认</span>
+            </td>
+          </tr>
+
+          <!-- 子模块行 (继承) -->
+          <tr style="border-bottom:1px solid #F5F5F4">
+            <td style="padding:10px 12px 10px 28px;color:#444">├ 客户管理</td>
+            <td style="text-align:center;padding:6px;color:#A8A29E">✓</td>
+            <td style="text-align:center;padding:6px;color:#A8A29E">✓</td>
+            <td style="text-align:center;padding:6px;color:#A8A29E">✓</td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:right;padding:6px"></td>
+          </tr>
+          <tr style="border-bottom:1px solid #F5F5F4">
+            <td style="padding:10px 12px 10px 28px;color:#444">├ 供应商管理</td>
+            <td style="text-align:center;padding:6px;color:#A8A29E">✓</td>
+            <td style="text-align:center;padding:6px;color:#A8A29E">✓</td>
+            <td style="text-align:center;padding:6px;color:#A8A29E">✓</td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:right;padding:6px"></td>
+          </tr>
+
+          <!-- 子模块行 (覆写) -->
+          <tr style="border-bottom:1px solid #F5F5F4;background:#FFF">
+            <td style="padding:10px 12px 10px 28px;font-weight:600">├ 投标统计</td>
+            <td style="text-align:center;padding:6px">
+              <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#1C1917;color:white;font-size:11px;line-height:20px">✓</span>
+            </td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:right;padding:6px">
+              <span style="font-size:11px;color:#1C1917;background:#1C1917/10;border-radius:4px;padding:2px 8px;font-weight:500">已覆写</span>
+            </td>
+          </tr>
+
+          <!-- 间隔 -->
+          <tr style="height:8px"><td colspan="6"></td></tr>
+
+          <!-- 模块级行 2 -->
+          <tr style="border-bottom:1px solid #F5F5F4;background:#FAFAF9">
+            <td style="padding:12px;font-weight:600;font-size:14px">财务管理</td>
+            <td style="text-align:center;padding:8px">
+              <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#1C1917;color:white;font-size:12px;line-height:22px">✓</span>
+            </td>
+            <td style="text-align:center;padding:8px">
+              <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#D1D5DB;color:#A8A29E;font-size:12px;line-height:22px">✗</span>
+            </td>
+            <td style="text-align:center;padding:8px">
+              <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#D1D5DB;color:#A8A29E;font-size:12px;line-height:22px">✗</span>
+            </td>
+            <td style="text-align:center;padding:8px">
+              <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#D1D5DB;color:#A8A29E;font-size:12px;line-height:22px">✗</span>
+            </td>
+            <td style="text-align:right;padding:8px">
+              <span style="font-size:11px;color:#78716C;background:#E7E5E4;border-radius:4px;padding:2px 8px">模块级默认</span>
+            </td>
+          </tr>
+
+          <!-- 子模块行 (覆写 - 费用报销单独可编辑) -->
+          <tr style="border-bottom:1px solid #F5F5F4;background:#FFF">
+            <td style="padding:10px 12px 10px 28px;font-weight:600">├ 费用报销</td>
+            <td style="text-align:center;padding:6px">
+              <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#1C1917;color:white;font-size:11px;line-height:20px">✓</span>
+            </td>
+            <td style="text-align:center;padding:6px">
+              <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#1C1917;color:white;font-size:11px;line-height:20px">✓</span>
+            </td>
+            <td style="text-align:center;padding:6px">
+              <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#1C1917;color:white;font-size:11px;line-height:20px">✓</span>
+            </td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:right;padding:6px">
+              <span style="font-size:11px;color:#1C1917;background:#1C1917/10;border-radius:4px;padding:2px 8px;font-weight:500">已覆写</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid #F5F5F4">
+            <td style="padding:10px 12px 10px 28px;color:#444">├ 合同收入</td>
+            <td style="text-align:center;padding:6px;color:#A8A29E">✓</td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:right;padding:6px"></td>
+          </tr>
+          <tr style="border-bottom:1px solid #F5F5F4">
+            <td style="padding:10px 12px 10px 28px;color:#444">├ 财务报表</td>
+            <td style="text-align:center;padding:6px;color:#A8A29E">✓</td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:center;padding:6px;color:#D1D5DB">✗</td>
+            <td style="text-align:right;padding:6px"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 底部操作 -->
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #F5F5F4">
+        <button class="mock-button" style="background:#f5f5f4;color:#444;font-size:13px;padding:8px 20px">取消</button>
+        <button class="mock-button" style="background:#1C1917;color:white;font-size:13px;padding:8px 20px">保存权限配置</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:16px">
+  <h3>交互规则</h3>
+  <ul>
+    <li><strong>模块级行</strong>（灰底）：点击任一 ✓/✗ 切换整个模块的 CRUD 状态，所有子模块随之继承</li>
+    <li><strong>子模块行</strong>（白底默认继承）：灰色 ✓/✗ 表示继承自模块级，不可直接点击</li>
+    <li><strong>覆写操作</strong>：点击子模块的任一 ✓/✗ → 该子模块变为独立可编辑状态，标为「已覆写」</li>
+    <li><strong>重置覆写</strong>：点击「已覆写」标签 → 恢复为继承模块级默认</li>
+    <li>保存时，只存 <code>modulePermissions</code>（模块级）+ <code>subModuleOverrides</code>（差异）</li>
+  </ul>
+</div>

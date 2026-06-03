@@ -14,6 +14,7 @@ import {
   Upload,
   Shield,
   Image,
+  Camera,
   Power,
 } from "lucide-react";
 import Modal from "@/components/Modal";
@@ -33,6 +34,7 @@ interface UserItem {
   email?: string;
   department?: string;
   signatureUrl?: string;
+  avatarUrl?: string;
   isActive: boolean;
   roles: Role[];
   createdAt: string;
@@ -49,6 +51,7 @@ interface UserFormData {
   department: string;
   roleIds: string[];
   signatureUrl: string;
+  avatarUrl: string;
 }
 
 const emptyForm: UserFormData = {
@@ -60,6 +63,7 @@ const emptyForm: UserFormData = {
   department: "",
   roleIds: [],
   signatureUrl: "",
+  avatarUrl: "",
 };
 
 const ROLE_COLORS = [
@@ -96,7 +100,9 @@ export default function UsersSettingsPage() {
 
   const [uploading, setUploading] = useState(false);
   const [signaturePreview, setSignaturePreview] = useState<string>("");
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -139,6 +145,7 @@ export default function UsersSettingsPage() {
     setEditingItem(null);
     setForm(emptyForm);
     setSignaturePreview("");
+    setAvatarPreview("");
     setFormError("");
     setShowModal(true);
   };
@@ -154,8 +161,10 @@ export default function UsersSettingsPage() {
       department: item.department || "",
       roleIds: item.roles.map((r) => r.id),
       signatureUrl: item.signatureUrl || "",
+      avatarUrl: item.avatarUrl || "",
     });
     setSignaturePreview(item.signatureUrl || "");
+    setAvatarPreview(item.avatarUrl || "");
     setFormError("");
     setShowModal(true);
   };
@@ -186,6 +195,7 @@ export default function UsersSettingsPage() {
         department: form.department.trim() || null,
         roleIds: form.roleIds,
         signatureUrl: form.signatureUrl || null,
+        avatarUrl: form.avatarUrl || null,
       };
 
       if (form.password.trim()) {
@@ -295,6 +305,47 @@ export default function UsersSettingsPage() {
     setSignaturePreview("");
   };
 
+  // 头像上传处理
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.match(/image\/(png|jpe?g)/)) {
+      setFormError("仅支持 png、jpg、jpeg 格式的图片");
+      return;
+    }
+
+    setUploading(true);
+    setFormError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (res.ok) {
+        setForm((prev) => ({ ...prev, avatarUrl: json.url }));
+        setAvatarPreview(json.url);
+      } else {
+        setFormError(json.error || "上传失败");
+      }
+    } catch {
+      setFormError("上传失败，请重试");
+    } finally {
+      setUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    setForm((prev) => ({ ...prev, avatarUrl: "" }));
+    setAvatarPreview("");
+  };
+
   const toggleRole = (roleId: string) => {
     setForm((prev) => {
       const exists = prev.roleIds.includes(roleId);
@@ -384,11 +435,19 @@ export default function UsersSettingsPage() {
                   <tr key={item.id}>
                     <td>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[13px] font-bold text-[#1C1917]">
-                            {item.realName.charAt(0)}
-                          </span>
-                        </div>
+                        {item.avatarUrl ? (
+                          <img
+                            src={item.avatarUrl}
+                            alt={item.realName}
+                            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-[13px] font-bold text-[#1C1917]">
+                              {item.realName.charAt(0)}
+                            </span>
+                          </div>
+                        )}
                         <span className="font-semibold">{item.username}</span>
                       </div>
                     </td>
@@ -605,6 +664,66 @@ export default function UsersSettingsPage() {
             ) : (
               <div className="text-[13px] text-[#78716C] py-3">加载角色中...</div>
             )}
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-2">
+              头像
+            </label>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              className="hidden"
+              accept=".png,.jpg,.jpeg"
+              onChange={handleAvatarUpload}
+            />
+            <div className="flex items-center gap-4">
+              <div className="relative group">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="头像预览"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-[#E7E5E4]"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-[#1C1917]/10 flex items-center justify-center border-2 border-[#E7E5E4]">
+                    <span className="text-[20px] font-bold text-[#1C1917]">
+                      {form.realName ? form.realName.charAt(0) : "?"}
+                    </span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="absolute inset-0 w-16 h-16 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  <Camera className="w-5 h-5 text-white" />
+                </button>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  className="ios-btn ios-btn-secondary ios-btn-sm"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  {uploading ? "上传中..." : "上传头像"}
+                </button>
+                {avatarPreview && (
+                  <button
+                    type="button"
+                    className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
+                    onClick={handleRemoveAvatar}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    移除头像
+                  </button>
+                )}
+                <span className="text-[11px] text-[#78716C]">支持 png、jpg、jpeg，建议正方形图片</span>
+              </div>
+            </div>
           </div>
 
           <div>
