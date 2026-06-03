@@ -4,6 +4,7 @@ import path from "path";
 const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["@prisma/client", "ali-oss"],
+  devIndicators: false,
   async rewrites() {
     return [
       {
