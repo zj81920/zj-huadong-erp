@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseSessionToken, SESSION_COOKIE } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
 
 const PUBLIC_PATHS = ["/login", "/api/auth", "/inquiry/quote", "/api/inquiry-quote"];
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPublic = PUBLIC_PATHS.some(
@@ -32,22 +31,6 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.set(SESSION_COOKIE, "", { maxAge: 0, path: "/" });
     return response;
-  }
-
-  // 系统设置页面仅 admin 可访问
-  if (pathname.startsWith("/settings")) {
-    const prisma = new PrismaClient();
-    try {
-      const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (!user || user.username !== "admin") {
-        if (pathname.startsWith("/api/")) {
-          return NextResponse.json({ error: "无权限访问" }, { status: 403 });
-        }
-        return NextResponse.redirect(new URL("/", request.url));
-      }
-    } finally {
-      await prisma.$disconnect();
-    }
   }
 
   const requestHeaders = new Headers(request.headers);
