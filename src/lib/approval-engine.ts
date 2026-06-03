@@ -28,7 +28,6 @@ interface SplitStage {
 }
 
 // 根据角色 code 解析实际审批人（支持逗号分隔的多角色）
-// projectSourceId: 项目编号（用于项目级角色动态解析）
 export async function resolveApproverIds(
   roleCode: string,
   projectSourceId?: string
@@ -61,22 +60,7 @@ async function resolveSingleRoleApproverIds(
   });
 
   if (!role || role.users.length === 0) {
-    if (roleCode === "project_manager" && projectSourceId) {
-      return await resolveProjectManager(projectSourceId);
-    }
-    if (roleCode === "production" && projectSourceId) {
-      return await resolveDesignManager(projectSourceId);
-    }
     return [];
-  }
-
-  if (["project_manager", "production"].includes(roleCode) && projectSourceId) {
-    if (roleCode === "project_manager") {
-      return await resolveProjectManager(projectSourceId);
-    }
-    if (roleCode === "production") {
-      return await resolveDesignManager(projectSourceId);
-    }
   }
 
   const userIds = role.users.map((ur) => ur.user.id);
@@ -92,46 +76,14 @@ async function resolveSingleRoleApproverIds(
   return userIds;
 }
 
-async function resolveProjectManager(
-  projectSourceId: string
-): Promise<string[]> {
-  const project = await prisma.project.findUnique({
-    where: { projectSourceId },
-    select: { designManagerId: true },
-  });
-  return project?.designManagerId ? [project.designManagerId] : [];
-}
-
-async function resolveDesignManager(
-  projectSourceId: string
-): Promise<string[]> {
-  const project = await prisma.project.findUnique({
-    where: { projectSourceId },
-    select: { supervisorLeaderId: true },
-  });
-  return project?.supervisorLeaderId ? [project.supervisorLeaderId] : [];
-}
-
 // 检查用户是否可以跳过某个节点（支持多角色）
 export async function shouldSkipNode(
-  roleCode: string,
-  userId: string,
-  projectSourceId?: string
+  _roleCode: string,
+  _userId: string,
+  _projectSourceId?: string
 ): Promise<boolean> {
-  if (!projectSourceId) return false;
-
-  const roleCodes = roleCode.split(",").map((r) => r.trim()).filter(Boolean);
-  for (const code of roleCodes) {
-    if (code === "project_manager") {
-      const ids = await resolveProjectManager(projectSourceId);
-      if (ids.includes(userId)) return true;
-    }
-    if (code === "production") {
-      const ids = await resolveDesignManager(projectSourceId);
-      if (ids.includes(userId)) return true;
-    }
-  }
-
+  // 项目关联已移除，不再自动跳过
+  // 发起人自动跳过将在 Task 5 中通过 startApprovalFlow 实现
   return false;
 }
 
