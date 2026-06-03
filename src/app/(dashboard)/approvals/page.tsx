@@ -350,7 +350,7 @@ export default function ApprovalsPage() {
   const [pendingList, setPendingList] = useState<PendingApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<"pending" | "processed" | "initiated">("pending");
+  const [activeTab, setActiveTab] = useState<"pending" | "processed" | "initiated" | "drafts">("pending");
   const [processedList, setProcessedList] = useState<ApprovalInstanceItem[]>([]);
   const [initiatedList, setInitiatedList] = useState<ApprovalInstanceItem[]>([]);
   const [processedLoading, setProcessedLoading] = useState(false);
@@ -470,8 +470,8 @@ export default function ApprovalsPage() {
   return (
     <>
       <div className="page-header">
-        <h1>{activeTab === "pending" ? "待审批" : activeTab === "processed" ? "已处理" : "已发起"}</h1>
-        <p>{activeTab === "pending" ? "您需要处理的审批事项" : activeTab === "processed" ? "您已处理过的审批记录" : "您发起的审批流程"}</p>
+        <h1>{activeTab === "pending" ? "待审批" : activeTab === "processed" ? "已处理" : activeTab === "initiated" ? "已发起" : "我的草稿"}</h1>
+        <p>{activeTab === "pending" ? "您需要处理的审批事项" : activeTab === "processed" ? "您已处理过的审批记录" : activeTab === "initiated" ? "您发起的审批流程" : "保存为草稿的单据，可随时继续编辑"}</p>
       </div>
 
       <div className="flex items-center gap-1 mb-4 border-b border-gray-200">
@@ -484,6 +484,9 @@ export default function ApprovalsPage() {
         </button>
         <button onClick={() => setActiveTab("initiated")} className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${activeTab === "initiated" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
           <Send className="w-4 h-4 inline mr-1.5 -mt-0.5" />已发起
+        </button>
+        <button onClick={() => setActiveTab("drafts")} className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${activeTab === "drafts" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          <FileText className="w-4 h-4 inline mr-1.5 -mt-0.5" />我的草稿
         </button>
       </div>
 
@@ -654,6 +657,20 @@ export default function ApprovalsPage() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === "drafts" && (
+        <div className="bento-card-static">
+          <div className="text-center py-16">
+            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center mx-auto mb-3">
+              <FileText className="w-8 h-8 text-[#78716C]" />
+            </div>
+            <div className="text-[#78716C] text-lg mb-2">暂无草稿</div>
+            <div className="text-[#A8A29E] text-sm">
+              在各业务模块创建单据时可保存为草稿，稍后继续编辑
+            </div>
+          </div>
         </div>
       )}
 
