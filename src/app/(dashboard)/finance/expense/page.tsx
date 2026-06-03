@@ -755,11 +755,16 @@ export default function FinanceExpensePage() {
   }, [activeTab, fetchPayables, fetchPaymentApplications, fetchPaymentVouchers, fetchNonContractExpenses, fetchLendingOuts, fetchExpenseReports, fetchSalaryBatches, fetchBorrowingReturnApps]);
 
   useEffect(() => {
-    if (!statusFlowTarget || statusFlowTarget.type !== "payableApps") {
+    // 从 statusFlowTarget 或 detailTarget 获取应付记录 ID
+    const payableId =
+      (statusFlowTarget?.type === "payableApps" ? statusFlowTarget.id : null) ||
+      (detailTarget?.type === "payable" ? detailTarget.id : null);
+
+    if (!payableId) {
       setPayableAppInstances({});
       return;
     }
-    const apps = getPayableApplications(statusFlowTarget.id);
+    const apps = getPayableApplications(payableId);
     const instanceIds = apps.map((a) => a.approvalInstanceId).filter(Boolean) as string[];
     if (instanceIds.length === 0) return;
 
@@ -784,7 +789,7 @@ export default function FinanceExpensePage() {
     }).finally(() => {
       setPayableAppInstancesLoading(false);
     });
-  }, [statusFlowTarget]);
+  }, [statusFlowTarget, detailTarget]);
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
