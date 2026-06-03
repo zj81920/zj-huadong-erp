@@ -11,12 +11,12 @@ function toModulePermissions(modules: string[]) {
   return JSON.stringify(perms);
 }
 
-const ALL_MODULE_KEYS = ["business", "projects", "procurement", "contracts", "finance", "hr", "settings"];
+const ALL_MODULE_KEYS = ["business", "projects", "procurement", "contracts", "finance", "hr"];
 const ALL_PERMISSIONS = toModulePermissions(ALL_MODULE_KEYS);
 
 const DEFAULT_ROLES = [
   { code: "initiator", name: "经办人", description: "发起审批流程的经办人员", modulePermissions: toModulePermissions(["business", "procurement", "finance"]), subModuleOverrides: "{}", isGlobalVisible: false, level: 1 },
-  { code: "dept_head", name: "部门负责人", description: "各部门负责人，审批本部门事务", modulePermissions: toModulePermissions(["business", "projects", "projects.list", "projects.plans", "projects.progress", "projects.outsourcing", "procurement", "contracts", "finance", "hr", "settings"]), subModuleOverrides: "{}", isGlobalVisible: false, level: 2 },
+  { code: "dept_head", name: "部门负责人", description: "各部门负责人，审批本部门事务", modulePermissions: toModulePermissions(["business", "projects", "projects.list", "projects.plans", "projects.progress", "projects.outsourcing", "procurement", "contracts", "finance", "hr"]), subModuleOverrides: "{}", isGlobalVisible: false, level: 2 },
   { code: "project_manager", name: "项目经理", description: "根据项目动态解析的项目经理", modulePermissions: toModulePermissions(["business", "projects", "projects.list", "projects.plans", "projects.progress", "projects.outsourcing", "procurement", "contracts", "finance"]), subModuleOverrides: "{}", isGlobalVisible: false, level: 3 },
   { code: "pmo", name: "项目管理部", description: "项目管理部审批人员", modulePermissions: toModulePermissions(["projects", "projects.list", "projects.plans", "projects.progress", "projects.outsourcing", "procurement", "contracts", "finance"]), subModuleOverrides: "{}", isGlobalVisible: false, level: 4 },
   { code: "admin", name: "行政", description: "行政管理相关审批人员", modulePermissions: toModulePermissions(["hr", "contracts", "finance"]), subModuleOverrides: "{}", isGlobalVisible: false, level: 5 },
@@ -24,9 +24,9 @@ const DEFAULT_ROLES = [
   { code: "production", name: "设计负责人/生产经理", description: "根据项目动态解析的设计负责人", modulePermissions: toModulePermissions(["projects", "procurement", "finance"]), subModuleOverrides: "{}", isGlobalVisible: false, level: 7 },
   { code: "finance", name: "财务", description: "财务审批人员", modulePermissions: toModulePermissions(["finance", "contracts"]), subModuleOverrides: "{}", isGlobalVisible: false, level: 8 },
   { code: "cashier", name: "出纳", description: "出纳确认付款，作为财务流程末端节点", modulePermissions: toModulePermissions(["finance"]), subModuleOverrides: "{}", isGlobalVisible: false, level: 9 },
-  { code: "vice_gm", name: "副总经理", description: "副总经理审批", modulePermissions: ALL_PERMISSIONS, subModuleOverrides: "{}", isGlobalVisible: true, level: 10 },
-  { code: "gm", name: "总经理", description: "总经理审批", modulePermissions: ALL_PERMISSIONS, subModuleOverrides: "{}", isGlobalVisible: true, level: 11 },
-  { code: "chairman", name: "董事长", description: "董事长审批", modulePermissions: ALL_PERMISSIONS, subModuleOverrides: "{}", isGlobalVisible: true, level: 12 },
+  { code: "vice_gm", name: "副总经理", description: "副总经理审批", modulePermissions: ALL_PERMISSIONS, subModuleOverrides: "{}", isGlobalVisible: false, level: 10 },
+  { code: "gm", name: "总经理", description: "总经理审批", modulePermissions: ALL_PERMISSIONS, subModuleOverrides: "{}", isGlobalVisible: false, level: 11 },
+  { code: "chairman", name: "董事长", description: "董事长审批", modulePermissions: ALL_PERMISSIONS, subModuleOverrides: "{}", isGlobalVisible: false, level: 12 },
 ];
 
 async function main() {

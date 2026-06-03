@@ -5,7 +5,7 @@ export const MODULE_KEYS = [
   "contracts",
   "finance",
   "hr",
-  "settings",
+  // "settings" 已移除：系统设置仅 admin 账号可访问，不参与角色权限体系
 ] as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[number];
@@ -17,7 +17,7 @@ export const MODULE_MAP: Record<ModuleKey, string> = {
   contracts: "合同管理",
   finance: "财务管理",
   hr: "人事行政",
-  settings: "系统设置",
+  // settings: "系统设置", // 仅 admin 账号可访问
 };
 
 export const SECTION_TO_MODULE: Record<string, ModuleKey> = {
@@ -27,7 +27,6 @@ export const SECTION_TO_MODULE: Record<string, ModuleKey> = {
   "合同管理": "contracts",
   "财务管理": "finance",
   "人事行政管理": "hr",
-  "系统设置": "settings",
 };
 
 export const SUB_MODULE_KEYS = [
@@ -140,7 +139,6 @@ export const MODULE_SUB_ITEMS: Record<ModuleKey, { key: SubModuleKey; label: str
     { key: "hr.certificates", label: "证照管理" },
     { key: "hr.seals", label: "印章管理" },
   ],
-  settings: [],
 };
 
 export const SUB_MODULE_TO_HREF: Record<SubModuleKey, string> = {

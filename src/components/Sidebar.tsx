@@ -108,7 +108,7 @@ const navSections: NavSection[] = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { modulePermissions } = useAuth();
+  const { modulePermissions, user } = useAuth();
   const [expandedSections, setExpandedSections] = useState<string[]>([
     "商务管理",
     "项目管理",
@@ -148,6 +148,10 @@ export default function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto custom-scrollbar px-3 pb-6">
         {navSections.map((section) => {
+          // 系统设置仅 admin 账号可见
+          if (section.title === "系统设置" && user?.username !== "admin") {
+            return null;
+          }
           const moduleKey = SECTION_TO_MODULE[section.title];
           if (moduleKey && !modulePermissions.accessibleModules.includes(moduleKey) && !modulePermissions.isGlobalVisible) {
             return null;
