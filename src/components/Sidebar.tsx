@@ -276,9 +276,6 @@ export default function Sidebar() {
           onClick={() => setShowUserMenu(!showUserMenu)}
           className="flex items-center gap-3 w-full text-left"
         >
-          <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white text-sm font-semibold">
-            {user?.realName?.charAt(0) || "用"}
-          </div>
           <div className="flex flex-col flex-1 min-w-0">
             <span className="text-[13px] font-semibold text-text-primary truncate">
               {user?.realName || "未登录"}
