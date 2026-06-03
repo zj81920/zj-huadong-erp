@@ -21,6 +21,7 @@ import {
 interface NavItem {
   label: string;
   href: string;
+  group?: string;
 }
 
 interface NavSection {
@@ -93,14 +94,14 @@ const navSections: NavSection[] = [
     title: "系统设置",
     icon: <Settings className="w-4.5 h-4.5" />,
     items: [
-      { label: "个人设置", href: "/settings/profile" },
-      { label: "部门设置", href: "/settings/departments" },
-      { label: "角色设置", href: "/settings/roles" },
-      { label: "用户设置", href: "/settings/users" },
-      { label: "流程设置", href: "/settings/approval-flow" },
-      { label: "往来信息管理", href: "/settings/counterparty" },
-      { label: "审批调试", href: "/settings/approval-debug" },
-      { label: "AI 模型配置", href: "/settings/ai-model" },
+      { label: "用户设置", href: "/settings/users", group: "用户与权限" },
+      { label: "角色设置", href: "/settings/roles", group: "用户与权限" },
+      { label: "部门设置", href: "/settings/departments", group: "用户与权限" },
+      { label: "流程设置", href: "/settings/approval-flow", group: "审批配置" },
+      { label: "审批调试", href: "/settings/approval-debug", group: "审批配置" },
+      { label: "个人设置", href: "/settings/profile", group: "基础数据" },
+      { label: "往来信息管理", href: "/settings/counterparty", group: "基础数据" },
+      { label: "AI 模型配置", href: "/settings/ai-model", group: "系统" },
     ],
   },
 ];
@@ -180,15 +181,29 @@ export default function Sidebar() {
                       }
                     }
                     return true;
-                  }).map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`nav-item w-full text-[13px] ${isActive(item.href) ? "active" : ""}`}
-                    >
-                      <span className="ml-4">{item.label}</span>
-                    </Link>
-                  ))}
+                  }).reduce<(React.ReactNode)[]>((acc, item, idx, arr) => {
+                    const prevGroup = idx > 0 ? arr[idx - 1].group : undefined;
+                    if (item.group && item.group !== prevGroup) {
+                      acc.push(
+                        <span
+                          key={`group-${item.group}`}
+                          className="px-3 pt-3 pb-1 text-[11px] font-semibold text-[#A8A29E] uppercase tracking-wider"
+                        >
+                          {item.group}
+                        </span>
+                      );
+                    }
+                    acc.push(
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`nav-item w-full text-[13px] ${isActive(item.href) ? "active" : ""}`}
+                      >
+                        <span className="ml-4">{item.label}</span>
+                      </Link>
+                    );
+                    return acc;
+                  }, [])}
                 </div>
               )}
             </div>
