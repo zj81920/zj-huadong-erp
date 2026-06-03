@@ -66,6 +66,8 @@ export async function POST(request: NextRequest) {
       amount,
       transactionDate,
       counterparty,
+      counterpartyBankName,
+      counterpartyBankAccount,
       description,
     } = body;
 
@@ -95,6 +97,8 @@ export async function POST(request: NextRequest) {
         amount: parseFloat(amount),
         transactionDate: transactionDate ? new Date(transactionDate) : new Date(),
         counterparty: counterparty?.trim() || null,
+        counterpartyBankName: counterpartyBankName?.trim() || null,
+        counterpartyBankAccount: counterpartyBankAccount?.trim() || null,
         description: description?.trim() || null,
       },
       include: {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import CounterpartySearch from "@/components/CounterpartySearch";
 import {
   Search,
   Plus,
@@ -37,8 +38,9 @@ interface ExpenseContract {
   totalAmount: string;
   contractType: string;
   status: string;
-  supplier: { id: string; name: string } | null;
+  supplier: { id: string; name: string; bankName: string | null; bankAccount: string | null } | null;
   project: { name: string; projectSourceId: string } | null;
+  invoicedAmount: string | null;
 }
 
 interface OutsourcingSource {
@@ -104,9 +106,13 @@ interface NonContractExpense {
   amount: number;
   transactionDate: string;
   counterparty: string | null;
+  counterpartyBankName?: string | null;
+  counterpartyBankAccount?: string | null;
   description: string | null;
   status: string;
   approvalInstanceId: string | null;
+  invoicedAmount?: number;
+  invoiceStatus?: string;
   project: { name: string } | null;
   bankAccountId: string | null;
   paymentMethod: string | null;
@@ -289,11 +295,13 @@ type ModalType =
   | "salaryBatchEdit"
   | "deleteConfirm"
   | "statusFlow"
+  | "detail"
   | "borrowingReturnDetail"
   | "otherExpenseDetail"
   | "lendingOutDetail"
   | "expenseReportDetail"
   | "salaryPaymentDetail"
+  | "supplementInvoice"
   | null;
 
 const sourceTypeMap: Record<string, string> = {
@@ -313,9 +321,9 @@ const appStatusConfig: Record<string, { color: string; label: string }> = {
   已付款: { color: "ios-badge-blue", label: "已付款" },
   未还清: { color: "ios-badge-orange", label: "未还清" },
   已还清: { color: "ios-badge-green", label: "已还清" },
-  未付: { color: "ios-badge-orange", label: "未付" },
+  未付: { color: "ios-badge-orange", label: "未付款" },
   部分付款: { color: "ios-badge-blue", label: "部分付款" },
-  已付: { color: "ios-badge-green", label: "已付" },
+  已付: { color: "ios-badge-green", label: "已付清" },
 };
 
 const appStatusFlow: Record<string, string[]> = {
@@ -350,15 +358,28 @@ const emptyPaymentAppForm = {
 const emptyOtherExpenseForm = {
   amount: "",
   counterparty: "",
+  counterpartyBankName: "",
+  counterpartyBankAccount: "",
   transactionDate: "",
   description: "",
   projectSourceId: "",
+  invoiceStatus: "无需开票",
+};
+
+const emptyInlineInvoiceForm = {
+  invoiceNo: "",
+  invoiceDate: "",
+  amount: "",
+  taxRate: "6",
+  attachments: [] as string[],
 };
 
 const emptyLendingOutForm = {
   lendingType: "",
   biddingId: "",
   borrowerName: "",
+  borrowerBankName: "",
+  borrowerBankAccount: "",
   amount: "",
   lendingDate: "",
   expectedReturnDate: "",
@@ -449,6 +470,8 @@ export default function FinanceExpensePage() {
 
   const [paymentAppForm, setPaymentAppForm] = useState(emptyPaymentAppForm);
   const [otherExpenseForm, setOtherExpenseForm] = useState(emptyOtherExpenseForm);
+  const [hasInvoice, setHasInvoice] = useState(false);
+  const [inlineInvoiceForm, setInlineInvoiceForm] = useState(emptyInlineInvoiceForm);
   const [lendingOutForm, setLendingOutForm] = useState(emptyLendingOutForm);
   const [lendingReturnForm, setLendingReturnForm] = useState(emptyLendingReturnForm);
   const [expenseReportForm, setExpenseReportForm] = useState(emptyExpenseReportForm);
@@ -461,6 +484,7 @@ export default function FinanceExpensePage() {
 
   const [returnTargetLending, setReturnTargetLending] = useState<LendingOut | null>(null);
   const [statusFlowTarget, setStatusFlowTarget] = useState<{ type: string; id: string; status: string } | null>(null);
+  const [detailTarget, setDetailTarget] = useState<{ type: string; id: string } | null>(null);
   const [payableAppInstances, setPayableAppInstances] = useState<Record<string, any>>({});
   const [payableAppInstancesLoading, setPayableAppInstancesLoading] = useState(false);
 
@@ -846,9 +870,12 @@ export default function FinanceExpensePage() {
     setOtherExpenseForm({
       amount: String(item.amount),
       counterparty: item.counterparty || "",
+      counterpartyBankName: item.counterpartyBankName || "",
+      counterpartyBankAccount: item.counterpartyBankAccount || "",
       transactionDate: formatDate(item.transactionDate),
       description: item.description || "",
       projectSourceId: item.projectSourceId || "",
+      invoiceStatus: item.invoiceStatus || "无需开票",
     });
     setFormError("");
     setModalType("otherExpenseForm");
@@ -865,9 +892,12 @@ export default function FinanceExpensePage() {
       const body = {
         amount: Number(otherExpenseForm.amount),
         counterparty: otherExpenseForm.counterparty.trim() || null,
+        counterpartyBankName: otherExpenseForm.counterpartyBankName.trim() || null,
+        counterpartyBankAccount: otherExpenseForm.counterpartyBankAccount.trim() || null,
         transactionDate: otherExpenseForm.transactionDate || new Date().toISOString(),
         description: otherExpenseForm.description.trim() || null,
         projectSourceId: otherExpenseForm.projectSourceId || null,
+        invoiceStatus: otherExpenseForm.invoiceStatus,
       };
       const url = editingOtherExpense
         ? `/api/non-contract-expenses/${editingOtherExpense.id}`
@@ -880,9 +910,55 @@ export default function FinanceExpensePage() {
       });
       const json = await res.json();
       if (res.ok) {
+        const createdExpense = json.data;
+
+        // 如果有发票则同步创建
+        if (hasInvoice && inlineInvoiceForm.invoiceNo.trim()) {
+          const taxRate = Number(inlineInvoiceForm.taxRate) / 100;
+          const amount = Number(inlineInvoiceForm.amount) || 0;
+          const taxAmount = amount * taxRate;
+          const totalAmount = amount + taxAmount;
+          await fetch("/api/invoices", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              invoiceNo: inlineInvoiceForm.invoiceNo.trim(),
+              invoiceType: "增值税普通发票",
+              invoiceCategory: "收票",
+              invoiceDate: inlineInvoiceForm.invoiceDate || otherExpenseForm.transactionDate,
+              amount,
+              taxRate,
+              taxAmount,
+              totalAmount: totalAmount || Number(otherExpenseForm.amount),
+              sourceType: "non_contract_expense",
+              sourceId: editingOtherExpense?.id || createdExpense?.id,
+              sellerName: otherExpenseForm.counterparty.trim() || null,
+              attachments: inlineInvoiceForm.attachments,
+              status: "已登记",
+            }),
+          }).catch((err) => {
+            console.error("创建发票失败:", err);
+          });
+        }
+
+        if (otherExpenseForm.counterparty.trim()) {
+          await fetch("/api/counterparty", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: otherExpenseForm.counterparty.trim(),
+              bankName: otherExpenseForm.counterpartyBankName.trim() || null,
+              bankAccount: otherExpenseForm.counterpartyBankAccount.trim() || null,
+            }),
+          }).catch((err) => {
+            console.error("保存往来信息失败:", err);
+          });
+        }
         setModalType(null);
         setOtherExpenseForm(emptyOtherExpenseForm);
         setEditingOtherExpense(null);
+        setHasInvoice(false);
+        setInlineInvoiceForm(emptyInlineInvoiceForm);
         fetchNonContractExpenses();
       } else {
         setFormError(json.error || "操作失败");
@@ -944,6 +1020,8 @@ export default function FinanceExpensePage() {
           lendingType: lendingOutForm.lendingType,
           biddingId: lendingOutForm.biddingId || null,
           borrowerName: lendingOutForm.borrowerName.trim(),
+          borrowerBankName: lendingOutForm.borrowerBankName.trim() || null,
+          borrowerBankAccount: lendingOutForm.borrowerBankAccount.trim() || null,
           amount: Number(lendingOutForm.amount),
           lendingDate: lendingOutForm.lendingDate || new Date().toISOString(),
           expectedReturnDate: lendingOutForm.expectedReturnDate || null,
@@ -952,6 +1030,17 @@ export default function FinanceExpensePage() {
       });
       const json = await res.json();
       if (res.ok) {
+        if (lendingOutForm.borrowerName.trim()) {
+          fetch("/api/counterparty", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: lendingOutForm.borrowerName.trim(),
+              bankName: lendingOutForm.borrowerBankName.trim() || null,
+              bankAccount: lendingOutForm.borrowerBankAccount.trim() || null,
+            }),
+          }).catch((err) => console.error("自动保存往来信息失败:", err));
+        }
         setModalType(null);
         setLendingOutForm(emptyLendingOutForm);
         fetchLendingOuts();
@@ -1491,13 +1580,11 @@ export default function FinanceExpensePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
-                    <th>来源编号</th>
-                    <th>项目名称</th>
+                    <th>项目</th>
+                    <th>合同编号</th>
                     <th>收款方</th>
-                    <th>来源金额</th>
-                    <th>应付金额</th>
+                    <th>合同金额</th>
                     <th>已付金额</th>
-                    <th>未付金额</th>
                     <th>状态</th>
                     <th>操作</th>
                   </tr>
@@ -1521,9 +1608,6 @@ export default function FinanceExpensePage() {
                       : (p.sourceContract ? formatAmount(parseFloat(p.sourceContract.totalAmount)) : "-");
                     return (
                       <tr key={p.id}>
-                        <td className="font-mono text-[13px] font-semibold text-[#1C1917]">
-                          {sourceNo}
-                        </td>
                         <td>
                           {projectName ? (
                             <div>
@@ -1531,6 +1615,9 @@ export default function FinanceExpensePage() {
                               <span className="block text-[11px] text-[#78716C]">{p.projectSourceId}</span>
                             </div>
                           ) : p.projectSourceId || "-"}
+                        </td>
+                        <td className="font-mono text-[13px] font-semibold text-[#1C1917]">
+                          {sourceNo}
                         </td>
                         <td>
                           {counterparty ? (
@@ -1545,24 +1632,20 @@ export default function FinanceExpensePage() {
                           ) : "-"}
                         </td>
                         <td className="font-semibold">{sourceAmount}</td>
-                        <td className="font-semibold text-[#78716C]">{formatAmount(p.amount)}</td>
                         <td className="font-semibold">{formatAmount(p.paidAmount)}</td>
-                        <td className="font-semibold text-[#78716C]">{formatAmount(unpaid)}</td>
                         <td>{getStatusBadge(p.status)}</td>
                         <td>
                           <div className="flex items-center gap-1">
-                            {apps.length > 0 && (
-                              <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm"
-                                onClick={() => {
-                                  setStatusFlowTarget({ type: "payableApps", id: p.id, status: p.status });
-                                  setModalType("statusFlow");
-                                }}
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                                记录
-                              </button>
-                            )}
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm"
+                              onClick={() => {
+                                setDetailTarget({ type: "payable", id: p.id });
+                                setModalType("detail");
+                              }}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              详情
+                            </button>
                             {unpaid > 0 && !apps.some((a) => a.approvalStatus === "草稿" || a.approvalStatus === "审批中") && (
                               <button
                                 className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
@@ -2413,8 +2496,12 @@ export default function FinanceExpensePage() {
             const sourceAmount = isOutsourcing
               ? (outsourcing ? Number(outsourcing.amount) : 0)
               : (contract ? parseFloat(contract.totalAmount) : 0);
+            const invoicedAmount = contract?.invoicedAmount ? parseFloat(contract.invoicedAmount) : 0;
+            const supplier = contract?.supplier;
+            const bankName = supplier?.bankName;
+            const bankAccount = supplier?.bankAccount;
             return (
-              <div className="p-3.5 rounded-xl bg-[#FAFAF9] space-y-2.5">
+              <div className="p-4 rounded-xl bg-[#FAFAF9] space-y-3">
                 <div className="flex items-center gap-2 text-[13px]">
                   <FileText className="w-3.5 h-3.5 text-[#1C1917] shrink-0" />
                   <span className="font-mono font-semibold text-[#1C1917]">{sourceNo}</span>
@@ -2433,10 +2520,37 @@ export default function FinanceExpensePage() {
                     <span className="text-[#78716C]">({projectId})</span>
                   </div>
                 )}
-                <div className="flex items-center gap-4 text-[12px]">
-                  <span className="text-[#78716C]">{isOutsourcing ? "外包" : "合同"} <span className="font-semibold text-[#1C1917]">{formatAmount(sourceAmount)}</span></span>
-                  <span className="text-[#78716C]">已付 <span className="font-semibold text-[#78716C]">{formatAmount(selectedPayable.paidAmount)}</span></span>
-                  <span className="text-[#78716C]">未付 <span className="font-semibold text-[#78716C]">{formatAmount(selectedPayable.amount - selectedPayable.paidAmount)}</span></span>
+                <div className="grid grid-cols-4 gap-3 pt-2 border-t border-[#E7E5E4]">
+                  <div className="text-center">
+                    <p className="text-[11px] text-[#78716C] mb-0.5">合同金额</p>
+                    <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(sourceAmount)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[11px] text-[#78716C] mb-0.5">已收票</p>
+                    <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(invoicedAmount)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[11px] text-[#78716C] mb-0.5">已付</p>
+                    <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(selectedPayable.paidAmount)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[11px] text-[#78716C] mb-0.5">未付</p>
+                    <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(selectedPayable.amount - selectedPayable.paidAmount)}</p>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-[#E7E5E4]">
+                  <div className="flex items-center gap-2 text-[12px] text-[#78716C] mb-1.5">
+                    <span>🏦</span>
+                    <span className="font-semibold">收款方银行信息</span>
+                  </div>
+                  {bankName || bankAccount ? (
+                    <div className="text-[13px] space-y-0.5">
+                      <p><span className="text-[#78716C]">开户行：</span><span className="font-semibold text-[#1C1917]">{bankName || "-"}</span></p>
+                      <p><span className="text-[#78716C]">账  号：</span><span className="font-mono font-semibold text-[#1C1917]">{bankAccount || "-"}</span></p>
+                    </div>
+                  ) : (
+                    <p className="text-[13px] text-[#A8A29E]">暂无银行账户信息</p>
+                  )}
                 </div>
               </div>
             );
@@ -2500,7 +2614,7 @@ export default function FinanceExpensePage() {
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setModalType(null)}>取消</button>
             <button className="ios-btn ios-btn-primary" onClick={handleSubmitPaymentApp} disabled={saving}>
-              {saving ? "保存中..." : "提交申请"}
+              {saving ? "保存中..." : "提交付款申请"}
             </button>
           </div>
         </div>
@@ -2531,12 +2645,39 @@ export default function FinanceExpensePage() {
             </div>
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">交易对方</label>
+              <CounterpartySearch
+                value={otherExpenseForm.counterparty}
+                onChange={(name) => setOtherExpenseForm((p) => ({ ...p, counterparty: name }))}
+                onSelect={(record) =>
+                  setOtherExpenseForm((p) => ({
+                    ...p,
+                    counterpartyBankName: record.bankName || p.counterpartyBankName,
+                    counterpartyBankAccount: record.bankAccount || p.counterpartyBankAccount,
+                  }))
+                }
+                placeholder="请输入交易对方（可从往来信息中选择）"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行</label>
               <input
                 type="text"
                 className="ios-input"
-                placeholder="请输入交易对方"
-                value={otherExpenseForm.counterparty}
-                onChange={(e) => setOtherExpenseForm((p) => ({ ...p, counterparty: e.target.value }))}
+                placeholder="请输入开户行"
+                value={otherExpenseForm.counterpartyBankName || ""}
+                onChange={(e) => setOtherExpenseForm((p) => ({ ...p, counterpartyBankName: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">银行账号</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入银行账号"
+                value={otherExpenseForm.counterpartyBankAccount || ""}
+                onChange={(e) => setOtherExpenseForm((p) => ({ ...p, counterpartyBankAccount: e.target.value }))}
               />
             </div>
           </div>
@@ -2565,6 +2706,78 @@ export default function FinanceExpensePage() {
               onChange={(id) => setOtherExpenseForm((p) => ({ ...p, projectSourceId: id }))}
               label="关联项目"
             />
+          </div>
+          {/* 发票信息区域 */}
+          <div className="border-t border-[#F5F5F4] pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-[13px] font-semibold text-[#1C1917]">发票信息</label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-[13px] text-[#78716C]">有发票</span>
+                <input
+                  type="checkbox"
+                  checked={hasInvoice}
+                  onChange={(e) => {
+                    setHasInvoice(e.target.checked);
+                    if (!e.target.checked) {
+                      setOtherExpenseForm((p) => ({ ...p, invoiceStatus: "待补票" }));
+                    } else {
+                      setOtherExpenseForm((p) => ({ ...p, invoiceStatus: "已收票" }));
+                    }
+                  }}
+                />
+              </label>
+            </div>
+            {hasInvoice && (
+              <div className="space-y-3 p-3 rounded-xl bg-[#FAFAF9]">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[12px] text-[#78716C] mb-1">发票号码 <span className="text-[#78716C]">*</span></label>
+                    <input
+                      type="text"
+                      className="ios-input text-[13px]"
+                      placeholder="请输入发票号码"
+                      value={inlineInvoiceForm.invoiceNo}
+                      onChange={(e) => setInlineInvoiceForm((p) => ({ ...p, invoiceNo: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[12px] text-[#78716C] mb-1">开票日期 <span className="text-[#78716C]">*</span></label>
+                    <input
+                      type="date"
+                      className="ios-input text-[13px]"
+                      value={inlineInvoiceForm.invoiceDate}
+                      onChange={(e) => setInlineInvoiceForm((p) => ({ ...p, invoiceDate: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[12px] text-[#78716C] mb-1">不含税金额</label>
+                    <input
+                      type="number"
+                      className="ios-input text-[13px]"
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                      value={inlineInvoiceForm.amount}
+                      onChange={(e) => setInlineInvoiceForm((p) => ({ ...p, amount: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[12px] text-[#78716C] mb-1">税率（%）</label>
+                    <input
+                      type="number"
+                      className="ios-input text-[13px]"
+                      placeholder="6"
+                      min="0"
+                      max="100"
+                      value={inlineInvoiceForm.taxRate}
+                      onChange={(e) => setInlineInvoiceForm((p) => ({ ...p, taxRate: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setModalType(null)}>取消</button>
@@ -2617,12 +2830,31 @@ export default function FinanceExpensePage() {
           )}
           <div>
             <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">借入方 <span className="text-[#78716C]">*</span></label>
+            <CounterpartySearch
+              value={lendingOutForm.borrowerName}
+              onChange={(name) => setLendingOutForm((p) => ({ ...p, borrowerName: name }))}
+              onSelect={(bank) => setLendingOutForm((p) => ({ ...p, borrowerBankName: bank.bankName, borrowerBankAccount: bank.bankAccount }))}
+              placeholder="请输入借入方"
+            />
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行</label>
             <input
               type="text"
               className="ios-input"
-              placeholder="请输入借入方"
-              value={lendingOutForm.borrowerName}
-              onChange={(e) => setLendingOutForm((p) => ({ ...p, borrowerName: e.target.value }))}
+              placeholder="请输入开户行"
+              value={lendingOutForm.borrowerBankName}
+              onChange={(e) => setLendingOutForm((p) => ({ ...p, borrowerBankName: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">银行账号</label>
+            <input
+              type="text"
+              className="ios-input"
+              placeholder="请输入银行账号"
+              value={lendingOutForm.borrowerBankAccount}
+              onChange={(e) => setLendingOutForm((p) => ({ ...p, borrowerBankAccount: e.target.value }))}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -3114,6 +3346,20 @@ export default function FinanceExpensePage() {
               </div>
             </div>
 
+            {(detailOtherExpense.counterpartyBankName || detailOtherExpense.counterpartyBankAccount) && (
+              <div className="col-span-2 p-3 rounded-xl bg-[#FAFAF9] mt-2">
+                <p className="text-[12px] text-[#78716C] mb-1">对方银行信息</p>
+                <div className="flex items-center gap-4 text-[13px] text-[#1C1917]">
+                  {detailOtherExpense.counterpartyBankName && (
+                    <span>开户行：{detailOtherExpense.counterpartyBankName}</span>
+                  )}
+                  {detailOtherExpense.counterpartyBankAccount && (
+                    <span>账号：{detailOtherExpense.counterpartyBankAccount}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
             {detailOtherExpense.description && (
               <div>
                 <p className="text-[12px] text-[#78716C] mb-0.5">说明</p>
@@ -3136,9 +3382,153 @@ export default function FinanceExpensePage() {
               </div>
             )}
 
+            {/* 发票信息卡片 */}
+            {detailOtherExpense.invoiceStatus && detailOtherExpense.invoiceStatus !== "无需开票" && (
+              <div className="p-3 rounded-xl bg-[#FFF9F0] border border-[#1C1917]/8">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[12px] font-semibold text-[#1C1917]">
+                    发票状态：
+                    <span className={detailOtherExpense.invoiceStatus === "已收票" ? "text-green-600" : "text-[#F97316]"}>
+                      {detailOtherExpense.invoiceStatus}
+                    </span>
+                  </p>
+                  {detailOtherExpense.invoiceStatus === "待补票" && (
+                    <button
+                      className="ios-btn ios-btn-sm ios-btn-primary text-[12px]"
+                      onClick={() => {
+                        setInlineInvoiceForm(emptyInlineInvoiceForm);
+                        setModalType("supplementInvoice");
+                      }}
+                    >
+                      补录发票
+                    </button>
+                  )}
+                </div>
+                {detailOtherExpense.invoicedAmount != null && Number(detailOtherExpense.invoicedAmount) > 0 && (
+                  <p className="text-[12px] text-[#78716C]">
+                    已收票金额：{formatAmount(detailOtherExpense.invoicedAmount)}
+                  </p>
+                )}
+              </div>
+            )}
+
             <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
           </div>
         )}
+      </Modal>
+
+      {/* 补录发票弹窗 */}
+      <Modal
+        isOpen={modalType === "supplementInvoice"}
+        onClose={() => { setModalType(null); setInlineInvoiceForm(emptyInlineInvoiceForm); }}
+        title="补录发票"
+        maxWidth="480px"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] text-[#78716C] mb-1">发票号码 <span className="text-[#78716C]">*</span></label>
+              <input
+                type="text"
+                className="ios-input text-[13px]"
+                value={inlineInvoiceForm.invoiceNo}
+                onChange={(e) => setInlineInvoiceForm((p) => ({ ...p, invoiceNo: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] text-[#78716C] mb-1">开票日期 <span className="text-[#78716C]">*</span></label>
+              <input
+                type="date"
+                className="ios-input text-[13px]"
+                value={inlineInvoiceForm.invoiceDate}
+                onChange={(e) => setInlineInvoiceForm((p) => ({ ...p, invoiceDate: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] text-[#78716C] mb-1">不含税金额</label>
+              <input
+                type="number"
+                className="ios-input text-[13px]"
+                min="0"
+                step="0.01"
+                value={inlineInvoiceForm.amount}
+                onChange={(e) => setInlineInvoiceForm((p) => ({ ...p, amount: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] text-[#78716C] mb-1">税率（%）</label>
+              <input
+                type="number"
+                className="ios-input text-[13px]"
+                min="0"
+                max="100"
+                value={inlineInvoiceForm.taxRate}
+                onChange={(e) => setInlineInvoiceForm((p) => ({ ...p, taxRate: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-3 border-t border-[#F5F5F4]">
+            <button className="ios-btn ios-btn-secondary" onClick={() => { setModalType(null); setInlineInvoiceForm(emptyInlineInvoiceForm); }}>取消</button>
+            <button
+              className="ios-btn ios-btn-primary"
+              onClick={async () => {
+                if (!inlineInvoiceForm.invoiceNo.trim() || !inlineInvoiceForm.invoiceDate) {
+                  alert("请填写发票号码和开票日期");
+                  return;
+                }
+                const taxRate = Number(inlineInvoiceForm.taxRate) / 100;
+                const amount = Number(inlineInvoiceForm.amount) || 0;
+                const taxAmount = amount * taxRate;
+                const totalAmount = amount + taxAmount;
+                const res = await fetch("/api/invoices", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    invoiceNo: inlineInvoiceForm.invoiceNo.trim(),
+                    invoiceType: "增值税普通发票",
+                    invoiceCategory: "收票",
+                    invoiceDate: inlineInvoiceForm.invoiceDate,
+                    amount,
+                    taxRate,
+                    taxAmount,
+                    totalAmount: totalAmount || Number(detailOtherExpense!.amount),
+                    sourceType: "non_contract_expense",
+                    sourceId: detailOtherExpense!.id,
+                    sellerName: detailOtherExpense!.counterparty || null,
+                    status: "已登记",
+                  }),
+                });
+                if (res.ok) {
+                  // 更新支出 invoiceStatus
+                  await fetch(`/api/non-contract-expenses/${detailOtherExpense!.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ invoiceStatus: "已收票" }),
+                  });
+                  setModalType(null);
+                  setInlineInvoiceForm(emptyInlineInvoiceForm);
+                  // 刷新详情
+                  if (detailOtherExpense) {
+                    const detailRes = await fetch(`/api/non-contract-expenses/${detailOtherExpense.id}`);
+                    if (detailRes.ok) {
+                      const detailJson = await detailRes.json();
+                      setDetailOtherExpense(detailJson.data);
+                    }
+                  }
+                  fetchNonContractExpenses();
+                  alert("发票补录成功");
+                } else {
+                  const json = await res.json();
+                  alert(json.error || "补录失败");
+                }
+              }}
+            >
+              确认补录
+            </button>
+          </div>
+        </div>
       </Modal>
 
       <Modal
@@ -3843,6 +4233,141 @@ export default function FinanceExpensePage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={modalType === "detail" && !!detailTarget}
+        onClose={() => { setModalType(null); setDetailTarget(null); }}
+        title="详情"
+        maxWidth="640px"
+      >
+        {detailTarget && (() => {
+          if (detailTarget.type === "payable") {
+            const p = payables.find((x) => x.id === detailTarget.id);
+            if (!p) return <p className="text-center text-[#78716C] py-8">数据不存在</p>;
+            const apps = getPayableApplications(p.id);
+            const isOutsourcing = p.sourceType === "outsourcing";
+            const contract = p.sourceContract;
+            const outsourcing = p.sourceOutsourcing;
+            const sourceNo = isOutsourcing
+              ? `外包-${outsourcing?.targetName || p.sourceId.slice(-6)}`
+              : contract?.contractNo || p.sourceId;
+            const counterparty = isOutsourcing ? outsourcing?.targetName : contract?.supplier?.name;
+            const projectName = contract?.project?.name || outsourcing?.project?.name || p.project?.name;
+            const projectId = contract?.project?.projectSourceId || outsourcing?.project?.projectSourceId || p.projectSourceId;
+            const sourceAmount = isOutsourcing
+              ? (outsourcing ? Number(outsourcing.amount) : 0)
+              : (contract ? parseFloat(contract.totalAmount) : 0);
+            const invoicedAmount = contract?.invoicedAmount ? parseFloat(contract.invoicedAmount) : 0;
+            const paidAmount = p.paidAmount;
+            const unpaid = p.amount - p.paidAmount;
+            const supplier = contract?.supplier;
+            const bankName = supplier?.bankName;
+            const bankAccount = supplier?.bankAccount;
+
+            return (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-[#FAFAF9] space-y-3">
+                  <div className="flex items-center gap-2 text-[13px]">
+                    <FileText className="w-3.5 h-3.5 text-[#1C1917] shrink-0" />
+                    <span className="font-mono font-semibold text-[#1C1917]">{sourceNo}</span>
+                    <span className="text-[#A8A29E]">|</span>
+                    {isOutsourcing ? (
+                      <span className="ios-badge ios-badge-green text-[11px]!">个人</span>
+                    ) : (
+                      <Building2 className="w-3.5 h-3.5 text-[#78716C] shrink-0" />
+                    )}
+                    <span className="truncate">{counterparty || "-"}</span>
+                  </div>
+                  {projectName && (
+                    <div className="flex items-center gap-1.5 text-[12px]">
+                      <span className="text-[#78716C]">关联项目:</span>
+                      <span className="font-semibold text-[#1C1917]">{projectName}</span>
+                      {projectId && <span className="text-[#78716C]">({projectId})</span>}
+                    </div>
+                  )}
+                  <div className="grid grid-cols-4 gap-3 pt-2 border-t border-[#E7E5E4]">
+                    <div className="text-center">
+                      <p className="text-[11px] text-[#78716C] mb-0.5">合同金额</p>
+                      <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(sourceAmount)}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[11px] text-[#78716C] mb-0.5">已收票</p>
+                      <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(invoicedAmount)}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[11px] text-[#78716C] mb-0.5">已付</p>
+                      <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(paidAmount)}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[11px] text-[#78716C] mb-0.5">未付</p>
+                      <p className="text-[15px] font-bold text-[#1C1917]">{formatAmount(unpaid)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-[#FAFAF9] space-y-2">
+                  <div className="flex items-center gap-2 text-[12px] text-[#78716C]">
+                    <span>🏦</span>
+                    <span className="font-semibold">收款方银行信息</span>
+                  </div>
+                  {bankName || bankAccount ? (
+                    <div className="text-[13px] space-y-1">
+                      <p><span className="text-[#78716C]">开户行：</span><span className="font-semibold text-[#1C1917]">{bankName || "-"}</span></p>
+                      <p><span className="text-[#78716C]">账  号：</span><span className="font-mono font-semibold text-[#1C1917]">{bankAccount ? `****${bankAccount.slice(-4)}` : "-"}</span></p>
+                    </div>
+                  ) : (
+                    <p className="text-[13px] text-[#A8A29E]">暂无银行账户信息</p>
+                  )}
+                </div>
+
+                {apps.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="text-[13px] font-semibold text-[#1C1917]">付款申请记录</p>
+                    {apps.map((app) => {
+                      const instance = app.approvalInstanceId ? payableAppInstances[app.approvalInstanceId] : null;
+                      return (
+                        <div key={app.id} className="rounded-xl border border-[#E7E5E4] overflow-hidden">
+                          <div className="p-3 bg-[#FAFAF9]">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[13px] font-semibold text-[#1C1917]">{app.applicant?.realName || "-"}</span>
+                                <span className="text-[12px] text-[#78716C]">{formatDate(app.createdAt)}</span>
+                              </div>
+                              {getStatusBadge(app.approvalStatus)}
+                            </div>
+                            <div className="flex items-center gap-4 text-[12px]">
+                              <span className="text-[#78716C]">
+                                申请金额 <span className="font-semibold text-[#1C1917]">{formatAmount(app.amount)}</span>
+                              </span>
+                              {app.paymentReason && (
+                                <span className="text-[#78716C] truncate max-w-[200px]">事由：{app.paymentReason}</span>
+                              )}
+                            </div>
+                          </div>
+                          {app.approvalInstanceId && (
+                            <div className="px-3 pb-3">
+                              <ApprovalTimeline instance={instance} loading={payableAppInstancesLoading && !instance} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-[#78716C] text-[13px] rounded-xl bg-[#FAFAF9]">
+                    暂无付款申请记录
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
+                  <button className="ios-btn ios-btn-secondary" onClick={() => { setModalType(null); setDetailTarget(null); }}>关闭</button>
+                </div>
+              </div>
+            );
+          }
+          return <p className="text-center text-[#78716C] py-8">未知类型</p>;
+        })()}
       </Modal>
     </>
   );

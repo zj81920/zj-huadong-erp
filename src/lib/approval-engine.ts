@@ -742,11 +742,31 @@ async function updateBusinessStatus(
     case "non_contract_income":
       await prisma.nonContractIncome.update({ where: { id: businessId }, data: updateData });
       break;
-    case "non_contract_expense":
+    case "non_contract_expense": {
       if (bankAccountId) updateData.bankAccountId = bankAccountId;
       if (paymentMethod) updateData.paymentMethod = paymentMethod;
-      await prisma.nonContractExpense.update({ where: { id: businessId }, data: updateData });
+      const updated = await prisma.nonContractExpense.update({ where: { id: businessId }, data: updateData });
+      // 同步往来信息到往来信息库
+      if (updated.counterparty) {
+        const existing = await prisma.counterpartyInfo.findFirst({
+          where: {
+            name: updated.counterparty,
+            bankName: updated.counterpartyBankName ?? null,
+            bankAccount: updated.counterpartyBankAccount ?? null,
+          },
+        });
+        if (!existing) {
+          await prisma.counterpartyInfo.create({
+            data: {
+              name: updated.counterparty,
+              bankName: updated.counterpartyBankName ?? null,
+              bankAccount: updated.counterpartyBankAccount ?? null,
+            },
+          });
+        }
+      }
       break;
+    }
     case "other_borrowing":
       await prisma.otherBorrowing.update({ where: { id: businessId }, data: updateData });
       break;

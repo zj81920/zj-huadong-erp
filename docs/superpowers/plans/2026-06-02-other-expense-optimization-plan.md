@@ -16,7 +16,6 @@
 |------|------|---------|
 | `prisma/schema.prisma` | Invoice 默认值调整 + NonContractExpense 新增字段 | 修改 |
 | `src/app/api/counterparty/route.ts` | 放开 POST 的 admin 限制 | 修改 |
-| `src/app/api/invoices/route.ts` | 兼容"待补票"状态 | 修改 |
 | `src/app/api/invoices/[id]/route.ts` | 作废发票时联动扣减 invoicedAmount | 修改 |
 | `src/app/(dashboard)/finance/expense/page.tsx` | 四项全部改动 | 修改 |
 | `src/app/(dashboard)/finance/invoices/page.tsx` | 作废按钮 + 待补票筛选 + badge | 修改 |

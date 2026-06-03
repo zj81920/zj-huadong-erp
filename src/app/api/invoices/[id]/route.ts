@@ -64,6 +64,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       },
     });
 
+    // 作废联动：发票作废时扣减关联模块的 invoicedAmount
+    if (body.status === "已作废" && existing.status !== "已作废") {
+      await updateRelatedInvoicedAmount(
+        existing.sourceType,
+        existing.sourceId,
+        Number(existing.totalAmount),
+        "subtract"
+      );
+    }
+
     return NextResponse.json({ data: record });
   } catch (error) {
     console.error("更新发票失败:", error);
@@ -85,7 +95,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: "已作废的发票不能删除" }, { status: 400 });
     }
 
-    await updateRelatedInvoicedAmount(existing.sourceType, existing.sourceId, Number(existing.totalAmount), "subtract");
+    // 仅"已登记"状态才扣减（已作废的已在作废时扣过）
+    if (existing.status !== "已作废") {
+      await updateRelatedInvoicedAmount(existing.sourceType, existing.sourceId, Number(existing.totalAmount), "subtract");
+    }
 
     await prisma.invoice.delete({ where: { id } });
 

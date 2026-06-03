@@ -52,8 +52,8 @@ export async function PUT(
       );
     }
 
-    const fieldKeys = Object.keys(body).filter((k) => k !== "status");
-    const isStatusOnlyChange = body.status !== undefined && fieldKeys.length === 0;
+    const fieldKeys = Object.keys(body).filter((k) => k !== "status" && k !== "invoiceStatus");
+    const isStatusOnlyChange = (body.status !== undefined || body.invoiceStatus !== undefined) && fieldKeys.length === 0;
 
     if (!isStatusOnlyChange && existing.status !== "草稿") {
       return NextResponse.json(
@@ -72,9 +72,14 @@ export async function PUT(
       updateData.transactionDate = body.transactionDate ? new Date(body.transactionDate) : new Date();
     if (body.counterparty !== undefined)
       updateData.counterparty = body.counterparty?.trim() || null;
+    if (body.counterpartyBankName !== undefined)
+      updateData.counterpartyBankName = body.counterpartyBankName?.trim() || null;
+    if (body.counterpartyBankAccount !== undefined)
+      updateData.counterpartyBankAccount = body.counterpartyBankAccount?.trim() || null;
     if (body.description !== undefined)
       updateData.description = body.description?.trim() || null;
     if (body.status !== undefined) updateData.status = body.status;
+    if (body.invoiceStatus !== undefined) updateData.invoiceStatus = body.invoiceStatus;
     if (body.approvalInstanceId !== undefined)
       updateData.approvalInstanceId = body.approvalInstanceId;
 

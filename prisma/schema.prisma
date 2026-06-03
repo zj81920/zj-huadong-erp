@@ -649,6 +649,8 @@ model NonContractIncome {
   amount             Decimal  @db.Decimal(15, 2)
   transactionDate    DateTime @default(now()) @map("transaction_date")
   counterparty       String?
+  counterpartyBankName   String?  @map("counterparty_bank_name")
+  counterpartyBankAccount String? @map("counterparty_bank_account")
   description        String?  @db.Text
   approvalInstanceId String?  @map("approval_instance_id")
   status             String   @default("草稿")
@@ -667,10 +669,13 @@ model NonContractExpense {
   amount             Decimal  @db.Decimal(15, 2)
   transactionDate    DateTime @default(now()) @map("transaction_date")
   counterparty       String?
+  counterpartyBankName   String?  @map("counterparty_bank_name")
+  counterpartyBankAccount String? @map("counterparty_bank_account")
   description        String?  @db.Text
   approvalInstanceId String?  @map("approval_instance_id")
   status             String   @default("草稿")
   invoicedAmount     Decimal  @default(0) @map("invoiced_amount") @db.Decimal(15, 2)
+  invoiceStatus      String   @default("无需开票") @map("invoice_status")
   bankAccountId      String?  @map("bank_account_id")
   paymentMethod      String?  @map("payment_method")
   paidAt             DateTime? @map("paid_at")
@@ -819,6 +824,7 @@ model PaymentApplication {
   paymentReason      String?  @map("payment_reason")
   paymentMethod      String?  @map("payment_method")
   bankAccount        String?  @map("bank_account")
+  bankName           String?  @map("bank_name")
   remark             String?
   approvalStatus     String   @default("草稿") @map("approval_status")
   approvalInstanceId String?  @map("approval_instance_id")
@@ -897,7 +903,7 @@ model Invoice {
   projectSourceId    String?  @map("project_source_id")
   sourceType         String   @map("source_type")
   sourceId           String?  @map("source_id")
-  status             String   @default("草稿")
+  status             String   @default("已登记")
   remark             String?  @db.Text
   attachments        Json     @default("[]") @map("attachments")
   approvalInstanceId String?  @map("approval_instance_id")
@@ -1016,6 +1022,8 @@ model LendingOut {
   projectSourceId    String?  @map("project_source_id")
   biddingId          String?  @map("bidding_id")
   borrowerName       String   @map("borrower_name")
+  borrowerBankName   String?  @map("borrower_bank_name")
+  borrowerBankAccount String? @map("borrower_bank_account")
   amount             Decimal  @db.Decimal(15, 2)
   returnedAmount     Decimal  @default(0) @map("returned_amount") @db.Decimal(15, 2)
   remainingAmount    Decimal  @db.Decimal(15, 2) @map("remaining_amount")
@@ -1310,4 +1318,15 @@ model SystemSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("system_settings")
+}
+
+model CounterpartyInfo {
+  id          String   @id @default(cuid())
+  name        String
+  bankName    String?  @map("bank_name")
+  bankAccount String?  @map("bank_account")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("counterparty_infos")
 }

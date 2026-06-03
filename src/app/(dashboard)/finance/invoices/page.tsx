@@ -15,6 +15,7 @@ import {
   Send,
   ArrowDownToLine,
   ArrowUpFromLine,
+  Ban,
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import ProjectPicker from "@/components/ProjectPicker";
@@ -136,6 +137,7 @@ const sourceTypeMap: Record<string, string> = {
 
 const statusConfig: Record<string, { color: string; label: string }> = {
   已登记: { color: "ios-badge-blue", label: "已登记" },
+  待补票: { color: "ios-badge-yellow", label: "待补票" },
   已作废: { color: "ios-badge-red", label: "已作废" },
 };
 
@@ -148,6 +150,7 @@ const categoryFilters = [
 const statusFilters = [
   { value: "", label: "全部" },
   { value: "已登记", label: "已登记" },
+  { value: "待补票", label: "待补票" },
   { value: "已作废", label: "已作废" },
 ];
 
@@ -738,6 +741,29 @@ export default function FinanceInvoicesPage() {
                           <Pencil className="w-3.5 h-3.5" />
                           编辑
                         </button>
+                        {inv.status === "已登记" && (
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#F97316]!"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (!confirm(`确定要作废发票 ${inv.invoiceNo} 吗？此操作将扣减关联金额。`)) return;
+                              const res = await fetch(`/api/invoices/${inv.id}`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ status: "已作废" }),
+                              });
+                              if (res.ok) {
+                                fetchInvoices();
+                              } else {
+                                const json = await res.json();
+                                alert(json.error || "操作失败");
+                              }
+                            }}
+                          >
+                            <Ban className="w-3.5 h-3.5" />
+                            作废
+                          </button>
+                        )}
                         {isAdminUser && (
                           <button
                             className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
