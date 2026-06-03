@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   Settings2,
   Plus,
@@ -14,6 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { BUSINESS_MODULE_GROUPS, BUSINESS_MODULES } from "@/lib/module-permissions";
 
 const CONTRACT_MODULES = ["income_contract", "expense_contract"];
 
@@ -21,49 +22,6 @@ const FINANCE_MODULES = [
   "non_contract_expense", "payment_application", "expense_report",
   "lending_out", "salary_payment", "borrowing_return_application",
 ];
-
-const BUSINESS_MODULE_GROUPS = [
-  {
-    label: "商务管理",
-    modules: [
-      { type: "quotation", name: "商务报价" },
-      { type: "supplier", name: "供应商审批" },
-    ],
-  },
-  {
-    label: "项目管理",
-    modules: [
-      { type: "outsourcing", name: "外包任务" },
-    ],
-  },
-  {
-    label: "项目采购",
-    modules: [
-      { type: "purchase_request", name: "采购需求" },
-      { type: "delivery_receipt", name: "到货验收" },
-    ],
-  },
-  {
-    label: "合同管理",
-    modules: [
-      { type: "income_contract", name: "收入合同" },
-      { type: "expense_contract", name: "支出合同" },
-    ],
-  },
-  {
-    label: "财务管理 · 支出",
-    modules: [
-      { type: "non_contract_expense", name: "其他支付" },
-      { type: "payment_application", name: "合同支付" },
-      { type: "lending_out", name: "借出款" },
-      { type: "expense_report", name: "费用报销" },
-      { type: "salary_payment", name: "工资发放" },
-      { type: "borrowing_return_application", name: "借入资金归还" },
-    ],
-  },
-];
-
-const BUSINESS_MODULES = BUSINESS_MODULE_GROUPS.flatMap((g) => g.modules);
 
 function getTerminalNodeType(moduleType: string): "archive" | "payment" | null {
   if (CONTRACT_MODULES.includes(moduleType)) return "archive";
@@ -114,20 +72,10 @@ export default function ApprovalFlowPage() {
   const [batchTargets, setBatchTargets] = useState<Record<string, string[]>>({});
   const [batchApplying, setBatchApplying] = useState(false);
   const [approverRoles, setApproverRoles] = useState(APPROVER_ROLES_FALLBACK);
+  // 编辑缓存：切换模块时保留未保存的编辑内容
+  const [editCache, setEditCache] = useState<Record<string, FlowNode[]>>({});
 
   const currentModule = BUSINESS_MODULES.find((m) => m.type === selectedModule)!;
-
-  const loadNodes = useCallback(
-    (moduleType: string) => {
-      const saved = savedFlows[moduleType];
-      if (saved) {
-        setNodes(saved.map((n) => ({ ...n })));
-      } else {
-        setNodes([]);
-      }
-    },
-    [savedFlows],
-  );
 
   useEffect(() => {
     const loadRoles = async () => {
@@ -146,11 +94,6 @@ export default function ApprovalFlowPage() {
     };
     loadRoles();
   }, []);
-
-  useEffect(() => {
-    setFlowLevel("common");
-    loadNodes(selectedModule);
-  }, [selectedModule, loadNodes]);
 
   useEffect(() => {
     async function fetchFlows() {
@@ -177,6 +120,9 @@ export default function ApprovalFlowPage() {
             }));
           }
           setSavedFlows(mapped);
+          // 初始化当前选中模块的节点
+          const initial = mapped[selectedModule];
+          setNodes(initial ? initial.map((n) => ({ ...n })) : []);
         }
       } catch {
       }
@@ -185,6 +131,22 @@ export default function ApprovalFlowPage() {
   }, []);
 
   const handleModuleSelect = (moduleType: string) => {
+    if (moduleType === selectedModule) return;
+
+    // 保存当前模块的编辑内容到缓存
+    if (selectedModule) {
+      setEditCache((prev) => ({ ...prev, [selectedModule]: nodes.map((n) => ({ ...n })) }));
+    }
+
+    // 从缓存或已保存数据加载目标模块的节点
+    const cached = editCache[moduleType];
+    if (cached) {
+      setNodes(cached.map((n) => ({ ...n })));
+    } else {
+      const saved = savedFlows[moduleType];
+      setNodes(saved ? saved.map((n) => ({ ...n })) : []);
+    }
+
     setSelectedModule(moduleType);
     setSaveMsg(null);
   };
@@ -219,12 +181,6 @@ export default function ApprovalFlowPage() {
   };
 
   const handleSave = async () => {
-    const invalid = nodes.find((n) => !n.approverRole);
-    if (invalid) {
-      setSaveMsg({ type: "error", text: "请为所有节点选择审批角色" });
-      return;
-    }
-
     const terminalType = getTerminalNodeType(selectedModule);
     const processedNodes: FlowNode[] = nodes.map((n, i) => ({
       ...n,
