@@ -113,46 +113,45 @@ export async function startApprovalFlow(params: {
 
   const startNode = flowNodes[0];
 
-  // 只有一个节点（发起节点），直接完成
-  if (flowNodes.length === 1) {
-    const instance = await prisma.approvalInstance.create({
-      data: {
-        businessType,
-        businessId,
-        flowLevel,
-        currentNode: startNode.nodeOrder,
-        status: "已批准",
-      },
-    });
+  // 获取发起人的角色 code 列表
+  const userRoles = await prisma.userRole.findMany({
+    where: { userId: initiatorId },
+    include: { role: { select: { code: true } } },
+  });
+  const userRoleCodes = new Set(userRoles.map((ur) => ur.role.code));
 
-    await prisma.approvalAction.create({
-      data: {
-        instanceId: instance.id,
-        nodeId: startNode.nodeOrder,
-        nodeName: startNode.nodeName,
-        approverId: initiatorId,
-        action: "initiate",
-        actedAt: new Date(),
-      },
-    });
+  // 确定起始节点：跳过发起人自己角色匹配的连续节点
+  // 从第一个节点开始，逐个检查是否需要跳过
+  let startNodeOrder = 1; // nodeOrder 从 1 开始
+  for (const node of flowNodes) {
+    // 归档和支付节点永远不跳过
+    if (node.nodeType === "archive" || node.nodeType === "payment") break;
 
-    return { instanceId: instance.id, currentNode: startNode.nodeOrder, status: "已批准", approverIds: [] };
+    // 检查发起人角色是否匹配该节点的审批角色
+    const nodeRoles = node.approverRole.split(",").map((r) => r.trim()).filter(Boolean);
+    const isSelf = nodeRoles.some((r) => userRoleCodes.has(r));
+
+    if (isSelf) {
+      startNodeOrder = node.nodeOrder + 1;
+    } else {
+      break; // 遇到第一个不匹配的节点就停止跳过
+    }
   }
 
-  // 自动完成第一节点（发起），推进到第二个节点
-  const nextNode = flowNodes[1];
-
-  // 检查是否需要跳过后续节点（如项目经理自己发起）
-  let actualNode = nextNode;
-  let skipCount = 1;
-
-  while (actualNode && (await shouldSkipNode(actualNode.approverRole, initiatorId, projectSourceId))) {
-    skipCount++;
-    if (skipCount >= flowNodes.length) break;
-    actualNode = flowNodes[skipCount];
+  // 限制到有效范围
+  if (startNodeOrder > flowNodes[flowNodes.length - 1].nodeOrder) {
+    startNodeOrder = flowNodes[flowNodes.length - 1].nodeOrder;
   }
 
-  if (skipCount >= flowNodes.length) {
+  const skippedCount = startNodeOrder - startNode.nodeOrder; // 被跳过的节点数（从 nodeOrder 1 到 startNodeOrder-1）
+  const actualNode = flowNodes.find((n) => n.nodeOrder === startNodeOrder);
+
+  if (!actualNode) {
+    throw new Error(`未找到 nodeOrder=${startNodeOrder} 的节点配置`);
+  }
+
+  // 所有节点都被跳过 -> 直接完成
+  if (skippedCount >= flowNodes.length) {
     const instance = await prisma.approvalInstance.create({
       data: {
         businessType,
@@ -169,8 +168,9 @@ export async function startApprovalFlow(params: {
           instanceId: instance.id,
           nodeId: flowNodes[i].nodeOrder,
           nodeName: flowNodes[i].nodeName,
-          approverId: i === 0 ? initiatorId : "system",
-          action: i === 0 ? "initiate" : "auto_skip",
+          approverId: initiatorId,
+          action: "auto_skip",
+          comment: "发起人自动跳过",
           actedAt: new Date(),
         },
       });
@@ -191,6 +191,7 @@ export async function startApprovalFlow(params: {
     },
   });
 
+  // 为发起节点创建 initiate 动作
   await prisma.approvalAction.create({
     data: {
       instanceId: instance.id,
@@ -202,14 +203,19 @@ export async function startApprovalFlow(params: {
     },
   });
 
-  for (let i = 1; i < skipCount; i++) {
+  // 为跳过的节点创建 auto_skip 动作（跳过发起节点之后的、发起人角色匹配的节点）
+  for (let i = 0; i < skippedCount; i++) {
+    const skippedNode = flowNodes[i];
+    // 发起节点已经记录为 initiate，跳过它
+    if (i === 0) continue;
     await prisma.approvalAction.create({
       data: {
         instanceId: instance.id,
-        nodeId: flowNodes[i].nodeOrder,
-        nodeName: flowNodes[i].nodeName,
-        approverId: "system",
+        nodeId: skippedNode.nodeOrder,
+        nodeName: skippedNode.nodeName,
+        approverId: initiatorId,
         action: "auto_skip",
+        comment: "发起人自动跳过",
         actedAt: new Date(),
       },
     });
