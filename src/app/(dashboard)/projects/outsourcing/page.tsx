@@ -17,7 +17,7 @@ import {
 import Modal from "@/components/Modal";
 import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker, { ProjectLeadItem } from "@/components/ProjectPicker";
-import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { DetailPageLayout } from "@/components/DetailPageLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
@@ -165,9 +165,6 @@ export default function OutsourcingPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<OutsourcingTask | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const [approvalInstance, setApprovalInstance] = useState<any>(null);
-  const [approvalLoading, setApprovalLoading] = useState(false);
-
   const {
     toggleSelect,
     selectAll,
@@ -175,23 +172,6 @@ export default function OutsourcingPage() {
     isAllSelected,
     isSelected,
   } = useBatchSelection(tasks.map((d) => d.id));
-
-  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
-    setApprovalLoading(true);
-    try {
-      const res = await fetch(`/api/approval-instances/${instanceId}`);
-      if (res.ok) {
-        const json = await res.json();
-        setApprovalInstance(json.data);
-      } else {
-        setApprovalInstance(null);
-      }
-    } catch {
-      setApprovalInstance(null);
-    } finally {
-      setApprovalLoading(false);
-    }
-  }, []);
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -400,21 +380,14 @@ export default function OutsourcingPage() {
   };
 
   const handleViewDetail = async (task: OutsourcingTask) => {
-    setApprovalInstance(null);
     try {
       const res = await fetch(`/api/projects/outsourcing/${task.id}`);
       const json = await res.json();
       if (res.ok) {
         setDetailTask(json.data);
-        if (json.data.approvalInstanceId) {
-          fetchApprovalInstance(json.data.approvalInstanceId);
-        }
       }
     } catch {
       setDetailTask(task);
-      if (task.approvalInstanceId) {
-        fetchApprovalInstance(task.approvalInstanceId);
-      }
     }
   };
 
@@ -1096,7 +1069,12 @@ export default function OutsourcingPage() {
         maxWidth="680px"
       >
         {detailTask && (
-          <div className="space-y-5">
+          <DetailPageLayout
+            title={detailTask.targetName || '外包任务详情'}
+            instanceId={detailTask.approvalInstanceId}
+            businessType="outsourcing"
+            businessId={detailTask.id}
+          >
             <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
               <div className="w-12 h-12 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
                 <Briefcase className="w-6 h-6 text-[#1C1917]" />
@@ -1202,8 +1180,7 @@ export default function OutsourcingPage() {
               </div>
             </div>
 
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-          </div>
+          </DetailPageLayout>
         )}
       </Modal>
 

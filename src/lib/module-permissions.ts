@@ -277,7 +277,6 @@ export const BUSINESS_MODULE_GROUPS: BusinessModuleGroup[] = [
   {
     label: "商务管理",
     modules: [
-      { type: "quotation", name: "商务报价" },
       { type: "supplier", name: "供应商审批" },
     ],
   },

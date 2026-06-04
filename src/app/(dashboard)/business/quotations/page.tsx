@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Search, Calculator, DollarSign, TrendingUp, Eye, BarChart3, CheckCircle, Clock } from "lucide-react";
 import Modal from "@/components/Modal";
+import { DetailPageLayout } from "@/components/DetailPageLayout";
 
 interface Customer {
   id: string;
@@ -20,6 +21,7 @@ interface Quotation {
   approvalStatus: string;
   status: string;
   version: number;
+  approvalInstanceId: string | null;
   adjustmentReason: string | null;
   createdAt: string;
   updatedAt: string;
@@ -188,21 +190,23 @@ export default function QuotationsPage() {
 
       <Modal isOpen={!!detailQuotation} onClose={() => setDetailQuotation(null)} title="报价单详情" maxWidth="680px">
         {detailQuotation && (
-          <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
-              <div className="w-12 h-12 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><Calculator className="w-6 h-6 text-[#78716C]" /></div>
-              <div><p className="text-[17px] font-bold text-[#1C1917]">{detailQuotation.customer.name} - 报价单</p><p className="text-[13px] text-[#78716C]">版本 v{detailQuotation.version}</p></div>
-              <span className={`ios-badge ml-auto ${approvalStatusConfig[detailQuotation.approvalStatus]?.color || "ios-badge-gray"}`}>{detailQuotation.approvalStatus}</span>
-            </div>
+          <DetailPageLayout
+            title={`${detailQuotation.customer.name} - 报价单`}
+            instanceId={detailQuotation.approvalInstanceId}
+            businessType="quotation"
+            businessId={detailQuotation.id}
+          >
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">关联项目</p><p className="text-[14px] font-semibold text-[#1C1917]">{detailQuotation.projectLead ? detailQuotation.projectLead.projectName : "（无关联）"}</p></div>
               <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">报价总金额</p><p className="text-[14px] font-semibold text-[#1C1917]">{formatMoney(detailQuotation.totalAmount)}</p></div>
               <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">利润率</p><p className="text-[14px] font-semibold text-[#78716C]">{detailQuotation.profitMargin ? `${detailQuotation.profitMargin}%` : "-"}</p></div>
               <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">报价状态</p><span className={`ios-badge ${quotationStatusConfig[detailQuotation.status]?.color || "ios-badge-gray"}`}>{quotationStatusConfig[detailQuotation.status]?.label || detailQuotation.status}</span></div>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">审批状态</p><span className={`ios-badge ${approvalStatusConfig[detailQuotation.approvalStatus]?.color || "ios-badge-gray"}`}>{detailQuotation.approvalStatus}</span></div>
+              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">版本</p><p className="text-[14px] font-semibold text-[#1C1917]">v{detailQuotation.version}</p></div>
               <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">创建时间</p><p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailQuotation.createdAt)}</p></div>
             </div>
             {detailQuotation.adjustmentReason && <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">调整原因</p><p className="text-[14px] font-semibold text-[#1C1917]">{detailQuotation.adjustmentReason}</p></div>}
-          </div>
+          </DetailPageLayout>
         )}
       </Modal>
     </>

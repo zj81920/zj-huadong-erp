@@ -16,7 +16,7 @@ import {
 import Modal from "@/components/Modal";
 import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
-import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { DetailPageLayout } from "@/components/DetailPageLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
@@ -147,27 +147,7 @@ export default function NonContractPage() {
   const [invoiceError, setInvoiceError] = useState("");
   const [invoiceReceiptId, setInvoiceReceiptId] = useState<string | null>(null);
 
-  const [approvalInstance, setApprovalInstance] = useState<any>(null);
-  const [approvalLoading, setApprovalLoading] = useState(false);
-
   const { toggleSelect, selectAll, clearSelection, isAllSelected, selectedCount, isSelected } = useBatchSelection(records.map((d) => d.id));
-
-  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
-    setApprovalLoading(true);
-    try {
-      const res = await fetch(`/api/approval-instances/${instanceId}`);
-      if (res.ok) {
-        const json = await res.json();
-        setApprovalInstance(json.data);
-      } else {
-        setApprovalInstance(null);
-      }
-    } catch {
-      setApprovalInstance(null);
-    } finally {
-      setApprovalLoading(false);
-    }
-  }, []);
 
   const apiUrl = activeTab === "income" ? "/api/non-contract-incomes" : "/api/non-contract-expenses";
 
@@ -643,10 +623,6 @@ export default function NonContractPage() {
                             className="ios-btn ios-btn-ghost ios-btn-sm"
                             onClick={() => {
                               setDetailRecord(record);
-                              setApprovalInstance(null);
-                              if (record.approvalInstanceId) {
-                                fetchApprovalInstance(record.approvalInstanceId);
-                              }
                               if (!isIncome) {
                                 fetchExpenseInvoices(record.id);
                               }
@@ -846,37 +822,23 @@ export default function NonContractPage() {
         maxWidth="600px"
       >
         {detailRecord && (
-          <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
-              <div
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                  isIncome ? "bg-[#78716C]/10" : "bg-[#78716C]/10"
-                }`}
-              >
-                {isIncome ? (
-                  <ArrowUpCircle className="w-6 h-6 text-[#78716C]" />
-                ) : (
-                  <ArrowDownCircle className="w-6 h-6 text-[#78716C]" />
-                )}
-              </div>
-              <div>
-                <p className="text-[17px] font-bold text-[#1C1917]">{detailRecord.counterparty}</p>
-                <p className="text-[13px] text-[#78716C]">
-                  {isIncome ? "收入" : "支出"} · {formatDate(detailRecord.transactionDate)}
-                </p>
-              </div>
-              <span className="ml-auto">
-                <AdminStatusOverride
-                  businessType={isIncome ? "non_contract_income" : "non_contract_expense"}
-                  businessId={detailRecord.id}
-                  currentStatus={detailRecord.status}
-                  onStatusChanged={(newStatus) => {
-                    setDetailRecord(prev => prev ? { ...prev, status: newStatus as NonContractRecord["status"] } : prev);
-                    setRecords(prev => prev.map(r => r.id === detailRecord.id ? { ...r, status: newStatus as NonContractRecord["status"] } : r));
-                  }}
-                  size="md"
-                />
-              </span>
+          <DetailPageLayout
+            title={detailRecord.counterparty}
+            instanceId={detailRecord.approvalInstanceId}
+            businessType={isIncome ? "non_contract_income" : "non_contract_expense"}
+            businessId={detailRecord.id}
+          >
+            <div className="flex items-center justify-end mb-2">
+              <AdminStatusOverride
+                businessType={isIncome ? "non_contract_income" : "non_contract_expense"}
+                businessId={detailRecord.id}
+                currentStatus={detailRecord.status}
+                onStatusChanged={(newStatus) => {
+                  setDetailRecord(prev => prev ? { ...prev, status: newStatus as NonContractRecord["status"] } : prev);
+                  setRecords(prev => prev.map(r => r.id === detailRecord.id ? { ...r, status: newStatus as NonContractRecord["status"] } : r));
+                }}
+                size="md"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -1010,11 +972,7 @@ export default function NonContractPage() {
                 )}
               </div>
             )}
-
-
-
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-          </div>
+          </DetailPageLayout>
         )}
       </Modal>
 

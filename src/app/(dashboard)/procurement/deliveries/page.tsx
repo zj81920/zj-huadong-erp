@@ -13,7 +13,7 @@ import {
   FileText,
 } from "lucide-react";
 import Modal from "@/components/Modal";
-import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
@@ -207,8 +207,6 @@ export default function DeliveryReceiptsPage() {
   const [receiptInvoices, setReceiptInvoices] = useState<Record<string, Invoice[]>>({});
   const [deliveredMap, setDeliveredMap] = useState<Record<string, { qty: number; amount: number }>>({});
   const [uploading, setUploading] = useState(false);
-  const [approvalInstance, setApprovalInstance] = useState<any>(null);
-  const [approvalLoading, setApprovalLoading] = useState(false);
 
   const {
     toggleSelect, selectAll, clearSelection, isAllSelected, selectedCount, isSelected,
@@ -246,21 +244,6 @@ export default function DeliveryReceiptsPage() {
       }
     } catch (err) {
       console.error("获取支出合同列表失败:", err);
-    }
-  }, []);
-
-  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
-    setApprovalLoading(true);
-    try {
-      const res = await fetch(`/api/approval-instances/${instanceId}`);
-      const json = await res.json();
-      if (res.ok) {
-        setApprovalInstance(json.data);
-      }
-    } catch (err) {
-      console.error("获取审批实例失败:", err);
-    } finally {
-      setApprovalLoading(false);
     }
   }, []);
 
@@ -317,15 +300,11 @@ export default function DeliveryReceiptsPage() {
   };
 
   const handleOpenDetail = async (receipt: DeliveryReceipt) => {
-    setApprovalInstance(null);
     try {
       const res = await fetch(`/api/delivery-receipts/${receipt.id}`);
       const json = await res.json();
       if (res.ok) {
         setDetailReceipt(json.data);
-        if (json.data?.approvalInstanceId) {
-          fetchApprovalInstance(json.data.approvalInstanceId);
-        }
         const contractId = json.data?.expenseContract?.id;
         if (contractId) {
           fetchInvoicesForReceipt(contractId, receipt.id);
@@ -1114,12 +1093,17 @@ export default function DeliveryReceiptsPage() {
 
       <Modal
         isOpen={!!detailReceipt}
-        onClose={() => { setDetailReceipt(null); setApprovalInstance(null); }}
+        onClose={() => { setDetailReceipt(null); }}
         title="验收记录详情"
         maxWidth="900px"
       >
         {detailReceipt && (
-          <div className="space-y-5">
+          <DetailPageLayout
+            title={detailReceipt.expenseContract?.contractNo || '验收记录详情'}
+            instanceId={detailReceipt.approvalInstanceId}
+            businessType="delivery_receipt"
+            businessId={detailReceipt.id}
+          >
             <div>
               <h3 className="text-[13px] font-semibold text-[#78716C] uppercase tracking-wider mb-3">
                 合同信息
@@ -1328,12 +1312,10 @@ export default function DeliveryReceiptsPage() {
               ) : null;
             })()}
 
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-
             <div className="flex justify-end gap-3 pt-2">
               <button
                 className="ios-btn ios-btn-secondary"
-                onClick={() => { setDetailReceipt(null); setApprovalInstance(null); }}
+                onClick={() => { setDetailReceipt(null); }}
               >
                 关闭
               </button>
@@ -1348,7 +1330,7 @@ export default function DeliveryReceiptsPage() {
                 编辑
               </button>
             </div>
-          </div>
+          </DetailPageLayout>
         )}
       </Modal>
 

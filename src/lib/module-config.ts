@@ -16,7 +16,6 @@ export const MODULE_CONFIG: ModuleConfigItem[] = [
   { key: "supplier",                name: "供应商审批",     group: "商务管理" },
   { key: "project_leads",           name: "市场开发",       group: "商务管理" },
   { key: "biddings",                name: "投标统计",       group: "商务管理" },
-  { key: "quotation",               name: "商务报价",       group: "商务管理" },
 
   // === 项目管理 ===
   { key: "projects_list",           name: "项目立项",       group: "项目管理" },
@@ -53,3 +52,26 @@ export const MODULE_CONFIG: ModuleConfigItem[] = [
   { key: "certificates",            name: "证照管理",       group: "人事行政" },
   { key: "seals",                   name: "印章管理",       group: "人事行政" },
 ]
+
+/** 包含流程状态的模块信息 */
+export interface ModuleWithFlowStatus {
+  moduleKey: string
+  moduleName: string
+  groupName: string
+  hasFlow: boolean
+}
+
+/**
+ * 根据 flowCounts 映射，给 MODULE_CONFIG 中的每个模块注入 hasFlow 状态。
+ * 纯函数，无副作用，便于测试。
+ */
+export function getModulesWithFlowStatus(
+  flowCounts: Record<string, number>
+): ModuleWithFlowStatus[] {
+  return MODULE_CONFIG.map((m) => ({
+    moduleKey: m.key,
+    moduleName: m.name,
+    groupName: m.group,
+    hasFlow: (flowCounts[m.key] || 0) > 0,
+  }))
+}

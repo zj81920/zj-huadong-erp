@@ -18,8 +18,8 @@ import {
 import Modal from "@/components/Modal";
 import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
-import { ApprovalTimeline } from "@/components/ApprovalComponents";
 import { useAuth } from "@/contexts/AuthContext";
+import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
@@ -276,27 +276,7 @@ export default function ExpenseContractsPage() {
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
   const draftFileRef = useRef<HTMLInputElement>(null);
 
-  const [approvalInstance, setApprovalInstance] = useState<any>(null);
-  const [approvalLoading, setApprovalLoading] = useState(false);
-
   const { toggleSelect, selectAll, clearSelection, isAllSelected, selectedCount, isSelected } = useBatchSelection(contracts.map((d) => d.id));
-
-  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
-    setApprovalLoading(true);
-    try {
-      const res = await fetch(`/api/approval-instances/${instanceId}`);
-      if (res.ok) {
-        const json = await res.json();
-        setApprovalInstance(json.data);
-      } else {
-        setApprovalInstance(null);
-      }
-    } catch {
-      setApprovalInstance(null);
-    } finally {
-      setApprovalLoading(false);
-    }
-  }, []);
 
   const fetchContracts = useCallback(async () => {
     setLoading(true);
@@ -528,29 +508,19 @@ export default function ExpenseContractsPage() {
     setDetailLoading(true);
     setShowDetail(true);
     setContractInvoices([]);
-    setApprovalInstance(null);
     try {
       const res = await fetch(`/api/expense-contracts/${contract.id}`);
       if (res.ok) {
         const json = await res.json();
         setDetailContract(json.data);
         fetchContractInvoices(json.data.id);
-        if (json.data.approvalInstanceId) {
-          fetchApprovalInstance(json.data.approvalInstanceId);
-        }
       } else {
         setDetailContract(contract);
         fetchContractInvoices(contract.id);
-        if (contract.approvalInstanceId) {
-          fetchApprovalInstance(contract.approvalInstanceId);
-        }
       }
     } catch {
       setDetailContract(contract);
       fetchContractInvoices(contract.id);
-      if (contract.approvalInstanceId) {
-        fetchApprovalInstance(contract.approvalInstanceId);
-      }
     } finally {
       setDetailLoading(false);
     }
@@ -1536,7 +1506,12 @@ export default function ExpenseContractsPage() {
             <div className="w-8 h-8 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : detailContract ? (
-          <div className="space-y-5">
+          <DetailPageLayout
+            title={detailContract.contractNo}
+            instanceId={detailContract.approvalInstanceId}
+            businessType="expense_contract"
+            businessId={detailContract.id}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#1C1917]/10 flex items-center justify-center">
@@ -1860,8 +1835,6 @@ export default function ExpenseContractsPage() {
               </div>
             )}
 
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-
             {(detailContract.status === "已批准" || detailContract.status === "合同归档" || detailContract.status === "生效") && (
               <div className="flex justify-end pt-4 border-t border-[#F5F5F4]">
                 <button
@@ -1872,7 +1845,7 @@ export default function ExpenseContractsPage() {
                 </button>
               </div>
             )}
-          </div>
+          </DetailPageLayout>
         ) : (
           <div className="text-center py-10 text-[#78716C]">
             未找到合同信息

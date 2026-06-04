@@ -25,7 +25,7 @@ import {
   Package,
 } from "lucide-react";
 import Modal from "@/components/Modal";
-import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
@@ -166,8 +166,6 @@ export default function InquiriesPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
   const [detailInquiry, setDetailInquiry] = useState<InquiryDetail | null>(null);
-  const [approvalInstance, setApprovalInstance] = useState<any>(null);
-  const [approvalLoading, setApprovalLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Inquiry | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -235,20 +233,6 @@ export default function InquiriesPage() {
       setLoading(false);
     }
   }, [search, filterProjectSourceId, pagination.page, pagination.pageSize]);
-
-  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
-    setApprovalLoading(true);
-    try {
-      const res = await fetch(`/api/approval-instances/${instanceId}`);
-      const json = await res.json();
-      if (res.ok) {
-        setApprovalInstance(json.data);
-      }
-    } catch {
-    } finally {
-      setApprovalLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     fetchPurchaseRequests();
@@ -400,16 +384,12 @@ export default function InquiriesPage() {
   };
 
   const handleViewDetail = async (inquiry: Inquiry) => {
-    setApprovalInstance(null);
     try {
       const res = await fetch(`/api/inquiries/${inquiry.id}`);
       const json = await res.json();
       if (res.ok) {
         setDetailInquiry(json.data);
         setViewingRound(json.data.currentRound || 1);
-        if (json.data.approvalInstanceId) {
-          fetchApprovalInstance(json.data.approvalInstanceId);
-        }
       }
     } catch {
       setDetailInquiry(inquiry as unknown as InquiryDetail);
@@ -1280,12 +1260,17 @@ export default function InquiriesPage() {
 
       <Modal
         isOpen={!!detailInquiry}
-        onClose={() => { setDetailInquiry(null); setApprovalInstance(null); }}
+        onClose={() => { setDetailInquiry(null); }}
         title="采购单详情"
         maxWidth="680px"
       >
         {detailInquiry && (
-          <div className="space-y-5">
+          <DetailPageLayout
+            title={detailInquiry.purchaseRequest?.requestNo || '采购单详情'}
+            instanceId={detailInquiry.approvalInstanceId}
+            businessType="inquiries"
+            businessId={detailInquiry.id}
+          >
             <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
               <div className="w-12 h-12 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
                 <HelpCircle className="w-6 h-6 text-[#1C1917]" />
@@ -1730,8 +1715,7 @@ export default function InquiriesPage() {
               </div>
             )}
 
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-          </div>
+          </DetailPageLayout>
         )}
       </Modal>
 

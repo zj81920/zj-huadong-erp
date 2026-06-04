@@ -1,27 +1,21 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
+import { getModulesWithFlowStatus } from "@/lib/module-config"
 
 export async function GET() {
   try {
-    const modules = await prisma.approvalModuleConfig.findMany({
+    // 从 DB 统计每个模块的活跃审批流数量
+    const flows = await prisma.approvalFlowDefinition.findMany({
       where: { isActive: true },
-      orderBy: [{ groupName: "asc" }, { moduleName: "asc" }],
+      select: { businessType: true },
     })
 
-    // 动态计算每个模块是否有审批流
-    const data = await Promise.all(
-      modules.map(async (m) => {
-        const flowCount = await prisma.approvalFlowDefinition.count({
-          where: { businessType: m.moduleKey, isActive: true },
-        })
-        return {
-          moduleKey: m.moduleKey,
-          moduleName: m.moduleName,
-          groupName: m.groupName,
-          hasFlow: flowCount > 0,
-        }
-      })
-    )
+    const flowCounts: Record<string, number> = {}
+    for (const f of flows) {
+      flowCounts[f.businessType] = (flowCounts[f.businessType] || 0) + 1
+    }
+
+    const data = getModulesWithFlowStatus(flowCounts)
 
     return NextResponse.json({ data })
   } catch (error) {

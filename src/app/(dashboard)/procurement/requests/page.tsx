@@ -23,7 +23,7 @@ import {
 import Modal from "@/components/Modal";
 import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
-import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { DetailPageLayout } from "@/components/DetailPageLayout";
 import * as XLSX from "xlsx";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
@@ -172,9 +172,6 @@ export default function PurchaseRequestsPage() {
   const [detailRecord, setDetailRecord] = useState<PurchaseRequest | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  const [approvalInstance, setApprovalInstance] = useState<any>(null);
-  const [approvalLoading, setApprovalLoading] = useState(false);
-
   const {
     toggleSelect, selectAll, clearSelection, isAllSelected, selectedCount, isSelected,
   } = useBatchSelection(records.map((r) => r.id));
@@ -190,23 +187,6 @@ export default function PurchaseRequestsPage() {
       return next;
     });
   };
-
-  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
-    setApprovalLoading(true);
-    try {
-      const res = await fetch(`/api/approval-instances/${instanceId}`);
-      if (res.ok) {
-        const json = await res.json();
-        setApprovalInstance(json.data);
-      } else {
-        setApprovalInstance(null);
-      }
-    } catch {
-      setApprovalInstance(null);
-    } finally {
-      setApprovalLoading(false);
-    }
-  }, []);
 
   const fetchRecords = useCallback(async () => {
     setLoading(true);
@@ -429,15 +409,11 @@ export default function PurchaseRequestsPage() {
   };
 
   const handleViewDetail = async (record: PurchaseRequest) => {
-    setApprovalInstance(null);
     try {
       const res = await fetch(`/api/purchase-requests/${record.id}`);
       const json = await res.json();
       if (res.ok) {
         setDetailRecord(json.data);
-        if (json.data.approvalInstanceId) {
-          fetchApprovalInstance(json.data.approvalInstanceId);
-        }
       }
     } catch {
       alert("获取详情失败");
@@ -1092,12 +1068,17 @@ export default function PurchaseRequestsPage() {
 
       <Modal
         isOpen={!!detailRecord}
-        onClose={() => { setDetailRecord(null); setApprovalInstance(null); }}
+        onClose={() => setDetailRecord(null)}
         title="采购需求详情"
         maxWidth="860px"
       >
         {detailRecord && (
-          <div className="space-y-5">
+          <DetailPageLayout
+            title={detailRecord.requestNo || '采购需求详情'}
+            instanceId={detailRecord.approvalInstanceId}
+            businessType="purchase_request"
+            businessId={detailRecord.id}
+          >
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-[12px] text-[#78716C] mb-1">计划单号</label>
@@ -1197,17 +1178,15 @@ export default function PurchaseRequestsPage() {
               </div>
             )}
 
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-
             <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
               <button
                 className="ios-btn ios-btn-secondary"
-                onClick={() => { setDetailRecord(null); setApprovalInstance(null); }}
+                onClick={() => setDetailRecord(null)}
               >
                 关闭
               </button>
             </div>
-          </div>
+          </DetailPageLayout>
         )}
       </Modal>
     </>

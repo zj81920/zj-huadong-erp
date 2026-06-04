@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import { useAuth } from "@/contexts/AuthContext";
-import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { DetailPageLayout } from "@/components/DetailPageLayout";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { getUserModulePerms } from "@/lib/types/permissions";
@@ -134,8 +134,6 @@ export default function SuppliersPage() {
   const [deleting, setDeleting] = useState(false);
 
   const [detailSupplier, setDetailSupplier] = useState<Supplier | null>(null);
-  const [approvalInstance, setApprovalInstance] = useState<any>(null);
-  const [approvalLoading, setApprovalLoading] = useState(false);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
 
   const {
@@ -179,23 +177,6 @@ export default function SuppliersPage() {
   useEffect(() => {
     fetchSuppliers();
   }, [fetchSuppliers]);
-
-  const fetchApprovalInstance = useCallback(async (instanceId: string) => {
-    setApprovalLoading(true);
-    try {
-      const res = await fetch(`/api/approval-instances/${instanceId}`);
-      if (res.ok) {
-        const json = await res.json();
-        setApprovalInstance(json.data);
-      } else {
-        setApprovalInstance(null);
-      }
-    } catch {
-      setApprovalInstance(null);
-    } finally {
-      setApprovalLoading(false);
-    }
-  }, []);
 
   const handleOpenCreate = () => {
     setEditingSupplier(null);
@@ -305,20 +286,6 @@ export default function SuppliersPage() {
       });
       const json = await res.json();
       if (res.ok) {
-        const instanceId = json.data.instanceId;
-        const supplier = suppliers.find((s) => s.id === supplierId);
-        if (supplier) {
-          setDetailSupplier({ ...supplier, approvalStatus: "审批中" });
-          setApprovalLoading(true);
-          try {
-            const instRes = await fetch(`/api/approval-instances/${instanceId}`);
-            const instJson = await instRes.json();
-            if (instJson.data) setApprovalInstance(instJson.data);
-          } catch {
-          } finally {
-            setApprovalLoading(false);
-          }
-        }
         fetchSuppliers();
       } else {
         alert(json.error || "提交审批失败");
@@ -334,36 +301,19 @@ export default function SuppliersPage() {
     fetchSuppliers();
     if (detailSupplier && detailSupplier.id) {
       setDetailSupplier((prev) => prev ? { ...prev, approvalStatus: newStatus } : null);
-      if (_instanceId) {
-        setApprovalLoading(true);
-        fetch(`/api/approval-instances/${_instanceId}`)
-          .then((r) => r.json())
-          .then((json) => { if (json.data) setApprovalInstance(json.data); })
-          .catch(() => {})
-          .finally(() => setApprovalLoading(false));
-      }
     }
   };
 
   const openDetail = async (supplier: Supplier) => {
     setDetailSupplier(supplier);
-    setApprovalInstance(null);
-    setApprovalLoading(true);
     try {
       const detailRes = await fetch(`/api/suppliers/${supplier.id}`);
       if (detailRes.ok) {
         const json = await detailRes.json();
         setDetailSupplier(json.data);
-        if (json.data.approvalInstanceId) {
-          fetchApprovalInstance(json.data.approvalInstanceId);
-        } else {
-          setApprovalLoading(false);
-        }
-      } else {
-        setApprovalLoading(false);
       }
     } catch {
-      setApprovalLoading(false);
+      // ignore
     }
   };
 
@@ -927,12 +877,17 @@ export default function SuppliersPage() {
 
       <Modal
         isOpen={!!detailSupplier}
-        onClose={() => { setDetailSupplier(null); setApprovalInstance(null); }}
+        onClose={() => setDetailSupplier(null)}
         title="供应商审批详情"
         maxWidth="700px"
       >
         {detailSupplier && (
-          <div className="space-y-4">
+          <DetailPageLayout
+            title={detailSupplier.name}
+            instanceId={detailSupplier.approvalInstanceId}
+            businessType="supplier"
+            businessId={detailSupplier.id}
+          >
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-xl bg-[#FAFAF9]">
                 <p className="text-[12px] text-[#78716C] mb-1">供应商名称</p>
@@ -963,12 +918,7 @@ export default function SuppliersPage() {
                 <p className="text-[14px] font-semibold">{detailSupplier.phone || "-"}</p>
               </div>
             </div>
-
-            <div className="pt-3 border-t border-[#F5F5F4]">
-              <h4 className="text-[13px] font-bold text-[#1C1917] mb-3">审批流程</h4>
-              <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-            </div>
-          </div>
+          </DetailPageLayout>
         )}
       </Modal>
     </>
