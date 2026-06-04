@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("supplier")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const supplierType = searchParams.get("supplierType") || "";
@@ -34,6 +36,11 @@ export async function GET(request: NextRequest) {
     const approvalStatus = searchParams.get("approvalStatus") || "";
     if (approvalStatus) {
       where.approvalStatus = approvalStatus;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [suppliers, total] = await Promise.all([
@@ -94,6 +101,7 @@ export async function POST(request: NextRequest) {
         attachmentUrl: attachmentUrl?.trim() || null,
         approvalStatus: "草稿",
         lastModifiedBy: currentUser?.realName || null,
+        createdById: currentUser?.id || null,
       },
     });
 

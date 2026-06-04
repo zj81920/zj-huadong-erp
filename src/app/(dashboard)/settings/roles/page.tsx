@@ -8,7 +8,6 @@ import {
   Trash2,
   Users,
   Search,
-  Loader2,
   AlertCircle,
   Check,
 } from "lucide-react";
@@ -21,7 +20,6 @@ interface Role {
   description: string | null;
   departmentName: string | null;
   modulePermissions: string;
-  level: number;
   updatedAt: string;
   userCount: number;
 }
@@ -36,20 +34,6 @@ const MODULE_OPTIONS = [
   { key: "settings", label: "系统设置" },
 ];
 
-const DEFAULT_ROLES: { name: string; level: number }[] = [
-  { name: "部门负责人", level: 1 },
-  { name: "项目经理", level: 2 },
-  { name: "项目管理部", level: 3 },
-  { name: "行政", level: 4 },
-  { name: "采购部", level: 5 },
-  { name: "设计负责人/生产经理", level: 6 },
-  { name: "财务", level: 7 },
-  { name: "出纳", level: 8 },
-  { name: "副总经理", level: 9 },
-  { name: "总经理", level: 10 },
-  { name: "董事长", level: 11 },
-];
-
 const formatDate = (dateStr: string) => {
   const d = new Date(dateStr);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -59,8 +43,6 @@ export default function RolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
-  const [saving, setSaving] = useState(false);
 
   const [deleteConfirm, setDeleteConfirm] = useState<Role | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -93,25 +75,6 @@ export default function RolesPage() {
       return () => clearTimeout(timer);
     }
   }, [toast]);
-
-  const handleInitDefaults = async () => {
-    setSaving(true);
-    try {
-      for (const role of DEFAULT_ROLES) {
-        await fetch("/api/roles", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(role),
-        });
-      }
-      setToast({ type: "success", text: "默认角色初始化成功" });
-      fetchRoles();
-    } catch {
-      setToast({ type: "error", text: "初始化默认角色失败" });
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
@@ -161,20 +124,6 @@ export default function RolesPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {roles.length === 0 && (
-              <button
-                className="ios-btn ios-btn-secondary gap-1.5"
-                onClick={handleInitDefaults}
-                disabled={saving}
-              >
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
-                初始化默认角色
-              </button>
-            )}
             <Link href="/settings/roles/new" className="ios-btn ios-btn-primary">
               <Plus className="w-4 h-4" />
               新增角色
@@ -210,7 +159,7 @@ export default function RolesPage() {
             <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
               <Shield className="w-8 h-8 text-[#78716C]" />
             </div>
-            <p>暂无角色，点击「初始化默认角色」快速创建</p>
+            <p>暂无角色，点击右上角「新增角色」添加角色</p>
           </div>
         ) : (
           <>
@@ -234,9 +183,9 @@ export default function RolesPage() {
                     {/* 头部：等级圆圈 + 名称 + 编辑 */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[14px] font-semibold text-[#1C1917]">{role.level}</span>
-                        </div>
+                      <div className="w-10 h-10 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
+                        <Shield className="w-5 h-5 text-[#1C1917]" />
+                      </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-[15px] font-semibold text-[#1C1917]">{role.name}</span>
@@ -247,7 +196,7 @@ export default function RolesPage() {
                             )}
                           </div>
                           <p className="text-[12px] text-[#78716C] mt-0.5">
-                            {role.departmentName || "无部门"} · 等级 {role.level}
+                            {role.departmentName || "无部门"}
                           </p>
                         </div>
                       </div>

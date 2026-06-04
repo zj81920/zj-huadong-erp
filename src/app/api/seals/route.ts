@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("seals")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const sealType = searchParams.get("sealType") || "";
@@ -20,6 +23,11 @@ export async function GET(request: NextRequest) {
     }
     if (sealType) where.sealType = sealType;
     if (status) where.status = status;
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
+    }
 
     const [records, total] = await Promise.all([
       prisma.seal.findMany({
@@ -44,6 +52,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const { name, sealType, custodian, location, status, remark } = body;
 
     if (!name || !name.trim()) {
@@ -61,6 +70,7 @@ export async function POST(request: NextRequest) {
         location: location?.trim() || null,
         status: status || "在库",
         remark: remark?.trim() || null,
+        createdById: currentUser?.id || null,
       },
     });
 

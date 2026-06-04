@@ -12,6 +12,7 @@ export interface CurrentUser {
   department: string | null;
   avatarUrl: string | null;
   roles: { id: string; code: string; name: string; modulePermissions: string; isGlobalVisible: boolean }[];
+  moduleFlowStatus: Record<string, boolean>;  // moduleKey → hasFlow
 }
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -45,6 +46,17 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 
     if (!user) return null;
 
+    // 查询所有有审批流的模块
+    const activeFlowTypes = await prisma.approvalFlowDefinition.findMany({
+      where: { isActive: true },
+      select: { businessType: true },
+      distinct: ["businessType"],
+    });
+    const moduleFlowStatus: Record<string, boolean> = {};
+    for (const ft of activeFlowTypes) {
+      moduleFlowStatus[ft.businessType] = true;
+    }
+
     return {
       id: user.id,
       username: user.username,
@@ -60,6 +72,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
         modulePermissions: ur.role.modulePermissions,
         isGlobalVisible: ur.role.isGlobalVisible,
       })),
+      moduleFlowStatus,
     };
   } catch {
     return null;

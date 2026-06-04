@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("other_borrowing")
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "";
     const page = parseInt(searchParams.get("page") || "1");
@@ -12,6 +15,11 @@ export async function GET(request: NextRequest) {
 
     if (status) {
       where.status = status;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [data, total] = await Promise.all([
@@ -40,6 +48,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const { lenderName, amount, borrowingDate, expectedReturnDate, description } = body;
 
     if (!lenderName) {
@@ -66,6 +75,7 @@ export async function POST(request: NextRequest) {
         expectedReturnDate: expectedReturnDate ? new Date(expectedReturnDate) : null,
         description: description || null,
         status: "草稿",
+        createdById: currentUser?.id || null,
       },
       include: {
         returns: true,

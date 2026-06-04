@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("salary_payment")
     const { searchParams } = new URL(request.url);
     const period = searchParams.get("period") || "";
     const status = searchParams.get("status") || "";
@@ -22,6 +25,11 @@ export async function GET(request: NextRequest) {
 
     if (employeeId) {
       where.employeeId = employeeId;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [data, total] = await Promise.all([
@@ -60,6 +68,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const {
       employeeId,
       period,
@@ -122,6 +131,7 @@ export async function POST(request: NextRequest) {
         netSalary: parseFloat(netSalary),
         paymentDate: paymentDate ? new Date(paymentDate) : null,
         remark: remark?.trim() || null,
+        createdById: currentUser?.id || null,
       },
       include: {
         employee: {

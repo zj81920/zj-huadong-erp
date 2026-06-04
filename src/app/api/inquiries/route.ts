@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("inquiries")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const projectSourceId = searchParams.get("projectSourceId") || "";
@@ -20,6 +23,11 @@ export async function GET(request: NextRequest) {
         { projectSourceId: { contains: search, mode: "insensitive" } },
         { purchaseRequest: { requestNo: { contains: search, mode: "insensitive" } } },
       ];
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [inquiries, total] = await Promise.all([
@@ -157,6 +165,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const {
       purchaseRequestId,
       supplierIds,
@@ -225,6 +234,7 @@ export async function POST(request: NextRequest) {
           onlineToken: inquiryMode === "online" ? crypto.randomUUID() : null,
           onlineDeadline: inquiryMode === "online" && onlineDeadline ? new Date(onlineDeadline) : null,
           onlineStatus: inquiryMode === "online" ? "pending" : "pending",
+          createdById: currentUser?.id || null,
         },
       }),
       prisma.purchaseRequest.update({

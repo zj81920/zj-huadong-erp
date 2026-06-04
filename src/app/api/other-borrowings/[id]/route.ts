@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
+import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
 
 export async function GET(
   _request: NextRequest,
@@ -37,6 +38,11 @@ export async function PUT(
     const existing = await prisma.otherBorrowing.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "借入款记录不存在" }, { status: 404 });
+    }
+
+    const editCheck = await checkEditPermission("other_borrowing", undefined, existing.status, existing.createdById);
+    if (!editCheck.allowed) {
+      return NextResponse.json({ error: editCheck.error }, { status: 403 });
     }
 
     const updatePayload: Record<string, unknown> = {};
@@ -77,6 +83,11 @@ export async function DELETE(
     });
     if (!existing) {
       return NextResponse.json({ error: "借入款记录不存在" }, { status: 404 });
+    }
+
+    const deleteCheck = await checkDeletePermission("other_borrowing", undefined, existing.status, existing.createdById);
+    if (!deleteCheck.allowed) {
+      return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
     if (existing.returns.length > 0 && !isAdmin(adminUser)) {

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("quotation")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const approvalStatus = searchParams.get("approvalStatus") || "";
@@ -26,6 +28,11 @@ export async function GET(request: NextRequest) {
 
     if (customerId) {
       where.customerId = customerId;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [quotations, total] = await Promise.all([
@@ -117,6 +124,7 @@ export async function POST(request: NextRequest) {
         quotationLetterUrl: quotationLetterUrl || null,
         files: files || [],
         lastModifiedBy: currentUser?.realName || null,
+        createdById: currentUser?.id || null,
       },
       include: {
         customer: { select: { id: true, name: true, industryType: true } },

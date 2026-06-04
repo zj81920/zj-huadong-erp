@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("certificates")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
@@ -25,6 +28,11 @@ export async function GET(request: NextRequest) {
 
     if (certType) {
       where.certType = certType;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [data, total] = await Promise.all([
@@ -55,6 +63,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const { name, certNo, certType, issuer, issueDate, expireDate, holder, status, location, remark } = body;
 
     if (!name || !name.trim()) {
@@ -73,6 +82,7 @@ export async function POST(request: NextRequest) {
         status: status || "有效",
         location: location?.trim() || null,
         remark: remark?.trim() || null,
+        createdById: currentUser?.id || null,
       },
     });
 

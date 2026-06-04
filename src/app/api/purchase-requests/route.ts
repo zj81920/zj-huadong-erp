@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("purchase_request")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
@@ -26,6 +29,11 @@ export async function GET(request: NextRequest) {
 
     if (projectSourceId) {
       where.projectSourceId = projectSourceId;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [records, total] = await Promise.all([
@@ -56,6 +64,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const { projectSourceId, requestType, requiredDate, items, attachments } = body;
 
     if (!projectSourceId || !projectSourceId.trim()) {
@@ -105,6 +114,7 @@ export async function POST(request: NextRequest) {
         requestType: requestType || "项目需求",
         requiredDate: requiredDate ? new Date(requiredDate) : null,
         status: "草稿",
+        createdById: currentUser?.id || null,
         items: {
           create: items.map((item: Record<string, unknown>, index: number) => ({
             materialName: (item.materialName as string).trim(),

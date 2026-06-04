@@ -16,7 +16,7 @@ export async function GET() {
   try {
     const roles = await prisma.role.findMany({
       where: { isActive: true },
-      orderBy: { level: "asc" },
+      orderBy: { updatedAt: "desc" },
       include: {
         department: { select: { id: true, name: true } },
         users: {
@@ -42,7 +42,6 @@ export async function GET() {
           ? JSON.parse(r.subModuleOverrides)
           : r.subModuleOverrides,
       isGlobalVisible: r.isGlobalVisible,
-      level: r.level,
       isActive: r.isActive,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
@@ -58,7 +57,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, departmentId, level, modulePermissions, subModuleOverrides, isGlobalVisible } = body;
+    const { name, description, departmentId, modulePermissions, subModuleOverrides, isGlobalVisible } = body;
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "角色名称不能为空" }, { status: 400 });
     }
@@ -87,7 +86,6 @@ export async function POST(request: NextRequest) {
         departmentId: departmentId || null,
         modulePermissions: typeof modulePermissions === "string" ? modulePermissions : JSON.stringify(modulePermissions || {}),
         subModuleOverrides: typeof subModuleOverrides === "string" ? subModuleOverrides : JSON.stringify(subModuleOverrides || {}),
-        level: level || 0,
         isGlobalVisible: isGlobalVisible || false,
       },
     });

@@ -1,47 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-
-interface BusinessType {
-  key: string;
-  label: string;
-}
+import { getCurrentUser, isAdmin } from "@/lib/auth";
 
 interface ApproverRole {
   key: string;
   label: string;
 }
-
-const businessTypes: BusinessType[] = [
-  { key: "quotation", label: "商务报价" },
-  { key: "outsourcing", label: "外包任务" },
-  { key: "purchase_request", label: "采购需求" },
-  { key: "income_contract", label: "收入合同" },
-  { key: "expense_contract", label: "支出合同" },
-  { key: "non_contract_income", label: "非合同收入" },
-  { key: "non_contract_expense", label: "其他支付" },
-  { key: "payment_application", label: "合同支付" },
-  { key: "expense_report", label: "费用报销" },
-  { key: "other_borrowing", label: "其他借入款" },
-  { key: "lending_out", label: "借出款" },
-  { key: "salary_payment", label: "工资发放" },
-  { key: "borrowing_return_application", label: "借入资金归还" },
-  { key: "delivery_receipt", label: "到货验收" },
-];
-
-const approverRoles: ApproverRole[] = [
-  { key: "initiator", label: "经办人" },
-  { key: "dept_head", label: "部门负责人" },
-  { key: "project_manager", label: "项目经理" },
-  { key: "pmo", label: "项目管理部" },
-  { key: "admin", label: "行政" },
-  { key: "procurement", label: "采购部" },
-  { key: "production", label: "设计负责人/生产经理" },
-  { key: "finance", label: "财务" },
-  { key: "vice_gm", label: "副总经理" },
-  { key: "gm", label: "总经理" },
-  { key: "chairman", label: "董事长" },
-  { key: "cashier", label: "出纳" },
-];
 
 const defaultFlows: Array<{ nodeOrder: number; nodeName: string; approverRole: string }> = [
   { nodeOrder: 1, nodeName: "发起", approverRole: "initiator" },
@@ -51,26 +15,57 @@ const defaultFlows: Array<{ nodeOrder: number; nodeName: string; approverRole: s
 ];
 
 export async function GET() {
-  return NextResponse.json({
-    data: {
-      businessTypes,
-      approverRoles,
-    },
-  });
+  try {
+    const user = await getCurrentUser();
+    if (!user || !isAdmin(user)) {
+      return NextResponse.json({ error: "未授权" }, { status: 403 });
+    }
+
+    // 从数据库读取模块清单
+    const modules = await prisma.approvalModuleConfig.findMany({
+      where: { isActive: true },
+      orderBy: [{ groupName: "asc" }, { moduleName: "asc" }],
+    });
+    const businessTypes = modules.map(m => ({ key: m.moduleKey, label: m.moduleName }));
+
+    // 从 Role 表读取角色列表
+    const roles = await prisma.role.findMany({ where: { isActive: true }, select: { code: true, name: true }, orderBy: { name: "asc" } });
+    const approverRoles: ApproverRole[] = [
+      { key: "initiator", label: "经办人" },
+      ...roles.map(r => ({ key: r.code, label: r.name })),
+    ];
+
+    return NextResponse.json({ data: { businessTypes, approverRoles } });
+  } catch (error) {
+    console.error("获取业务类型失败:", error);
+    return NextResponse.json({ error: "获取业务类型失败" }, { status: 500 });
+  }
 }
 
 export async function POST() {
   try {
+    const user = await getCurrentUser();
+    if (!user || !isAdmin(user)) {
+      return NextResponse.json({ error: "未授权" }, { status: 403 });
+    }
+
+    // 从数据库读取模块清单
+    const modules = await prisma.approvalModuleConfig.findMany({
+      where: { isActive: true },
+      select: { moduleKey: true },
+    });
+    const businessTypeKeys = modules.map(m => m.moduleKey);
+
     let createdCount = 0;
 
     await prisma.$transaction(async (tx) => {
-      for (const bt of businessTypes) {
+      for (const btKey of businessTypeKeys) {
         const flowLevel = "common";
 
         for (const node of defaultFlows) {
           const existing = await tx.approvalFlowDefinition.findFirst({
             where: {
-              businessType: bt.key,
+              businessType: btKey,
               flowLevel,
               nodeOrder: node.nodeOrder,
             },
@@ -79,7 +74,7 @@ export async function POST() {
           if (!existing) {
             await tx.approvalFlowDefinition.create({
               data: {
-                businessType: bt.key,
+                businessType: btKey,
                 flowLevel,
                 nodeOrder: node.nodeOrder,
                 nodeName: node.nodeName,

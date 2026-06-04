@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 async function generateProjectSourceId(): Promise<string> {
   const year = new Date().getFullYear();
@@ -26,6 +27,7 @@ async function generateProjectSourceId(): Promise<string> {
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("projects_list")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
@@ -59,6 +61,11 @@ export async function GET(request: NextRequest) {
 
     if (source) {
       where.source = source;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [projects, total] = await Promise.all([
@@ -196,6 +203,7 @@ export async function POST(request: NextRequest) {
           location: body.location?.trim() || null,
           implementationEntity: body.implementationEntity?.trim() || "华东工程",
           currentStatus: "已立项",
+          createdById: currentUser?.id || null,
         },
       });
     } else {

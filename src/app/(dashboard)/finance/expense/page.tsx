@@ -29,6 +29,8 @@ import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
 import { ApprovalTimeline } from "@/components/ApprovalComponents";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
+import { getUserModulePerms } from "@/lib/types/permissions";
+import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface ExpenseContract {
   id: string;
@@ -118,6 +120,7 @@ interface NonContractExpense {
   paymentMethod: string | null;
   paidAt: string | null;
   bankAccount: { id: string; accountName: string; bankName: string; accountNo: string } | null;
+  createdById: string | null;
 }
 
 interface LendingOut {
@@ -139,6 +142,7 @@ interface LendingOut {
   paymentMethod: string | null;
   paidAt: string | null;
   bankAccount: { id: string; accountName: string; bankName: string; accountNo: string } | null;
+  createdById: string | null;
 }
 
 interface LendingReturn {
@@ -185,6 +189,7 @@ interface ExpenseReport {
   paymentMethod: string | null;
   paidAt: string | null;
   bankAccount: { id: string; accountName: string; bankName: string; accountNo: string } | null;
+  createdById: string | null;
 }
 
 interface SalaryBatchItem {
@@ -232,6 +237,7 @@ interface SalaryBatch {
   lastModifiedBy: string | null;
   items: SalaryBatchItem[];
   bankAccount: { id: string; accountName: string; bankName: string; accountNo: string } | null;
+  createdById: string | null;
 }
 
 interface BorrowingReturnApplication {
@@ -251,6 +257,7 @@ interface BorrowingReturnApplication {
   paymentMethod: string | null;
   paidAt: string | null;
   bankAccount: { id: string; accountName: string; bankName: string; accountNo: string } | null;
+  createdById: string | null;
 }
 
 interface User {
@@ -479,7 +486,7 @@ export default function FinanceExpensePage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string; status: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string; status: string; createdById?: string | null } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const [returnTargetLending, setReturnTargetLending] = useState<LendingOut | null>(null);
@@ -977,8 +984,8 @@ export default function FinanceExpensePage() {
 
   const handleDeleteOtherExpense = async () => {
     if (!deleteTarget || deleteTarget.type !== "otherExpense") return;
-    if (deleteTarget.status !== "草稿" && deleteTarget.status !== "已驳回" && !isAdmin) {
-      alert("该记录已进入审批流程，仅管理员可删除");
+    if (!canDeleteFrontend(ncExpenseHasFlow, ncExpensePerms, deleteTarget.status, currentUser?.id ?? "", deleteTarget.createdById ?? null, isAdmin)) {
+      alert("无权删除该记录");
       setDeleteTarget(null);
       setModalType(null);
       return;
@@ -1324,8 +1331,8 @@ export default function FinanceExpensePage() {
 
   const handleDeleteBatch = async (batchId: string, status: string) => {
     if (!confirm("确定删除此批次？")) return;
-    if (status !== "草稿" && status !== "已驳回" && !isAdmin) {
-      alert("该记录已进入审批流程，仅管理员可删除");
+    if (!canDeleteFrontend(salaryPaymentHasFlow, salaryPaymentPerms, status, currentUser?.id ?? "", null, isAdmin)) {
+      alert("无权删除该记录");
       return;
     }
     try {
@@ -1505,7 +1512,18 @@ export default function FinanceExpensePage() {
   const userModules: string[] = [...modulePermissions.accessibleSubModules];
   const tabPermValues = Object.values(TAB_PERMISSION_MAP);
   const hasTabPermissions = userModules.some((m) => tabPermValues.includes(m));
-  const isAdmin = currentUser?.roles?.some((r: any) => r.code === "admin");
+  const isAdmin = currentUser?.roles?.some((r: any) => r.code === "admin") || currentUser?.username === "admin";
+  // 各子模块权限
+  const ncExpensePerms = getUserModulePerms(currentUser, "non_contract_expense");
+  const ncExpenseHasFlow = currentUser?.moduleFlowStatus?.["non_contract_expense"] ?? false;
+  const lendingOutPerms = getUserModulePerms(currentUser, "lending_out");
+  const lendingOutHasFlow = currentUser?.moduleFlowStatus?.["lending_out"] ?? false;
+  const expenseReportPerms = getUserModulePerms(currentUser, "expense_report");
+  const expenseReportHasFlow = currentUser?.moduleFlowStatus?.["expense_report"] ?? false;
+  const salaryPaymentPerms = getUserModulePerms(currentUser, "salary_payment");
+  const salaryPaymentHasFlow = currentUser?.moduleFlowStatus?.["salary_payment"] ?? false;
+  const borrowingReturnPerms = getUserModulePerms(currentUser, "borrowing_return_application");
+  const borrowingReturnHasFlow = currentUser?.moduleFlowStatus?.["borrowing_return_application"] ?? false;
   const tabs = (!hasTabPermissions || isAdmin) ? allTabs : allTabs.filter((tab) => userModules.includes(TAB_PERMISSION_MAP[tab.key]));
 
   const getPrimaryBtnLabel = () => {
@@ -1723,7 +1741,7 @@ export default function FinanceExpensePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
-                    {isAdmin && (
+                    {ncExpensePerms.delete && (
                       <th className="w-10">
                         <input
                           type="checkbox"
@@ -1747,7 +1765,7 @@ export default function FinanceExpensePage() {
                     const nextStatuses = appStatusFlow[item.status] || [];
                     return (
                       <tr key={item.id} className={isSelectedOtherExpense(item.id) ? "bg-[#1C1917]/5" : ""}>
-                        {isAdmin && (
+                        {ncExpensePerms.delete && (
                           <td className="w-10">
                             <input
                               type="checkbox"
@@ -1795,11 +1813,11 @@ export default function FinanceExpensePage() {
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm"
                               onClick={() => openEditOtherExpense(item)}
-                              disabled={item.status !== "草稿" && item.status !== "已驳回"}
+                              disabled={!canEditFrontend(ncExpenseHasFlow, ncExpensePerms, item.status, currentUser?.id ?? "", item.createdById ?? null, isAdmin)}
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
-                            {(item.status === "草稿" || item.status === "已驳回" || isAdmin) && (
+                            {(canDeleteFrontend(ncExpenseHasFlow, ncExpensePerms, item.status, currentUser?.id ?? "", item.createdById ?? null, isAdmin)) && (
                               <button
                                 className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => {
@@ -1850,7 +1868,7 @@ export default function FinanceExpensePage() {
           )}
         </div>
 
-        {isAdmin && (
+        {ncExpensePerms.delete && (
           <BatchDeleteBar
             businessType="non_contract_expense"
             selectedIds={nonContractExpenses.filter((d) => isSelectedOtherExpense(d.id)).map((d) => d.id)}
@@ -1881,7 +1899,7 @@ export default function FinanceExpensePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
-                    {isAdmin && (
+                    {lendingOutPerms.delete && (
                       <th className="w-10">
                         <input
                           type="checkbox"
@@ -1906,7 +1924,7 @@ export default function FinanceExpensePage() {
                     const nextStatuses = lendingStatusFlow[item.status] || [];
                     return (
                       <tr key={item.id} className={isSelectedLendingOut(item.id) ? "bg-[#1C1917]/5" : ""}>
-                        {isAdmin && (
+                        {lendingOutPerms.delete && (
                           <td className="w-10">
                             <input
                               type="checkbox"
@@ -1963,7 +1981,7 @@ export default function FinanceExpensePage() {
                                 收回
                               </button>
                             )}
-                            {isAdmin && (
+                            {canDeleteFrontend(lendingOutHasFlow, lendingOutPerms, item.status, currentUser?.id ?? "", item.createdById ?? null, isAdmin) && (
                               <button
                                 className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => handleDeleteLendingOut(item.id)}
@@ -1992,7 +2010,7 @@ export default function FinanceExpensePage() {
           )}
         </div>
 
-        {isAdmin && (
+        {lendingOutPerms.delete && (
           <BatchDeleteBar
             businessType="lending_out"
             selectedIds={lendingOuts.filter((d) => isSelectedLendingOut(d.id)).map((d) => d.id)}
@@ -2042,7 +2060,7 @@ export default function FinanceExpensePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
-                    {isAdmin && (
+                    {expenseReportPerms.delete && (
                       <th className="w-10">
                         <input
                           type="checkbox"
@@ -2065,7 +2083,7 @@ export default function FinanceExpensePage() {
                     const nextStatuses = appStatusFlow[item.status] || [];
                     return (
                       <tr key={item.id} className={isSelectedExpenseReport(item.id) ? "bg-[#1C1917]/5" : ""}>
-                        {isAdmin && (
+                        {expenseReportPerms.delete && (
                           <td className="w-10">
                             <input
                               type="checkbox"
@@ -2110,7 +2128,7 @@ export default function FinanceExpensePage() {
                               <Eye className="w-3.5 h-3.5" />
                               查看
                             </button>
-                            {isAdmin && (
+                            {canDeleteFrontend(expenseReportHasFlow, expenseReportPerms, item.status, currentUser?.id ?? "", item.createdById ?? null, isAdmin) && (
                               <button
                                 className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => handleDeleteExpenseReport(item.id)}
@@ -2164,7 +2182,7 @@ export default function FinanceExpensePage() {
           )}
         </div>
 
-        {isAdmin && (
+        {expenseReportPerms.delete && (
           <BatchDeleteBar
             businessType="expense_report"
             selectedIds={expenseReports.filter((d) => isSelectedExpenseReport(d.id)).map((d) => d.id)}
@@ -2214,7 +2232,7 @@ export default function FinanceExpensePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
-                    {isAdmin && (
+                    {salaryPaymentPerms.delete && (
                       <th className="w-10">
                         <input
                           type="checkbox"
@@ -2238,7 +2256,7 @@ export default function FinanceExpensePage() {
                 <tbody>
                   {salaryBatches.map((batch) => (
                     <tr key={batch.id} className={isSelectedSalary(batch.id) ? "bg-[#1C1917]/5" : ""}>
-                      {isAdmin && (
+                        {salaryPaymentPerms.delete && (
                         <td className="w-10">
                           <input
                             type="checkbox"
@@ -2281,7 +2299,7 @@ export default function FinanceExpensePage() {
                             <Eye className="w-3.5 h-3.5" />
                             查看
                           </button>
-                          {(batch.status === "草稿" || batch.status === "已驳回" || isAdmin) && (
+                          {(canEditFrontend(salaryPaymentHasFlow, salaryPaymentPerms, batch.status, currentUser?.id ?? "", batch.createdById ?? null, isAdmin) || canDeleteFrontend(salaryPaymentHasFlow, salaryPaymentPerms, batch.status, currentUser?.id ?? "", batch.createdById ?? null, isAdmin)) && (
                             <>
                               <button
                                 className="ios-btn ios-btn-ghost ios-btn-sm"
@@ -2336,7 +2354,7 @@ export default function FinanceExpensePage() {
           )}
         </div>
 
-        {isAdmin && (
+        {salaryPaymentPerms.delete && (
           <BatchDeleteBar
             businessType="salary_payment"
             selectedIds={salaryBatches.filter((d) => isSelectedSalary(d.id)).map((d) => d.id)}
@@ -2367,7 +2385,7 @@ export default function FinanceExpensePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
-                    {isAdmin && (
+                    {borrowingReturnPerms.delete && (
                       <th className="w-10">
                         <input
                           type="checkbox"
@@ -2390,7 +2408,7 @@ export default function FinanceExpensePage() {
                 <tbody>
                   {borrowingReturnApps.map((item) => (
                     <tr key={item.id} className={isSelectedBorrowReturn(item.id) ? "bg-[#1C1917]/5" : ""}>
-                      {isAdmin && (
+                      {borrowingReturnPerms.delete && (
                         <td className="w-10">
                           <input
                             type="checkbox"
@@ -2446,7 +2464,7 @@ export default function FinanceExpensePage() {
           )}
         </div>
 
-        {isAdmin && (
+        {borrowingReturnPerms.delete && (
           <BatchDeleteBar
             businessType="borrowing_return_application"
             selectedIds={borrowingReturnApps.filter((d) => isSelectedBorrowReturn(d.id)).map((d) => d.id)}

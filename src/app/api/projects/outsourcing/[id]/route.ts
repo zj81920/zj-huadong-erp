@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
 
 export async function GET(
   _request: NextRequest,
@@ -37,6 +38,11 @@ export async function PUT(
     const existing = await prisma.outsourcingTask.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "外包任务不存在" }, { status: 404 });
+    }
+
+    const editCheck = await checkEditPermission("outsourcing", undefined, existing.approvalStatus, existing.createdById);
+    if (!editCheck.allowed) {
+      return NextResponse.json({ error: editCheck.error }, { status: 403 });
     }
 
     const {
@@ -156,6 +162,11 @@ export async function DELETE(
     const existing = await prisma.outsourcingTask.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "外包任务不存在" }, { status: 404 });
+    }
+
+    const deleteCheck = await checkDeletePermission("outsourcing", undefined, existing.approvalStatus, existing.createdById);
+    if (!deleteCheck.allowed) {
+      return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
     await prisma.outsourcingTask.delete({ where: { id } });

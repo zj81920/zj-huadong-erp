@@ -26,6 +26,7 @@ interface CurrentUser {
   department: string | null;
   avatarUrl: string | null;
   roles: UserRole[];
+  moduleFlowStatus: Record<string, boolean>;
 }
 
 interface AuthContextType {

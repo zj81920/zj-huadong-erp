@@ -30,6 +30,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import { getUserModulePerms } from "@/lib/types/permissions";
+import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface PurchaseRequestItem {
   id: string;
@@ -96,6 +98,7 @@ interface Inquiry {
   confirmedRound: number | null;
   inquiryStatus: string;
   approvalInstanceId: string | null;
+  createdById: string | null;
   attachments?: { name: string; url: string }[];
 }
 
@@ -140,7 +143,9 @@ const emptyForm: FormData = {
 
 export default function InquiriesPage() {
   const { user } = useAuth();
-  const isAdminUser = user?.username === "admin";
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "inquiries");
+  const hasFlow = user?.moduleFlowStatus?.["inquiries"] ?? false;
   const { configured: flowConfigured } = useFlowConfigured("quotation");
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -413,8 +418,8 @@ export default function InquiriesPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
-    if (deleteConfirm.inquiryStatus !== "草稿" && deleteConfirm.inquiryStatus !== "已驳回" && !isAdminUser) {
-      alert("该记录已进入审批流程，仅管理员可删除");
+    if (!canDeleteFrontend(hasFlow, rolePerms, deleteConfirm.inquiryStatus, user?.id ?? "", deleteConfirm.createdById ?? null, isAdminUser)) {
+      alert("无权删除该记录");
       setDeleteConfirm(null);
       return;
     }
@@ -639,7 +644,7 @@ export default function InquiriesPage() {
             <table className="ios-table">
               <thead>
                 <tr>
-                  {isAdminUser && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
+                  {rolePerms.delete && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
                   <th>项目名称</th>
                   <th>采购需求</th>
                   <th>询价日期</th>
@@ -657,7 +662,7 @@ export default function InquiriesPage() {
                   return (
                     <Fragment key={inquiry.id}>
                       <tr className={`${isExpanded ? "bg-[#FAFAF9]/60" : ""} ${isSelected(inquiry.id) ? "bg-[#1C1917]/5" : ""}`}>
-                        {isAdminUser && (
+                        {rolePerms.delete && (
                           <td className="w-10">
                             <input type="checkbox" className="ios-checkbox" checked={isSelected(inquiry.id)} onChange={() => toggleSelect(inquiry.id)} />
                           </td>
@@ -729,13 +734,13 @@ export default function InquiriesPage() {
                               <Eye className="w-3.5 h-3.5" />
                               详情
                             </button>
-                            {((inquiry.inquiryStatus === "草稿" || inquiry.inquiryStatus === "已驳回") && !inquiry.hasContract || isAdminUser) && (
+                            {(canEditFrontend(hasFlow, rolePerms, inquiry.inquiryStatus, user?.id ?? "", inquiry.createdById ?? null, isAdminUser) && !inquiry.hasContract) && (
                               <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(inquiry)}>
                                 <Pencil className="w-3.5 h-3.5" />
                                 编辑
                               </button>
                             )}
-                            {(inquiry.inquiryStatus === "草稿" || inquiry.inquiryStatus === "已驳回" || isAdminUser) && (
+                            {canDeleteFrontend(hasFlow, rolePerms, inquiry.inquiryStatus, user?.id ?? "", inquiry.createdById ?? null, isAdminUser) && (
                               <button
                                 className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => setDeleteConfirm(inquiry)}
@@ -869,7 +874,7 @@ export default function InquiriesPage() {
         )}
       </div>
 
-      {isAdminUser && (
+      {rolePerms.delete && (
         <BatchDeleteBar
           businessType="inquiry"
           selectedIds={inquiries.filter((d) => isSelected(d.id)).map((d) => d.id)}
@@ -1748,14 +1753,14 @@ export default function InquiriesPage() {
               项目名称: {deleteConfirm.projectCode ? `${deleteConfirm.projectCode} - ${deleteConfirm.projectName}` : (deleteConfirm.projectName || deleteConfirm.projectSourceId)} | 计划单号: {deleteConfirm.purchaseRequest?.requestNo}
             </p>
           )}
-          {deleteConfirm?.hasContract && !isAdminUser ? (
+          {deleteConfirm?.hasContract && !canDeleteFrontend(hasFlow, rolePerms, deleteConfirm.inquiryStatus, user?.id ?? "", deleteConfirm.createdById ?? null, isAdminUser) ? (
             <p className="text-[13px] text-[#78716C] mb-4">该采购单已生成采购合同，无法删除</p>
           ) : (
             <p className="text-[13px] text-[#78716C] mb-6">删除后采购需求将恢复为"已批准"状态</p>
           )}
           <div className="flex justify-center gap-3">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
-            {deleteConfirm && (!deleteConfirm.hasContract || isAdminUser) && (
+            {deleteConfirm && (!deleteConfirm.hasContract || canDeleteFrontend(hasFlow, rolePerms, deleteConfirm.inquiryStatus, user?.id ?? "", deleteConfirm.createdById ?? null, isAdminUser)) && (
               <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>
                 {deleting ? "删除中..." : "确认删除"}
               </button>

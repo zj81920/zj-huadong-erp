@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("income_contract")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
@@ -23,6 +25,11 @@ export async function GET(request: NextRequest) {
 
     if (projectSourceId) {
       where.projectSourceId = projectSourceId;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [contracts, total] = await Promise.all([
@@ -144,6 +151,7 @@ export async function POST(request: NextRequest) {
         contractSummary: contractSummary || null,
         paymentTerms: paymentTerms || null,
         lastModifiedBy: currentUser?.realName || null,
+        createdById: currentUser?.id || null,
       },
       include: {
         customer: true,

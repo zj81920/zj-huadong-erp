@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 const batchSelect = {
   id: true,
@@ -39,6 +40,7 @@ const batchSelect = {
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("salary_payment")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const period = searchParams.get("period") || "";
@@ -55,6 +57,11 @@ export async function GET(request: NextRequest) {
     }
     if (period) where.period = period;
     if (status) where.status = status;
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
+    }
 
     const [batches, total] = await Promise.all([
       prisma.salaryBatch.findMany({
@@ -163,6 +170,7 @@ export async function POST(request: NextRequest) {
         totalBankOutflow,
         remark: remark?.trim() || null,
         lastModifiedBy: currentUser?.realName || null,
+        createdById: currentUser?.id || null,
         items: { create: items },
       },
       select: batchSelect,

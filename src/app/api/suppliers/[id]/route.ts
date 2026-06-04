@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
 
 export async function GET(
   _request: NextRequest,
@@ -36,6 +37,11 @@ export async function PUT(
     const existing = await prisma.supplier.findUnique({ where: { id } });
     if (!existing || !existing.isActive) {
       return NextResponse.json({ error: "供应商不存在" }, { status: 404 });
+    }
+
+    const editCheck = await checkEditPermission("supplier", undefined, existing.approvalStatus, existing.createdById);
+    if (!editCheck.allowed) {
+      return NextResponse.json({ error: editCheck.error }, { status: 403 });
     }
 
     if (existing.approvalStatus === "审批中") {
@@ -87,6 +93,11 @@ export async function DELETE(
     const existing = await prisma.supplier.findUnique({ where: { id } });
     if (!existing || !existing.isActive) {
       return NextResponse.json({ error: "供应商不存在" }, { status: 404 });
+    }
+
+    const deleteCheck = await checkDeletePermission("supplier", undefined, existing.approvalStatus, existing.createdById);
+    if (!deleteCheck.allowed) {
+      return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
     await prisma.supplier.update({

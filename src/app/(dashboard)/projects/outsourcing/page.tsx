@@ -22,6 +22,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import { getUserModulePerms } from "@/lib/types/permissions";
+import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface Project {
   id: string;
@@ -51,6 +53,7 @@ interface OutsourcingTask {
   acceptanceStatus: string;
   approvalStatus: string;
   approvalInstanceId: string | null;
+  createdById: string | null;
   createdAt: string;
   updatedAt: string;
   project: Project;
@@ -123,7 +126,9 @@ const typeConfig: Record<string, { color: string; label: string }> = {
 
 export default function OutsourcingPage() {
   const { user } = useAuth();
-  const isAdmin = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "outsourcing");
+  const hasFlow = user?.moduleFlowStatus?.["outsourcing"] ?? false;
   const { configured: flowConfigured } = useFlowConfigured("outsourcing");
   const [tasks, setTasks] = useState<OutsourcingTask[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -415,8 +420,8 @@ export default function OutsourcingPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
-    if (deleteConfirm.approvalStatus !== "草稿" && deleteConfirm.approvalStatus !== "已驳回" && !isAdmin) {
-      alert("该记录已进入审批流程，仅管理员可删除");
+    if (!canDeleteFrontend(hasFlow, rolePerms, deleteConfirm.approvalStatus, user?.id ?? "", deleteConfirm.createdById ?? null, isAdminUser)) {
+      alert("无权删除该记录");
       setDeleteConfirm(null);
       return;
     }
@@ -610,7 +615,7 @@ export default function OutsourcingPage() {
             <table className="ios-table">
               <thead>
                 <tr>
-                  {isAdmin && (
+                  {rolePerms.delete && (
                     <th className="w-10">
                       <input
                         type="checkbox"
@@ -643,7 +648,7 @@ export default function OutsourcingPage() {
                   const supplier = task.supplier;
                   return (
                     <tr key={task.id} className={isSelected(task.id) ? "bg-[#1C1917]/5" : ""}>
-                      {isAdmin && (
+                      {rolePerms.delete && (
                         <td className="w-10">
                           <input
                             type="checkbox"
@@ -718,7 +723,7 @@ export default function OutsourcingPage() {
                             <Pencil className="w-3.5 h-3.5" />
                             编辑
                           </button>
-                          {(task.approvalStatus === "草稿" || task.approvalStatus === "已驳回" || isAdmin) && (
+                          {canDeleteFrontend(hasFlow, rolePerms, task.approvalStatus, user?.id ?? "", task.createdById ?? null, isAdminUser) && (
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                               onClick={() => setDeleteConfirm(task)}
@@ -759,7 +764,7 @@ export default function OutsourcingPage() {
         )}
       </div>
 
-      {isAdmin && (
+      {rolePerms.delete && (
         <BatchDeleteBar
           businessType="outsourcing"
           selectedIds={tasks.filter((d) => isSelected(d.id)).map((d) => d.id)}

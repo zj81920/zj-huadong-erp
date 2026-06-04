@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("office_supplies")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
@@ -21,6 +24,11 @@ export async function GET(request: NextRequest) {
 
     if (category) {
       where.category = category;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [data, total] = await Promise.all([
@@ -51,6 +59,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const { name, category, spec, unit, quantity, unitPrice, totalPrice, storeLocation, remark } = body;
 
     if (!name || !name.trim()) {
@@ -68,6 +77,7 @@ export async function POST(request: NextRequest) {
         totalPrice: totalPrice ?? null,
         storeLocation: storeLocation?.trim() || null,
         remark: remark?.trim() || null,
+        createdById: currentUser?.id || null,
       },
     });
 

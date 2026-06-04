@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
 
 const batchSelect = {
   id: true,
@@ -67,6 +68,11 @@ export async function PUT(
 
     const existing = await prisma.salaryBatch.findUnique({ where: { id } });
     if (!existing) return NextResponse.json({ error: "批次不存在" }, { status: 404 });
+
+    const editCheck = await checkEditPermission("salary_payment", undefined, existing.status, existing.createdById);
+    if (!editCheck.allowed) {
+      return NextResponse.json({ error: editCheck.error }, { status: 403 });
+    }
 
     if (updatedItems && Array.isArray(updatedItems)) {
       for (const item of updatedItems) {
@@ -156,7 +162,11 @@ export async function DELETE(
     const { id } = await params;
     const existing = await prisma.salaryBatch.findUnique({ where: { id } });
     if (!existing) return NextResponse.json({ error: "批次不存在" }, { status: 404 });
-    if (existing.status !== "草稿") return NextResponse.json({ error: "只能删除草稿状态的批次" }, { status: 400 });
+
+    const deleteCheck = await checkDeletePermission("salary_payment", undefined, existing.status, existing.createdById);
+    if (!deleteCheck.allowed) {
+      return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
+    }
 
     await prisma.salaryBatch.delete({ where: { id } });
     return NextResponse.json({ message: "批次已删除" });

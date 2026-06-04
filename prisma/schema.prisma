@@ -102,9 +102,6 @@ model Role {
 
   isGlobalVisible    Boolean     @default(false) @map("is_global_visible")
 
-  // sort replaced with level (used for role list ordering only)
-  level              Int         @default(0)
-
   isActive           Boolean     @default(true) @map("is_active")
   createdAt          DateTime    @default(now()) @map("created_at")
   updatedAt          DateTime    @updatedAt @map("updated_at")
@@ -146,6 +143,7 @@ model Supplier {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   expenseContracts  ExpenseContract[]
   outsourcingTasks  OutsourcingTask[]
@@ -168,6 +166,7 @@ model Customer {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   projectLeads    ProjectLead[]
   projects        Project[]
@@ -205,6 +204,7 @@ model ProjectLead {
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   customer   Customer     @relation(fields: [customerId], references: [id])
   project    Project?
@@ -233,6 +233,7 @@ model Bidding {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   projectLead ProjectLead @relation(fields: [projectSourceId], references: [projectSourceId])
 
@@ -256,6 +257,7 @@ model Quotation {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   customer    Customer     @relation(fields: [customerId], references: [id])
   projectLead ProjectLead? @relation(fields: [projectSourceId], references: [projectSourceId])
@@ -285,6 +287,7 @@ model Project {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   customer             Customer           @relation(fields: [customerId], references: [id])
   projectLead          ProjectLead        @relation(fields: [projectSourceId], references: [projectSourceId])
@@ -323,6 +326,7 @@ model ProjectPlan {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   project           Project @relation(fields: [projectSourceId], references: [projectSourceId])
   responsiblePerson User?   @relation(fields: [responsibleId], references: [id])
@@ -385,6 +389,7 @@ model OutsourcingTask {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   project  Project  @relation(fields: [projectSourceId], references: [projectSourceId])
   supplier Supplier? @relation(fields: [supplierId], references: [id])
@@ -406,6 +411,7 @@ model PurchaseRequest {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   project Project  @relation(fields: [projectSourceId], references: [projectSourceId])
   inquiry Inquiry?
@@ -461,6 +467,7 @@ model Inquiry {
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   purchaseRequest  PurchaseRequest   @relation(fields: [purchaseRequestId], references: [id])
   expenseContract  ExpenseContract?
@@ -530,6 +537,7 @@ model DeliveryReceipt {
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   expenseContract ExpenseContract @relation(fields: [expenseContractId], references: [id])
   items           DeliveryReceiptItem[]
@@ -580,6 +588,7 @@ model IncomeContract {
   contractSummary    String?   @map("contract_summary") @db.Text
   paymentTerms       String?   @map("payment_terms") @db.Text
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
@@ -612,6 +621,7 @@ model ExpenseContract {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   supplier        Supplier?        @relation(fields: [supplierId], references: [id])
   project         Project?         @relation(fields: [projectSourceId], references: [projectSourceId])
@@ -665,6 +675,7 @@ model NonContractIncome {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   project     Project?     @relation(fields: [projectSourceId], references: [projectSourceId])
 
@@ -690,6 +701,7 @@ model NonContractExpense {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   project   Project?   @relation(fields: [projectSourceId], references: [projectSourceId])
   bankAccount BankAccount? @relation(fields: [bankAccountId], references: [id])
@@ -733,6 +745,7 @@ model ExpenseReport {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   project   Project? @relation(fields: [projectSourceId], references: [projectSourceId])
   applicant User     @relation("ExpenseReportApplicant", fields: [applicantId], references: [id])
@@ -842,6 +855,7 @@ model PaymentApplication {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   payable         Payable          @relation(fields: [payableId], references: [id])
   applicant       User             @relation("PaymentApplicationApplicant", fields: [applicantId], references: [id])
@@ -1003,6 +1017,7 @@ model OtherBorrowing {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   returns BorrowingReturn[]
 
@@ -1046,6 +1061,7 @@ model LendingOut {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   returns LendingReturn[]
   bankAccount BankAccount? @relation(fields: [bankAccountId], references: [id])
@@ -1086,6 +1102,7 @@ model BorrowingReturnApplication {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?  @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   bankAccount BankAccount? @relation(fields: [bankAccountId], references: [id])
 
@@ -1113,6 +1130,7 @@ model SalaryPayment {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   employee    User        @relation(fields: [employeeId], references: [id])
   bankAccount BankAccount? @relation(fields: [bankAccountId], references: [id])
@@ -1144,6 +1162,7 @@ model SalaryBatch {
   createdAt                   DateTime  @default(now()) @map("created_at")
   updatedAt                   DateTime  @updatedAt @map("updated_at")
   lastModifiedBy              String?   @map("last_modified_by")
+  createdById                  String?   @map("created_by")
 
   items          SalaryBatchItem[]
   bankAccount    BankAccount? @relation(fields: [bankAccountId], references: [id])
@@ -1258,6 +1277,7 @@ model OfficeSupply {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   @@map("office_supplies")
 }
@@ -1277,6 +1297,7 @@ model Certificate {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   @@map("certificates")
 }
@@ -1292,6 +1313,7 @@ model Seal {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
 
   @@map("seals")
 }
@@ -1352,4 +1374,16 @@ model Notification {
   user        User     @relation(fields: [userId], references: [id])
 
   @@map("notifications")
+}
+
+model ApprovalModuleConfig {
+  id         String   @id @default(cuid())
+  moduleKey  String   @unique @map("module_key")
+  moduleName String   @map("module_name")
+  groupName  String   @map("group_name")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("approval_module_config")
 }

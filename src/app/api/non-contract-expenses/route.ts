@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("non_contract_expense")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
@@ -25,6 +28,11 @@ export async function GET(request: NextRequest) {
 
     if (projectSourceId) {
       where.projectSourceId = projectSourceId;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [records, total] = await Promise.all([
@@ -61,6 +69,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const {
       projectSourceId,
       amount,
@@ -100,6 +109,7 @@ export async function POST(request: NextRequest) {
         counterpartyBankName: counterpartyBankName?.trim() || null,
         counterpartyBankAccount: counterpartyBankAccount?.trim() || null,
         description: description?.trim() || null,
+        createdById: currentUser?.id || null,
       },
       include: {
         project: true,

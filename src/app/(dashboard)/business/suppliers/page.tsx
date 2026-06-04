@@ -22,6 +22,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ApprovalTimeline } from "@/components/ApprovalComponents";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import { getUserModulePerms } from "@/lib/types/permissions";
+import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface Supplier {
   id: string;
@@ -41,6 +43,7 @@ interface Supplier {
   createdAt: string;
   updatedAt: string;
   lastModifiedBy: string | null;
+  createdById: string | null;
 }
 
 interface SupplierFormData {
@@ -104,6 +107,8 @@ const supplierTypeOptions = ["企业", "政府", "银行", "税务", "政务机�
 export default function SuppliersPage() {
   const { user } = useAuth();
   const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "supplier");
+  const hasFlow = user?.moduleFlowStatus?.["supplier"] ?? false;
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -258,8 +263,8 @@ export default function SuppliersPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
-    if ((deleteConfirm.approvalStatus === "审批中" || deleteConfirm.approvalStatus === "已批准") && !isAdminUser) {
-      alert("该记录已进入审批流程，仅管理员可删除");
+    if (!canDeleteFrontend(hasFlow, rolePerms, deleteConfirm.approvalStatus, user?.id ?? "", deleteConfirm.createdById ?? null, isAdminUser)) {
+      alert("无权删除该记录");
       setDeleteConfirm(null);
       return;
     }
@@ -499,7 +504,7 @@ export default function SuppliersPage() {
             <table className="ios-table">
               <thead>
                 <tr>
-                  {isAdminUser && (
+                  {rolePerms.delete && (
                     <th className="w-10">
                       <input
                         type="checkbox"
@@ -522,7 +527,7 @@ export default function SuppliersPage() {
               <tbody>
                 {suppliers.map((supplier) => (
                   <tr key={supplier.id} className={isSelected(supplier.id) ? "bg-[#1C1917]/5" : ""}>
-                    {isAdminUser && (
+                    {rolePerms.delete && (
                       <td className="w-10">
                         <input
                           type="checkbox"
@@ -599,7 +604,7 @@ export default function SuppliersPage() {
                           </>
                         ) : supplier.approvalStatus === "审批中" ? (
                           <>
-                            {isAdminUser && (
+                            {canDeleteFrontend(hasFlow, rolePerms, supplier.approvalStatus, user?.id ?? "", supplier.createdById ?? null, isAdminUser) && (
                               <button
                                 className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => setDeleteConfirm(supplier)}
@@ -618,7 +623,7 @@ export default function SuppliersPage() {
                           </>
                         ) : supplier.approvalStatus === "已批准" ? (
                           <>
-                            {isAdminUser && (
+                            {canDeleteFrontend(hasFlow, rolePerms, supplier.approvalStatus, user?.id ?? "", supplier.createdById ?? null, isAdminUser) && (
                               <button
                                 className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                                 onClick={() => setDeleteConfirm(supplier)}
@@ -673,7 +678,7 @@ export default function SuppliersPage() {
           </div>
         )}
 
-        {isAdminUser && (
+        {rolePerms.delete && (
           <BatchDeleteBar
             businessType="supplier"
             selectedIds={suppliers.filter((s) => isSelected(s.id)).map((s) => s.id)}

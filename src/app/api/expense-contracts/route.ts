@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("expense_contract")
     const { searchParams } = new URL(request.url);
     const mode = searchParams.get("mode") || "";
 
@@ -57,6 +60,11 @@ export async function GET(request: NextRequest) {
       where.contractType = contractType;
     }
 
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
+    }
+
     const [contracts, total] = await Promise.all([
       prisma.expenseContract.findMany({
         where,
@@ -97,6 +105,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const {
       contractNo,
       projectSourceId,
@@ -306,6 +315,7 @@ export async function POST(request: NextRequest) {
           taxRate: taxRate || null,
           pricingMethod: pricingMethod || null,
           contractSummary: contractSummary || null,
+          createdById: currentUser?.id || null,
           ...(contractItemsData.length > 0 && {
             items: {
               create: contractItemsData,

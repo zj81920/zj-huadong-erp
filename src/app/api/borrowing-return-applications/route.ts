@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("borrowing_return_application")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
@@ -22,6 +25,11 @@ export async function GET(request: NextRequest) {
 
     if (sourceType) {
       where.sourceType = sourceType;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [records, total] = await Promise.all([
@@ -55,6 +63,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const {
       sourceType,
       sourceId,
@@ -133,6 +142,7 @@ export async function POST(request: NextRequest) {
         returnAmount: parseFloat(returnAmount),
         returnDate: returnDate ? new Date(returnDate) : new Date(),
         remark: remark?.trim() || null,
+        createdById: currentUser?.id || null,
       },
     });
 

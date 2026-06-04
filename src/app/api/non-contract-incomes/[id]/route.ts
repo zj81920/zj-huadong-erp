@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
+import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
 
 export async function GET(
   request: NextRequest,
@@ -52,14 +53,9 @@ export async function PUT(
       );
     }
 
-    const fieldKeys = Object.keys(body).filter((k) => k !== "status");
-    const isStatusOnlyChange = body.status !== undefined && fieldKeys.length === 0;
-
-    if (!isStatusOnlyChange && existing.status !== "草稿") {
-      return NextResponse.json(
-        { error: "只有草稿状态的记录可以编辑" },
-        { status: 400 }
-      );
+    const editCheck = await checkEditPermission("non_contract_income", undefined, existing.status, existing.createdById);
+    if (!editCheck.allowed) {
+      return NextResponse.json({ error: editCheck.error }, { status: 403 });
     }
 
     const updateData: Record<string, unknown> = {};
@@ -115,11 +111,9 @@ export async function DELETE(
       );
     }
 
-    if (existing.status !== "草稿" && !isAdmin(adminUser)) {
-      return NextResponse.json(
-        { error: "只有草稿状态的记录可以删除" },
-        { status: 400 }
-      );
+    const deleteCheck = await checkDeletePermission("non_contract_income", undefined, existing.status, existing.createdById);
+    if (!deleteCheck.allowed) {
+      return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
     await prisma.nonContractIncome.delete({

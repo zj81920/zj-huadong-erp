@@ -14,7 +14,6 @@ import {
   Loader2,
 } from "lucide-react";
 import Modal from "@/components/Modal";
-import { BUSINESS_MODULE_GROUPS, BUSINESS_MODULES } from "@/lib/module-permissions";
 
 const CONTRACT_MODULES = ["income_contract", "expense_contract"];
 
@@ -61,8 +60,14 @@ interface SavedFlows {
   [key: string]: FlowNode[];
 }
 
+interface ModuleGroup {
+  label: string;
+  modules: { type: string; name: string }[];
+}
+
 export default function ApprovalFlowPage() {
-  const [selectedModule, setSelectedModule] = useState(BUSINESS_MODULES[0].type);
+  const [selectedModule, setSelectedModule] = useState<string>("");
+  const [moduleGroups, setModuleGroups] = useState<ModuleGroup[]>([]);
   const [flowLevel, setFlowLevel] = useState<FlowLevel>("common");
   const [nodes, setNodes] = useState<FlowNode[]>([]);
   const [savedFlows, setSavedFlows] = useState<SavedFlows>({});
@@ -75,7 +80,27 @@ export default function ApprovalFlowPage() {
   // 编辑缓存：切换模块时保留未保存的编辑内容
   const [editCache, setEditCache] = useState<Record<string, FlowNode[]>>({});
 
-  const currentModule = BUSINESS_MODULES.find((m) => m.type === selectedModule)!;
+  const currentModule = moduleGroups.flatMap(g => g.modules).find((m) => m.type === selectedModule);
+
+  useEffect(() => {
+    // 从 API 加载模块列表
+    fetch("/api/approval-module-config")
+      .then(r => r.json())
+      .then(json => {
+        const data: { moduleKey: string; moduleName: string; groupName: string; hasFlow: boolean }[] = json.data || [];
+        const grouped: Record<string, { type: string; name: string }[]> = {};
+        for (const m of data) {
+          if (!grouped[m.groupName]) grouped[m.groupName] = [];
+          grouped[m.groupName].push({ type: m.moduleKey, name: m.moduleName });
+        }
+        const groups = Object.entries(grouped).map(([label, modules]) => ({ label, modules }));
+        setModuleGroups(groups);
+        if (data.length > 0 && !selectedModule) {
+          setSelectedModule(data[0].moduleKey);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const loadRoles = async () => {
@@ -224,7 +249,8 @@ export default function ApprovalFlowPage() {
 
   const handleBatchApply = () => {
     const targets: Record<string, string[]> = {};
-    BUSINESS_MODULES.forEach((m) => {
+    const allModules = moduleGroups.flatMap(g => g.modules);
+    allModules.forEach((m) => {
       if (m.type === selectedModule) return;
       targets[m.type] = [];
     });
@@ -246,8 +272,9 @@ export default function ApprovalFlowPage() {
   const toggleAllBatchTargets = () => {
     const allSelected = Object.values(batchTargets).every((levels) => levels.includes("common"));
 
+    const allModules2 = moduleGroups.flatMap(g => g.modules);
     const updated: Record<string, string[]> = {};
-    BUSINESS_MODULES.forEach((m) => {
+    allModules2.forEach((m) => {
       if (m.type === selectedModule) return;
       updated[m.type] = allSelected ? [] : ["common"];
     });
@@ -303,7 +330,7 @@ export default function ApprovalFlowPage() {
               <h3 className="text-[14px] font-bold text-[#1C1917]">业务模块</h3>
             </div>
             <div className="py-2 custom-scrollbar" style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto" }}>
-              {BUSINESS_MODULE_GROUPS.map((group) => (
+              {moduleGroups.map((group) => (
                 <div key={group.label}>
                   <div className="px-5 py-2">
                     <span className="text-[11px] font-semibold text-[#78716C] uppercase tracking-wider">{group.label}</span>
@@ -338,7 +365,7 @@ export default function ApprovalFlowPage() {
             {/* 标题 + 级别切换 */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <h2 className="text-[17px] font-bold text-[#1C1917]">{currentModule.name} · 审批流程</h2>
+                <h2 className="text-[17px] font-bold text-[#1C1917]">{currentModule?.name || ""} · 审批流程</h2>
               </div>
               <span className="text-[13px] text-[#78716C]">
                 共 {nodes.length} 个节点
@@ -528,7 +555,7 @@ export default function ApprovalFlowPage() {
       >
         <div className="space-y-4">
           <div className="p-3 rounded-xl bg-[#1C1917]/6 text-[13px] text-[#1C1917] font-medium">
-            将「{currentModule.name}」的审批流程应用到以下模块
+            将「{currentModule?.name || ""}」的审批流程应用到以下模块
           </div>
 
           <div className="flex justify-end">
@@ -543,7 +570,7 @@ export default function ApprovalFlowPage() {
           </div>
 
           <div className="space-y-1 max-h-[360px] overflow-y-auto custom-scrollbar">
-            {BUSINESS_MODULES.filter((m) => m.type !== selectedModule).map((mod) => {
+            {moduleGroups.flatMap(g => g.modules).filter((m) => m.type !== selectedModule).map((mod) => {
               const selectedLevels = batchTargets[mod.type] || [];
               const isSelected = selectedLevels.includes("common");
 

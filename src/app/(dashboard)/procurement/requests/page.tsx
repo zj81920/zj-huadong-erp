@@ -29,6 +29,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import { getUserModulePerms } from "@/lib/types/permissions";
+import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface PurchaseRequestItem {
   id: string;
@@ -54,6 +56,7 @@ interface PurchaseRequest {
   createdAt: string;
   updatedAt: string;
   lastModifiedBy: string | null;
+  createdById: string | null;
   project: { projectSourceId: string; name: string };
   items: PurchaseRequestItem[];
   attachments: { name: string; url: string }[];
@@ -137,7 +140,9 @@ const excelColumnMap: Record<string, keyof PurchaseRequestItemData> = {
 
 export default function PurchaseRequestsPage() {
   const { user } = useAuth();
-  const isAdminUser = user?.username === "admin";
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "purchase_request");
+  const hasFlow = user?.moduleFlowStatus?.["purchase_request"] ?? false;
   const { configured: flowConfigured } = useFlowConfigured("purchase_request");
   const [records, setRecords] = useState<PurchaseRequest[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -374,8 +379,8 @@ export default function PurchaseRequestsPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
-    if (deleteConfirm.status !== "草稿" && deleteConfirm.status !== "已驳回" && !isAdminUser) {
-      alert("该记录已进入审批流程，仅管理员可删除");
+    if (!canDeleteFrontend(hasFlow, rolePerms, deleteConfirm.status, user?.id ?? "", deleteConfirm.createdById ?? null, isAdminUser)) {
+      alert("无权删除该记录");
       setDeleteConfirm(null);
       return;
     }
@@ -610,7 +615,7 @@ export default function PurchaseRequestsPage() {
             <table className="ios-table">
               <thead>
                 <tr>
-                  {isAdminUser && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
+                  {rolePerms.delete && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
                   <th>计划单号</th>
                   <th>项目源ID</th>
                   <th>项目名称</th>
@@ -627,7 +632,7 @@ export default function PurchaseRequestsPage() {
                   return (
                     <Fragment key={record.id}>
                       <tr className={`${isExpanded ? "bg-[#FAFAF9]/60" : ""} ${isSelected(record.id) ? "bg-[#1C1917]/5" : ""}`}>
-                        {isAdminUser && (
+                        {rolePerms.delete && (
                           <td className="w-10">
                             <input type="checkbox" className="ios-checkbox" checked={isSelected(record.id)} onChange={() => toggleSelect(record.id)} />
                           </td>
@@ -696,7 +701,7 @@ export default function PurchaseRequestsPage() {
                                 转询价
                               </button>
                             )}
-                            {(record.status === "草稿" || record.status === "已驳回" || isAdminUser) && (
+                            {(canEditFrontend(hasFlow, rolePerms, record.status, user?.id ?? "", record.createdById ?? null, isAdminUser) || canDeleteFrontend(hasFlow, rolePerms, record.status, user?.id ?? "", record.createdById ?? null, isAdminUser)) && (
                               <>
                                 <button
                                   className="ios-btn ios-btn-ghost ios-btn-sm"
@@ -805,7 +810,7 @@ export default function PurchaseRequestsPage() {
           </div>
         )}
 
-        {isAdminUser && (
+        {rolePerms.delete && (
           <BatchDeleteBar
             businessType="purchase_request"
             selectedIds={records.filter((d) => isSelected(d.id)).map((d) => d.id)}

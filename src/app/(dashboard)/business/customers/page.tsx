@@ -17,6 +17,7 @@ import Modal from "@/components/Modal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import { getUserModulePerms } from "@/lib/types/permissions";
 
 interface Customer {
   id: string;
@@ -31,6 +32,7 @@ interface Customer {
   createdAt: string;
   updatedAt: string;
   lastModifiedBy: string | null;
+  createdById: string | null;
 }
 
 interface CustomerFormData {
@@ -75,7 +77,7 @@ const industryLabelMap: Record<string, string> = {
 
 export default function CustomersPage() {
   const { user } = useAuth();
-  const isAdminUser = user?.username === "admin" || false;
+  const rolePerms = getUserModulePerms(user, "customers");
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -305,7 +307,7 @@ export default function CustomersPage() {
             <table className="ios-table">
               <thead>
                 <tr>
-                  {isAdminUser && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
+                  {rolePerms.delete && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
                   <th>客户名称</th>
                   <th>行业类型</th>
                   <th>客户等级</th>
@@ -319,7 +321,7 @@ export default function CustomersPage() {
               <tbody>
                 {customers.map((customer) => (
                   <tr key={customer.id} className={isSelected(customer.id) ? "bg-[#1C1917]/5" : ""}>
-                    {isAdminUser && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(customer.id)} onChange={() => toggleSelect(customer.id)} /></td>}
+                    {rolePerms.delete && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(customer.id)} onChange={() => toggleSelect(customer.id)} /></td>}
                     <td>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
@@ -414,7 +416,7 @@ export default function CustomersPage() {
           </div>
         )}
 
-        {isAdminUser && <BatchDeleteBar businessType="customer" selectedIds={customers.filter(d => isSelected(d.id)).map(d => d.id)} onDeleteSuccess={fetchCustomers} onClear={clearSelection} />}
+        {rolePerms.delete && <BatchDeleteBar businessType="customer" selectedIds={customers.filter(d => isSelected(d.id)).map(d => d.id)} onDeleteSuccess={fetchCustomers} onClear={clearSelection} />}
       </div>
 
       <Modal

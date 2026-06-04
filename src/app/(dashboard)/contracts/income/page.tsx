@@ -22,6 +22,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import { getUserModulePerms } from "@/lib/types/permissions";
+import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface Customer {
   id: string;
@@ -71,6 +73,7 @@ interface IncomeContract {
   contractSummary: string | null;
   paymentTerms: string | null;
   lastModifiedBy: string | null;
+  createdById: string | null;
   createdAt: string;
   updatedAt: string;
   customer: Customer;
@@ -129,7 +132,9 @@ const statusActionsMap: Record<
 
 export default function IncomeContractsPage() {
   const { user } = useAuth();
-  const isAdminUser = user?.username === "admin";
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "income_contract");
+  const hasFlow = user?.moduleFlowStatus?.["income_contract"] ?? false;
   const { configured: flowConfigured } = useFlowConfigured("income_contract");
   const [contracts, setContracts] = useState<IncomeContract[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -549,8 +554,8 @@ export default function IncomeContractsPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
-    if (deleteConfirm.status !== "草稿" && deleteConfirm.status !== "已驳回" && !isAdminUser) {
-      alert("该记录已进入审批流程，仅管理员可删除");
+    if (!canDeleteFrontend(hasFlow, rolePerms, deleteConfirm.status, user?.id ?? "", deleteConfirm.createdById ?? null, isAdminUser)) {
+      alert("无权删除该记录");
       setDeleteConfirm(null);
       return;
     }
@@ -812,7 +817,7 @@ export default function IncomeContractsPage() {
             <table className="ios-table">
               <thead>
                 <tr>
-                  {isAdminUser && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
+                  {rolePerms.delete && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
                   <th>合同编号</th>
                   <th>客户名称</th>
                   <th>关联项目</th>
@@ -827,7 +832,7 @@ export default function IncomeContractsPage() {
               <tbody>
                 {contracts.map((contract) => (
                   <tr key={contract.id} className={isSelected(contract.id) ? "bg-[#1C1917]/5" : ""}>
-                    {isAdminUser && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(contract.id)} onChange={() => toggleSelect(contract.id)} /></td>}
+                    {rolePerms.delete && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(contract.id)} onChange={() => toggleSelect(contract.id)} /></td>}
                     <td>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
@@ -881,7 +886,7 @@ export default function IncomeContractsPage() {
                           <Eye className="w-3.5 h-3.5" />
                           查看
                         </button>
-                        {(contract.status === "草稿" || contract.status === "已驳回" || isAdminUser) && (
+                        {(canEditFrontend(hasFlow, rolePerms, contract.status, user?.id ?? "", contract.createdById ?? null, isAdminUser) || canDeleteFrontend(hasFlow, rolePerms, contract.status, user?.id ?? "", contract.createdById ?? null, isAdminUser)) && (
                           <>
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm"
@@ -967,7 +972,7 @@ export default function IncomeContractsPage() {
           </div>
         )}
 
-        {isAdminUser && <BatchDeleteBar businessType="income_contract" selectedIds={contracts.filter(d => isSelected(d.id)).map(d => d.id)} onDeleteSuccess={fetchContracts} onClear={clearSelection} />}
+        {rolePerms.delete && <BatchDeleteBar businessType="income_contract" selectedIds={contracts.filter(d => isSelected(d.id)).map(d => d.id)} onDeleteSuccess={fetchContracts} onClear={clearSelection} />}
       </div>
 
       <Modal

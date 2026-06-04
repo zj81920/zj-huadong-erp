@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
+import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
 
 export async function GET(
   _request: NextRequest,
@@ -71,8 +72,9 @@ export async function PUT(
       return NextResponse.json({ data: record });
     }
 
-    if (existing.status !== "草稿") {
-      return NextResponse.json({ error: "只有草稿状态的需求才能编辑" }, { status: 400 });
+    const editCheck = await checkEditPermission("purchase_request", undefined, existing.status, existing.createdById);
+    if (!editCheck.allowed) {
+      return NextResponse.json({ error: editCheck.error }, { status: 403 });
     }
 
     const { projectSourceId, requestType, requiredDate, items, attachments } = body;
@@ -157,8 +159,9 @@ export async function DELETE(
       return NextResponse.json({ error: "采购需求不存在" }, { status: 404 });
     }
 
-    if (existing.status !== "草稿" && !isAdmin(adminUser)) {
-      return NextResponse.json({ error: "只有草稿状态的需求才能删除" }, { status: 400 });
+    const deleteCheck = await checkDeletePermission("purchase_request", undefined, existing.status, existing.createdById);
+    if (!deleteCheck.allowed) {
+      return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
     if (existing.inquiry && !isAdmin(adminUser)) {

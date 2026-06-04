@@ -22,6 +22,8 @@ import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
+import { getUserModulePerms } from "@/lib/types/permissions";
+import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface IncomeContract {
   id: string;
@@ -74,6 +76,7 @@ interface NonContractIncome {
   description: string | null;
   status: string;
   project: { name: string } | null;
+  createdById: string | null;
 }
 
 interface Shareholder {
@@ -554,8 +557,8 @@ export default function FinanceIncomePage() {
 
   const handleDeleteOtherIncome = async () => {
     if (!deleteConfirm) return;
-    if (deleteConfirm.status !== "草稿" && deleteConfirm.status !== "已驳回" && !isAdmin) {
-      alert("该记录已进入审批流程，仅管理员可删除");
+    if (!canDeleteFrontend(otherIncomeHasFlow, otherIncomePerms, deleteConfirm.status, currentUser?.id ?? "", deleteConfirm.createdById ?? null, isAdmin)) {
+      alert("无权删除该记录");
       setDeleteConfirm(null);
       return;
     }
@@ -753,7 +756,10 @@ export default function FinanceIncomePage() {
   const userModules: string[] = [...modulePermissions.accessibleSubModules];
   const tabPermValues = Object.values(TAB_PERMISSION_MAP);
   const hasTabPermissions = userModules.some((m) => tabPermValues.includes(m));
-  const isAdmin = currentUser?.roles?.some((r: any) => r.code === "admin");
+  const isAdmin = currentUser?.roles?.some((r: any) => r.code === "admin") || currentUser?.username === "admin";
+  // 各子模块权限
+  const otherIncomePerms = getUserModulePerms(currentUser, "non_contract_income");
+  const otherIncomeHasFlow = currentUser?.moduleFlowStatus?.["non_contract_income"] ?? false;
   const tabs = (!hasTabPermissions || isAdmin) ? allTabs : allTabs.filter((tab) => userModules.includes(TAB_PERMISSION_MAP[tab.key]));
 
   const getPrimaryBtnLabel = () => {
@@ -945,7 +951,7 @@ export default function FinanceIncomePage() {
               <table className="ios-table">
                 <thead>
                   <tr>
-                    {isAdmin && (
+                    {otherIncomePerms.delete && (
                       <th className="w-10">
                         <input
                           type="checkbox"
@@ -967,7 +973,7 @@ export default function FinanceIncomePage() {
                 <tbody>
                   {otherIncomes.map((item) => (
                     <tr key={item.id} className={isSelected(item.id) ? "bg-[#1C1917]/5" : ""}>
-                      {isAdmin && (
+                      {otherIncomePerms.delete && (
                         <td className="w-10">
                           <input
                             type="checkbox"
@@ -1004,7 +1010,7 @@ export default function FinanceIncomePage() {
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          {(item.status === "草稿" || item.status === "已驳回" || isAdmin) && (
+                          {canDeleteFrontend(otherIncomeHasFlow, otherIncomePerms, item.status, currentUser?.id ?? "", item.createdById ?? null, isAdmin) && (
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                               onClick={() => setDeleteConfirm(item)}
@@ -1041,7 +1047,7 @@ export default function FinanceIncomePage() {
           )}
         </div>
 
-        {isAdmin && (
+        {otherIncomePerms.delete && (
           <BatchDeleteBar
             businessType="non_contract_income"
             selectedIds={otherIncomes.filter((d) => isSelected(d.id)).map((d) => d.id)}

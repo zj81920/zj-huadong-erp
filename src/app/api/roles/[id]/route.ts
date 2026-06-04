@@ -1,6 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const role = await prisma.role.findUnique({
+      where: { id },
+      include: {
+        department: { select: { id: true, name: true } },
+        users: {
+          include: {
+            user: { select: { id: true, username: true, realName: true } },
+          },
+        },
+      },
+    });
+    if (!role || !role.isActive) {
+      return NextResponse.json({ error: "角色不存在" }, { status: 404 });
+    }
+    const data = {
+      id: role.id,
+      code: role.code,
+      name: role.name,
+      description: role.description,
+      departmentId: role.departmentId,
+      departmentName: role.department?.name || null,
+      modulePermissions:
+        typeof role.modulePermissions === "string"
+          ? JSON.parse(role.modulePermissions)
+          : role.modulePermissions,
+      subModuleOverrides:
+        typeof role.subModuleOverrides === "string"
+          ? JSON.parse(role.subModuleOverrides)
+          : role.subModuleOverrides,
+      isGlobalVisible: role.isGlobalVisible,
+      isActive: role.isActive,
+      createdAt: role.createdAt,
+      updatedAt: role.updatedAt,
+      userCount: role.users.length,
+    };
+    return NextResponse.json({ data });
+  } catch (error) {
+    console.error("获取角色详情失败:", error);
+    return NextResponse.json({ error: "获取角色详情失败" }, { status: 500 });
+  }
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -8,7 +56,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, description, departmentId, level, isActive, modulePermissions, subModuleOverrides, isGlobalVisible } = body;
+    const { name, description, departmentId, isActive, modulePermissions, subModuleOverrides, isGlobalVisible } = body;
 
     const existing = await prisma.role.findUnique({ where: { id } });
     if (!existing) {
@@ -38,7 +86,6 @@ export async function PUT(
         ...(name !== undefined && { name: name.trim() }),
         ...(description !== undefined && { description: description || null }),
         ...(departmentId !== undefined && { departmentId: departmentId || null }),
-        ...(level !== undefined && { level }),
         ...(isActive !== undefined && { isActive }),
         ...(modulePermissions !== undefined && { modulePermissions: typeof modulePermissions === "string" ? modulePermissions : JSON.stringify(modulePermissions) }),
         ...(subModuleOverrides !== undefined && { subModuleOverrides: typeof subModuleOverrides === "string" ? subModuleOverrides : JSON.stringify(subModuleOverrides) }),

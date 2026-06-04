@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
 
 export async function GET(
   request: NextRequest,
@@ -51,6 +52,11 @@ export async function PUT(
       );
     }
 
+    const editCheck = await checkEditPermission("lending_out", undefined, existing.status, existing.createdById);
+    if (!editCheck.allowed) {
+      return NextResponse.json({ error: editCheck.error }, { status: 403 });
+    }
+
     const updateData: Record<string, unknown> = {};
 
     if (body.lendingType !== undefined) updateData.lendingType = body.lendingType;
@@ -99,6 +105,11 @@ export async function DELETE(
         { error: "借出款记录不存在" },
         { status: 404 }
       );
+    }
+
+    const deleteCheck = await checkDeletePermission("lending_out", undefined, existing.status, existing.createdById);
+    if (!deleteCheck.allowed) {
+      return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
     await prisma.lendingOut.delete({

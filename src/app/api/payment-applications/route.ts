@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("payment_application")
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "";
     const applicantId = searchParams.get("applicantId") || "";
@@ -17,6 +20,11 @@ export async function GET(request: NextRequest) {
 
     if (applicantId) {
       where.applicantId = applicantId;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [applications, total] = await Promise.all([
@@ -62,6 +70,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const { payableId, applicantId, amount, paymentReason, paymentMethod, bankAccount, remark } = body;
 
     if (!payableId) {
@@ -91,6 +100,7 @@ export async function POST(request: NextRequest) {
         paymentMethod: paymentMethod ?? null,
         bankAccount: bankAccount ?? null,
         remark: remark ?? null,
+        createdById: currentUser?.id || null,
       },
       include: {
         payable: {

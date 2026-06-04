@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
+    const { canReadAll, userId } = await checkReadPermission("expense_report")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
@@ -35,6 +38,11 @@ export async function GET(request: NextRequest) {
 
     if (expenseType) {
       where.expenseType = expenseType;
+    }
+
+    // 权限过滤
+    if (!canReadAll && userId) {
+      where.createdById = userId;
     }
 
     const [records, total] = await Promise.all([
@@ -79,6 +87,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const currentUser = await getCurrentUser();
     const { applicantId, expenseType, amount, projectSourceId, budgetCategory, description, items } = body;
 
     if (!applicantId) {
@@ -147,6 +156,7 @@ export async function POST(request: NextRequest) {
           projectSourceId: projectSourceId || null,
           budgetCategory: budgetCategory || null,
           description: description?.trim() || null,
+          createdById: currentUser?.id || null,
         },
         include: {
           project: true,
