@@ -43,6 +43,14 @@ interface Payable {
 
 type TabType = "summary" | "projectCost" | "receivableAging" | "payableAging" | "cashflow";
 
+interface Organization {
+  id: string;
+  code: string;
+  name: string;
+  shortName: string | null;
+  type: string;
+}
+
 const tabs = [
   { key: "summary" as TabType, label: "收支汇总", icon: <BarChart3 className="w-4 h-4" /> },
   { key: "projectCost" as TabType, label: "项目成本", icon: <DollarSign className="w-4 h-4" /> },
@@ -54,6 +62,8 @@ const tabs = [
 export default function FinanceReportsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("summary");
   const [loading, setLoading] = useState(true);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
 
   const [receivables, setReceivables] = useState<Receivable[]>([]);
   const [payables, setPayables] = useState<Payable[]>([]);
@@ -68,7 +78,7 @@ export default function FinanceReportsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [receivablesRes, payablesRes, nonContractIncomesRes, nonContractExpensesRes, contributionsRes, borrowingsRes, lendingsRes, salariesRes, expenseReportsRes] = await Promise.all([
+      const [receivablesRes, payablesRes, nonContractIncomesRes, nonContractExpensesRes, contributionsRes, borrowingsRes, lendingsRes, salariesRes, expenseReportsRes, orgsRes] = await Promise.all([
         fetch("/api/receivables?pageSize=500"),
         fetch("/api/payables?pageSize=500"),
         fetch("/api/non-contract-incomes?pageSize=500"),
@@ -78,6 +88,7 @@ export default function FinanceReportsPage() {
         fetch("/api/lending-outs?pageSize=500"),
         fetch("/api/salary-payments?pageSize=500"),
         fetch("/api/expense-reports?pageSize=500"),
+        fetch("/api/organizations"),
       ]);
       if (receivablesRes.ok) {
         const json = await receivablesRes.json();
@@ -115,6 +126,10 @@ export default function FinanceReportsPage() {
         const json = await expenseReportsRes.json();
         setExpenseReportData(json.data || []);
       }
+      if (orgsRes.ok) {
+        const json = await orgsRes.json();
+        setOrganizations(json.data || []);
+      }
     } catch (err) {
       console.error("获取报表数据失败:", err);
     } finally {
@@ -128,26 +143,37 @@ export default function FinanceReportsPage() {
 
   const formatAmount = (amount: number) => `¥${Number(amount).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}`;
 
-  const totalReceivablePaid = receivables.reduce((sum, r) => sum + Number(r.paidAmount || 0), 0);
-  const totalPayablePaid = payables.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0);
-  const totalNonContractIncome = nonContractIncomes.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const totalContribution = contributions.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const totalBorrowing = borrowings.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const totalNonContractExpense = nonContractExpenses.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const totalLending = lendings.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const totalSalaryPaid = salaries.reduce((sum, r) => sum + Number(r.netSalary || 0), 0);
-  const totalExpenseReport = expenseReportData.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  // 按主体过滤数据
+  const filteredReceivables = selectedOrgId ? receivables.filter((r: any) => r.organizationId === selectedOrgId) : receivables;
+  const filteredPayables = selectedOrgId ? payables.filter((p: any) => p.organizationId === selectedOrgId) : payables;
+  const filteredNonContractIncomes = selectedOrgId ? nonContractIncomes.filter((r: any) => r.organizationId === selectedOrgId) : nonContractIncomes;
+  const filteredNonContractExpenses = selectedOrgId ? nonContractExpenses.filter((r: any) => r.organizationId === selectedOrgId) : nonContractExpenses;
+  const filteredContributions = selectedOrgId ? contributions.filter((r: any) => r.organizationId === selectedOrgId) : contributions;
+  const filteredBorrowings = selectedOrgId ? borrowings.filter((r: any) => r.organizationId === selectedOrgId) : borrowings;
+  const filteredLendings = selectedOrgId ? lendings.filter((r: any) => r.organizationId === selectedOrgId) : lendings;
+  const filteredSalaries = selectedOrgId ? salaries.filter((r: any) => r.organizationId === selectedOrgId) : salaries;
+  const filteredExpenseReportData = selectedOrgId ? expenseReportData.filter((r: any) => r.organizationId === selectedOrgId) : expenseReportData;
+
+  const totalReceivablePaid = filteredReceivables.reduce((sum, r) => sum + Number(r.paidAmount || 0), 0);
+  const totalPayablePaid = filteredPayables.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0);
+  const totalNonContractIncome = filteredNonContractIncomes.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  const totalContribution = filteredContributions.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  const totalBorrowing = filteredBorrowings.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  const totalNonContractExpense = filteredNonContractExpenses.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  const totalLending = filteredLendings.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  const totalSalaryPaid = filteredSalaries.reduce((sum, r) => sum + Number(r.netSalary || 0), 0);
+  const totalExpenseReport = filteredExpenseReportData.reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
   const totalIncome = totalReceivablePaid + totalNonContractIncome + totalContribution + totalBorrowing;
   const totalExpense = totalPayablePaid + totalNonContractExpense + totalLending + totalSalaryPaid + totalExpenseReport;
   const netProfit = totalIncome - totalExpense;
 
-  const totalReceivableAmount = receivables.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const totalPayableAmount = payables.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const totalReceivableAmount = filteredReceivables.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+  const totalPayableAmount = filteredPayables.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
   const getProjectCostMap = () => {
     const map = new Map<string, { name: string; totalAmount: number; paidAmount: number; expenseReportAmount: number }>();
-    payables.filter((p) => p.projectSourceId).forEach((p) => {
+    filteredPayables.filter((p) => p.projectSourceId).forEach((p) => {
       const existing = map.get(p.projectSourceId!) || {
         name: p.project?.name || p.projectSourceId!,
         totalAmount: 0,
@@ -158,7 +184,7 @@ export default function FinanceReportsPage() {
       existing.paidAmount += Number(p.paidAmount || 0);
       map.set(p.projectSourceId!, existing);
     });
-    expenseReportData.filter((r) => r.projectSourceId).forEach((r) => {
+    filteredExpenseReportData.filter((r) => r.projectSourceId).forEach((r) => {
       const existing = map.get(r.projectSourceId!) || {
         name: r.project?.name || r.projectSourceId!,
         totalAmount: 0,
@@ -198,7 +224,7 @@ export default function FinanceReportsPage() {
   const getMonthlyData = () => {
     const monthMap = new Map<string, { income: number; expense: number }>();
 
-    receivables.forEach((r) => {
+    filteredReceivables.forEach((r) => {
       if (Number(r.paidAmount) > 0) {
         const date = r.dueDate ? new Date(r.dueDate) : new Date();
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -208,7 +234,7 @@ export default function FinanceReportsPage() {
       }
     });
 
-    payables.forEach((p) => {
+    filteredPayables.forEach((p) => {
       if (Number(p.paidAmount) > 0) {
         const date = p.dueDate ? new Date(p.dueDate) : new Date();
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -218,7 +244,7 @@ export default function FinanceReportsPage() {
       }
     });
 
-    nonContractIncomes.forEach((r) => {
+    filteredNonContractIncomes.forEach((r) => {
       const date = r.transactionDate ? new Date(r.transactionDate) : new Date();
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       const existing = monthMap.get(key) || { income: 0, expense: 0 };
@@ -226,7 +252,7 @@ export default function FinanceReportsPage() {
       monthMap.set(key, existing);
     });
 
-    nonContractExpenses.forEach((r) => {
+    filteredNonContractExpenses.forEach((r) => {
       const date = r.transactionDate ? new Date(r.transactionDate) : new Date();
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       const existing = monthMap.get(key) || { income: 0, expense: 0 };
@@ -234,7 +260,7 @@ export default function FinanceReportsPage() {
       monthMap.set(key, existing);
     });
 
-    contributions.forEach((r) => {
+    filteredContributions.forEach((r) => {
       const date = r.contributeDate ? new Date(r.contributeDate) : new Date();
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       const existing = monthMap.get(key) || { income: 0, expense: 0 };
@@ -242,7 +268,7 @@ export default function FinanceReportsPage() {
       monthMap.set(key, existing);
     });
 
-    borrowings.forEach((r) => {
+    filteredBorrowings.forEach((r) => {
       const date = r.borrowingDate ? new Date(r.borrowingDate) : new Date();
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       const existing = monthMap.get(key) || { income: 0, expense: 0 };
@@ -250,7 +276,7 @@ export default function FinanceReportsPage() {
       monthMap.set(key, existing);
     });
 
-    lendings.forEach((r) => {
+    filteredLendings.forEach((r) => {
       const date = r.lendingDate ? new Date(r.lendingDate) : new Date();
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       const existing = monthMap.get(key) || { income: 0, expense: 0 };
@@ -258,7 +284,7 @@ export default function FinanceReportsPage() {
       monthMap.set(key, existing);
     });
 
-    salaries.forEach((r) => {
+    filteredSalaries.forEach((r) => {
       const date = r.paymentDate ? new Date(r.paymentDate) : new Date();
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       const existing = monthMap.get(key) || { income: 0, expense: 0 };
@@ -266,7 +292,7 @@ export default function FinanceReportsPage() {
       monthMap.set(key, existing);
     });
 
-    expenseReportData.forEach((r) => {
+    filteredExpenseReportData.forEach((r) => {
       const date = r.createdAt ? new Date(r.createdAt) : new Date();
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       const existing = monthMap.get(key) || { income: 0, expense: 0 };
@@ -312,6 +338,21 @@ export default function FinanceReportsPage() {
             {tab.label}
           </button>
         ))}
+        {organizations.length > 0 && (
+          <div className="ml-auto flex items-center gap-2">
+            <label className="text-[13px] font-semibold text-[#78716C]">经营主体</label>
+            <select
+              className="ios-select"
+              value={selectedOrgId}
+              onChange={(e) => setSelectedOrgId(e.target.value)}
+            >
+              <option value="">全部（合并报表）</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>{org.shortName || org.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {activeTab === "summary" && (
@@ -503,7 +544,7 @@ export default function FinanceReportsPage() {
       {activeTab === "receivableAging" && (
         <div className="space-y-5">
           <div className="grid grid-cols-4 gap-4">
-            {getAgingBuckets(receivables, "receive").map((bucket) => (
+            {getAgingBuckets(filteredReceivables, "receive").map((bucket) => (
               <div key={bucket.range} className="bento-card-static">
                 <div className="flex items-center justify-between mb-2">
                   <span className={`ios-badge ${bucket.color}`}>{bucket.label}</span>
@@ -515,14 +556,14 @@ export default function FinanceReportsPage() {
           </div>
           <div className="bento-card-static">
             <h3 className="text-[15px] font-bold text-[#1C1917] mb-4">应收账款明细</h3>
-            {receivables.filter((r) => r.status !== "已收" && Number(r.amount) - Number(r.paidAmount) > 0).length === 0 ? (
+            {filteredReceivables.filter((r) => r.status !== "已收" && Number(r.amount) - Number(r.paidAmount) > 0).length === 0 ? (
               <div className="empty-state py-8"><p>暂无未收款记录</p></div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="ios-table">
                   <thead><tr><th>来源类型</th><th>项目</th><th>应收金额</th><th>已收金额</th><th>未收金额</th><th>到期日</th><th>逾期天数</th></tr></thead>
                   <tbody>
-                    {receivables.filter((r) => r.status !== "已收" && Number(r.amount) - Number(r.paidAmount) > 0).map((r) => {
+                    {filteredReceivables.filter((r) => r.status !== "已收" && Number(r.amount) - Number(r.paidAmount) > 0).map((r) => {
                       const diffDays = Math.floor((Date.now() - new Date(r.dueDate).getTime()) / (1000 * 60 * 60 * 24));
                       return (
                         <tr key={r.id}>
@@ -551,7 +592,7 @@ export default function FinanceReportsPage() {
       {activeTab === "payableAging" && (
         <div className="space-y-5">
           <div className="grid grid-cols-4 gap-4">
-            {getAgingBuckets(payables, "pay").map((bucket) => (
+            {getAgingBuckets(filteredPayables, "pay").map((bucket) => (
               <div key={bucket.range} className="bento-card-static">
                 <div className="flex items-center justify-between mb-2">
                   <span className={`ios-badge ${bucket.color}`}>{bucket.label}</span>
@@ -563,14 +604,14 @@ export default function FinanceReportsPage() {
           </div>
           <div className="bento-card-static">
             <h3 className="text-[15px] font-bold text-[#1C1917] mb-4">应付账款明细</h3>
-            {payables.filter((p) => p.status !== "已付" && Number(p.amount) - Number(p.paidAmount) > 0).length === 0 ? (
+            {filteredPayables.filter((p) => p.status !== "已付" && Number(p.amount) - Number(p.paidAmount) > 0).length === 0 ? (
               <div className="empty-state py-8"><p>暂无未付款记录</p></div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="ios-table">
                   <thead><tr><th>来源类型</th><th>项目</th><th>应付金额</th><th>已付金额</th><th>未付金额</th><th>到期日</th><th>逾期天数</th></tr></thead>
                   <tbody>
-                    {payables.filter((p) => p.status !== "已付" && Number(p.amount) - Number(p.paidAmount) > 0).map((p) => {
+                    {filteredPayables.filter((p) => p.status !== "已付" && Number(p.amount) - Number(p.paidAmount) > 0).map((p) => {
                       const diffDays = Math.floor((Date.now() - new Date(p.dueDate).getTime()) / (1000 * 60 * 60 * 24));
                       return (
                         <tr key={p.id}>

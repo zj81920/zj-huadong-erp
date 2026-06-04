@@ -92,7 +92,25 @@ export async function PUT(
         ...(isGlobalVisible !== undefined && { isGlobalVisible }),
       },
     });
-    return NextResponse.json({ data: role });
+    // 返回格式化数据，与 GET 保持一致
+    const data = {
+      id: role.id,
+      code: role.code,
+      name: role.name,
+      description: role.description,
+      departmentId: role.departmentId,
+      modulePermissions:
+        typeof role.modulePermissions === "string"
+          ? JSON.parse(role.modulePermissions)
+          : role.modulePermissions,
+      subModuleOverrides:
+        typeof role.subModuleOverrides === "string"
+          ? JSON.parse(role.subModuleOverrides)
+          : role.subModuleOverrides || {},
+      isGlobalVisible: role.isGlobalVisible,
+      isActive: role.isActive,
+    };
+    return NextResponse.json({ data });
   } catch (error) {
     console.error("更新角色失败:", error);
     return NextResponse.json({ error: "更新角色失败" }, { status: 500 });

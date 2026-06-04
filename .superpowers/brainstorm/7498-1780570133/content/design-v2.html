@@ -1,0 +1,124 @@
+<h2>方案C 设计 V2 — 汇总信息调整</h2>
+<p class="subtitle">汇总区显示 5 项关键指标</p>
+
+<div class="mockup" style="max-width:800px;margin:0 auto;">
+  <div class="mockup-header">新建工资批次（内联表格）</div>
+  <div class="mockup-body" style="padding:16px;text-align:left;">
+
+    <!-- 基本信息区 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:#1C1917;">工资周期</div>
+        <div style="padding:8px 12px;background:#F5F5F4;border-radius:8px;font-size:13px;color:#1C1917;">2026-06</div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:#1C1917;">批次名称</div>
+        <div style="padding:8px 12px;background:#F5F5F4;border-radius:8px;font-size:13px;color:#1C1917;">2026年6月工资发放</div>
+      </div>
+    </div>
+
+    <!-- 汇总信息卡片（5项指标） -->
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:100px;padding:12px;background:#FAFAF9;border-radius:8px;text-align:center;">
+        <div style="font-size:11px;color:#78716C;margin-bottom:4px;">应发人数</div>
+        <div style="font-size:20px;font-weight:700;color:#1C1917;">25</div>
+        <div style="font-size:11px;color:#78716C;">人</div>
+      </div>
+      <div style="flex:1;min-width:120px;padding:12px;background:#FAFAF9;border-radius:8px;text-align:center;">
+        <div style="font-size:11px;color:#78716C;margin-bottom:4px;">应发总额</div>
+        <div style="font-size:20px;font-weight:700;color:#1C1917;">¥328,500</div>
+      </div>
+      <div style="flex:1;min-width:120px;padding:12px;background:#FAFAF9;border-radius:8px;text-align:center;">
+        <div style="font-size:11px;color:#78716C;margin-bottom:4px;">代缴社保总计</div>
+        <div style="font-size:20px;font-weight:700;color:#1C1917;">¥18,750</div>
+      </div>
+      <div style="flex:1;min-width:120px;padding:12px;background:#FAFAF9;border-radius:8px;text-align:center;">
+        <div style="font-size:11px;color:#78716C;margin-bottom:4px;">代缴公积金总计</div>
+        <div style="font-size:20px;font-weight:700;color:#1C1917;">¥10,800</div>
+      </div>
+      <div style="flex:1;min-width:120px;padding:12px;background:#FAFAF9;border-radius:8px;text-align:center;">
+        <div style="font-size:11px;color:#78716C;margin-bottom:4px;">代缴个税总计</div>
+        <div style="font-size:20px;font-weight:700;color:#1C1917;">¥2,120</div>
+      </div>
+    </div>
+
+    <!-- 实发总额单独突出 -->
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+      <div style="padding:10px 24px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;text-align:center;">
+        <div style="font-size:12px;color:#16A34A;margin-bottom:2px;">实发总额</div>
+        <div style="font-size:22px;font-weight:700;color:#16A34A;">¥296,830</div>
+      </div>
+    </div>
+
+    <!-- 内联表格 -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:#1C1917;">发放明细</div>
+      <div style="overflow-x:auto;border:1px solid #E7E5E4;border-radius:8px;">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+          <thead>
+            <tr style="background:#F5F5F4;">
+              <th style="padding:8px;text-align:left;border-bottom:1px solid #E7E5E4;">员工</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">基本工资</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">奖金</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">补贴</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">应发合计</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">社保个人</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">公积金个人</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">个税</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">其他扣款</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">扣款合计</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">实发工资</th>
+              <th style="padding:8px;text-align:center;border-bottom:1px solid #E7E5E4;width:36px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;font-weight:600;">张三</td>
+              <td style="padding:8px;text-align:right;"><input value="15000" style="width:85px;padding:4px 6px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;text-align:right;"><input value="2000" style="width:85px;padding:4px 6px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;text-align:right;"><input value="500" style="width:85px;padding:4px 6px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;text-align:right;font-weight:600;">17,500</td>
+              <td style="padding:8px;text-align:right;"><input value="1200" style="width:85px;padding:4px 6px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;text-align:right;"><input value="900" style="width:85px;padding:4px 6px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;text-align:right;"><input value="450" style="width:85px;padding:4px 6px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;text-align:right;"><input value="0" style="width:85px;padding:4px 6px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;text-align:right;color:#78716C;">2,550</td>
+              <td style="padding:8px;text-align:right;font-weight:600;">14,950</td>
+              <td style="padding:8px;text-align:center;"><span style="color:#DC2626;cursor:pointer;font-size:14px;">✕</span></td>
+            </tr>
+            <tr>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;font-weight:600;color:#A8A29E;text-decoration:line-through;">李四</td>
+              <td colspan="10" style="padding:8px;color:#A8A29E;font-size:11px;">已排除（点击恢复）</td>
+              <td style="padding:8px;text-align:center;"><span style="color:#16A34A;cursor:pointer;">↩</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 底部 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:12px;color:#78716C;">
+        ✓ 已包含 <strong>24</strong> 名在职员工 · 已排除 <strong>1</strong> 人
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button style="padding:8px 16px;border:1px solid #E7E5E4;border-radius:8px;background:white;font-size:13px;cursor:default;">取消</button>
+        <button style="padding:8px 16px;border:none;border-radius:8px;background:#1C1917;color:white;font-size:13px;cursor:default;">创建批次</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<h3>汇总项对应关系</h3>
+<table style="width:100%;font-size:13px;border-collapse:collapse;">
+  <tr>
+    <th style="text-align:left;padding:8px;border-bottom:1px solid #E7E5E4;background:#F5F5F4;">汇总项</th>
+    <th style="text-align:left;padding:8px;border-bottom:1px solid #E7E5E4;background:#F5F5F4;">对应数据字段</th>
+  </tr>
+  <tr><td style="padding:8px;border-bottom:1px solid #F5F5F4;">应发总额</td><td style="padding:8px;border-bottom:1px solid #F5F5F4;">所有员工 grossSalary 之和</td></tr>
+  <tr><td style="padding:8px;border-bottom:1px solid #F5F5F4;">代缴社保总计</td><td style="padding:8px;border-bottom:1px solid #F5F5F4;">所有员工 socialInsurancePersonal 之和</td></tr>
+  <tr><td style="padding:8px;border-bottom:1px solid #F5F5F4;">代缴公积金总计</td><td style="padding:8px;border-bottom:1px solid #F5F5F4;">所有员工 housingFundPersonal 之和</td></tr>
+  <tr><td style="padding:8px;border-bottom:1px solid #F5F5F4;">代缴个税总计</td><td style="padding:8px;border-bottom:1px solid #F5F5F4;">所有员工 incomeTax 之和</td></tr>
+  <tr><td style="padding:8px;">实发总额</td><td style="padding:8px;">所有员工 netSalary 之和（绿色突出）</td></tr>
+</table>

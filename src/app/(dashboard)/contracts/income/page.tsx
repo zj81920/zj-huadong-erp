@@ -24,6 +24,7 @@ import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { useRouter } from "next/navigation";
 
 interface Customer {
   id: string;
@@ -72,6 +73,7 @@ interface IncomeContract {
   pricingMethod: string | null;
   contractSummary: string | null;
   paymentTerms: string | null;
+  organizationId: string | null;
   lastModifiedBy: string | null;
   createdById: string | null;
   createdAt: string;
@@ -91,6 +93,7 @@ interface ContractFormData {
   pricingMethod: string;
   contractSummary: string;
   paymentTerms: string;
+  organizationId: string;
 }
 
 interface PaginationInfo {
@@ -111,6 +114,7 @@ const emptyForm: ContractFormData = {
   pricingMethod: "",
   contractSummary: "",
   paymentTerms: "",
+  organizationId: "",
 };
 
 const statusBadgeMap: Record<string, string> = {
@@ -132,6 +136,7 @@ const statusActionsMap: Record<
 
 export default function IncomeContractsPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
   const rolePerms = getUserModulePerms(user, "income_contract");
   const hasFlow = user?.moduleFlowStatus?.["income_contract"] ?? false;
@@ -148,6 +153,8 @@ export default function IncomeContractsPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterProject, setFilterProject] = useState("");
+  const [filterOrg, setFilterOrg] = useState("");
+  const [organizations, setOrganizations] = useState<any[]>([]);
 
   const [showModal, setShowModal] = useState(false);
   const [editingContract, setEditingContract] =
@@ -245,6 +252,7 @@ export default function IncomeContractsPage() {
       if (search) params.set("search", search);
       if (filterStatus) params.set("status", filterStatus);
       if (filterProject) params.set("projectSourceId", filterProject);
+      if (filterOrg) params.set("organizationId", filterOrg);
       params.set("page", pagination.page.toString());
       params.set("pageSize", pagination.pageSize.toString());
 
@@ -260,7 +268,7 @@ export default function IncomeContractsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterStatus, filterProject, pagination.page, pagination.pageSize]);
+  }, [search, filterStatus, filterProject, filterOrg, pagination.page, pagination.pageSize]);
 
   useEffect(() => {
     fetchContracts();
@@ -310,11 +318,26 @@ export default function IncomeContractsPage() {
     fetchProjects();
     fetchProjectLeads();
     fetchCustomers();
+
+    const fetchOrganizations = async () => {
+      try {
+        const res = await fetch("/api/organizations");
+        if (res.ok) {
+          const json = await res.json();
+          setOrganizations(json.data || []);
+        }
+      } catch {
+        setOrganizations([]);
+      }
+    };
+    fetchOrganizations();
   }, []);
 
   const handleOpenCreate = () => {
     setEditingContract(null);
-    setForm({ ...emptyForm });
+    // 默认选择总公司（type=PARENT），没有则选第一个
+    const defaultOrg = organizations.find((o: any) => o.type === "PARENT") || organizations[0];
+    setForm({ ...emptyForm, organizationId: defaultOrg?.id || "" });
     setFormError("");
     setShowModal(true);
   };
@@ -343,6 +366,7 @@ export default function IncomeContractsPage() {
       pricingMethod: contract.pricingMethod || "",
       contractSummary: contract.contractSummary || "",
       paymentTerms: contract.paymentTerms || "",
+      organizationId: contract.organizationId || "",
     });
     setFormError("");
     setShowModal(true);
@@ -529,6 +553,7 @@ export default function IncomeContractsPage() {
         pricingMethod: form.pricingMethod || null,
         contractSummary: form.contractSummary || null,
         paymentTerms: form.paymentTerms || null,
+        organizationId: form.organizationId || null,
       };
 
       const res = await fetch(url, {
@@ -787,6 +812,20 @@ export default function IncomeContractsPage() {
             ))}
           </select>
 
+          <select
+            className="ios-select w-[160px]"
+            value={filterOrg || ''}
+            onChange={(e) => {
+              setFilterOrg(e.target.value);
+              setPagination((prev) => ({ ...prev, page: 1 }));
+            }}
+          >
+            <option value="">全部主体</option>
+            {organizations.map((org: any) => (
+              <option key={org.id} value={org.id}>{org.name}</option>
+            ))}
+          </select>
+
           <div className="ml-auto text-[13px] text-[#78716C]">
             共{" "}
             <span className="font-semibold text-[#1C1917]">
@@ -1000,6 +1039,25 @@ export default function IncomeContractsPage() {
                 value={form.contractNo}
                 onChange={(e) => updateForm("contractNo", e.target.value)}
               />
+            </div>
+
+            {/* 所属主体 */}
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                所属主体 <span className="text-[#78716C]">*</span>
+              </label>
+              <select
+                className="ios-select"
+                value={form.organizationId || ''}
+                onChange={(e) => updateForm("organizationId", e.target.value)}
+              >
+                <option value="">请选择主体</option>
+                {organizations.map((org: any) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -1664,6 +1722,17 @@ export default function IncomeContractsPage() {
             </div>
 
             <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
+
+            {(detailContract.status === "已批准" || detailContract.status === "合同归档" || detailContract.status === "生效") && (
+              <div className="flex justify-end pt-4 border-t border-[#F5F5F4]">
+                <button
+                  className="ios-btn ios-btn-secondary"
+                  onClick={() => router.push(`/contracts/change-orders/new?contractType=income_contract&contractId=${detailContract.id}`)}
+                >
+                  发起变更
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-10 text-[#78716C]">

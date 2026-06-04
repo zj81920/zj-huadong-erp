@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status") || "";
     const projectSourceId = searchParams.get("projectSourceId") || "";
     const contractType = searchParams.get("contractType") || "";
+    const organizationId = searchParams.get("organizationId") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "20");
 
@@ -58,6 +59,10 @@ export async function GET(request: NextRequest) {
 
     if (contractType) {
       where.contractType = contractType;
+    }
+
+    if (organizationId) {
+      where.organizationId = organizationId;
     }
 
     // 权限过滤

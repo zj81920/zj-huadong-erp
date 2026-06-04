@@ -288,11 +288,13 @@ model Project {
   updatedAt         DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
   createdById         String?   @map("created_by")
+  organizationId     String?   @map("organization_id")
 
   customer             Customer           @relation(fields: [customerId], references: [id])
   projectLead          ProjectLead        @relation(fields: [projectSourceId], references: [projectSourceId])
   designManager        User?              @relation("DesignManager", fields: [designManagerId], references: [id])
   supervisorLeader     User?              @relation("SupervisorLeader", fields: [supervisorLeaderId], references: [id])
+  organization         Organization?      @relation(fields: [organizationId], references: [id])
   plans                ProjectPlan[]
   progressRecords     ProjectProgress[]
   designTasks         DesignTask[]
@@ -589,11 +591,14 @@ model IncomeContract {
   paymentTerms       String?   @map("payment_terms") @db.Text
   lastModifiedBy     String?   @map("last_modified_by")
   createdById         String?   @map("created_by")
+  organizationId     String?   @map("organization_id")
+  interOrgContractId String?   @map("inter_org_contract_id")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
   customer Customer @relation(fields: [customerId], references: [id])
   project  Project? @relation(fields: [projectSourceId], references: [projectSourceId])
+  organization Organization? @relation(fields: [organizationId], references: [id])
 
   @@map("income_contracts")
 }
@@ -622,10 +627,12 @@ model ExpenseContract {
   updatedAt          DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
   createdById         String?   @map("created_by")
+  organizationId     String?   @map("organization_id")
 
   supplier        Supplier?        @relation(fields: [supplierId], references: [id])
   project         Project?         @relation(fields: [projectSourceId], references: [projectSourceId])
   remark          String?
+  organization    Organization?    @relation(fields: [organizationId], references: [id])
 
   inquiry         Inquiry?         @relation(fields: [inquiryId], references: [id])
   deliveryReceipts DeliveryReceipt[]
@@ -810,9 +817,11 @@ model Receivable {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  organizationId     String?   @map("organization_id")
 
   project         Project?         @relation(fields: [projectSourceId], references: [projectSourceId])
   receiptVouchers ReceiptVoucher[]
+  organization    Organization?    @relation(fields: [organizationId], references: [id])
 
   @@map("receivables")
 }
@@ -830,9 +839,11 @@ model Payable {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  organizationId     String?   @map("organization_id")
 
   project              Project?             @relation(fields: [projectSourceId], references: [projectSourceId])
   paymentApplications  PaymentApplication[]
+  organization         Organization?        @relation(fields: [organizationId], references: [id])
 
   @@map("payables")
 }
@@ -878,9 +889,11 @@ model ReceiptVoucher {
   bankAccount     String?   @map("bank_account")
   attachments     String?   @map("attachments")
   remark          String?
+  organizationId  String?   @map("organization_id")
   createdAt       DateTime  @default(now()) @map("created_at")
 
-  receivable Receivable @relation(fields: [receivableId], references: [id])
+  receivable    Receivable   @relation(fields: [receivableId], references: [id])
+  organization  Organization? @relation(fields: [organizationId], references: [id])
 
   @@map("receipt_vouchers")
 }
@@ -898,9 +911,11 @@ model PaymentVoucher {
   bankAccount          String?   @map("bank_account")
   attachments          String?   @map("attachments")
   remark               String?
+  organizationId       String?   @map("organization_id")
   createdAt            DateTime  @default(now()) @map("created_at")
 
   paymentApplication PaymentApplication @relation(fields: [paymentApplicationId], references: [id])
+  organization       Organization?      @relation(fields: [organizationId], references: [id])
 
   @@map("payment_vouchers")
 }
@@ -932,8 +947,10 @@ model Invoice {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
+  organizationId     String?   @map("organization_id")
 
   project Project? @relation(fields: [projectSourceId], references: [projectSourceId])
+  organization Organization? @relation(fields: [organizationId], references: [id])
 
   @@map("invoices")
 }
@@ -1225,6 +1242,9 @@ model ApprovalInstance {
 
   actions ApprovalAction[]
 
+  interOrgContracts    InterOrgContract[]
+  contractChangeOrders ContractChangeOrder[]
+
   @@map("approval_instances")
 }
 
@@ -1319,17 +1339,19 @@ model Seal {
 }
 
 model BankAccount {
-  id          String   @id @default(cuid())
-  accountName String   @map("account_name")
-  bankName    String   @map("bank_name")
-  accountNo   String   @unique @map("account_no")
-  accountType String   @map("account_type")
-  isActive    Boolean  @default(true) @map("is_active")
-  remark      String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  lastModifiedBy     String?   @map("last_modified_by")
+  id              String   @id @default(cuid())
+  accountName     String   @map("account_name")
+  bankName        String   @map("bank_name")
+  accountNo       String   @unique @map("account_no")
+  accountType     String   @map("account_type")
+  isActive        Boolean  @default(true) @map("is_active")
+  remark          String?
+  organizationId  String?  @map("organization_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  lastModifiedBy  String?  @map("last_modified_by")
 
+  organization             Organization? @relation(fields: [organizationId], references: [id])
   nonContractExpenses      NonContractExpense[]
   expenseReports           ExpenseReport[]
   paymentApplications      PaymentApplication[]
@@ -1386,4 +1408,92 @@ model ApprovalModuleConfig {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("approval_module_config")
+}
+
+// ==================== 经营主体 ====================
+
+model Organization {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  shortName String?  @map("short_name")
+  taxId     String?  @map("tax_id")
+  type      String   // PARENT / BRANCH / CONSULTING / AFFILIATED
+  isActive  Boolean  @default(true) @map("is_active")
+  sort      Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  bankAccounts   BankAccount[]
+  projects       Project[]
+  incomeContracts IncomeContract[]
+  expenseContracts ExpenseContract[]
+  invoices       Invoice[]
+  receivables    Receivable[]
+  payables       Payable[]
+  receiptVouchers ReceiptVoucher[]
+  paymentVouchers PaymentVoucher[]
+  fromContracts  InterOrgContract[] @relation("from_org")
+  toContracts    InterOrgContract[] @relation("to_org")
+
+  @@map("organizations")
+}
+
+// ==================== 内部结算合同 ====================
+
+model InterOrgContract {
+  id                  String    @id @default(cuid())
+  contractNo          String    @map("contract_no")
+  contractName        String    @map("contract_name")
+  fromOrgId           String    @map("from_org_id")
+  toOrgId             String    @map("to_org_id")
+  type                String    @default("MANAGEMENT_FEE")
+  relatedContractId   String?   @map("related_contract_id")
+  mainContractAmount  Decimal?  @db.Decimal(15, 2) @map("main_contract_amount")
+  managementFee       Decimal   @default(0) @db.Decimal(15, 2) @map("management_fee")
+  taxBurden           Decimal   @default(0) @db.Decimal(15, 2) @map("tax_burden")
+  otherFee            Decimal   @default(0) @db.Decimal(15, 2) @map("other_fee")
+  otherFeeNote        String?   @map("other_fee_note")
+  settlementAmount    Decimal   @default(0) @db.Decimal(15, 2) @map("settlement_amount")
+  status              String    @default("草稿")
+  approvalInstanceId  String?   @map("approval_instance_id")
+  archivedUrl         String?   @map("archived_url")
+  remark              String?   @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  lastModifiedBy      String?   @map("last_modified_by")
+  createdById         String?   @map("created_by")
+
+  fromOrg Organization @relation("from_org", fields: [fromOrgId], references: [id])
+  toOrg   Organization @relation("to_org", fields: [toOrgId], references: [id])
+  approvalInstance ApprovalInstance? @relation(fields: [approvalInstanceId], references: [id])
+
+  @@map("inter_org_contracts")
+}
+
+model ContractChangeOrder {
+  id                  String    @id @default(cuid())
+  changeNo            String    @map("change_no")
+  contractType        String    @map("contract_type")
+  contractId          String    @map("contract_id")
+  changeReason        String    @map("change_reason") @db.Text
+  previousAmount      Decimal   @db.Decimal(15, 2) @map("previous_amount")
+  previousData        Json      @map("previous_data")
+  newAmount           Decimal   @db.Decimal(15, 2) @map("new_amount")
+  newData             Json      @default("{}") @map("new_data")
+  amountDifference    Decimal   @db.Decimal(15, 2) @map("amount_difference")
+  hasOverCollection   Boolean   @default(false) @map("has_over_collection")
+  overCollectionAmount Decimal? @db.Decimal(15, 2) @map("over_collection_amount")
+  newFiles            Json      @default("[]") @map("new_files")
+  status              String    @default("草稿")
+  approvalInstanceId  String?   @map("approval_instance_id")
+  remark              String?   @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  createdById         String?   @map("created_by")
+  lastModifiedBy      String?   @map("last_modified_by")
+
+  approvalInstance ApprovalInstance? @relation(fields: [approvalInstanceId], references: [id])
+
+  @@map("contract_change_orders")
 }

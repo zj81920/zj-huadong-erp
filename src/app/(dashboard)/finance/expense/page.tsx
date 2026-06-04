@@ -470,8 +470,10 @@ export default function FinanceExpensePage() {
   const [showBatchForm, setShowBatchForm] = useState(false);
   const [batchFormPeriod, setBatchFormPeriod] = useState("");
   const [batchFormTitle, setBatchFormTitle] = useState("");
-  const [batchFormEmployees, setBatchFormEmployees] = useState<string[]>([]);
   const [batchFormRemark, setBatchFormRemark] = useState("");
+  // 新建批次时的预览明细（含 excluded 标记）
+  const [batchPreviewItems, setBatchPreviewItems] = useState<(SalaryBatchItem & { excluded: boolean })[]>([]);
+  const [batchPreviewLoading, setBatchPreviewLoading] = useState(false);
   const [editingBatchItems, setEditingBatchItems] = useState<SalaryBatchItem[]>([]);
   const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
 
@@ -1243,17 +1245,34 @@ export default function FinanceExpensePage() {
     const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     setBatchFormPeriod(defaultPeriod);
     setBatchFormTitle(`${defaultPeriod}月工资发放`);
-    setBatchFormEmployees([]);
     setBatchFormRemark("");
+    setBatchPreviewItems([]);
     setEditingBatchId(null);
     setFormError("");
     setShowBatchForm(true);
+
+    // 加载在职员工薪酬预览
+    setBatchPreviewLoading(true);
+    try {
+      const res = await fetch(`/api/salary-batches/preview?period=${defaultPeriod}`);
+      if (res.ok) {
+        const json = await res.json();
+        setBatchPreviewItems(
+          json.data.items.map((item: SalaryBatchItem) => ({ ...item, excluded: false }))
+        );
+      }
+    } catch {
+      // 预览加载失败，后续新建时会由后端兜底
+    } finally {
+      setBatchPreviewLoading(false);
+    }
   };
 
   const handleCreateBatch = async () => {
     if (!batchFormPeriod) { setFormError("请选择工资周期"); return; }
     if (!batchFormTitle) { setFormError("请输入批次名称"); return; }
-    if (batchFormEmployees.length === 0) { setFormError("请选择发放员工"); return; }
+    const activeItems = batchPreviewItems.filter((item) => !item.excluded);
+    if (activeItems.length === 0) { setFormError("至少需要一名发放员工"); return; }
     setSaving(true);
     setFormError("");
     try {
@@ -1263,12 +1282,27 @@ export default function FinanceExpensePage() {
         body: JSON.stringify({
           period: batchFormPeriod,
           title: batchFormTitle,
-          employeeIds: batchFormEmployees,
           remark: batchFormRemark,
+          items: activeItems.map((item) => ({
+            employeeId: item.employeeId,
+            baseSalary: item.baseSalary,
+            bonus: item.bonus,
+            allowance: item.allowance,
+            grossSalary: item.grossSalary,
+            socialInsurancePersonal: item.socialInsurancePersonal,
+            socialInsuranceCompany: item.socialInsuranceCompany,
+            housingFundPersonal: item.housingFundPersonal,
+            housingFundCompany: item.housingFundCompany,
+            incomeTax: item.incomeTax,
+            otherDeduction: item.otherDeduction,
+            totalDeduction: item.totalDeduction,
+            netSalary: item.netSalary,
+          })),
         }),
       });
       if (res.ok) {
         setShowBatchForm(false);
+        setBatchPreviewItems([]);
         fetchSalaryBatches();
       } else {
         const json = await res.json();
@@ -1427,6 +1461,28 @@ export default function FinanceExpensePage() {
       item.totalDeduction = item.socialInsurancePersonal + item.housingFundPersonal + item.incomeTax + item.otherDeduction;
       item.netSalary = Math.round((item.grossSalary - item.totalDeduction) * 100) / 100;
       items[idx] = item;
+      return items;
+    });
+  };
+
+  // 新建批次弹窗：更新预览明细项
+  const updatePreviewItem = (idx: number, field: string, value: string) => {
+    setBatchPreviewItems(prev => {
+      const items = [...prev];
+      const item = { ...items[idx], [field]: Number(value) || 0 };
+      item.grossSalary = item.baseSalary + item.bonus + item.allowance;
+      item.totalDeduction = item.socialInsurancePersonal + item.housingFundPersonal + item.incomeTax + item.otherDeduction;
+      item.netSalary = Math.round((item.grossSalary - item.totalDeduction) * 100) / 100;
+      items[idx] = item;
+      return items;
+    });
+  };
+
+  // 新建批次弹窗：切换排除/恢复员工
+  const toggleExcludeEmployee = (idx: number) => {
+    setBatchPreviewItems(prev => {
+      const items = [...prev];
+      items[idx] = { ...items[idx], excluded: !items[idx].excluded };
       return items;
     });
   };
@@ -3152,14 +3208,15 @@ export default function FinanceExpensePage() {
 
       <Modal
         isOpen={showBatchForm && !editingBatchId}
-        onClose={() => setShowBatchForm(false)}
+        onClose={() => { setShowBatchForm(false); setBatchPreviewItems([]); }}
         title="新建工资批次"
-        maxWidth="720px"
+        maxWidth="95vw"
       >
         <div className="space-y-4">
           {formError && (
             <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">{formError}</div>
           )}
+          {/* 基本信息 */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">工资周期 <span className="text-[#78716C]">*</span></label>
@@ -3180,42 +3237,170 @@ export default function FinanceExpensePage() {
               />
             </div>
           </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">选择发放员工 <span className="text-[#78716C]">*</span>（在职员工）</label>
-            <div className="max-h-[300px] overflow-y-auto border rounded-xl p-3 space-y-2">
-              {users.map((u) => (
-                <label key={u.id} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="w-3.5 h-3.5 rounded border-[#A8A29E] accent-[#1C1917]"
-                    checked={batchFormEmployees.includes(u.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) setBatchFormEmployees((prev) => [...prev, u.id]);
-                      else setBatchFormEmployees((prev) => prev.filter((id) => id !== u.id));
-                    }}
-                  />
-                  <span className="text-[13px] text-[#1C1917]">{u.realName}</span>
-                </label>
-              ))}
+
+          {batchPreviewLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-[13px] text-[#78716C]">正在加载员工薪酬数据...</div>
             </div>
-            {batchFormEmployees.length > 0 && (
-              <p className="text-[12px] text-[#78716C] mt-1">已选 {batchFormEmployees.length} 人</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
-            <textarea
-              className="ios-textarea"
-              placeholder="请输入备注"
-              value={batchFormRemark}
-              onChange={(e) => setBatchFormRemark(e.target.value)}
-            />
-          </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
-            <button className="ios-btn ios-btn-secondary" onClick={() => setShowBatchForm(false)}>取消</button>
-            <button className="ios-btn ios-btn-primary" onClick={handleCreateBatch} disabled={saving}>
-              {saving ? "创建中..." : "创建批次"}
-            </button>
+          ) : batchPreviewItems.length > 0 ? (
+            <>
+              {/* 汇总信息区 */}
+              {(() => {
+                const active = batchPreviewItems.filter((it) => !it.excluded);
+                const totalGross = active.reduce((s, it) => s + it.grossSalary, 0);
+                const totalSIPersonal = active.reduce((s, it) => s + it.socialInsurancePersonal, 0);
+                const totalSICompany = active.reduce((s, it) => s + it.socialInsuranceCompany, 0);
+                const totalHFPersonal = active.reduce((s, it) => s + it.housingFundPersonal, 0);
+                const totalHFCompany = active.reduce((s, it) => s + it.housingFundCompany, 0);
+                const totalTax = active.reduce((s, it) => s + it.incomeTax, 0);
+                const totalNet = active.reduce((s, it) => s + it.netSalary, 0);
+                const totalCompanyCost = totalGross + totalSICompany + totalHFCompany;
+                const excludedCount = batchPreviewItems.length - active.length;
+
+                return (
+                  <>
+                    {/* 第一行：基本指标 */}
+                    <div className="flex gap-3 flex-wrap">
+                      <div className="flex-1 min-w-[80px] p-3 bg-[#FAFAF9] rounded-xl text-center">
+                        <div className="text-[11px] text-[#78716C] mb-1">应发人数</div>
+                        <div className="text-xl font-bold text-[#1C1917]">{active.length}</div>
+                        <div className="text-[11px] text-[#78716C]">人</div>
+                      </div>
+                      <div className="flex-1 min-w-[100px] p-3 bg-[#FAFAF9] rounded-xl text-center">
+                        <div className="text-[11px] text-[#78716C] mb-1">应发总额</div>
+                        <div className="text-lg font-bold text-[#1C1917]">{formatAmount(totalGross)}</div>
+                      </div>
+                      <div className="flex-1 min-w-[100px] p-3 bg-[#F0FDF4] rounded-xl text-center">
+                        <div className="text-[11px] text-[#16A34A] mb-1">实发总额</div>
+                        <div className="text-lg font-bold text-[#16A34A]">{formatAmount(totalNet)}</div>
+                      </div>
+                    </div>
+
+                    {/* 第二行：代扣代缴（个人） */}
+                    <div>
+                      <div className="text-[12px] font-semibold text-[#78716C] mb-2">代扣代缴（个人）</div>
+                      <div className="flex gap-3 flex-wrap">
+                        <div className="flex-1 min-w-[100px] p-2.5 bg-[#FFF7ED] rounded-xl text-center">
+                          <div className="text-[11px] text-[#78716C] mb-1">代缴社保（个人）</div>
+                          <div className="text-base font-bold text-[#1C1917]">{formatAmount(totalSIPersonal)}</div>
+                        </div>
+                        <div className="flex-1 min-w-[100px] p-2.5 bg-[#FFF7ED] rounded-xl text-center">
+                          <div className="text-[11px] text-[#78716C] mb-1">代缴公积金（个人）</div>
+                          <div className="text-base font-bold text-[#1C1917]">{formatAmount(totalHFPersonal)}</div>
+                        </div>
+                        <div className="flex-1 min-w-[100px] p-2.5 bg-[#FFF7ED] rounded-xl text-center">
+                          <div className="text-[11px] text-[#78716C] mb-1">代缴个税</div>
+                          <div className="text-base font-bold text-[#1C1917]">{formatAmount(totalTax)}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 第三行：公司承担 */}
+                    <div>
+                      <div className="text-[12px] font-semibold text-[#78716C] mb-2">公司承担</div>
+                      <div className="flex gap-3 flex-wrap">
+                        <div className="flex-1 min-w-[100px] p-2.5 bg-[#EFF6FF] rounded-xl text-center">
+                          <div className="text-[11px] text-[#78716C] mb-1">公司社保</div>
+                          <div className="text-base font-bold text-[#1C1917]">{formatAmount(totalSICompany)}</div>
+                        </div>
+                        <div className="flex-1 min-w-[100px] p-2.5 bg-[#EFF6FF] rounded-xl text-center">
+                          <div className="text-[11px] text-[#78716C] mb-1">公司公积金</div>
+                          <div className="text-base font-bold text-[#1C1917]">{formatAmount(totalHFCompany)}</div>
+                        </div>
+                        <div className="flex-1 min-w-[100px] p-2.5 bg-[#EFF6FF] rounded-xl text-center">
+                          <div className="text-[11px] text-[#78716C] mb-1">公司总成本</div>
+                          <div className="text-base font-bold text-[#2563EB]">{formatAmount(totalCompanyCost)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+
+              {/* 发放明细表格 */}
+              <div>
+                <div className="text-[12px] font-semibold text-[#1C1917] mb-2">发放明细</div>
+                <div className="overflow-x-auto border border-[#E7E5E4] rounded-xl">
+                  <table className="ios-table text-[12px]">
+                    <thead>
+                      <tr>
+                        <th className="min-w-[60px]">员工</th>
+                        <th className="min-w-[80px]">基本工资</th>
+                        <th className="min-w-[60px]">奖金</th>
+                        <th className="min-w-[60px]">补贴</th>
+                        <th className="min-w-[80px]">应发</th>
+                        <th className="min-w-[70px]">社保个人</th>
+                        <th className="min-w-[70px]">公积金个人</th>
+                        <th className="min-w-[60px]">个税</th>
+                        <th className="min-w-[60px]">其他扣款</th>
+                        <th className="min-w-[80px]">扣合计</th>
+                        <th className="min-w-[80px]">实发</th>
+                        <th className="min-w-[40px]"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {batchPreviewItems.map((item, idx) => (
+                        <tr key={item.employeeId} className={item.excluded ? "opacity-50" : ""}>
+                          {item.excluded ? (
+                            <>
+                              <td className="font-semibold whitespace-nowrap line-through text-[#A8A29E]">{item.employee?.realName}</td>
+                              <td colSpan={10} className="text-[11px] text-[#A8A29E]">已排除（点击恢复）</td>
+                              <td className="text-center">
+                                <button
+                                  className="text-[#16A34A] hover:opacity-70 text-sm"
+                                  onClick={() => toggleExcludeEmployee(idx)}
+                                  title="恢复"
+                                >↩</button>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="font-semibold whitespace-nowrap">{item.employee?.realName}</td>
+                              <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.baseSalary} onChange={(e) => updatePreviewItem(idx, "baseSalary", e.target.value)} /></td>
+                              <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.bonus} onChange={(e) => updatePreviewItem(idx, "bonus", e.target.value)} /></td>
+                              <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.allowance} onChange={(e) => updatePreviewItem(idx, "allowance", e.target.value)} /></td>
+                              <td className="font-semibold text-[#1C1917]">{formatAmount(item.grossSalary)}</td>
+                              <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.socialInsurancePersonal} onChange={(e) => updatePreviewItem(idx, "socialInsurancePersonal", e.target.value)} /></td>
+                              <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.housingFundPersonal} onChange={(e) => updatePreviewItem(idx, "housingFundPersonal", e.target.value)} /></td>
+                              <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.incomeTax} onChange={(e) => updatePreviewItem(idx, "incomeTax", e.target.value)} /></td>
+                              <td><input type="number" step="0.01" className="ios-input text-[12px] py-1" value={item.otherDeduction} onChange={(e) => updatePreviewItem(idx, "otherDeduction", e.target.value)} /></td>
+                              <td className="text-[#78716C]">{formatAmount(item.totalDeduction)}</td>
+                              <td className="font-semibold text-[#78716C]">{formatAmount(item.netSalary)}</td>
+                              <td className="text-center">
+                                <button
+                                  className="text-[#DC2626] hover:opacity-70 text-sm"
+                                  onClick={() => toggleExcludeEmployee(idx)}
+                                  title="排除"
+                                >✕</button>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8 text-[13px] text-[#78716C]">暂无可发放的在职员工</div>
+          )}
+
+          {/* 底部 */}
+          <div className="flex justify-between items-center pt-4 border-t border-[#F5F5F4]">
+            <div className="text-[12px] text-[#78716C]">
+              {(() => {
+                const activeCount = batchPreviewItems.filter((it) => !it.excluded).length;
+                const excludedCount = batchPreviewItems.length - activeCount;
+                return `✓ 已包含 ${activeCount} 名在职员工` + (excludedCount > 0 ? ` · 已排除 ${excludedCount} 人` : "");
+              })()}
+            </div>
+            <div className="flex gap-3">
+              <button className="ios-btn ios-btn-secondary" onClick={() => { setShowBatchForm(false); setBatchPreviewItems([]); }}>取消</button>
+              <button className="ios-btn ios-btn-primary" onClick={handleCreateBatch} disabled={saving}>
+                {saving ? "创建中..." : "创建批次"}
+              </button>
+            </div>
           </div>
         </div>
       </Modal>

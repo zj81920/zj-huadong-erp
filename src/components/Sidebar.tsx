@@ -67,6 +67,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "收入合同", href: "/contracts/income" },
       { label: "支出合同", href: "/contracts/expense" },
+      { label: "内部结算", href: "/contracts/internal-settlement" },
     ],
   },
   {

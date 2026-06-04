@@ -221,6 +221,14 @@ export function resolveUserPermissions(
     };
   }
 
+  // 自动继承：父模块可见时，其所有子模块也可见
+  for (const moduleKey of moduleSet) {
+    const subItems = MODULE_SUB_ITEMS[moduleKey] || [];
+    for (const sub of subItems) {
+      subModuleSet.add(sub.key);
+    }
+  }
+
   return {
     accessibleModules: [...moduleSet],
     accessibleSubModules: [...subModuleSet],

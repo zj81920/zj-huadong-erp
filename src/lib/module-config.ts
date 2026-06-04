@@ -32,6 +32,8 @@ export const MODULE_CONFIG: ModuleConfigItem[] = [
   // === 合同管理 ===
   { key: "income_contract",         name: "收入合同",       group: "合同管理" },
   { key: "expense_contract",        name: "支出合同",       group: "合同管理" },
+  { key: "inter_org_contract",      name: "内部结算合同",   group: "合同管理" },
+  { key: "contract_change_order",   name: "合同变更",       group: "合同管理" },
 
   // === 财务管理 · 收入 ===
   { key: "non_contract_income",     name: "非合同收入",     group: "财务管理" },

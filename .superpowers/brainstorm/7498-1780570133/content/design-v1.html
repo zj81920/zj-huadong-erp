@@ -1,0 +1,94 @@
+<h2>方案C 详细设计 — 页面布局</h2>
+<p class="subtitle">新建批次弹窗改造</p>
+
+<div class="mockup" style="max-width:800px;margin:0 auto;">
+  <div class="mockup-header">新建工资批次（内联表格）</div>
+  <div class="mockup-body" style="padding:16px;text-align:left;">
+
+    <!-- 基本信息区 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:#1C1917;">工资周期</div>
+        <div style="padding:8px 12px;background:#F5F5F4;border-radius:8px;font-size:13px;color:#1C1917;">2026-06</div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:#1C1917;">批次名称</div>
+        <div style="padding:8px 12px;background:#F5F5F4;border-radius:8px;font-size:13px;color:#1C1917;">2026年6月工资发放</div>
+      </div>
+    </div>
+
+    <!-- 员工汇总信息 -->
+    <div style="display:flex;gap:16px;margin-bottom:16px;padding:12px;background:#FAFAF9;border-radius:8px;font-size:13px;">
+      <div><span style="color:#78716C;">应发人数：</span><strong>25人</strong></div>
+      <div><span style="color:#78716C;">应发总额：</span><strong>¥328,500.00</strong></div>
+      <div><span style="color:#78716C;">实发总额：</span><strong>¥296,830.00</strong></div>
+    </div>
+
+    <!-- 内联表格 -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:#1C1917;">发放明细</div>
+      <div style="overflow-x:auto;border:1px solid #E7E5E4;border-radius:8px;">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;white-space:nowrap;">
+          <thead>
+            <tr style="background:#F5F5F4;">
+              <th style="padding:8px;text-align:left;border-bottom:1px solid #E7E5E4;">员工</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">基本工资</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">奖金</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">补贴</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">应发合计</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">社保个人</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">公积金个人</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">个税</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">其他扣款</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">扣款合计</th>
+              <th style="padding:8px;text-align:right;border-bottom:1px solid #E7E5E4;">实发工资</th>
+              <th style="padding:8px;text-align:center;border-bottom:1px solid #E7E5E4;width:40px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;font-weight:600;">张三</td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:right;"><input type="number" step="0.01" value="15000.00" style="width:90px;padding:4px 8px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:right;"><input type="number" step="0.01" value="2000.00" style="width:90px;padding:4px 8px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:right;"><input type="number" step="0.01" value="500.00" style="width:90px;padding:4px 8px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:right;font-weight:600;">17,500.00</td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:right;"><input type="number" step="0.01" value="1200.00" style="width:90px;padding:4px 8px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:right;"><input type="number" step="0.01" value="900.00" style="width:90px;padding:4px 8px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:right;"><input type="number" step="0.01" value="450.00" style="width:90px;padding:4px 8px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:right;"><input type="number" step="0.01" value="0" style="width:90px;padding:4px 8px;border:1px solid #E7E5E4;border-radius:6px;text-align:right;font-size:12px;"></td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:right;color:#78716C;">2,550.00</td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:right;font-weight:600;">14,950.00</td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:center;">
+                <span style="color:#DC2626;cursor:pointer;font-size:14px;">✕</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;font-weight:600;color:#A8A29E;text-decoration:line-through;">李四</td>
+              <td colspan="10" style="padding:8px;border-bottom:1px solid #F5F5F4;color:#A8A29E;font-size:11px;">已排除（点击恢复）</td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;text-align:center;">
+                <span style="color:#16A34A;cursor:pointer;font-size:14px;">↩</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;font-weight:600;">王五</td>
+              <td colspan="10" style="padding:8px;border-bottom:1px solid #F5F5F4;color:#78716C;text-align:center;font-size:11px;">...</td>
+              <td style="padding:8px;border-bottom:1px solid #F5F5F4;"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 底部操作 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:12px;color:#78716C;">
+        ✓ 已包含 <strong>24</strong> 名在职员工 · 已排除 <strong>1</strong> 人
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button style="padding:8px 16px;border:1px solid #E7E5E4;border-radius:8px;background:white;font-size:13px;cursor:default;">取消</button>
+        <button style="padding:8px 16px;border:none;border-radius:8px;background:#1C1917;color:white;font-size:13px;cursor:default;">创建批次</button>
+      </div>
+    </div>
+
+  </div>
+</div>

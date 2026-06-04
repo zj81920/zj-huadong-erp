@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
     const projectSourceId = searchParams.get("projectSourceId") || "";
+    const organizationId = searchParams.get("organizationId") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "20");
 
@@ -25,6 +26,10 @@ export async function GET(request: NextRequest) {
 
     if (projectSourceId) {
       where.projectSourceId = projectSourceId;
+    }
+
+    if (organizationId) {
+      where.organizationId = organizationId;
     }
 
     // 权限过滤
@@ -78,6 +83,7 @@ export async function POST(request: NextRequest) {
       pricingMethod,
       contractSummary,
       paymentTerms,
+      organizationId,
     } = body;
 
     const currentUser = await getCurrentUser();
@@ -150,6 +156,7 @@ export async function POST(request: NextRequest) {
         pricingMethod: pricingMethod || null,
         contractSummary: contractSummary || null,
         paymentTerms: paymentTerms || null,
+        organizationId: organizationId || null,
         lastModifiedBy: currentUser?.realName || null,
         createdById: currentUser?.id || null,
       },

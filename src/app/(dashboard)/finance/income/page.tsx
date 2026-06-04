@@ -384,6 +384,8 @@ export default function FinanceIncomePage() {
     }
   }, []);
 
+
+
   const fetchReceiptHistory = async (receivable: Receivable) => {
     setReceiptHistoryLoading(true);
     setReceiptHistoryReceivable(receivable);

@@ -60,7 +60,12 @@ export default function RolePermissionMatrix({ role, onSaved }: RolePermissionMa
       };
     }
     setModulePerms(normalized);
-    setOverrides(role.subModuleOverrides || {});
+    const rawOverrides = role.subModuleOverrides;
+    setOverrides(
+      rawOverrides && typeof rawOverrides === "object" && !Array.isArray(rawOverrides)
+        ? rawOverrides
+        : {}
+    );
   }, [role.modulePermissions, role.subModuleOverrides]);
 
   useEffect(() => {

@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const invoiceType = searchParams.get("invoiceType") || "";
     const sourceType = searchParams.get("sourceType") || "";
     const projectSourceId = searchParams.get("projectSourceId") || "";
+    const organizationId = searchParams.get("organizationId") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "20");
 
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
       status,
       remark,
       attachments,
+      organizationId,
     } = body;
 
     if (!invoiceNo || !invoiceType || !invoiceCategory || !invoiceDate || !totalAmount) {
@@ -112,6 +114,7 @@ export async function POST(request: NextRequest) {
         sourceId: sourceId || null,
         status: status || "已登记",
         remark: remark?.trim() || null,
+        organizationId: organizationId || null,
         attachments: attachments || [],
       },
       include: {
@@ -171,6 +174,13 @@ async function updateRelatedInvoicedAmount(
         where: { id: sourceId },
         data: { invoicedAmount: { increment: delta } },
       });
+    }
+  } else if (sourceType === "inter_org_contract") {
+    const contract = await prisma.interOrgContract.findUnique({
+      where: { id: sourceId },
+    });
+    if (!contract) {
+      throw new Error('内部结算合同不存在');
     }
   }
 }

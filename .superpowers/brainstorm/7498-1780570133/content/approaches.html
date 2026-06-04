@@ -1,0 +1,85 @@
+<h2>三种实现方案对比</h2>
+<p class="subtitle">请选择您倾向的方案</p>
+
+<div class="options" data-multiselect>
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>改良 checkbox 列表</h3>
+      <p>保留现有 checkbox 列表形式，但默认全部勾选在职员工</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros">
+          <h4>优点</h4>
+          <ul>
+            <li>改动最小，前端改动少</li>
+            <li>员工可见，可逐个取消</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>缺点</h4>
+          <ul>
+            <li>员工多时滚动列表仍显笨重</li>
+            <li>没有搜索/筛选功能</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>摘要卡片 + 排除名单</h3>
+      <p>主体显示汇总信息（人数、总额），排除操作在独立弹窗中完成</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros">
+          <h4>优点</h4>
+          <ul>
+            <li>新建弹窗简洁清爽</li>
+            <li>排除操作有独立空间</li>
+            <li>可加入搜索/按部门筛选</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>缺点</h4>
+          <ul>
+            <li>需额外弹窗操作</li>
+            <li>开发工作量中等</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>内联表格（推荐）</h3>
+      <p>新建弹窗直接展示员工明细表格，所有在职员工默认已有数据，可编辑金额也可删除整行排除</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros">
+          <h4>优点</h4>
+          <ul>
+            <li>一步完成：选择+编辑金额</li>
+            <li>直观看到每个人薪酬</li>
+            <li>删除行 = 排除员工</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>缺点</h4>
+          <ul>
+            <li>员工多时表格可能很长</li>
+            <li>开发工作量稍大</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section">
+  <h3>我的推荐：方案 C（内联表格）</h3>
+  <p>理由：当前新建批次后紧接着就是编辑明细的步骤。如果把两步合并，用户在新建时就能看到所有员工的薪酬预览并直接编辑，同时可以通过"删除行"来排除员工，流程更顺畅。</p>
+</div>

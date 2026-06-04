@@ -1,0 +1,94 @@
+<h2>工资批次创建流程对比</h2>
+<p class="subtitle">当前方式 vs 您期望的方式</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header" style="background:#F5F5F4;color:#78716C;">当前：手动勾选</div>
+    <div class="mockup-body" style="padding:16px;text-align:left;">
+      <div style="margin-bottom:12px;padding:8px;background:#FEF2F2;border-radius:8px;font-size:13px;color:#DC2626;">
+        ⚠️ 问题：员工列表可能不全（最多200人），逐一勾选效率低
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#1C1917;">选择发放员工 <span style="color:#DC2626;">*</span></div>
+        <div style="max-height:200px;overflow-y:auto;border:1px solid #E7E5E4;border-radius:8px;padding:8px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+            <input type="checkbox" checked disabled style="accent-color:#1C1917;">
+            <span style="font-size:13px;">张三</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+            <input type="checkbox" disabled style="accent-color:#1C1917;">
+            <span style="font-size:13px;">李四</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+            <input type="checkbox" checked disabled style="accent-color:#1C1917;">
+            <span style="font-size:13px;">王五</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+            <input type="checkbox" disabled style="accent-color:#1C1917;">
+            <span style="font-size:13px;">赵六</span>
+          </div>
+          <div style="padding:8px;text-align:center;color:#A8A29E;font-size:12px;">... 更多员工</div>
+        </div>
+        <div style="font-size:12px;color:#78716C;margin-top:4px;">已选 2 人</div>
+      </div>
+      <div style="padding:8px;background:#F5F5F4;border-radius:8px;font-size:12px;color:#78716C;">
+        📋 后端：从 /api/users?pageSize=200 获取用户列表
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header" style="background:#F0FDF4;color:#16A34A;">改进：自动包含</div>
+    <div class="mockup-body" style="padding:16px;text-align:left;">
+      <div style="margin-bottom:12px;padding:8px;background:#F0FDF4;border-radius:8px;font-size:13px;color:#16A34A;">
+        ✅ 自动读取所有在职员工，无需手动选择
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#1C1917;">发放员工</div>
+        <div style="border:1px solid #E7E5E4;border-radius:8px;padding:12px;background:#FAFAF9;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22C55E;"></span>
+            <span style="font-size:13px;font-weight:500;">在职员工自动纳入</span>
+            <span style="margin-left:auto;background:#F0FDF4;color:#16A34A;font-size:11px;padding:2px 8px;border-radius:999px;">25人</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span style="background:#F5F5F4;padding:4px 12px;border-radius:999px;font-size:12px;">张三</span>
+            <span style="background:#F5F5F4;padding:4px 12px;border-radius:999px;font-size:12px;">李四</span>
+            <span style="background:#F5F5F4;padding:4px 12px;border-radius:999px;font-size:12px;">王五</span>
+            <span style="background:#F5F5F4;padding:4px 12px;border-radius:999px;font-size:12px;">赵六</span>
+            <span style="background:#F5F5F4;padding:4px 12px;border-radius:999px;font-size:12px;">+21人</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:8px;background:#F0FDF4;border-radius:8px;font-size:12px;color:#16A34A;">
+        📋 后端：自动查询 employmentStatus="active" 的全部员工
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>关键变化</h3>
+  <table style="width:100%;font-size:13px;border-collapse:collapse;">
+    <tr>
+      <th style="text-align:left;padding:8px;border-bottom:1px solid #E7E5E4;">维度</th>
+      <th style="text-align:left;padding:8px;border-bottom:1px solid #E7E5E4;">当前</th>
+      <th style="text-align:left;padding:8px;border-bottom:1px solid #E7E5E4;">改进后</th>
+    </tr>
+    <tr>
+      <td style="padding:8px;border-bottom:1px solid #F5F5F4;font-weight:500;">员工来源</td>
+      <td style="padding:8px;border-bottom:1px solid #F5F5F4;">手动勾选</td>
+      <td style="padding:8px;border-bottom:1px solid #F5F5F4;color:#16A34A;">自动包含全部在职员工</td>
+    </tr>
+    <tr>
+      <td style="padding:8px;border-bottom:1px solid #F5F5F4;font-weight:500;">可见性</td>
+      <td style="padding:8px;border-bottom:1px solid #F5F5F4;">有限制（max 200）</td>
+      <td style="padding:8px;border-bottom:1px solid #F5F5F4;color:#16A34A;">无限制，全部展示</td>
+    </tr>
+    <tr>
+      <td style="padding:8px;font-weight:500;">排除逻辑</td>
+      <td style="padding:8px;">不勾选即可排除</td>
+      <td style="padding:8px;color:#78716C;">可设置排除名单（如离职/请假）</td>
+    </tr>
+  </table>
+</div>

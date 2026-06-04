@@ -53,6 +53,18 @@ export async function GET(request: NextRequest) {
         });
         contractMap = Object.fromEntries(contracts.map((c) => [c.id, c]));
       }
+    } else if (sourceType === "inter_org_contract") {
+      const contractIds = receivables
+        .map((r) => r.sourceId)
+        .filter(Boolean);
+
+      if (contractIds.length > 0) {
+        const contracts = await prisma.interOrgContract.findMany({
+          where: { id: { in: contractIds } },
+          include: { fromOrg: true, toOrg: true },
+        });
+        contractMap = Object.fromEntries(contracts.map((c) => [c.id, c]));
+      }
     }
 
     const enriched = receivables.map((r) => ({

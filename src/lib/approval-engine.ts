@@ -8,6 +8,7 @@ const BUSINESS_TYPE_LABELS: Record<string, string> = {
   delivery_receipt: "到货验收",
   income_contract: "收入合同",
   expense_contract: "支出合同",
+  inter_org_contract: "内部结算合同",
   non_contract_income: "非合同收入",
   non_contract_expense: "其他支付",
   payment_application: "合同支付",
@@ -905,6 +906,163 @@ async function updateBusinessStatus(
     case "delivery_receipt":
       await prisma.deliveryReceipt.update({ where: { id: businessId }, data: updateData });
       break;
+    case "contract_change_order": {
+      await prisma.contractChangeOrder.update({
+        where: { id: businessId },
+        data: updateData,
+      });
+
+      if (status === "已批准") {
+        const order = await prisma.contractChangeOrder.findUnique({
+          where: { id: businessId },
+        });
+        if (!order) break;
+
+        // 1. 更新关联合同金额
+        const newAmount = parseFloat(order.newAmount.toString());
+        if (order.contractType === "income_contract") {
+          await prisma.incomeContract.update({
+            where: { id: order.contractId },
+            data: { totalAmount: newAmount },
+          });
+        } else if (order.contractType === "expense_contract") {
+          await prisma.expenseContract.update({
+            where: { id: order.contractId },
+            data: { totalAmount: newAmount },
+          });
+        } else if (order.contractType === "inter_org_contract") {
+          await prisma.interOrgContract.update({
+            where: { id: order.contractId },
+            data: { settlementAmount: newAmount },
+          });
+        }
+
+        // 2. 调整关联的应收/应付记录
+        const diff = parseFloat(order.amountDifference.toString());
+        if (order.contractType === "income_contract" || order.contractType === "inter_org_contract") {
+          const receivable = await prisma.receivable.findFirst({
+            where: { sourceType: order.contractType, sourceId: order.contractId },
+          });
+          if (receivable) {
+            const newReceivableAmount = parseFloat(receivable.amount.toString()) + diff;
+            const paidAmt = parseFloat(receivable.paidAmount.toString());
+            await prisma.receivable.update({
+              where: { id: receivable.id },
+              data: { amount: newReceivableAmount },
+            });
+            // 同步更新变更单的超收标记
+            if (paidAmt > newReceivableAmount) {
+              await prisma.contractChangeOrder.update({
+                where: { id: businessId },
+                data: {
+                  hasOverCollection: true,
+                  overCollectionAmount: paidAmt - newReceivableAmount,
+                },
+              });
+            }
+          }
+        } else if (order.contractType === "expense_contract") {
+          const payable = await prisma.payable.findFirst({
+            where: { sourceType: "expense_contract", sourceId: order.contractId },
+          });
+          if (payable) {
+            const newPayableAmount = parseFloat(payable.amount.toString()) + diff;
+            await prisma.payable.update({
+              where: { id: payable.id },
+              data: { amount: newPayableAmount },
+            });
+          }
+        }
+
+        // 3. 追加归档文件到原合同
+        const newFiles = Array.isArray(order.newFiles) ? order.newFiles as string[] : [];
+        if (newFiles.length > 0) {
+          const contractModel = order.contractType === "income_contract" ? "incomeContract" :
+            order.contractType === "expense_contract" ? "expenseContract" : "interOrgContract";
+          const existingContract = await (prisma[contractModel as keyof typeof prisma] as any).findUnique({
+            where: { id: order.contractId },
+            select: { archivedUrl: true },
+          });
+          const existingFiles: string[] = existingContract?.archivedUrl
+            ? (() => { try { const p = JSON.parse(existingContract.archivedUrl); return Array.isArray(p) ? p : [existingContract.archivedUrl]; } catch { return [existingContract.archivedUrl]; } })()
+            : [];
+          const merged = [...existingFiles, ...newFiles];
+          await (prisma[contractModel as keyof typeof prisma] as any).update({
+            where: { id: order.contractId },
+            data: { archivedUrl: JSON.stringify(merged) },
+          });
+        }
+
+        // 4. 变更单状态更新为"已生效"
+        await prisma.contractChangeOrder.update({
+          where: { id: businessId },
+          data: { status: "已生效" },
+        });
+      }
+      break;
+    }
+    case "inter_org_contract": {
+      const interData: Record<string, unknown> = {};
+      if (instanceId) interData.approvalInstanceId = instanceId;
+      interData.status = status;
+      
+      await prisma.interOrgContract.update({ where: { id: businessId }, data: interData });
+
+      const contract = await prisma.interOrgContract.findUnique({
+        where: { id: businessId },
+      });
+
+      if (status === "已批准") {
+        // 防重复创建应收记录
+        const existingReceivables = await prisma.receivable.findMany({
+          where: { sourceType: "inter_org_contract", sourceId: businessId },
+        });
+        
+        if (existingReceivables.length === 0) {
+          if (contract && parseFloat(contract.settlementAmount.toString()) > 0) {
+            // 查找关联收入合同的 projectSourceId
+            let projectSourceId: string | null = null;
+            if (contract.relatedContractId) {
+              const incomeContract = await prisma.incomeContract.findUnique({
+                where: { id: contract.relatedContractId },
+                select: { projectSourceId: true },
+              });
+              projectSourceId = incomeContract?.projectSourceId || null;
+            }
+            
+            await prisma.receivable.create({
+              data: {
+                sourceType: "inter_org_contract",
+                sourceId: businessId,
+                projectSourceId,
+                dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                amount: contract.settlementAmount,
+                paidAmount: 0,
+                invoicedAmount: 0,
+                status: "未收",
+              },
+            });
+          }
+        }
+        
+        // 更新关联的收入合同标记
+        if (contract?.relatedContractId) {
+          await prisma.incomeContract.update({
+            where: { id: contract.relatedContractId },
+            data: { interOrgContractId: businessId },
+          });
+        }
+      } else if (status === "已驳回" || status === "草稿") {
+        // 清空关联标记
+        if (contract?.relatedContractId) {
+          await prisma.incomeContract.update({
+            where: { id: contract.relatedContractId },
+            data: { interOrgContractId: null },
+          });
+        }
+      }
+      break;
+    }
   }
 }
 

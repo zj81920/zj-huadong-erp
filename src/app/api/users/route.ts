@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
+    const employmentStatus = searchParams.get("employmentStatus") || "";
     const pageSize = parseInt(searchParams.get("pageSize") || "200");
 
     const where: Record<string, unknown> = { isActive: true };
@@ -14,6 +15,12 @@ export async function GET(request: NextRequest) {
         { realName: { contains: search, mode: "insensitive" } },
         { username: { contains: search, mode: "insensitive" } },
       ];
+    }
+
+    // 支持按在职状态筛选
+    if (employmentStatus) {
+      const statuses = employmentStatus.split(",");
+      where.employmentStatus = { in: statuses };
     }
 
     const users = await prisma.user.findMany({
