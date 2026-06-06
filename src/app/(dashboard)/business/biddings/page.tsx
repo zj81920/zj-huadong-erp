@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Search, Trophy, DollarSign, TrendingUp, Eye, BarChart3 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
 
 interface ProjectLeadBrief {
   id: string;
@@ -27,13 +29,6 @@ interface Bidding {
   projectLead: ProjectLeadBrief;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 const resultConfig: Record<string, { color: string; label: string }> = {
   "中标": { color: "ios-badge-green", label: "中标" },
   "未中标": { color: "ios-badge-red", label: "未中标" },
@@ -46,9 +41,7 @@ const bondStatusConfig: Record<string, { color: string; label: string }> = {
 
 export default function BiddingsPage() {
   const [biddings, setBiddings] = useState<Bidding[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1, pageSize: 20, total: 0, totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterResult, setFilterResult] = useState("");
@@ -60,15 +53,15 @@ export default function BiddingsPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (filterResult) params.set("bidResult", filterResult);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
       const res = await fetch(`/api/biddings?${params}`);
       const json = await res.json();
       if (res.ok) { setBiddings(json.data); setPagination(json.pagination); }
     } catch (err) {
       console.error("获取投标列表失败:", err);
     } finally { setLoading(false); }
-  }, [search, filterResult, pagination.page, pagination.pageSize]);
+  }, [search, filterResult, page, pageSize]);
 
   useEffect(() => { fetchBiddings(); }, [fetchBiddings]);
 
@@ -102,7 +95,7 @@ export default function BiddingsPage() {
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bento-card-static flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center"><BarChart3 className="w-5 h-5 text-[#1C1917]" /></div>
-          <div><p className="text-[12px] text-[#78716C]">投标总数</p><p className="text-[20px] font-bold text-[#1C1917]">{pagination.total}</p></div>
+          <div><p className="text-[12px] text-[#78716C]">投标总数</p><p className="text-[20px] font-bold text-[#1C1917]">{pagination?.total ?? 0}</p></div>
         </div>
         <div className="bento-card-static flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-[#78716C]/10 flex items-center justify-center"><Trophy className="w-5 h-5 text-[#78716C]" /></div>
@@ -126,14 +119,14 @@ export default function BiddingsPage() {
         <div className="filter-bar">
           <div className="relative flex-1 min-w-[200px] max-w-[360px]">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
-            <input type="text" className="ios-input pl-10" placeholder="搜索项目ID、名称..." value={search} onChange={(e) => { setSearch(e.target.value); setPagination((p) => ({ ...p, page: 1 })); }} />
+            <input type="text" className="ios-input pl-10" placeholder="搜索项目ID、名称..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
           </div>
-          <select className="ios-select w-[140px]" value={filterResult} onChange={(e) => { setFilterResult(e.target.value); setPagination((p) => ({ ...p, page: 1 })); }}>
+          <select className="ios-select w-[140px]" value={filterResult} onChange={(e) => { setFilterResult(e.target.value); setPage(1); }}>
             <option value="">全部结果</option>
             <option value="中标">中标</option>
             <option value="未中标">未中标</option>
           </select>
-          <div className="ml-auto text-[13px] text-[#78716C]">共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录</div>
+          <div className="ml-auto text-[13px] text-[#78716C]">共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录</div>
         </div>
 
         {loading ? (
@@ -163,13 +156,7 @@ export default function BiddingsPage() {
                 })}
               </tbody>
             </table>
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button className="ios-btn ios-btn-secondary ios-btn-sm" disabled={pagination.page <= 1} onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}>上一页</button>
-                <span className="text-[13px] text-[#78716C] px-3">{pagination.page} / {pagination.totalPages}</span>
-                <button className="ios-btn ios-btn-secondary ios-btn-sm" disabled={pagination.page >= pagination.totalPages} onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}>下一页</button>
-              </div>
-            )}
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
       </div>

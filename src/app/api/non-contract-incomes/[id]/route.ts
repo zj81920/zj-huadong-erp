@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
 import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   request: NextRequest,
@@ -19,16 +20,16 @@ export async function GET(
 
     if (!record) {
       return NextResponse.json(
-        { error: "非合同收入记录不存在" },
+        { error: "其他收入记录不存在" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({ data: record });
   } catch (error) {
-    console.error("获取非合同收入详情失败:", error);
+    console.error("获取其他收入详情失败:", error);
     return NextResponse.json(
-      { error: "获取非合同收入详情失败" },
+      { error: "获取其他收入详情失败" },
       { status: 500 }
     );
   }
@@ -48,7 +49,7 @@ export async function PUT(
 
     if (!existing) {
       return NextResponse.json(
-        { error: "非合同收入记录不存在" },
+        { error: "其他收入记录不存在" },
         { status: 404 }
       );
     }
@@ -84,9 +85,9 @@ export async function PUT(
 
     return NextResponse.json({ data: record });
   } catch (error) {
-    console.error("更新非合同收入失败:", error);
+    console.error("更新其他收入失败:", error);
     return NextResponse.json(
-      { error: "更新非合同收入失败" },
+      { error: "更新其他收入失败" },
       { status: 500 }
     );
   }
@@ -106,7 +107,7 @@ export async function DELETE(
 
     if (!existing) {
       return NextResponse.json(
-        { error: "非合同收入记录不存在" },
+        { error: "其他收入记录不存在" },
         { status: 404 }
       );
     }
@@ -116,15 +117,16 @@ export async function DELETE(
       return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
+    await cleanupBusinessApprovalRecords("non_contract_income", id);
     await prisma.nonContractIncome.delete({
       where: { id },
     });
 
     return NextResponse.json({ message: "删除成功" });
   } catch (error) {
-    console.error("删除非合同收入失败:", error);
+    console.error("删除其他收入失败:", error);
     return NextResponse.json(
-      { error: "删除非合同收入失败" },
+      { error: "删除其他收入失败" },
       { status: 500 }
     );
   }

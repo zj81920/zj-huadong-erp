@@ -21,6 +21,10 @@ import Modal from "@/components/Modal";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
+import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface Customer {
   id: string;
@@ -62,13 +66,6 @@ interface LeadFormData {
   implementationEntity: string;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 const emptyForm: LeadFormData = {
   customerId: "",
   projectName: "",
@@ -102,11 +99,11 @@ const statusConfig: Record<string, { color: string; label: string }> = {
 export default function ProjectLeadsPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const isAdminUser = user?.username === "admin";
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "project_lead");
+  const hasFlow = false;
   const [leads, setLeads] = useState<ProjectLead[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1, pageSize: 20, total: 0, totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -177,8 +174,8 @@ export default function ProjectLeadsPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (filterStatus) params.set("status", filterStatus);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/project-leads?${params}`);
       const json = await res.json();
@@ -191,7 +188,7 @@ export default function ProjectLeadsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterStatus, pagination.page, pagination.pageSize]);
+  }, [search, filterStatus, page, pageSize]);
 
   useEffect(() => {
     fetchCustomers();
@@ -364,7 +361,7 @@ export default function ProjectLeadsPage() {
   };
 
   const stats = {
-    total: pagination.total,
+    total: pagination?.total ?? 0,
     bidding: leads.filter((l) => l.currentStatus === "投标中").length,
     quotation: leads.filter((l) => l.currentStatus === "报价中").length,
   };
@@ -425,7 +422,7 @@ export default function ProjectLeadsPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -435,7 +432,7 @@ export default function ProjectLeadsPage() {
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部状态</option>
@@ -449,7 +446,7 @@ export default function ProjectLeadsPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条线索
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条线索
           </div>
         </div>
 
@@ -507,7 +504,7 @@ export default function ProjectLeadsPage() {
                   const sc = statusConfig[lead.currentStatus] || statusConfig["跟踪中"];
                   const isEstablished = lead.currentStatus === "已立项";
                   return (
-                    <tr key={lead.id} className={isSelected(lead.id) ? "bg-[#1C1917]/5" : ""}>
+                    <tr key={lead.id} className={`${getRowStatusClass(lead.currentStatus)} ${isSelected(lead.id) ? "bg-[#1C1917]/5" : ""}`}>
                       {isAdminUser && (
                         <td className="w-10">
                           <input
@@ -557,16 +554,20 @@ export default function ProjectLeadsPage() {
                           </button>
                           {!isEstablished && (
                             <>
-                              <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(lead)}>
-                                <Pencil className="w-3.5 h-3.5" />
-                                编辑
-                              </button>
-                              <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
-                                onClick={() => setDeleteConfirm(lead)}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              {canEditFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
+                                <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(lead)}>
+                                  <Pencil className="w-3.5 h-3.5" />
+                                  编辑
+                                </button>
+                              )}
+                              {canDeleteFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
+                                <button
+                                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
+                                  onClick={() => setDeleteConfirm(lead)}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </>
                           )}
                         </div>
@@ -583,27 +584,7 @@ export default function ProjectLeadsPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
 

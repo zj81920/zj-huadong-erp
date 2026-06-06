@@ -172,9 +172,9 @@ export const SUB_MODULE_TO_HREF: Record<SubModuleKey, string> = {
   "finance.expense.salary": "/finance/expense",
   "finance.expense.return": "/finance/expense",
   "hr.employees": "/hr/employees",
-  "hr.supplies": "/admin/supplies",
-  "hr.certificates": "/admin/certificates",
-  "hr.seals": "/admin/seals",
+  "hr.supplies": "/hr/supplies",
+  "hr.certificates": "/hr/certificates",
+  "hr.seals": "/hr/seals",
 };
 
 export interface UserModulePermission {
@@ -259,6 +259,37 @@ export function needsProjectIsolation(
   if (permissions.isGlobalVisible) return false;
   return (moduleKey === "projects" || moduleKey === "procurement");
 }
+
+// API 路由使用的 key → 子模块 key 的映射（单一数据源）
+// 后端 API 和前端页面通过此映射自动与角色配置的子模块 key 对齐
+export const API_TO_SUB_MODULE: Record<string, SubModuleKey> = {
+  "supplier": "business.suppliers",
+  "customers": "business.customers",
+  "project_leads": "business.project_leads",
+  "biddings": "business.biddings",
+  "quotation": "business.quotations",
+  "projects_list": "projects.list",
+  "outsourcing": "projects.outsourcing",
+  "purchase_request": "procurement.requests",
+  "inquiries": "procurement.inquiries",
+  "delivery_receipt": "procurement.deliveries",
+  "income_contract": "contracts.income",
+  "expense_contract": "contracts.expense",
+  "non_contract_income": "finance.income.other",
+  "non_contract_expense": "finance.expense.other",
+  "payment_application": "finance.expense.contract",
+  "lending_out": "finance.expense.lending",
+  "expense_report": "finance.expense.report",
+  "salary_payment": "finance.expense.salary",
+  "borrowing_return_application": "finance.expense.return",
+  "seals": "hr.seals",
+  "certificates": "hr.certificates",
+  "office_supplies": "hr.supplies",
+  "other_borrowing": "finance.income.borrowing",
+  "inter_org_contract": "contracts.income",
+  "supplier_change": "business.suppliers",
+  "contract_change_order": "contracts.income",
+};
 
 // === 业务模块定义（供流程设置页面使用）===
 export interface BusinessModule {

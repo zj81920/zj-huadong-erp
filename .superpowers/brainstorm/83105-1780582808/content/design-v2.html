@@ -1,0 +1,223 @@
+<h2>统一设计方案 v2</h2>
+<p class="subtitle">已移除"前往审批中心"按钮，根据你的反馈更新</p>
+
+<div class="section">
+  <h3>更新后的审批流状态操作标准</h3>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="background:#F5F5F4">
+          <th style="padding:8px;border-bottom:1px solid #E5E5E4">当前状态</th>
+          <th style="padding:8px;border-bottom:1px solid #E5E5E4">操作栏按钮</th>
+          <th style="padding:8px;border-bottom:1px solid #E5E5E4">查看弹窗内容</th>
+          <th style="padding:8px;border-bottom:1px solid #E5E5E4">说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE"><span class="ios-badge ios-badge-gray">草稿</span></td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">查看 + 编辑 + 删除 + <strong>提交审批</strong></td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">完整业务信息（无审批区块）</td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">可编辑可删除</td>
+        </tr>
+        <tr>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE"><span style="background:#DBEAFE;color:#1E40AF;padding:2px 8px;border-radius:4px;font-size:11px">审批中</span></td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">查看 + [编辑/删除有条件] <br><span style="color:#999;font-size:11px">（无"前往审批中心"按钮，通过通知/待办进入审批）</span></td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">完整业务信息 + 审批区块（只读时间线）</td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">编辑/删除由权限控制</td>
+        </tr>
+        <tr>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE"><span class="ios-badge ios-badge-green">已批准</span></td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">查看 + [编辑/删除有条件] + <strong>合同归档</strong>（如有）</td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">完整业务信息 + 审批区块（已通过）</td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">归档后才可发起变更</td>
+        </tr>
+        <tr>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE"><span class="ios-badge ios-badge-red">已驳回</span></td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">查看 + 编辑 + 删除 + <strong>提交审批</strong></td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">完整业务信息 + 审批区块（含驳回原因）</td>
+          <td style="padding:8px;border-bottom:1px solid #F0EFEE">退回草稿状态，可重新提交</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <div style="background:#fff8e1;padding:16px;border-radius:8px">
+    <p style="font-size:14px;font-weight:600">还有一个问题需要确认：</p>
+    <p style="font-size:13px;margin-top:8px"><strong>内部结算和变更单</strong> 目前使用的是独立路由页面（`[id]/page.tsx`）来展示详情，而其他模块都是 Modal 弹窗。</p>
+    <p style="font-size:13px">你觉得内部结算和变更单的"查看"是否需要改为和其他模块一致的 Modal 弹窗？</p>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <span style="background:#1C1917;color:white;padding:6px 14px;border-radius:6px;font-size:13px">A. 统一改为 Modal</span>
+      <span style="background:#E8E8E8;padding:6px 14px;border-radius:6px;font-size:13px">B. 保留独立页面</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>当前各模块操作栏全面对比（⚠️ 待统一项已标红）</h3>
+  <div style="max-height:500px;overflow-y:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="background:#F5F5F4">
+          <th style="padding:6px 8px;border-bottom:1px solid #E5E5E4">模块</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #E5E5E4">有审批流？</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #E5E5E4">当前"查看"按钮</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #E5E5E4">当前"提交审批"</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #E5E5E4">操作栏其他按钮</th>
+          <th style="padding:6px 8px;border-bottom:1px solid #E5E5E4">待统一</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:#FFF4E5">
+          <td>供应商</td><td>✅</td>
+          <td style="color:#D32F2F;font-weight:600">纯图标（无文字）</td><td>✅ 行内判断</td>
+          <td>编辑、删除</td>
+          <td>查看加文字、审批中状态加"提交审批"</td>
+        </tr>
+        <tr>
+          <td>客户</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>-</td>
+          <td>编辑、删除</td>
+          <td>详情→查看</td>
+        </tr>
+        <tr>
+          <td>报价</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">纯图标（无文字）</td><td>-</td>
+          <td>无</td>
+          <td>加"查看"文字</td>
+        </tr>
+        <tr>
+          <td>投标</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">纯图标（无文字）</td><td>-</td>
+          <td>无</td>
+          <td>加"查看"文字</td>
+        </tr>
+        <tr>
+          <td>立项</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>-</td>
+          <td>编辑、删除</td>
+          <td>详情→查看</td>
+        </tr>
+        <tr>
+          <td>收入合同</td><td>✅</td>
+          <td>✅ "查看"</td><td>✅ statusActionsMap</td>
+          <td>编辑、删除、提交审批、合同归档、关闭</td>
+          <td style="color:#D32F2F">弹窗内"开票""发起变更"移出</td>
+        </tr>
+        <tr>
+          <td>支出合同</td><td>✅</td>
+          <td>✅ "查看"</td><td>✅ statusActionsMap</td>
+          <td>编辑、删除、提交审批、合同归档</td>
+          <td style="color:#D32F2F">弹窗内"登记发票""发起变更"移出</td>
+        </tr>
+        <tr>
+          <td>合同变更单</td><td>✅</td>
+          <td>✅ "查看"</td><td>✅ 行内判断</td>
+          <td>编辑、删除</td>
+          <td>确认是否改为Modal</td>
+        </tr>
+        <tr>
+          <td>内部结算</td><td>✅</td>
+          <td>✅ "查看"（独立路由）</td><td>✅ 行内判断</td>
+          <td>编辑、删除</td>
+          <td>确认是否改为Modal</td>
+        </tr>
+        <tr>
+          <td>非合同收支</td><td>✅</td>
+          <td style="color:#D32F2F;font-weight:600">纯图标（无文字）</td><td>✅</td>
+          <td>编辑、删除、登记发票</td>
+          <td>加"查看"文字</td>
+        </tr>
+        <tr>
+          <td>采购需求</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>-</td>
+          <td>编辑、删除、转询价</td>
+          <td>详情→查看</td>
+        </tr>
+        <tr>
+          <td>采购询价</td><td>✅</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>✅ 下拉框</td>
+          <td>编辑、删除</td>
+          <td>详情→查看</td>
+        </tr>
+        <tr>
+          <td>到货验收</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>-</td>
+          <td>编辑、登记发票</td>
+          <td>详情→查看</td>
+        </tr>
+        <tr>
+          <td>项目列表</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>-</td>
+          <td>编辑、删除</td>
+          <td>详情→查看</td>
+        </tr>
+        <tr>
+          <td>外包</td><td>✅</td>
+          <td style="color:#D32F2F;font-weight:600">纯图标（无文字）</td><td>AdminStatusOverride</td>
+          <td>编辑、删除</td>
+          <td>加"查看"文字</td>
+        </tr>
+        <tr>
+          <td>计划</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">纯图标（无文字）</td><td>-</td>
+          <td>编辑、删除</td>
+          <td>加"查看"文字</td>
+        </tr>
+        <tr>
+          <td>进度</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">纯图标（无文字）</td><td>-</td>
+          <td>编辑、删除</td>
+          <td>加"查看"文字</td>
+        </tr>
+        <tr>
+          <td>财务收入-应收</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>-</td>
+          <td>收款、删除</td>
+          <td>详情→查看</td>
+        </tr>
+        <tr>
+          <td>财务支出</td><td>✅</td>
+          <td>✅ "查看"</td><td>✅ 行内判断</td>
+          <td>付款、编辑、删除、状态流转</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td>发票</td><td>❌</td>
+          <td>✅ "查看"</td><td>-</td>
+          <td>编辑、作废、删除</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td>员工</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>-</td>
+          <td>编辑、禁用</td>
+          <td>详情→查看</td>
+        </tr>
+        <tr>
+          <td>办公用品</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>-</td>
+          <td>编辑、删除</td>
+          <td>详情→查看</td>
+        </tr>
+        <tr>
+          <td>证照</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>-</td>
+          <td>编辑、删除</td>
+          <td>详情→查看</td>
+        </tr>
+        <tr>
+          <td>印章</td><td>❌</td>
+          <td style="color:#D32F2F;font-weight:600">"详情"</td><td>-</td>
+          <td>编辑、删除</td>
+          <td>详情→查看</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="margin-top:8px;padding:8px;background:#FAFAF9;border-radius:8px;font-size:12px">
+    橙色行 = 该模块本次需要修改 &nbsp;|&nbsp; 红色文字 = 当前存在不一致的地方
+  </div>
+</div>

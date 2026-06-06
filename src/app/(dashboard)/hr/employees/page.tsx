@@ -15,6 +15,10 @@ import {
   Download,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
 
 interface Employee {
   id: string;
@@ -77,13 +81,6 @@ interface EmployeeFormData {
   housingFundCompanyRate: string;
   taxDeduction: string;
   remark: string;
-}
-
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
 }
 
 const emptyForm: EmployeeFormData = {
@@ -186,13 +183,12 @@ function formatMoney(val: number | null | undefined): string {
 }
 
 export default function EmployeesPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "employee");
+
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -229,8 +225,8 @@ export default function EmployeesPage() {
       if (filterDepartment) params.set("department", filterDepartment);
       if (filterStatus) params.set("isActive", filterStatus);
       if (filterEmploymentStatus) params.set("employmentStatus", filterEmploymentStatus);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/hr/employees?${params}`);
       const json = await res.json();
@@ -244,7 +240,7 @@ export default function EmployeesPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterRole, filterDepartment, filterStatus, filterEmploymentStatus, pagination.page, pagination.pageSize]);
+  }, [search, filterRole, filterDepartment, filterStatus, filterEmploymentStatus, page, pageSize]);
 
   useEffect(() => {
     fetchEmployees();
@@ -506,7 +502,7 @@ export default function EmployeesPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -516,7 +512,7 @@ export default function EmployeesPage() {
             value={filterEmploymentStatus}
             onChange={(e) => {
               setFilterEmploymentStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">在职状态</option>
@@ -530,7 +526,7 @@ export default function EmployeesPage() {
             value={filterRole}
             onChange={(e) => {
               setFilterRole(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部角色</option>
@@ -544,7 +540,7 @@ export default function EmployeesPage() {
             value={filterDepartment}
             onChange={(e) => {
               setFilterDepartment(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部部门</option>
@@ -558,7 +554,7 @@ export default function EmployeesPage() {
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">账号状态</option>
@@ -567,7 +563,7 @@ export default function EmployeesPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录
           </div>
         </div>
 
@@ -657,6 +653,7 @@ export default function EmployeesPage() {
                           <Eye className="w-3.5 h-3.5" />
                           详情
                         </button>
+                        {canEditFrontend(false, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
                         <button
                           className="ios-btn ios-btn-ghost ios-btn-sm"
                           onClick={() => handleOpenEdit(employee)}
@@ -664,7 +661,8 @@ export default function EmployeesPage() {
                           <Pencil className="w-3.5 h-3.5" />
                           编辑
                         </button>
-                        {employee.isActive && (
+                        )}
+                        {employee.isActive && canDeleteFrontend(false, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
                           <button
                             className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                             onClick={() => setDeleteConfirm(employee)}
@@ -680,27 +678,7 @@ export default function EmployeesPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
       </div>

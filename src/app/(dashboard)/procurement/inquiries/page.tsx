@@ -32,6 +32,9 @@ import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
 
 interface PurchaseRequestItem {
   id: string;
@@ -108,13 +111,6 @@ interface InquiryDetail extends Inquiry {
   supplierQuotes: { id: string; supplierId: string; supplier: { name: string }; quoteMode: string; totalPrice: number | null; deliveryDays: number | null; remark: string | null; quotedAt: string | null; isValid: boolean; round: number; items: { id: string; purchaseRequestItemId: string; unitPrice: number | null; quantity: number | null; totalPrice: number | null; deliveryDays: number | null; remark: string | null; purchaseRequestItem: { id: string; materialName: string; spec: string | null; unit: string | null; quantity: number | null } }[] }[];
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 interface FormData {
   purchaseRequestId: string;
   projectSourceId: string;
@@ -146,11 +142,9 @@ export default function InquiriesPage() {
   const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
   const rolePerms = getUserModulePerms(user, "inquiries");
   const hasFlow = user?.moduleFlowStatus?.["inquiries"] ?? false;
-  const { configured: flowConfigured } = useFlowConfigured("quotation");
+  const { configured: flowConfigured } = useFlowConfigured("inquiries");
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1, pageSize: 20, total: 0, totalPages: 0,
-  });
+  const { page, pageSize, pagination, setPage, setPageSize, setPagination } = usePagination();
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -219,8 +213,8 @@ export default function InquiriesPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (filterProjectSourceId) params.set("projectSourceId", filterProjectSourceId);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/inquiries?${params}`);
       const json = await res.json();
@@ -232,7 +226,7 @@ export default function InquiriesPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterProjectSourceId, pagination.page, pagination.pageSize]);
+  }, [search, filterProjectSourceId, page, pageSize]);
 
   useEffect(() => {
     fetchPurchaseRequests();
@@ -520,7 +514,7 @@ export default function InquiriesPage() {
   };
 
   const stats = {
-    total: pagination.total,
+    total: pagination?.total ?? 0,
     onlinePending: inquiries.filter((i) => i.inquiryMode === "online" && !i.confirmedSupplierId).length,
     confirmed: inquiries.filter((i) => i.confirmedSupplierId).length,
   };
@@ -581,7 +575,7 @@ export default function InquiriesPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -591,7 +585,7 @@ export default function InquiriesPage() {
             value={filterProjectSourceId}
             onChange={(e) => {
               setFilterProjectSourceId(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部项目</option>
@@ -603,7 +597,7 @@ export default function InquiriesPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条采购单
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条采购单
           </div>
         </div>
 
@@ -641,7 +635,7 @@ export default function InquiriesPage() {
                   const isExpanded = expandedRows.has(inquiry.id);
                   return (
                     <Fragment key={inquiry.id}>
-                      <tr className={`${isExpanded ? "bg-[#FAFAF9]/60" : ""} ${isSelected(inquiry.id) ? "bg-[#1C1917]/5" : ""}`}>
+                      <tr className={`${isExpanded ? "bg-[#FAFAF9]/60" : ""} ${isSelected(inquiry.id) ? "bg-[#1C1917]/5" : ""} ${getRowStatusClass(inquiry.inquiryStatus)}`}>
                         {rolePerms.delete && (
                           <td className="w-10">
                             <input type="checkbox" className="ios-checkbox" checked={isSelected(inquiry.id)} onChange={() => toggleSelect(inquiry.id)} />
@@ -710,9 +704,9 @@ export default function InquiriesPage() {
                         </td>
                         <td>
                           <div className="flex items-center gap-1">
-                            <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(inquiry)}>
+                            <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(inquiry)} title="查看">
                               <Eye className="w-3.5 h-3.5" />
-                              详情
+                              查看
                             </button>
                             {(canEditFrontend(hasFlow, rolePerms, inquiry.inquiryStatus, user?.id ?? "", inquiry.createdById ?? null, isAdminUser) && !inquiry.hasContract) && (
                               <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(inquiry)}>
@@ -829,27 +823,11 @@ export default function InquiriesPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar
+              pagination={pagination}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </div>
         )}
       </div>

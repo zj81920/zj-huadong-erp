@@ -37,6 +37,20 @@ async function main() {
   });
   console.log("✅ 已创建管理员账号 admin/admin123");
 
+  // 创建预设系统角色（admin + finance）
+  const systemRoles = [
+    { code: "admin", name: "管理员", description: "系统管理员角色" },
+    { code: "finance", name: "财务", description: "财务审批角色，审批时可选择付款账户" },
+  ];
+  for (const role of systemRoles) {
+    await prisma.role.upsert({
+      where: { code: role.code },
+      update: { name: role.name, description: role.description },
+      create: { code: role.code, name: role.name, description: role.description },
+    });
+  }
+  console.log(`✅ 已同步 ${systemRoles.length} 个系统预设角色`);
+
   // 同步模块清单到 approval_module_config 表
   console.log("📋 同步模块清单...");
   for (const config of MODULE_CONFIG) {

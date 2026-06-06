@@ -1,0 +1,106 @@
+<h2>最终设计方案 v3</h2>
+<p class="subtitle">所有模块统一由流程配置驱动，无节点=纯CRUD，有节点=审批流</p>
+
+<div class="section">
+  <h3>核心设计理念</h3>
+  <div style="background:#F0FDF4;padding:16px;border-radius:8px;font-size:13px">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <span style="background:#1C1917;color:white;padding:6px 14px;border-radius:6px;font-weight:600">流程设置</span>
+      <span style="color:#999">→</span>
+      <span>配置了 N ≥ 1 个节点？</span>
+      <span style="color:#999">→</span>
+      <span style="background:#1C1917;color:white;padding:6px 14px;border-radius:6px;font-weight:600">✅ 有审批流</span>
+      <span style="color:#999" class="ml-4">或者</span>
+      <span style="color:#999">→</span>
+      <span style="background:#E8E8E8;padding:6px 14px;border-radius:6px;font-weight:600">❌ 纯CRUD</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>规则矩阵</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead>
+      <tr style="background:#F5F5F4">
+        <th style="padding:8px;border-bottom:1px solid #E5E5E4">模块状态</th>
+        <th style="padding:8px;border-bottom:1px solid #E5E5E4">操作栏</th>
+        <th style="padding:8px;border-bottom:1px solid #E5E5E4">"查看"弹窗内容</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE"><strong>纯CRUD</strong>（无节点）</td>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE">查看 + 编辑 + 删除</td>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE">只含业务信息</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE"><strong>审批流</strong>（有节点）<br>— 草稿</td>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE">查看 + 编辑 + 删除 + <strong>提交审批</strong></td>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE">只含业务信息（待提交后才产生审批实例）</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE"><strong>审批流</strong>（有节点）<br>— 审批中</td>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE">查看 + [编辑/删除有条件]</td>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE">业务信息 + 审批区块（时间线只读）</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE"><strong>审批流</strong>（有节点）<br>— 已批准</td>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE">查看 + [编辑/删除有条件]</td>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE">业务信息 + 审批区块（已通过）</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE"><strong>审批流</strong>（有节点）<br>— 已驳回</td>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE">查看 + 编辑 + 删除 + <strong>提交审批</strong></td>
+        <td style="padding:8px;border-bottom:1px solid #F0EFEE">业务信息 + 审批区块（含驳回原因）</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>审批中心视图</h3>
+  <div style="background:#F0FDF4;padding:12px;border-radius:8px;font-size:13px">
+    审批中心打开审批时，直接展示和"查看"弹窗 <strong>完全一样</strong> 的业务内容，底部加上审批操作按钮（通过/驳回）。
+  </div>
+</div>
+
+<div class="section">
+  <h3>本次需改造的模块清单（24个）</h3>
+  <div style="max-height:400px;overflow-y:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="background:#F5F5F4">
+          <th style="padding:6px 8px">模块</th>
+          <th style="padding:6px 8px">问题</th>
+          <th style="padding:6px 8px">改动</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>hr/员工</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>admin/办公用品</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>admin/证照</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>admin/印章</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>business/供应商</td><td>纯图标无文字</td><td>加"查看"文字</td></tr>
+        <tr><td>business/客户</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>business/报价</td><td>纯图标无文字</td><td>加"查看"文字</td></tr>
+        <tr><td>business/投标</td><td>纯图标无文字</td><td>加"查看"文字</td></tr>
+        <tr><td>business/立项</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>procurement/需求</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>procurement/到货</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>procurement/询价</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>projects/项目列表</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>projects/计划</td><td>纯图标无文字</td><td>加"查看"文字</td></tr>
+        <tr><td>projects/进度</td><td>纯图标无文字</td><td>加"查看"文字</td></tr>
+        <tr><td>projects/外包</td><td>纯图标无文字</td><td>加"查看"文字</td></tr>
+        <tr><td>finance/收入(应收)</td><td>"详情" → "查看"</td><td>改文案</td></tr>
+        <tr><td>finance/支出</td><td>✅ 已有"查看"</td><td>-</td></tr>
+        <tr><td>finance/发票</td><td>✅ 已有"查看"</td><td>-</td></tr>
+        <tr><td>contracts/收入合同</td><td>弹窗内有"开票""发起变更"</td><td>移到操作栏</td></tr>
+        <tr><td>contracts/支出合同</td><td>弹窗内有"登记发票""发起变更"</td><td>移到操作栏</td></tr>
+        <tr><td>contracts/非合同收支</td><td>纯图标无文字</td><td>加"查看"文字</td></tr>
+        <tr><td>contracts/内部结算</td><td>独立路由 → Modal</td><td>重构为弹窗</td></tr>
+        <tr><td>contracts/变更单</td><td>独立路由 → Modal</td><td>重构为弹窗</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>

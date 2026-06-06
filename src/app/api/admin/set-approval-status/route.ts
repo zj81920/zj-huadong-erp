@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser, isAdmin } from "@/lib/auth";
 
-type StatusField = "status" | "approvalStatus" | "inquiryStatus";
+type StatusField = "status" | "approvalStatus" | "inquiryStatus" | "receiptStatus";
 
 interface BusinessConfig {
   model: string;
@@ -21,11 +21,6 @@ const BUSINESS_CONFIGS: Record<string, BusinessConfig> = {
     statusField: "inquiryStatus",
     validStatuses: ["草稿", "审批中", "已批准", "已驳回"],
   },
-  quotation: {
-    model: "quotation",
-    statusField: "approvalStatus",
-    validStatuses: ["草稿", "审批中", "已批准", "已驳回"],
-  },
   income_contract: {
     model: "incomeContract",
     statusField: "status",
@@ -35,11 +30,6 @@ const BUSINESS_CONFIGS: Record<string, BusinessConfig> = {
     model: "expenseContract",
     statusField: "status",
     validStatuses: ["草稿", "审批中", "已批准", "已驳回", "合同归档"],
-  },
-  non_contract_income: {
-    model: "nonContractIncome",
-    statusField: "status",
-    validStatuses: ["草稿", "审批中", "已批准", "已驳回"],
   },
   non_contract_expense: {
     model: "nonContractExpense",
@@ -61,11 +51,6 @@ const BUSINESS_CONFIGS: Record<string, BusinessConfig> = {
     statusField: "status",
     validStatuses: ["草稿", "审批中", "已批准", "已驳回"],
   },
-  other_borrowing: {
-    model: "otherBorrowing",
-    statusField: "status",
-    validStatuses: ["草稿", "审批中", "已批准", "已驳回", "未还清", "已还清"],
-  },
   lending_out: {
     model: "lendingOut",
     statusField: "status",
@@ -81,20 +66,37 @@ const BUSINESS_CONFIGS: Record<string, BusinessConfig> = {
     statusField: "status",
     validStatuses: ["草稿", "审批中", "已批准", "已驳回"],
   },
+  inter_org_contract: {
+    model: "interOrgContract",
+    statusField: "status",
+    validStatuses: ["草稿", "审批中", "已批准", "已驳回"],
+  },
+  contract_change_order: {
+    model: "contractChangeOrder",
+    statusField: "status",
+    validStatuses: ["草稿", "审批中", "已批准", "已驳回"],
+  },
+  delivery_receipt: {
+    model: "deliveryReceipt",
+    statusField: "receiptStatus",
+    validStatuses: ["草稿", "审批中", "已批准", "已驳回"],
+  },
+  supplier_change: {
+    model: "supplierChange",
+    statusField: "approvalStatus",
+    validStatuses: ["草稿", "审批中", "已批准", "已驳回"],
+  },
 };
 
 const MODEL_MAP: Record<string, string> = {
   purchaseRequest: "purchaseRequest",
   inquiry: "inquiry",
-  quotation: "quotation",
   incomeContract: "incomeContract",
   expenseContract: "expenseContract",
-  nonContractIncome: "nonContractIncome",
   nonContractExpense: "nonContractExpense",
   outsourcingTask: "outsourcingTask",
   paymentApplication: "paymentApplication",
   expenseReport: "expenseReport",
-  otherBorrowing: "otherBorrowing",
   lendingOut: "lendingOut",
   salaryBatch: "salaryBatch",
   borrowingReturnApplication: "borrowingReturnApplication",
@@ -255,13 +257,6 @@ export async function POST(request: NextRequest) {
     }
 
     // === 借入款：审批通过 → 自动映射为"未还清" ===
-    if (businessType === "other_borrowing" && newStatus === "已批准") {
-      const existing = await prisma.otherBorrowing.findUnique({ where: { id: businessId } });
-      if (existing && existing.status === "审批中") {
-        updateData.status = "未还清";
-      }
-    }
-
     // === 借出款：审批通过 → 自动映射为"未还清" ===
     if (businessType === "lending_out" && newStatus === "已批准") {
       const existing = await prisma.lendingOut.findUnique({ where: { id: businessId } });

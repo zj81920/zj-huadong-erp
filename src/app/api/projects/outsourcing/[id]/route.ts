@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   _request: NextRequest,
@@ -169,6 +170,7 @@ export async function DELETE(
       return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
+    await cleanupBusinessApprovalRecords("outsourcing", id);
     await prisma.outsourcingTask.delete({ where: { id } });
 
     return NextResponse.json({ message: "删除成功" });

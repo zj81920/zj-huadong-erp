@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   request: NextRequest,
@@ -59,6 +60,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  await cleanupBusinessApprovalRecords("contract_change_order", id);
   await prisma.contractChangeOrder.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

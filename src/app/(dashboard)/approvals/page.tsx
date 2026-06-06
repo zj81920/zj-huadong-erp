@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Clock,
   CheckCircle,
@@ -11,8 +12,12 @@ import {
   X,
   MessageSquare,
 } from "lucide-react";
-import { ApprovalTimeline, ApprovalActionButton } from "@/components/ApprovalComponents";
+import { ApprovalTimeline, ApprovalActionButton, ApprovalInfoPanel } from "@/components/ApprovalComponents";
 import Modal from "@/components/Modal";
+import { DETAIL_CARD_MAP } from "@/components/detail-cards";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
 
 const BUSINESS_TYPE_LABELS: Record<string, string> = {
   quotation: "商务报价",
@@ -22,14 +27,18 @@ const BUSINESS_TYPE_LABELS: Record<string, string> = {
   delivery_receipt: "到货验收",
   income_contract: "收入合同",
   expense_contract: "支出合同",
-  non_contract_income: "非合同收入",
   non_contract_expense: "其他支付",
+  non_contract_income: "其他收入",
   payment_application: "合同支付",
   expense_report: "费用报销",
+  supplier_change: "供应商变更",
   other_borrowing: "其他借入款",
   lending_out: "借出款",
   salary_payment: "工资发放",
   borrowing_return_application: "借入资金归还",
+  inquiries: "采购单",
+  inter_org_contract: "内部结算合同",
+  contract_change_order: "合同变更",
 };
 
 const BUSINESS_TYPE_API_MAP: Record<string, string> = {
@@ -40,7 +49,6 @@ const BUSINESS_TYPE_API_MAP: Record<string, string> = {
   delivery_receipt: "/api/delivery-receipts",
   income_contract: "/api/income-contracts",
   expense_contract: "/api/expense-contracts",
-  non_contract_income: "/api/non-contract-incomes",
   non_contract_expense: "/api/non-contract-expenses",
   payment_application: "/api/payment-applications",
   expense_report: "/api/expense-reports",
@@ -48,6 +56,10 @@ const BUSINESS_TYPE_API_MAP: Record<string, string> = {
   lending_out: "/api/lending-outs",
   salary_payment: "/api/salary-batches",
   borrowing_return_application: "/api/borrowing-return-applications",
+  inquiries: "/api/inquiries",
+  inter_org_contract: "/api/inter-org-contracts",
+  contract_change_order: "/api/change-orders",
+  supplier_change: "/api/supplier-changes",
 };
 
 interface PendingApproval {
@@ -60,6 +72,7 @@ interface PendingApproval {
   nodeType: string;
   createdAt: string;
   initiatorName: string;
+  businessTitle?: string;
 }
 
 /** 根据等待时间计算优先级标签 */
@@ -83,6 +96,7 @@ interface ApprovalInstanceItem {
   currentNode: number;
   flowLevel: string;
   createdAt: string;
+  businessTitle?: string;
 }
 
 interface ApprovalDetail {
@@ -105,12 +119,6 @@ function formatDate(dateStr: string) {
   return `${month}-${day} ${hour}:${min}`;
 }
 
-function formatAmount(amount: unknown): string {
-  const n = Number(amount || 0);
-  if (Number.isNaN(n)) return "¥0.00";
-  return `¥${n.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 function getTimeAgo(dateStr: string) {
   const now = Date.now();
   const diff = now - new Date(dateStr).getTime();
@@ -122,287 +130,6 @@ function getTimeAgo(dateStr: string) {
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days}天前`;
   return formatDate(dateStr);
-}
-
-function SupplierDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "供应商名称", value: data?.name },
-    { label: "供应商性质", value: data?.supplierType },
-    { label: "联系人", value: data?.contactPerson },
-    { label: "电话", value: data?.phone },
-    { label: "邮箱", value: data?.email },
-    { label: "状态", value: data?.status },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function QuotationDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "客户", value: data?.customer?.name },
-    { label: "预估成本", value: data?.estimatedCost ? `¥${Number(data.estimatedCost).toLocaleString()}` : "-" },
-    { label: "总金额", value: data?.totalAmount ? `¥${Number(data.totalAmount).toLocaleString()}` : "-" },
-    { label: "利润率", value: data?.profitMargin ? `${data.profitMargin}%` : "-" },
-    { label: "状态", value: data?.status },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function OutsourcingDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "项目", value: data?.project?.name },
-    { label: "供应商", value: data?.supplier?.name },
-    { label: "任务描述", value: data?.taskDescription },
-    { label: "工作量", value: data?.workload },
-    { label: "金额", value: data?.amount ? `¥${Number(data.amount).toLocaleString()}` : "-" },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function PurchaseRequestDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "项目", value: data?.project?.name },
-    { label: "需求类型", value: data?.requestType },
-    { label: "需求日期", value: data?.requiredDate ? formatDate(data.requiredDate) : "-" },
-    { label: "物料数量", value: data?.items?.length ? `${data.items.length} 项` : "0 项" },
-    { label: "状态", value: data?.status },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function DeliveryReceiptDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "合同", value: data?.expenseContract?.contractNo || "-" },
-    { label: "交货日期", value: data?.deliveryDate ? formatDate(data.deliveryDate) : "-" },
-    { label: "验收结果", value: data?.inspectionResult || "-" },
-    { label: "金额", value: data?.deliveryAmount ? `¥${Number(data.deliveryAmount).toLocaleString()}` : "-" },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function IncomeContractDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "客户", value: data?.customer?.name },
-    { label: "项目", value: data?.project?.name },
-    { label: "合同编号", value: data?.contractNo },
-    { label: "合同金额", value: data?.totalAmount ? `¥${Number(data.totalAmount).toLocaleString()}` : "-" },
-    { label: "状态", value: data?.status },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function ExpenseContractDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "供应商", value: data?.supplier?.name },
-    { label: "项目", value: data?.project?.name },
-    { label: "合同编号", value: data?.contractNo },
-    { label: "合同金额", value: data?.totalAmount ? `¥${Number(data.totalAmount).toLocaleString()}` : "-" },
-    { label: "状态", value: data?.status },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function NonContractIncomeDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "项目", value: data?.project?.name },
-    { label: "金额", value: data?.amount ? `¥${Number(data.amount).toLocaleString()}` : "-" },
-    { label: "交易日期", value: data?.transactionDate ? formatDate(data.transactionDate) : "-" },
-    { label: "对方单位", value: data?.counterparty },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function NonContractExpenseDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "项目", value: data?.project?.name },
-    { label: "金额", value: data?.amount ? `¥${Number(data.amount).toLocaleString()}` : "-" },
-    { label: "交易日期", value: data?.transactionDate ? formatDate(data.transactionDate) : "-" },
-    { label: "对方单位", value: data?.counterparty },
-    { label: "开户行", value: data?.counterpartyBankName || "-" },
-    { label: "银行账号", value: data?.counterpartyBankAccount ? `****${String(data.counterpartyBankAccount).slice(-4)}` : "-" },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function PaymentApplicationDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "申请人", value: data?.applicant?.realName || "-" },
-    { label: "金额", value: data?.amount ? `¥${Number(data.amount).toLocaleString()}` : "-" },
-    { label: "应付来源", value: data?.payable?.project?.name || "-" },
-    { label: "备注", value: data?.remark },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function ExpenseReportDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "申请人", value: data?.applicant?.realName || "-" },
-    { label: "项目", value: data?.project?.name },
-    { label: "费用类型", value: data?.expenseType },
-    { label: "金额", value: data?.amount ? `¥${Number(data.amount).toLocaleString()}` : "-" },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function LendingOutDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "借款人", value: data?.borrowerName },
-    { label: "项目", value: data?.projectSourceId },
-    { label: "金额", value: data?.amount ? `¥${Number(data.amount).toLocaleString()}` : "-" },
-    { label: "借款日期", value: data?.lendingDate ? formatDate(data.lendingDate) : "-" },
-    { label: "预计归还日期", value: data?.expectedReturnDate ? formatDate(data.expectedReturnDate) : "-" },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function SalaryPaymentDetailCard({ data }: { data: any }) {
-  if (!data) return <p className="text-sm text-[#78716C]">无数据</p>;
-
-  const items = data.items || [];
-
-  return (
-    <div className="space-y-3">
-      {/* 基本信息 */}
-      <DetailGrid fields={[
-        { label: "批次号", value: data.batchNo },
-        { label: "工资周期", value: data.period },
-        { label: "人数", value: `${data.employeeCount || 0} 人` },
-        { label: "状态", value: data.status },
-      ]} />
-
-      {/* 汇总数据 */}
-      <div className="bg-[#FAFAF9] rounded-xl p-3">
-        <p className="text-[11px] font-semibold text-[#78716C] mb-2">工资汇总</p>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="text-center">
-            <p className="text-[10px] text-[#78716C]">应发总额</p>
-            <p className="text-[13px] font-bold text-[#1C1917]">{formatAmount(data.totalGrossSalary)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-[10px] text-[#78716C]">实发总额</p>
-            <p className="text-[13px] font-bold text-[#78716C]">{formatAmount(data.totalNetSalary)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-[10px] text-[#78716C]">银行总支出</p>
-            <p className="text-[13px] font-bold text-[#78716C]">{formatAmount(data.totalBankOutflow)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 代扣代缴 */}
-      <div className="bg-[#FFF7ED] rounded-xl p-3">
-        <p className="text-[11px] font-semibold text-[#78716C] mb-2">代扣代缴（个人）</p>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="text-center">
-            <p className="text-[10px] text-[#78716C]">社保</p>
-            <p className="text-[12px] font-medium text-[#1C1917]">{formatAmount(data.totalSocialInsurancePersonal)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-[10px] text-[#78716C]">公积金</p>
-            <p className="text-[12px] font-medium text-[#1C1917]">{formatAmount(data.totalHousingFundPersonal)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-[10px] text-[#78716C]">个税</p>
-            <p className="text-[12px] font-medium text-[#1C1917]">{formatAmount(data.totalIncomeTax)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 员工明细（前5条 + 更多提示） */}
-      {items.length > 0 && (
-        <div>
-          <p className="text-[11px] font-semibold text-[#78716C] mb-1">
-            发放明细（共 {items.length} 人）
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[11px]">
-              <thead>
-                <tr className="border-b border-[#E7E5E4]">
-                  <th className="text-left py-1 font-medium text-[#78716C]">员工</th>
-                  <th className="text-right py-1 font-medium text-[#78716C]">应发</th>
-                  <th className="text-right py-1 font-medium text-[#78716C]">扣款</th>
-                  <th className="text-right py-1 font-medium text-[#78716C]">实发</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.slice(0, 5).map((item: any) => (
-                  <tr key={item.id} className="border-b border-[#F5F5F4]">
-                    <td className="py-1 font-medium text-[#1C1917]">{item.employee?.realName || "-"}</td>
-                    <td className="py-1 text-right">{formatAmount(item.grossSalary)}</td>
-                    <td className="py-1 text-right text-[#78716C]">{formatAmount(item.totalDeduction)}</td>
-                    <td className="py-1 text-right font-medium">{formatAmount(item.netSalary)}</td>
-                  </tr>
-                ))}
-                {items.length > 5 && (
-                  <tr>
-                    <td colSpan={4} className="py-1 text-center text-[#A8A29E]">
-                      ... 还有 {items.length - 5} 人
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {data.remark && (
-        <div>
-          <p className="text-[11px] font-semibold text-[#78716C] mb-1">备注</p>
-          <p className="text-sm text-[#1C1917] bg-[#FAFAF9] p-2 rounded-lg">{data.remark}</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function BorrowingReturnDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "借出款编号", value: data?.lendingOutId },
-    { label: "归还金额", value: data?.returnAmount ? `¥${Number(data.returnAmount).toLocaleString()}` : "-" },
-    { label: "归还日期", value: data?.returnDate ? formatDate(data.returnDate) : "-" },
-    { label: "备注", value: data?.remark },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-function OtherBorrowingDetailCard({ data }: { data: any }) {
-  const fields = [
-    { label: "金额", value: data?.amount ? `¥${Number(data.amount).toLocaleString()}` : "-" },
-    { label: "交易日期", value: data?.transactionDate ? formatDate(data.transactionDate) : "-" },
-    { label: "备注", value: data?.description || data?.remark },
-  ];
-  return <DetailGrid fields={fields} />;
-}
-
-const DETAIL_CARD_MAP: Record<string, React.FC<{ data: any }>> = {
-  supplier: SupplierDetailCard,
-  quotation: QuotationDetailCard,
-  outsourcing: OutsourcingDetailCard,
-  purchase_request: PurchaseRequestDetailCard,
-  delivery_receipt: DeliveryReceiptDetailCard,
-  income_contract: IncomeContractDetailCard,
-  expense_contract: ExpenseContractDetailCard,
-  non_contract_income: NonContractIncomeDetailCard,
-  non_contract_expense: NonContractExpenseDetailCard,
-  payment_application: PaymentApplicationDetailCard,
-  expense_report: ExpenseReportDetailCard,
-  lending_out: LendingOutDetailCard,
-  salary_payment: SalaryPaymentDetailCard,
-  borrowing_return_application: BorrowingReturnDetailCard,
-  other_borrowing: OtherBorrowingDetailCard,
-};
-
-function DetailGrid({ fields }: { fields: { label: string; value: any }[] }) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {fields.map((f, i) => (
-        <div key={i} className="p-3 rounded-xl bg-[#FAFAF9]">
-          <p className="text-[12px] text-[#78716C] mb-1">{f.label}</p>
-          <p className="text-[14px] font-semibold truncate">{f.value ?? "-"}</p>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function BusinessDetailPanel({ businessType, data, loading }: { businessType: string; data: any; loading: boolean }) {
@@ -443,16 +170,18 @@ function BusinessDetailPanel({ businessType, data, loading }: { businessType: st
 }
 
 export default function ApprovalsPage() {
+  const router = useRouter();
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [pendingList, setPendingList] = useState<PendingApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<"pending" | "processed" | "initiated" | "drafts">("pending");
+  const [activeTab, setActiveTab] = useState<"pending" | "processed" | "initiated">("pending");
   const [processedList, setProcessedList] = useState<ApprovalInstanceItem[]>([]);
   const [initiatedList, setInitiatedList] = useState<ApprovalInstanceItem[]>([]);
   const [processedLoading, setProcessedLoading] = useState(false);
   const [initiatedLoading, setInitiatedLoading] = useState(false);
 
-  const [selectedApproval, setSelectedApproval] = useState<PendingApproval | null>(null);
+  const [selectedApproval, setSelectedApproval] = useState<(PendingApproval & { status?: string }) | null>(null);
   const [approvalDetail, setApprovalDetail] = useState<ApprovalDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [businessDetail, setBusinessDetail] = useState<any>(null);
@@ -508,7 +237,44 @@ export default function ApprovalsPage() {
 
   useEffect(() => {
     fetchPending();
-  }, []);
+  }, [page, pageSize]);
+
+  // 已处理列表分组去重：同一 businessType+businessId 只显示最新实例
+  const groupedProcessedList = useMemo(() => {
+    const latestMap = new Map<string, ApprovalInstanceItem>();
+    for (const item of processedList) {
+      const key = `${item.businessType}:${item.businessId}`;
+      if (!latestMap.has(key)) {
+        latestMap.set(key, item);
+      }
+    }
+    return Array.from(latestMap.values());
+  }, [processedList]);
+
+  // 重新提交：跳转到对应业务页面
+  const handleResubmit = (item: { businessType: string }) => {
+    const hrefMap: Record<string, string> = {
+      supplier: "/business/suppliers",
+      supplier_change: "/business/suppliers",
+      outsourcing: "/projects/outsourcing",
+      purchase_request: "/procurement/requests",
+      delivery_receipt: "/procurement/deliveries",
+      income_contract: "/contracts/income",
+      expense_contract: "/contracts/expense",
+      non_contract_expense: "/finance/expense",
+      non_contract_income: "/contracts/non-contract",
+      payment_application: "/finance/expense",
+      expense_report: "/finance/expense",
+      lending_out: "/finance/expense",
+      salary_payment: "/finance/expense",
+      borrowing_return_application: "/finance/expense",
+      contract_change_order: "/contracts/change-orders",
+      inter_org_contract: "/contracts/internal-settlement",
+      inquiries: "/procurement/inquiries",
+      quotation: "/business/quotations",
+    };
+    router.push(hrefMap[item.businessType] || "/");
+  };
 
   const openApprovalDetail = async (item: PendingApproval) => {
     setSelectedApproval(item);
@@ -543,6 +309,42 @@ export default function ApprovalsPage() {
     }
   };
 
+  const openProcessedDetail = async (item: ApprovalInstanceItem) => {
+    const pseudoItem: PendingApproval = {
+      id: item.id,
+      businessType: item.businessType,
+      businessId: item.businessId,
+      flowLevel: item.flowLevel || "common",
+      currentNode: item.currentNode,
+      nodeName: "",
+      nodeType: "",
+      createdAt: item.createdAt,
+      initiatorName: "",
+    };
+    setSelectedApproval(pseudoItem);
+    setApprovalDetail(null);
+    setBusinessDetail(null);
+    setDetailLoading(true);
+    setBusinessDetailLoading(true);
+    try {
+      const [instanceRes, detailRes] = await Promise.all([
+        fetch(`/api/approval-instances/${item.id}`),
+        BUSINESS_TYPE_API_MAP[item.businessType]
+          ? fetch(`${BUSINESS_TYPE_API_MAP[item.businessType]}/${item.businessId}`)
+          : Promise.resolve(null),
+      ]);
+      const instanceJson = await instanceRes.json();
+      if (instanceRes.ok && instanceJson.data) setApprovalDetail(instanceJson.data);
+      if (detailRes && detailRes.ok) {
+        const detailJson = await detailRes.json();
+        if (detailJson.data) setBusinessDetail(detailJson.data);
+      }
+    } catch {} finally {
+      setDetailLoading(false);
+      setBusinessDetailLoading(false);
+    }
+  };
+
   const handleStatusChange = async (_newStatus: string, _instanceId: string | null) => {
     const refreshedList = await fetchPending();
     if (selectedApproval && _instanceId) {
@@ -566,8 +368,8 @@ export default function ApprovalsPage() {
   return (
     <>
       <div className="page-header">
-        <h1>{activeTab === "pending" ? "待审批" : activeTab === "processed" ? "已处理" : activeTab === "initiated" ? "已发起" : "我的草稿"}</h1>
-        <p>{activeTab === "pending" ? "您需要处理的审批事项" : activeTab === "processed" ? "您已处理过的审批记录" : activeTab === "initiated" ? "您发起的审批流程" : "保存为草稿的单据，可随时继续编辑"}</p>
+        <h1>{activeTab === "pending" ? "待审批" : activeTab === "processed" ? "已处理" : "已发起"}</h1>
+        <p>{activeTab === "pending" ? "您需要处理的审批事项" : activeTab === "processed" ? "您已处理过的审批记录" : "您发起的审批流程"}</p>
       </div>
 
       <div className="flex items-center gap-1 mb-4 border-b border-gray-200">
@@ -580,9 +382,6 @@ export default function ApprovalsPage() {
         </button>
         <button onClick={() => setActiveTab("initiated")} className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${activeTab === "initiated" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
           <Send className="w-4 h-4 inline mr-1.5 -mt-0.5" />已发起
-        </button>
-        <button onClick={() => setActiveTab("drafts")} className={`px-4 py-2.5 text-[13px] font-medium border-b-2 transition-colors ${activeTab === "drafts" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
-          <FileText className="w-4 h-4 inline mr-1.5 -mt-0.5" />我的草稿
         </button>
       </div>
 
@@ -639,18 +438,11 @@ export default function ApprovalsPage() {
               <thead>
                 <tr>
                   <th>业务类型</th>
-                  <th>当前节点</th>
-                  <th>提交人</th>
-                  <th>优先级</th>
-                  <th>节点类型</th>
-                  <th>提交时间</th>
                   <th>操作</th>
                 </tr>
               </thead>
               <tbody>
-                {pendingList.map((item) => {
-                  const priority = getPriorityInfo(item.createdAt);
-                  return (
+                {pendingList.map((item) => (
                   <tr key={item.id}>
                     <td>
                       <div className="flex items-center gap-2">
@@ -659,44 +451,34 @@ export default function ApprovalsPage() {
                         </div>
                         <span className="font-semibold">
                           {BUSINESS_TYPE_LABELS[item.businessType] || item.businessType}
+                          {item.businessTitle ? `：${item.businessTitle}` : ""}
                         </span>
                       </div>
                     </td>
                     <td>
-                      <span className="text-[#1C1917]">{item.nodeName}</span>
-                    </td>
-                    <td>
-                      <span className="text-[#1C1917] text-[13px]">{item.initiatorName}</span>
-                    </td>
-                    <td>
-                      <span className={priority.className}>{priority.label}</span>
-                    </td>
-                    <td>
-                      {item.nodeType === "archive" ? (
-                        <span className="ios-badge ios-badge-purple">归档</span>
-                      ) : item.nodeType === "payment" ? (
-                        <span className="ios-badge ios-badge-blue">支付</span>
+                      {item.nodeType === "resubmit" ? (
+                        <button
+                          className="ios-btn !bg-[#F59E0B] !text-white ios-btn-sm"
+                          onClick={() => handleResubmit(item)}
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          重新提交
+                        </button>
                       ) : (
-                        <span className="ios-badge ios-badge-gray">审批</span>
+                        <button
+                          className="ios-btn !bg-[#2563EB] !text-white ios-btn-sm"
+                          onClick={() => openApprovalDetail(item)}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          处理审批
+                        </button>
                       )}
                     </td>
-                    <td className="text-[#78716C] text-[13px] whitespace-nowrap">
-                      <span title={formatDate(item.createdAt)}>{getTimeAgo(item.createdAt)}</span>
-                    </td>
-                    <td>
-                      <button
-                        className="ios-btn !bg-[#2563EB] !text-white ios-btn-sm"
-                        onClick={() => openApprovalDetail(item)}
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        处理审批
-                      </button>
-                    </td>
                   </tr>
-                  );
-                })}
+                ))}
               </tbody>
             </table>
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
       </div>
@@ -713,17 +495,23 @@ export default function ApprovalsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="ios-table">
-                <thead><tr><th>业务类型</th><th>状态</th><th>提交时间</th></tr></thead>
+                <thead><tr><th>业务类型</th><th>状态</th><th>提交时间</th><th>操作</th></tr></thead>
                 <tbody>
-                  {processedList.map((item) => (
+                  {groupedProcessedList.map((item) => (
                     <tr key={item.id}>
-                      <td><span className="font-semibold">{BUSINESS_TYPE_LABELS[item.businessType] || item.businessType}</span></td>
+                      <td><span className="font-semibold">{BUSINESS_TYPE_LABELS[item.businessType] || item.businessType}{item.businessTitle ? `：${item.businessTitle}` : ""}</span></td>
                       <td><span className="ios-badge ios-badge-green">{item.status}</span></td>
                       <td className="text-[#78716C] text-[13px] whitespace-nowrap">{formatDate(item.createdAt)}</td>
+                      <td>
+                        <button onClick={() => openProcessedDetail(item)} className="text-[13px] font-medium text-[#1C1917] bg-[#FAFAF9] hover:bg-[#F5F5F4] px-3 py-1.5 rounded-lg border border-[#E7E5E4] transition-colors">
+                          <Eye className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />查看
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
             </div>
           )}
         </div>
@@ -740,33 +528,62 @@ export default function ApprovalsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="ios-table">
-                <thead><tr><th>业务类型</th><th>状态</th><th>提交时间</th></tr></thead>
+                <thead><tr>
+                  <th>摘要</th>
+                  <th>状态</th>
+                  <th>优先级</th>
+                  <th>提交时间</th>
+                  <th>操作</th>
+                </tr></thead>
                 <tbody>
-                  {initiatedList.map((item) => (
-                    <tr key={item.id}>
-                      <td><span className="font-semibold">{BUSINESS_TYPE_LABELS[item.businessType] || item.businessType}</span></td>
+                  {initiatedList.map((item) => {
+                    const priority = getPriorityInfo(item.createdAt);
+                    return (
+                    <tr key={item.id} className={getRowStatusClass(item.status)}>
+                      <td>
+                        <span className="font-semibold">
+                          {BUSINESS_TYPE_LABELS[item.businessType] || item.businessType}
+                          {item.businessTitle ? `：${item.businessTitle}` : ""}
+                        </span>
+                      </td>
                       <td><span className={`ios-badge ${item.status === "审批中" ? "ios-badge-blue" : item.status === "已批准" ? "ios-badge-green" : "ios-badge-red"}`}>{item.status}</span></td>
+                      <td><span className={priority.className}>{priority.label}</span></td>
                       <td className="text-[#78716C] text-[13px] whitespace-nowrap">{formatDate(item.createdAt)}</td>
+                      <td>
+                        {item.status === "已驳回" ? (
+                          <button onClick={() => handleResubmit(item)} className="text-[13px] font-medium text-[#2563EB] hover:text-blue-700 transition-colors">
+                            <Send className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />重新提交
+                          </button>
+                        ) : (
+                          <button onClick={() => {
+                            const pseudoItem: PendingApproval & { status?: string } = {
+                              id: item.id,
+                              businessType: item.businessType,
+                              businessId: item.businessId,
+                              flowLevel: item.flowLevel,
+                              currentNode: item.currentNode,
+                              nodeName: "",
+                              nodeType: "approval",
+                              createdAt: item.createdAt,
+                              initiatorName: "",
+                              businessTitle: item.businessTitle,
+                              status: item.status,
+                            };
+                            setSelectedApproval(pseudoItem);
+                            openProcessedDetail(item);
+                          }} className="text-[13px] font-medium text-[#1C1917] bg-[#FAFAF9] hover:bg-[#F5F5F4] px-3 py-1.5 rounded-lg border border-[#E7E5E4] transition-colors">
+                            <Eye className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />查看
+                          </button>
+                        )}
+                      </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
+              <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
             </div>
           )}
-        </div>
-      )}
-
-      {activeTab === "drafts" && (
-        <div className="bento-card-static">
-          <div className="text-center py-16">
-            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center mx-auto mb-3">
-              <FileText className="w-8 h-8 text-[#78716C]" />
-            </div>
-            <div className="text-[#78716C] text-lg mb-2">暂无草稿</div>
-            <div className="text-[#A8A29E] text-sm">
-              在各业务模块创建单据时可保存为草稿，稍后继续编辑
-            </div>
-          </div>
         </div>
       )}
 
@@ -784,22 +601,26 @@ export default function ApprovalsPage() {
               loading={businessDetailLoading}
             />
 
+            <ApprovalInfoPanel instance={approvalDetail} />
+
             <div className="pt-3 border-t border-[#F5F5F4]">
               <h4 className="text-[13px] font-bold text-[#1C1917] mb-3">审批流程</h4>
               <ApprovalTimeline instance={approvalDetail} loading={detailLoading} />
             </div>
 
-            <div className="pt-3 border-t border-[#F5F5F4]">
-              <ApprovalActionButton
-                instanceId={approvalDetail?.id || null}
-                businessType={selectedApproval.businessType}
-                businessId={selectedApproval.businessId}
-                flowLevel={selectedApproval.flowLevel}
-                currentStatus={approvalDetail?.status || "审批中"}
-                approvalInstance={approvalDetail || undefined}
-                onStatusChange={handleStatusChange}
-              />
-            </div>
+            {activeTab === "pending" && (
+              <div className="pt-3 border-t border-[#F5F5F4]">
+                <ApprovalActionButton
+                  instanceId={approvalDetail?.id || null}
+                  businessType={selectedApproval.businessType}
+                  businessId={selectedApproval.businessId}
+                  flowLevel={selectedApproval.flowLevel}
+                  currentStatus={approvalDetail?.status || "审批中"}
+                  approvalInstance={approvalDetail || undefined}
+                  onStatusChange={handleStatusChange}
+                />
+              </div>
+            )}
           </div>
         )}
       </Modal>

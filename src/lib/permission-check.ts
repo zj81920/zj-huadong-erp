@@ -11,6 +11,7 @@ import {
   canReadAll as _canReadAll,
   type CrudPermissions,
 } from "@/lib/types/permissions"
+import { API_TO_SUB_MODULE, SUB_MODULE_MAP, type SubModuleKey } from "@/lib/module-permissions"
 
 export interface PermissionResult {
   userId: string
@@ -59,9 +60,33 @@ export async function resolveCurrentUserPermission(
     }
   }
 
-  const perms = subModuleKey
-    ? (modulePermissions[subModuleKey] || modulePermissions[moduleKey] || { create: false, read: false, update: false, delete: false })
-    : (modulePermissions[moduleKey] || { create: false, read: false, update: false, delete: false })
+  // 尝试将 API key 映射到子模块 key（支持多层嵌套向上查找）
+  const mappedSubKey = API_TO_SUB_MODULE[moduleKey] as SubModuleKey | undefined;
+
+  let perms: CrudPermissions | undefined;
+  if (subModuleKey) {
+    // 显式指定子模块 key
+    perms = modulePermissions[subModuleKey] || modulePermissions[moduleKey];
+  } else if (mappedSubKey) {
+    // 从子模块 key 开始，逐级向上查找祖先模块
+    let currentKey: string | undefined = mappedSubKey;
+    while (currentKey && !perms) {
+      perms = modulePermissions[currentKey];
+      if (!perms) {
+        currentKey = SUB_MODULE_MAP[currentKey as SubModuleKey]?.parent as string | undefined;
+      }
+    }
+    // 最终 fallback 到原始 moduleKey
+    if (!perms) {
+      perms = modulePermissions[moduleKey];
+    }
+  } else {
+    perms = modulePermissions[moduleKey];
+  }
+
+  if (!perms) {
+    perms = { create: false, read: false, update: false, delete: false };
+  }
 
   return { userId: user.id, isAdmin: false, perms }
 }
@@ -123,37 +148,5 @@ export async function checkReadPermission(
   return { canReadAll: _canReadAll(permResult.perms), userId: permResult.userId, permResult }
 }
 
-/**
- * 从 CurrentUser 对象中提取模块的 CRUD 权限（前端使用）
- */
-export function getUserModulePerms(
-  user: CurrentUser | null,
-  moduleKey: string
-): CrudPermissions {
-  if (!user) return { create: false, read: false, update: false, delete: false }
-
-  // admin 角色拥有所有权限
-  const roleCodes = user.roles.map(r => r.code)
-  if (roleCodes.includes("admin") || user.username === "admin") {
-    return { create: true, read: true, update: true, delete: true }
-  }
-
-  const perms: CrudPermissions = { create: false, read: false, update: false, delete: false }
-  for (const role of user.roles) {
-    try {
-      const parsed = typeof role.modulePermissions === "string"
-        ? JSON.parse(role.modulePermissions)
-        : role.modulePermissions
-      const modulePerms = parsed[moduleKey]
-      if (modulePerms) {
-        if (modulePerms.create) perms.create = true
-        if (modulePerms.read) perms.read = true
-        if (modulePerms.update) perms.update = true
-        if (modulePerms.delete) perms.delete = true
-      }
-    } catch {
-      // 忽略
-    }
-  }
-  return perms
-}
+// getUserModulePerms 已统一到 @/lib/types/permissions.ts，通过 re-export 保持向后兼容
+export { getUserModulePerms } from "@/lib/types/permissions"

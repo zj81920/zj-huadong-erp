@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   request: NextRequest,
@@ -116,6 +117,7 @@ export async function DELETE(
       return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
+    await cleanupBusinessApprovalRecords("borrowing_return_application", id);
     await prisma.borrowingReturnApplication.delete({
       where: { id },
     });

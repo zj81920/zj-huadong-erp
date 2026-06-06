@@ -1,0 +1,79 @@
+<h2>数据流 &amp; 改造计划</h2>
+
+<div class="section">
+  <h3>数据流（页面 → API → 数据库 → 返回）</h3>
+  <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-size:13px;line-height:1.8;">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+      <span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;">1. 页面</span>
+      <code>usePagination</code> 提供 page, pageSize → fetch API
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+      <span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;">2. API</span>
+      <code>parseInt(page)</code> + <code>parseInt(pageSize)</code> → Prisma skip/take + count
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+      <span style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:4px;">3. 数据库</span>
+      执行分页查询，返回 data + pagination 对象
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;">4. 页面渲染</span>
+      <code>setPagination(res.pagination)</code> → PaginationBar 显示
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>筛选联动机制</h3>
+  <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-size:13px;line-height:1.8;">
+    <p style="margin:0 0 8px 0;color:#6b7280;">usePagination hook 提供 <code>resetPage()</code> 方法，筛选变化时调用：</p>
+    <pre style="font-size:12px;background:#1e293b;color:#e2e8f0;padding:12px;border-radius:6px;margin:0;">
+<span style="color:#94a3b8;">// hook 内部实现</span>
+<span style="color:#c084fc">const</span> <span style="color:#38bdf8">handleFilterChange</span> = <span style="color:#c084fc">useCallback</span>((newFilters) => {
+  <span style="color:#38bdf8">setFilters</span>(newFilters);
+  <span style="color:#38bdf8">setPage</span>(1);  <span style="color:#94a3b8;">// 自动重置到第一页</span>
+}, []);
+</pre>
+    <p style="margin:8px 0 0 0;color:#6b7280;">页面只需将新筛选条件传给 <code>handleFilterChange</code>，页码自动重置。</p>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>改造优先级（分 4 批，每批约 7-8 个页面）</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <tr style="background:#f3f4f6;">
+      <td style="padding:8px 12px;font-weight:600;">批次</td>
+      <td style="padding:8px 12px;font-weight:600;">模块</td>
+      <td style="padding:8px 12px;font-weight:600;">数量</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 12px;"><span style="background:#dbeafe;padding:2px 6px;border-radius:4px;">P1</span></td>
+      <td style="padding:6px 12px;">合同管理(5) + 采购管理(3)</td>
+      <td style="padding:6px 12px;">8</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 12px;"><span style="background:#fef3c7;padding:2px 6px;border-radius:4px;">P2</span></td>
+      <td style="padding:6px 12px;">财务管理(6) + 商务管理(4)</td>
+      <td style="padding:6px 12px;">10</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 12px;"><span style="background:#e0e7ff;padding:2px 6px;border-radius:4px;">P3</span></td>
+      <td style="padding:6px 12px;">项目管理(4) + 审批/HR/行政(3)</td>
+      <td style="padding:6px 12px;">7</td>
+    </tr>
+    <tr>
+      <td style="padding:6px 12px;"><span style="background:#d1fae5;padding:2px 6px;border-radius:4px;">P4</span></td>
+      <td style="padding:6px 12px;">系统设置(4) + 数据量小的模块</td>
+      <td style="padding:6px 12px;">4</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>需要补充分页的 API（3 个）</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <tr><td style="padding:6px 12px;font-family:monospace;">GET /api/inter-org-contracts</td><td style="padding:6px 12px;">内部结算合同列表</td></tr>
+    <tr><td style="padding:6px 12px;font-family:monospace;">GET /api/organizations</td><td style="padding:6px 12px;">组织列表</td></tr>
+    <tr><td style="padding:6px 12px;font-family:monospace;">GET /api/supplier-changes</td><td style="padding:6px 12px;">供应商变更记录</td></tr>
+  </table>
+  <p style="color:#6b7280;font-size:13px;margin-top:8px;">其余 42 个列表 API 已支持 page/pageSize，无需改动。</p>
+</div>

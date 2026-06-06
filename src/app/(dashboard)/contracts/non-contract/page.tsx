@@ -20,6 +20,9 @@ import { DetailPageLayout } from "@/components/DetailPageLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
 
 interface Project {
   id: string;
@@ -62,13 +65,6 @@ interface NonContractFormData {
   description: string;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 type TabType = "income" | "expense";
 
 const emptyForm: NonContractFormData = {
@@ -103,12 +99,7 @@ export default function NonContractPage() {
   const isAdminUser = user?.username === "admin";
   const [activeTab, setActiveTab] = useState<TabType>("income");
   const [records, setRecords] = useState<NonContractRecord[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, pageSize, pagination, setPage, setPageSize, setPagination } = usePagination();
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -177,8 +168,8 @@ export default function NonContractPage() {
       if (search) params.set("search", search);
       if (filterStatus) params.set("status", filterStatus);
       if (filterProject) params.set("projectSourceId", filterProject);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`${apiUrl}?${params}`);
       const json = await res.json();
@@ -191,7 +182,7 @@ export default function NonContractPage() {
     } finally {
       setLoading(false);
     }
-  }, [apiUrl, search, filterStatus, filterProject, pagination.page, pagination.pageSize]);
+  }, [apiUrl, search, filterStatus, filterProject, page, pageSize]);
 
   useEffect(() => {
     fetchProjects();
@@ -229,7 +220,7 @@ export default function NonContractPage() {
     setSearch("");
     setFilterStatus("");
     setFilterProject("");
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    setPage(1);
   };
 
   const handleOpenCreate = () => {
@@ -350,6 +341,7 @@ export default function NonContractPage() {
         body: JSON.stringify({
           businessType: activeTab === "income" ? "non_contract_income" : "non_contract_expense",
           businessId: record.id,
+          businessTitle: record.description,
           flowLevel: "common",
         }),
       });
@@ -462,7 +454,7 @@ export default function NonContractPage() {
     return <span className={`ios-badge ${config.color}`}>{config.label}</span>;
   };
 
-  const tabLabel = activeTab === "income" ? "非合同收入" : "非合同支出";
+  const tabLabel = activeTab === "income" ? "其他收入" : "非合同支出";
   const isIncome = activeTab === "income";
 
   return (
@@ -471,7 +463,7 @@ export default function NonContractPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1>非合同收支</h1>
-            <p>管理非合同收入与支出，支持按项目或公司级记录</p>
+            <p>管理其他收入与非合同支出，支持按项目或公司级记录</p>
           </div>
           <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
             <Plus className="w-4 h-4" />
@@ -486,7 +478,7 @@ export default function NonContractPage() {
           onClick={() => handleTabChange("income")}
         >
           <ArrowUpCircle className="w-4 h-4" />
-          非合同收入
+          其他收入
         </button>
         <button
           className={`ios-btn ${!isIncome ? "ios-btn-primary" : "ios-btn-secondary"}`}
@@ -508,7 +500,7 @@ export default function NonContractPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -518,7 +510,7 @@ export default function NonContractPage() {
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部状态</option>
@@ -533,7 +525,7 @@ export default function NonContractPage() {
             value={filterProject}
             onChange={(e) => {
               setFilterProject(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部项目</option>
@@ -545,7 +537,7 @@ export default function NonContractPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录
           </div>
         </div>
 
@@ -585,7 +577,7 @@ export default function NonContractPage() {
                 {records.map((record) => {
                   const nextStatuses = statusFlow[record.status] || [];
                   return (
-                    <tr key={record.id} className={isSelected(record.id) ? "bg-[#1C1917]/5" : ""}>
+                    <tr key={record.id} className={`${isSelected(record.id) ? "bg-[#1C1917]/5" : ""} ${getRowStatusClass(record.status)}`}>
                       {isAdminUser && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(record.id)} onChange={() => toggleSelect(record.id)} /></td>}
                       <td className="font-semibold">{record.counterparty}</td>
                       <td>{formatAmount(record.amount, activeTab)}</td>
@@ -700,27 +692,11 @@ export default function NonContractPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar
+              pagination={pagination}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </div>
         )}
 

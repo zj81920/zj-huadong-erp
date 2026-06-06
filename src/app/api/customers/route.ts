@@ -5,7 +5,7 @@ import { checkReadPermission } from "@/lib/permission-check";
 
 export async function GET(request: NextRequest) {
   try {
-    const { canReadAll, userId } = await checkReadPermission("customers")
+    const { canReadAll, userId } = await checkReadPermission("business")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const industryType = searchParams.get("industryType") || "";

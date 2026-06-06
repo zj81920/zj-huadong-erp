@@ -1,4 +1,6 @@
 // CRUD 操作权限
+import { API_TO_SUB_MODULE, SUB_MODULE_MAP, type SubModuleKey } from "@/lib/module-permissions";
+
 export interface CrudPermissions {
   create: boolean;
   read: boolean;
@@ -187,13 +189,28 @@ export function getUserModulePerms(
     return { create: true, read: true, update: true, delete: true }
   }
 
+  // 子模块映射链（与后端 resolveCurrentUserPermission 一致）
+  const mappedSubKey = API_TO_SUB_MODULE[moduleKey as keyof typeof API_TO_SUB_MODULE] as string | undefined;
+
   const perms: CrudPermissions = { create: false, read: false, update: false, delete: false }
   for (const role of user.roles) {
     try {
       const parsed = typeof role.modulePermissions === "string"
         ? JSON.parse(role.modulePermissions)
         : role.modulePermissions
-      const modulePerms = parsed[moduleKey]
+
+      // 尝试直接匹配 moduleKey，再尝试子模块映射链向上查找
+      let modulePerms = parsed[moduleKey];
+      if (!modulePerms && mappedSubKey) {
+        let currentKey: string | undefined = mappedSubKey;
+        while (currentKey && !modulePerms) {
+          modulePerms = parsed[currentKey];
+          if (!modulePerms) {
+            currentKey = SUB_MODULE_MAP[currentKey as SubModuleKey]?.parent as string | undefined;
+          }
+        }
+      }
+
       if (modulePerms) {
         if (modulePerms.create) perms.create = true
         if (modulePerms.read) perms.read = true

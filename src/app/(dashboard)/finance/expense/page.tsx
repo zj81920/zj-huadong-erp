@@ -31,6 +31,9 @@ import { ApprovalTimeline } from "@/components/ApprovalComponents";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
 
 interface ExpenseContract {
   id: string;
@@ -284,13 +287,6 @@ interface BankAccount {
   isActive: boolean;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 type TabType = "contractExpense" | "otherExpense" | "lendingOut" | "expenseReport" | "salaryPayment" | "borrowingReturn";
 
 type ModalType =
@@ -316,7 +312,7 @@ const sourceTypeMap: Record<string, string> = {
   expense_report: "费用报销",
   loan_request: "备用金借款",
   income_contract: "收入合同",
-  non_contract_income: "非合同收入",
+  non_contract_income: "其他收入",
   non_contract_expense: "非合同支出",
 };
 
@@ -456,12 +452,13 @@ export default function FinanceExpensePage() {
   const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
   const [biddings, setBiddings] = useState<Bidding[]>([]);
 
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  // 每个 Tab 独立的分页实例
+  const contractExpensePg = usePagination({});
+  const otherExpensePg = usePagination({});
+  const lendingOutPg = usePagination({});
+  const expenseReportPg = usePagination({});
+  const salaryPg = usePagination({});
+  const borrowingReturnPg = usePagination({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -559,9 +556,17 @@ export default function FinanceExpensePage() {
   const fetchPayables = useCallback(async () => {
     setLoading(true);
     try {
+      const params1 = new URLSearchParams();
+      params1.set("sourceType", "expense_contract");
+      params1.set("page", contractExpensePg.page.toString());
+      params1.set("pageSize", contractExpensePg.pageSize.toString());
+      const params2 = new URLSearchParams();
+      params2.set("sourceType", "outsourcing");
+      params2.set("page", contractExpensePg.page.toString());
+      params2.set("pageSize", contractExpensePg.pageSize.toString());
       const [contractRes, outsourcingRes] = await Promise.all([
-        fetch("/api/payables?sourceType=expense_contract&pageSize=200"),
-        fetch("/api/payables?sourceType=outsourcing&pageSize=200"),
+        fetch(`/api/payables?${params1}`),
+        fetch(`/api/payables?${params2}`),
       ]);
       const contractJson = await contractRes.json();
       const outsourcingJson = await outsourcingRes.json();
@@ -576,7 +581,7 @@ export default function FinanceExpensePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [contractExpensePg.page, contractExpensePg.pageSize]);
 
   const fetchPaymentApplications = useCallback(async () => {
     try {
@@ -603,33 +608,40 @@ export default function FinanceExpensePage() {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", otherExpensePg.page.toString());
+      params.set("pageSize", otherExpensePg.pageSize.toString());
       const res = await fetch(`/api/non-contract-expenses?${params}`);
       const json = await res.json();
       if (res.ok) {
         setNonContractExpenses(json.data || []);
-        if (json.pagination) setPagination(json.pagination);
+        if (json.pagination) otherExpensePg.setPagination(json.pagination);
       }
     } catch (err) {
       console.error("获取其他支出失败:", err);
     } finally {
       setLoading(false);
     }
-  }, [search, pagination.page, pagination.pageSize]);
+  }, [search, otherExpensePg.page, otherExpensePg.pageSize]);
 
   const fetchLendingOuts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/lending-outs?include=returns&pageSize=200");
+      const params = new URLSearchParams();
+      params.set("include", "returns");
+      params.set("page", lendingOutPg.page.toString());
+      params.set("pageSize", lendingOutPg.pageSize.toString());
+      const res = await fetch(`/api/lending-outs?${params}`);
       const json = await res.json();
-      if (res.ok) setLendingOuts(json.data || []);
+      if (res.ok) {
+        setLendingOuts(json.data || []);
+        if (json.pagination) lendingOutPg.setPagination(json.pagination);
+      }
     } catch (err) {
       console.error("获取借出款失败:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [lendingOutPg.page, lendingOutPg.pageSize]);
 
   const fetchBiddings = useCallback(async () => {
     try {
@@ -647,53 +659,59 @@ export default function FinanceExpensePage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       params.set("include", "items,applicant");
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", expenseReportPg.page.toString());
+      params.set("pageSize", expenseReportPg.pageSize.toString());
       const res = await fetch(`/api/expense-reports?${params}`);
       const json = await res.json();
       if (res.ok) {
         setExpenseReports(json.data || []);
-        if (json.pagination) setPagination(json.pagination);
+        if (json.pagination) expenseReportPg.setPagination(json.pagination);
       }
     } catch (err) {
       console.error("获取费用报销失败:", err);
     } finally {
       setLoading(false);
     }
-  }, [search, pagination.page, pagination.pageSize]);
+  }, [search, expenseReportPg.page, expenseReportPg.pageSize]);
 
   const fetchSalaryBatches = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", salaryPg.page.toString());
+      params.set("pageSize", salaryPg.pageSize.toString());
       const res = await fetch(`/api/salary-batches?${params}`);
       const json = await res.json();
       if (res.ok) {
         setSalaryBatches(json.data || []);
-        if (json.pagination) setPagination(json.pagination);
+        if (json.pagination) salaryPg.setPagination(json.pagination);
       }
     } catch (err) {
       console.error("获取工资批次失败:", err);
     } finally {
       setLoading(false);
     }
-  }, [search, pagination.page, pagination.pageSize]);
+  }, [search, salaryPg.page, salaryPg.pageSize]);
 
   const fetchBorrowingReturnApps = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/borrowing-return-applications?pageSize=200");
+      const params = new URLSearchParams();
+      params.set("page", borrowingReturnPg.page.toString());
+      params.set("pageSize", borrowingReturnPg.pageSize.toString());
+      const res = await fetch(`/api/borrowing-return-applications?${params}`);
       const json = await res.json();
-      if (res.ok) setBorrowingReturnApps(json.data || []);
+      if (res.ok) {
+        setBorrowingReturnApps(json.data || []);
+        if (json.pagination) borrowingReturnPg.setPagination(json.pagination);
+      }
     } catch (err) {
       console.error("获取借入资金归还失败:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [borrowingReturnPg.page, borrowingReturnPg.pageSize]);
 
   const fetchApprovalInstance = useCallback(async (instanceId: string) => {
     setApprovalLoading(true);
@@ -803,7 +821,12 @@ export default function FinanceExpensePage() {
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     setSearch("");
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    contractExpensePg.setPage(1);
+    otherExpensePg.setPage(1);
+    lendingOutPg.setPage(1);
+    expenseReportPg.setPage(1);
+    salaryPg.setPage(1);
+    borrowingReturnPg.setPage(1);
   };
 
   const openPaymentAppModal = () => {
@@ -843,6 +866,7 @@ export default function FinanceExpensePage() {
               businessType: "payment_application",
               businessId: appId,
               flowLevel: "common",
+              businessTitle: paymentAppForm.paymentReason || "付款申请",
             }),
           });
           if (approvalRes.ok) {
@@ -1435,6 +1459,7 @@ export default function FinanceExpensePage() {
           businessType: "salary_payment",
           businessId: batch.id,
           flowLevel: "common",
+          businessTitle: batch.title || batch.batchNo || "工资发放",
         }),
       });
       const json = await res.json();
@@ -1686,7 +1711,7 @@ export default function FinanceExpensePage() {
                       ? (p.sourceOutsourcing ? formatAmount(Number(p.sourceOutsourcing.amount)) : "-")
                       : (p.sourceContract ? formatAmount(parseFloat(p.sourceContract.totalAmount)) : "-");
                     return (
-                      <tr key={p.id}>
+                      <tr key={p.id} className={getRowStatusClass(p.status)}>
                         <td>
                           {projectName ? (
                             <div>
@@ -1753,6 +1778,7 @@ export default function FinanceExpensePage() {
                   })}
                 </tbody>
               </table>
+              <PaginationBar pagination={contractExpensePg.pagination} onPageChange={contractExpensePg.setPage} onPageSizeChange={contractExpensePg.setPageSize} />
             </div>
           )}
         </div>
@@ -1771,12 +1797,12 @@ export default function FinanceExpensePage() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
+                  otherExpensePg.setPage(1);
                 }}
               />
             </div>
             <div className="ml-auto text-[13px] text-[#78716C]">
-              共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+              共 <span className="font-semibold text-[#1C1917]">{otherExpensePg.pagination?.total ?? 0}</span> 条记录
             </div>
           </div>
 
@@ -1820,7 +1846,7 @@ export default function FinanceExpensePage() {
                   {nonContractExpenses.map((item) => {
                     const nextStatuses = appStatusFlow[item.status] || [];
                     return (
-                      <tr key={item.id} className={isSelectedOtherExpense(item.id) ? "bg-[#1C1917]/5" : ""}>
+                      <tr key={item.id} className={`${getRowStatusClass(item.status)} ${isSelectedOtherExpense(item.id) ? "bg-[#1C1917]/5" : ""}`}>
                         {ncExpensePerms.delete && (
                           <td className="w-10">
                             <input
@@ -1901,27 +1927,8 @@ export default function FinanceExpensePage() {
                   })}
                 </tbody>
               </table>
-              {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                  <button
-                    className="ios-btn ios-btn-secondary ios-btn-sm"
-                    disabled={pagination.page <= 1}
-                    onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                  >
-                    上一页
-                  </button>
-                  <span className="text-[13px] text-[#78716C] px-3">{pagination.page} / {pagination.totalPages}</span>
-                  <button
-                    className="ios-btn ios-btn-secondary ios-btn-sm"
-                    disabled={pagination.page >= pagination.totalPages}
-                    onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                  >
-                    下一页
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+              <PaginationBar pagination={otherExpensePg.pagination} onPageChange={otherExpensePg.setPage} onPageSizeChange={otherExpensePg.setPageSize} />
+            </div>          )}
         </div>
 
         {ncExpensePerms.delete && (
@@ -1979,7 +1986,7 @@ export default function FinanceExpensePage() {
                   {lendingOuts.map((item) => {
                     const nextStatuses = lendingStatusFlow[item.status] || [];
                     return (
-                      <tr key={item.id} className={isSelectedLendingOut(item.id) ? "bg-[#1C1917]/5" : ""}>
+                      <tr key={item.id} className={`${getRowStatusClass(item.status)} ${isSelectedLendingOut(item.id) ? "bg-[#1C1917]/5" : ""}`}>
                         {lendingOutPerms.delete && (
                           <td className="w-10">
                             <input
@@ -2062,6 +2069,7 @@ export default function FinanceExpensePage() {
                   })}
                 </tbody>
               </table>
+              <PaginationBar pagination={lendingOutPg.pagination} onPageChange={lendingOutPg.setPage} onPageSizeChange={lendingOutPg.setPageSize} />
             </div>
           )}
         </div>
@@ -2090,12 +2098,12 @@ export default function FinanceExpensePage() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
+                  expenseReportPg.setPage(1);
                 }}
               />
             </div>
             <div className="ml-auto text-[13px] text-[#78716C]">
-              共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+              共 <span className="font-semibold text-[#1C1917]">{expenseReportPg.pagination?.total ?? 0}</span> 条记录
             </div>
           </div>
 
@@ -2138,7 +2146,7 @@ export default function FinanceExpensePage() {
                   {expenseReports.map((item) => {
                     const nextStatuses = appStatusFlow[item.status] || [];
                     return (
-                      <tr key={item.id} className={isSelectedExpenseReport(item.id) ? "bg-[#1C1917]/5" : ""}>
+                      <tr key={item.id} className={`${getRowStatusClass(item.status)} ${isSelectedExpenseReport(item.id) ? "bg-[#1C1917]/5" : ""}`}>
                         {expenseReportPerms.delete && (
                           <td className="w-10">
                             <input
@@ -2215,25 +2223,7 @@ export default function FinanceExpensePage() {
                   })}
                 </tbody>
               </table>
-              {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                  <button
-                    className="ios-btn ios-btn-secondary ios-btn-sm"
-                    disabled={pagination.page <= 1}
-                    onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                  >
-                    上一页
-                  </button>
-                  <span className="text-[13px] text-[#78716C] px-3">{pagination.page} / {pagination.totalPages}</span>
-                  <button
-                    className="ios-btn ios-btn-secondary ios-btn-sm"
-                    disabled={pagination.page >= pagination.totalPages}
-                    onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                  >
-                    下一页
-                  </button>
-                </div>
-              )}
+              <PaginationBar pagination={expenseReportPg.pagination} onPageChange={expenseReportPg.setPage} onPageSizeChange={expenseReportPg.setPageSize} />
             </div>
           )}
         </div>
@@ -2262,12 +2252,12 @@ export default function FinanceExpensePage() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
+                  salaryPg.setPage(1);
                 }}
               />
             </div>
             <div className="ml-auto text-[13px] text-[#78716C]">
-              共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+              共 <span className="font-semibold text-[#1C1917]">{salaryPg.pagination?.total ?? 0}</span> 条记录
             </div>
           </div>
 
@@ -2311,7 +2301,7 @@ export default function FinanceExpensePage() {
                 </thead>
                 <tbody>
                   {salaryBatches.map((batch) => (
-                    <tr key={batch.id} className={isSelectedSalary(batch.id) ? "bg-[#1C1917]/5" : ""}>
+                    <tr key={batch.id} className={`${getRowStatusClass(batch.status)} ${isSelectedSalary(batch.id) ? "bg-[#1C1917]/5" : ""}`}>
                         {salaryPaymentPerms.delete && (
                         <td className="w-10">
                           <input
@@ -2387,25 +2377,7 @@ export default function FinanceExpensePage() {
                   ))}
                 </tbody>
               </table>
-              {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                  <button
-                    className="ios-btn ios-btn-secondary ios-btn-sm"
-                    disabled={pagination.page <= 1}
-                    onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                  >
-                    上一页
-                  </button>
-                  <span className="text-[13px] text-[#78716C] px-3">{pagination.page} / {pagination.totalPages}</span>
-                  <button
-                    className="ios-btn ios-btn-secondary ios-btn-sm"
-                    disabled={pagination.page >= pagination.totalPages}
-                    onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                  >
-                    下一页
-                  </button>
-                </div>
-              )}
+              <PaginationBar pagination={salaryPg.pagination} onPageChange={salaryPg.setPage} onPageSizeChange={salaryPg.setPageSize} />
             </div>
           )}
         </div>
@@ -2463,7 +2435,7 @@ export default function FinanceExpensePage() {
                 </thead>
                 <tbody>
                   {borrowingReturnApps.map((item) => (
-                    <tr key={item.id} className={isSelectedBorrowReturn(item.id) ? "bg-[#1C1917]/5" : ""}>
+                    <tr key={item.id} className={`${getRowStatusClass(item.status)} ${isSelectedBorrowReturn(item.id) ? "bg-[#1C1917]/5" : ""}`}>
                       {borrowingReturnPerms.delete && (
                         <td className="w-10">
                           <input
@@ -2516,6 +2488,7 @@ export default function FinanceExpensePage() {
                   ))}
                 </tbody>
               </table>
+              <PaginationBar pagination={borrowingReturnPg.pagination} onPageChange={borrowingReturnPg.setPage} onPageSizeChange={borrowingReturnPg.setPageSize} />
             </div>
           )}
         </div>

@@ -6,6 +6,30 @@ import {
   canInitiateFlow,
 } from "@/lib/approval-engine";
 
+// 自动从数据库查询业务标题
+async function resolveBusinessTitle(businessType: string, businessId: string): Promise<string | null> {
+  const { default: prisma } = await import("@/lib/prisma");
+  const titleMap: Record<string, (id: string) => Promise<string | null>> = {
+    supplier: async (id) => { const r = await prisma.supplier.findUnique({ where: { id }, select: { name: true } }); return r?.name || null; },
+    supplier_change: async (id) => { const r = await prisma.supplierChange.findUnique({ where: { id }, select: { name: true } }); return r?.name || null; },
+    expense_report: async (id) => { const r = await prisma.expenseReport.findUnique({ where: { id }, select: { description: true } }); return r?.description || null; },
+    payment_application: async (id) => { const r = await prisma.paymentApplication.findUnique({ where: { id }, select: { paymentReason: true } }); return r?.paymentReason || null; },
+    non_contract_expense: async (id) => { const r = await prisma.nonContractExpense.findUnique({ where: { id }, select: { description: true } }); return r?.description || null; },
+    non_contract_income: async (id) => { const r = await prisma.nonContractIncome.findUnique({ where: { id }, select: { description: true } }); return r?.description || null; },
+    lending_out: async (id) => { const r = await prisma.lendingOut.findUnique({ where: { id }, select: { borrowerName: true } }); return r?.borrowerName || null; },
+    other_borrowing: async (id) => { const r = await prisma.otherBorrowing.findUnique({ where: { id }, select: { description: true } }); return r?.description || null; },
+    borrowing_return_application: async (id) => { const r = await prisma.borrowingReturnApplication.findUnique({ where: { id }, select: { sourceName: true } }); return r?.sourceName || null; },
+    salary_payment: async (id) => { const r = await prisma.salaryBatch.findUnique({ where: { id }, select: { title: true } }); return r?.title || null; },
+    income_contract: async (id) => { const r = await prisma.incomeContract.findUnique({ where: { id }, select: { contractNo: true } }); return r?.contractNo || null; },
+    expense_contract: async (id) => { const r = await prisma.expenseContract.findUnique({ where: { id }, select: { contractNo: true } }); return r?.contractNo || null; },
+    inter_org_contract: async (id) => { const r = await prisma.interOrgContract.findUnique({ where: { id }, select: { contractName: true } }); return r?.contractName || null; },
+    contract_change_order: async (id) => { const r = await prisma.contractChangeOrder.findUnique({ where: { id }, select: { changeReason: true } }); return r?.changeReason || null; },
+  };
+  const resolver = titleMap[businessType];
+  if (!resolver) return null;
+  try { return await resolver(businessId); } catch { return null; }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -14,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { businessType, businessId, flowLevel, projectSourceId } = body;
+    const { businessType, businessId, flowLevel, projectSourceId, businessTitle, parentInstanceId } = body;
 
     if (!businessType || !businessId || !flowLevel) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
@@ -25,12 +49,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "您没有权限发起此类型的审批流程" }, { status: 403 });
     }
 
+    // 自动填充 businessTitle：如果前端未传，从数据库查询
+    let resolvedTitle = businessTitle;
+    if (!resolvedTitle) {
+      resolvedTitle = await resolveBusinessTitle(businessType, businessId);
+    }
+
     const result = await startApprovalFlow({
       businessType,
       businessId,
       flowLevel,
       initiatorId: user.id,
       projectSourceId,
+      businessTitle: resolvedTitle || undefined,
+      parentInstanceId,
     });
 
     return NextResponse.json({ data: result }, { status: 201 });

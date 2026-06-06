@@ -257,6 +257,14 @@
     color: #78716C;
   }
 
+  /* 行底色区分 — 极淡背景，与 badge 同色系 */
+  .row-status-draft    { background: #FAFAF9; }
+  .row-status-pending  { background: #FEF9E7; }
+  .row-status-approved { background: #F0FDF4; }
+  .row-status-rejected { background: #FEF2F2; }
+  .row-status-archived { background: #F0F4FF; }
+  .row-status-overdue  { background: #FFF7ED; }
+
   .ios-table {
     width: 100%;
     border-collapse: collapse;

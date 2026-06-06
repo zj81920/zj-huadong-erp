@@ -132,6 +132,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "项目编号已存在" }, { status: 400 });
     }
 
+    const existingName = await prisma.project.findUnique({
+      where: { name: name.trim() },
+    });
+    if (existingName) {
+      return NextResponse.json({ error: "项目名称已存在" }, { status: 409 });
+    }
+
     const customer = await prisma.customer.findUnique({ where: { id: customerId } });
     if (!customer || !customer.isActive) {
       return NextResponse.json({ error: "客户不存在或已停用" }, { status: 400 });

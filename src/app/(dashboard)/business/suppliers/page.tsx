@@ -16,6 +16,7 @@ import {
   X,
   Send,
   Eye,
+  RefreshCw,
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +25,10 @@ import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
+import { SupplierDetailCard } from "@/components/detail-cards";
 
 interface Supplier {
   id: string;
@@ -58,13 +63,6 @@ interface SupplierFormData {
   bankAccount: string;
   remark: string;
   attachmentUrl: string;
-}
-
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
 }
 
 const emptyForm: SupplierFormData = {
@@ -111,12 +109,7 @@ export default function SuppliersPage() {
   const hasFlow = user?.moduleFlowStatus?.["supplier"] ?? false;
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -135,6 +128,12 @@ export default function SuppliersPage() {
 
   const [detailSupplier, setDetailSupplier] = useState<Supplier | null>(null);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
+
+  const [changeFormOpen, setChangeFormOpen] = useState(false);
+  const [changeSupplier, setChangeSupplier] = useState<Supplier | null>(null);
+  const [changeForm, setChangeForm] = useState<SupplierFormData>(emptyForm);
+  const [changeSaving, setChangeSaving] = useState(false);
+  const [changeError, setChangeError] = useState("");
 
   const {
     toggleSelect,
@@ -157,8 +156,8 @@ export default function SuppliersPage() {
       if (filterType) params.set("supplierType", filterType);
       if (filterStatus) params.set("status", filterStatus);
       if (filterApproval) params.set("approvalStatus", filterApproval);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/suppliers?${params}`);
       const json = await res.json();
@@ -172,7 +171,7 @@ export default function SuppliersPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterType, filterStatus, filterApproval, pagination.page, pagination.pageSize]);
+  }, [search, filterType, filterStatus, filterApproval, page, pageSize]);
 
   useEffect(() => {
     fetchSuppliers();
@@ -272,7 +271,7 @@ export default function SuppliersPage() {
     }
   };
 
-  const handleSubmitApproval = async (supplierId: string) => {
+  const handleSubmitApproval = async (supplierId: string, supplierName?: string) => {
     setSubmittingId(supplierId);
     try {
       const res = await fetch("/api/approval-instances", {
@@ -282,6 +281,7 @@ export default function SuppliersPage() {
           businessType: "supplier",
           businessId: supplierId,
           flowLevel: "common",
+          businessTitle: supplierName,
         }),
       });
       const json = await res.json();
@@ -301,6 +301,67 @@ export default function SuppliersPage() {
     fetchSuppliers();
     if (detailSupplier && detailSupplier.id) {
       setDetailSupplier((prev) => prev ? { ...prev, approvalStatus: newStatus } : null);
+    }
+  };
+
+  const handleChangeFormUpdate = (field: keyof SupplierFormData, value: string) => {
+    setChangeForm((prev) => ({ ...prev, [field]: value }));
+    if (changeError) setChangeError("");
+  };
+
+  const handleChangeSubmit = async () => {
+    if (!changeSupplier) return;
+    if (!changeForm.name.trim()) {
+      setChangeError("供应商名称不能为空");
+      return;
+    }
+
+    setChangeSaving(true);
+    setChangeError("");
+    try {
+      // 创建变更单
+      const res = await fetch("/api/supplier-changes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          supplierId: changeSupplier.id,
+          ...changeForm,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setChangeError(json.error || "创建变更单失败");
+        setChangeSaving(false);
+        return;
+      }
+
+      // 触发审批
+      if (hasFlow) {
+        const approvalRes = await fetch("/api/approval-instances", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            businessType: "supplier_change",
+            businessId: json.data.id,
+            flowLevel: "common",
+            businessTitle: changeForm.name,
+          }),
+        });
+        if (!approvalRes.ok) {
+          const approvalJson = await approvalRes.json();
+          setChangeError(approvalJson.error || "提交审批失败");
+          setChangeSaving(false);
+          return;
+        }
+      }
+
+      setChangeFormOpen(false);
+      setChangeSupplier(null);
+      fetchSuppliers();
+    } catch {
+      setChangeError("网络错误，请重试");
+    } finally {
+      setChangeSaving(false);
     }
   };
 
@@ -383,7 +444,7 @@ export default function SuppliersPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -393,7 +454,7 @@ export default function SuppliersPage() {
             value={filterType}
             onChange={(e) => {
               setFilterType(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部性质</option>
@@ -409,7 +470,7 @@ export default function SuppliersPage() {
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部状态</option>
@@ -422,7 +483,7 @@ export default function SuppliersPage() {
             value={filterApproval}
             onChange={(e) => {
               setFilterApproval(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部审批</option>
@@ -433,7 +494,7 @@ export default function SuppliersPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录
           </div>
         </div>
 
@@ -476,7 +537,7 @@ export default function SuppliersPage() {
               </thead>
               <tbody>
                 {suppliers.map((supplier) => (
-                  <tr key={supplier.id} className={isSelected(supplier.id) ? "bg-[#1C1917]/5" : ""}>
+                  <tr key={supplier.id} className={`${getRowStatusClass(supplier.approvalStatus)} ${isSelected(supplier.id) ? "bg-[#1C1917]/5" : ""}`}>
                     {rolePerms.delete && (
                       <td className="w-10">
                         <input
@@ -531,63 +592,83 @@ export default function SuppliersPage() {
                           <>
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm"
-                              onClick={() => handleOpenEdit(supplier)}
+                              onClick={() => openDetail(supplier)}
+                              title="查看"
                             >
-                              <Pencil className="w-3.5 h-3.5" />
-                              编辑
+                              <Eye className="w-3.5 h-3.5" />
+                              查看
                             </button>
-                            <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
-                              onClick={() => setDeleteConfirm(supplier)}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              删除
-                            </button>
-                            <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
-                              disabled={submittingId === supplier.id}
-                              onClick={() => handleSubmitApproval(supplier.id)}
-                            >
-                              <Send className="w-3.5 h-3.5" />
-                              {submittingId === supplier.id ? "提交中..." : "提交审批"}
-                            </button>
+                            {canEditFrontend(hasFlow, rolePerms, supplier.approvalStatus, user?.id ?? "", supplier.createdById ?? null, isAdminUser) && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm"
+                                onClick={() => handleOpenEdit(supplier)}
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                                编辑
+                              </button>
+                            )}
+                            {canDeleteFrontend(hasFlow, rolePerms, supplier.approvalStatus, user?.id ?? "", supplier.createdById ?? null, isAdminUser) && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
+                                onClick={() => setDeleteConfirm(supplier)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                删除
+                              </button>
+                            )}
+                            {hasFlow && (
+                              <button
+                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
+                                disabled={submittingId === supplier.id}
+                                onClick={() => handleSubmitApproval(supplier.id, supplier.name)}
+                              >
+                                <Send className="w-3.5 h-3.5" />
+                                {submittingId === supplier.id ? "提交中..." : "提交审批"}
+                              </button>
+                            )}
                           </>
                         ) : supplier.approvalStatus === "审批中" ? (
-                          <>
-                            {canDeleteFrontend(hasFlow, rolePerms, supplier.approvalStatus, user?.id ?? "", supplier.createdById ?? null, isAdminUser) && (
-                              <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
-                                onClick={() => setDeleteConfirm(supplier)}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                删除
-                              </button>
-                            )}
-                            <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm"
-                              onClick={() => openDetail(supplier)}
-                              title="查看详情"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-                          </>
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm"
+                            onClick={() => openDetail(supplier)}
+                            title="查看"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            查看
+                          </button>
                         ) : supplier.approvalStatus === "已批准" ? (
                           <>
-                            {canDeleteFrontend(hasFlow, rolePerms, supplier.approvalStatus, user?.id ?? "", supplier.createdById ?? null, isAdminUser) && (
-                              <button
-                                className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
-                                onClick={() => setDeleteConfirm(supplier)}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                删除
-                              </button>
-                            )}
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm"
                               onClick={() => openDetail(supplier)}
-                              title="查看详情"
+                              title="查看"
                             >
                               <Eye className="w-3.5 h-3.5" />
+                              查看
+                            </button>
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm"
+                              onClick={() => {
+                                setChangeSupplier(supplier);
+                                setChangeForm({
+                                  name: supplier.name,
+                                  supplierType: supplier.supplierType || "",
+                                  status: supplier.status || "当前有效",
+                                  contactPerson: supplier.contactPerson || "",
+                                  phone: supplier.phone || "",
+                                  email: supplier.email || "",
+                                  address: supplier.address || "",
+                                  bankName: supplier.bankName || "",
+                                  bankAccount: supplier.bankAccount || "",
+                                  remark: supplier.remark || "",
+                                  attachmentUrl: supplier.attachmentUrl || "",
+                                });
+                                setChangeError("");
+                                setChangeFormOpen(true);
+                              }}
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                              发起变更
                             </button>
                           </>
                         ) : null}
@@ -604,27 +685,7 @@ export default function SuppliersPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
 
@@ -876,6 +937,168 @@ export default function SuppliersPage() {
       </Modal>
 
       <Modal
+        isOpen={changeFormOpen}
+        onClose={() => setChangeFormOpen(false)}
+        title={`发起供应商变更 - ${changeSupplier?.name || ""}`}
+        maxWidth="600px"
+      >
+        <div className="space-y-4">
+          {changeError && (
+            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
+              {changeError}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                供应商名称 <span className="text-[#78716C]">*</span>
+              </label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="请输入供应商名称"
+                value={changeForm.name}
+                onChange={(e) => handleChangeFormUpdate("name", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">供应商性质</label>
+              <select
+                className="ios-select"
+                value={changeForm.supplierType}
+                onChange={(e) => handleChangeFormUpdate("supplierType", e.target.value)}
+              >
+                <option value="">请选择</option>
+                {supplierTypeOptions.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">供应商状态</label>
+              <select
+                className="ios-select"
+                value={changeForm.status}
+                onChange={(e) => handleChangeFormUpdate("status", e.target.value)}
+              >
+                <option value="当前有效">当前有效</option>
+                <option value="已失效">已失效</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系人</label>
+              <div className="relative">
+                <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                <input
+                  type="text"
+                  className="ios-input pl-10"
+                  placeholder="联系人姓名"
+                  value={changeForm.contactPerson}
+                  onChange={(e) => handleChangeFormUpdate("contactPerson", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">电话</label>
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                <input
+                  type="text"
+                  className="ios-input pl-10"
+                  placeholder="联系电话"
+                  value={changeForm.phone}
+                  onChange={(e) => handleChangeFormUpdate("phone", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">邮箱</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                <input
+                  type="email"
+                  className="ios-input pl-10"
+                  placeholder="邮箱地址"
+                  value={changeForm.email}
+                  onChange={(e) => handleChangeFormUpdate("email", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行信息</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="开户行名称"
+                value={changeForm.bankName}
+                onChange={(e) => handleChangeFormUpdate("bankName", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行账号</label>
+              <input
+                type="text"
+                className="ios-input"
+                placeholder="银行账号"
+                value={changeForm.bankAccount}
+                onChange={(e) => handleChangeFormUpdate("bankAccount", e.target.value)}
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">地址</label>
+              <div className="relative">
+                <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-[#78716C]" />
+                <input
+                  type="text"
+                  className="ios-input pl-10"
+                  placeholder="供应商地址"
+                  value={changeForm.address}
+                  onChange={(e) => handleChangeFormUpdate("address", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
+              <textarea
+                className="ios-input min-h-[80px] resize-none"
+                placeholder="备注信息"
+                value={changeForm.remark}
+                onChange={(e) => handleChangeFormUpdate("remark", e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
+            <button
+              className="ios-btn ios-btn-secondary"
+              onClick={() => setChangeFormOpen(false)}
+            >
+              取消
+            </button>
+            <button
+              className="ios-btn ios-btn-primary"
+              onClick={handleChangeSubmit}
+              disabled={changeSaving}
+            >
+              {changeSaving ? "提交中..." : "提交变更申请"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
         isOpen={!!detailSupplier}
         onClose={() => setDetailSupplier(null)}
         title="供应商审批详情"
@@ -888,36 +1111,7 @@ export default function SuppliersPage() {
             businessType="supplier"
             businessId={detailSupplier.id}
           >
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">供应商名称</p>
-                <p className="text-[14px] font-semibold">{detailSupplier.name}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">供应商性质</p>
-                <p className="text-[14px] font-semibold">{detailSupplier.supplierType || "-"}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">审批状态</p>
-                <span className={`ios-badge ${approvalStatusConfig[detailSupplier.approvalStatus]?.color || "ios-badge-gray"}`}>
-                  {approvalStatusConfig[detailSupplier.approvalStatus]?.label || detailSupplier.approvalStatus}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">供应商状态</p>
-                <span className={`ios-badge ${statusColorMap[detailSupplier.status || "当前有效"]}`}>
-                  {detailSupplier.status || "当前有效"}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">联系人</p>
-                <p className="text-[14px] font-semibold">{detailSupplier.contactPerson || "-"}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">电话</p>
-                <p className="text-[14px] font-semibold">{detailSupplier.phone || "-"}</p>
-              </div>
-            </div>
+            <SupplierDetailCard data={detailSupplier} />
           </DetailPageLayout>
         )}
       </Modal>

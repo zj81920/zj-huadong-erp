@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
           nodeOrder: node.nodeOrder,
           nodeName: node.nodeName,
           approverRole: node.approverRole,
+          nodeType: node.nodeType || "approval",
           isActive: true,
         })),
       });

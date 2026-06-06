@@ -77,4 +77,42 @@ test.describe('合同变更单完整流程', () => {
     const form = page.locator('form, [class*="card"]');
     await expect(form.first()).toBeVisible({ timeout: 5000 });
   });
+
+  test('合同变更单归档流程', async ({ page }) => {
+    await login(page);
+
+    // 1. 进入变更单列表
+    await page.goto(`${BASE_URL}/contracts/change-orders`);
+    await page.waitForLoadState('networkidle');
+
+    // 2. 找到"待归档"或"已批准"的变更单
+    const pendingArchiveRow = page.locator('tr').filter({ hasText: '待归档' }).first();
+    const approvedRow = page.locator('tr').filter({ hasText: '已批准' }).first();
+
+    const targetRow = (await pendingArchiveRow.count()) > 0 ? pendingArchiveRow :
+      (await approvedRow.count()) > 0 ? approvedRow : null;
+
+    if (targetRow) {
+      // 3. 点击归档
+      const archiveBtn = targetRow.locator('button:has-text("归档")');
+      if (await archiveBtn.count() > 0) {
+        await archiveBtn.click();
+        await page.waitForLoadState('networkidle');
+
+        // 4. 确认归档弹窗显示
+        const modal = page.locator('[class*="fixed"]').filter({ hasText: '变更单归档' });
+        if (await modal.count() > 0) {
+          // 5. 点击确认归档（不上传文件）
+          const confirmBtn = page.locator('button:has-text("确认归档")');
+          if (await confirmBtn.count() > 0) {
+            await confirmBtn.click();
+            await page.waitForLoadState('networkidle');
+          }
+        }
+      }
+    }
+
+    // 6. 验证列表仍然正常渲染
+    await expect(page.locator('table')).toBeVisible({ timeout: 5000 });
+  });
 });

@@ -24,7 +24,11 @@ import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { IncomeContractDetailCard } from '@/components/detail-cards';
 import { useRouter } from "next/navigation";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
 
 interface Customer {
   id: string;
@@ -96,13 +100,6 @@ interface ContractFormData {
   organizationId: string;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 const emptyForm: ContractFormData = {
   contractNo: "",
   projectSourceId: "",
@@ -142,12 +139,7 @@ export default function IncomeContractsPage() {
   const hasFlow = user?.moduleFlowStatus?.["income_contract"] ?? false;
   const { configured: flowConfigured } = useFlowConfigured("income_contract");
   const [contracts, setContracts] = useState<IncomeContract[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, pageSize, pagination, setPage, setPageSize, setPagination } = usePagination();
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -233,8 +225,8 @@ export default function IncomeContractsPage() {
       if (filterStatus) params.set("status", filterStatus);
       if (filterProject) params.set("projectSourceId", filterProject);
       if (filterOrg) params.set("organizationId", filterOrg);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/income-contracts?${params}`);
       const json = await res.json();
@@ -248,7 +240,7 @@ export default function IncomeContractsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterStatus, filterProject, filterOrg, pagination.page, pagination.pageSize]);
+  }, [search, filterStatus, filterProject, filterOrg, page, pageSize]);
 
   useEffect(() => {
     fetchContracts();
@@ -605,10 +597,11 @@ export default function IncomeContractsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          businessType: "income_contract",
-          businessId: contract.id,
-          flowLevel: "common",
-        }),
+        businessType: "income_contract",
+        businessId: contract.id,
+        businessTitle: contract.contractNo,
+        flowLevel: "common",
+      }),
       });
       const json = await res.json();
       if (res.ok) {
@@ -745,7 +738,7 @@ export default function IncomeContractsPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -755,7 +748,7 @@ export default function IncomeContractsPage() {
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部状态</option>
@@ -771,7 +764,7 @@ export default function IncomeContractsPage() {
             value={filterProject}
             onChange={(e) => {
               setFilterProject(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部项目</option>
@@ -787,7 +780,7 @@ export default function IncomeContractsPage() {
             value={filterOrg || ''}
             onChange={(e) => {
               setFilterOrg(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部主体</option>
@@ -799,7 +792,7 @@ export default function IncomeContractsPage() {
           <div className="ml-auto text-[13px] text-[#78716C]">
             共{" "}
             <span className="font-semibold text-[#1C1917]">
-              {pagination.total}
+              {pagination?.total ?? 0}
             </span>{" "}
             条记录
           </div>
@@ -840,7 +833,7 @@ export default function IncomeContractsPage() {
               </thead>
               <tbody>
                 {contracts.map((contract) => (
-                  <tr key={contract.id} className={isSelected(contract.id) ? "bg-[#1C1917]/5" : ""}>
+                  <tr key={contract.id} className={`${isSelected(contract.id) ? "bg-[#1C1917]/5" : ""} ${getRowStatusClass(contract.status)}`}>
                     {rolePerms.delete && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(contract.id)} onChange={() => toggleSelect(contract.id)} /></td>}
                     <td>
                       <div className="flex items-center gap-2">
@@ -946,6 +939,45 @@ export default function IncomeContractsPage() {
                               关闭
                             </button>
                           )}
+                        {contract.status === "已批准" && (
+                          <>
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
+                              onClick={() => {
+                                setDetailContract(contract);
+                                setContractInvoices([]);
+                                setInvoiceError("");
+                                setInvoiceForm({
+                                  invoiceNo: "",
+                                  invoiceCode: "",
+                                  invoiceType: "增值税专用发票",
+                                  invoiceDate: new Date().toISOString().split("T")[0],
+                                  amount: "",
+                                  taxRate: "6",
+                                  taxAmount: "",
+                                  totalAmount: "",
+                                  buyerName: contract.customer?.name || "",
+                                  buyerTaxNo: "",
+                                  remark: "",
+                                  attachments: [],
+                                });
+                                setInvoiceUploadName("");
+                                setShowInvoiceModal(true);
+                              }}
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              开票
+                            </button>
+                          </>
+                        )}
+                        {contract.status === "合同归档" && (
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917]!"
+                            onClick={() => router.push(`/contracts/change-orders/new?contractType=income_contract&contractId=${contract.id}`)}
+                          >
+                            发起变更
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -953,31 +985,11 @@ export default function IncomeContractsPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() =>
-                    setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
-                  }
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() =>
-                    setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
-                  }
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar
+              pagination={pagination}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </div>
         )}
 
@@ -1429,81 +1441,7 @@ export default function IncomeContractsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">客户名称</p>
-                <p className="text-[14px] font-medium text-[#1C1917] flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#78716C]" />
-                  {detailContract.customer.name}
-                </p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">合同金额</p>
-                <p className="text-[14px] font-bold text-[#1C1917]">
-                  {formatAmount(detailContract.totalAmount)}
-                </p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">合同税率</p>
-                <p className="text-[14px] text-[#1C1917]">
-                  {detailContract.taxRate || "-"}
-                </p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">计价方式</p>
-                <p className="text-[14px] text-[#1C1917]">
-                  {detailContract.pricingMethod || "-"}
-                </p>
-              </div>
-              {detailContract.signedDate && (
-                <div>
-                  <p className="text-[12px] text-[#78716C] mb-0.5">签订日期</p>
-                  <p className="text-[14px] text-[#1C1917]">
-                    {formatDate(detailContract.signedDate)}
-                  </p>
-                </div>
-              )}
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#1C1917]">
-                  {formatDate(detailContract.createdAt)}
-                </p>
-              </div>
-              {detailContract.customer.contactPerson && (
-                <div>
-                  <p className="text-[12px] text-[#78716C] mb-0.5">联系人</p>
-                  <p className="text-[14px] text-[#1C1917]">
-                    {detailContract.customer.contactPerson}
-                  </p>
-                </div>
-              )}
-              {detailContract.customer.phone && (
-                <div>
-                  <p className="text-[12px] text-[#78716C] mb-0.5">联系电话</p>
-                  <p className="text-[14px] text-[#1C1917]">
-                    {detailContract.customer.phone}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {detailContract.contractSummary && (
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">合同概要</p>
-                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">
-                  {detailContract.contractSummary}
-                </p>
-              </div>
-            )}
-
-            {detailContract.paymentTerms && (
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">付款方式</p>
-                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">
-                  {detailContract.paymentTerms}
-                </p>
-              </div>
-            )}
+            <IncomeContractDetailCard data={detailContract} />
 
             {detailContract.scannedUrl && (
               <div>
@@ -1565,83 +1503,12 @@ export default function IncomeContractsPage() {
               );
             })()}
 
-            {detailContract.splitStages &&
-              Array.isArray(detailContract.splitStages) &&
-              detailContract.splitStages.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[13px] font-semibold text-[#1C1917]">
-                      分期付款 ({detailContract.splitStages.length}期)
-                    </p>
-                    <span className="text-[13px] font-bold text-[#1C1917]">
-                      合计{" "}
-                      {formatAmount(
-                        detailContract.splitStages.reduce((sum, s) => {
-                          const val =
-                            typeof s.amount === "string"
-                              ? parseFloat(s.amount)
-                              : s.amount;
-                          return sum + (isNaN(val) ? 0 : val);
-                        }, 0)
-                      )}
-                    </span>
-                  </div>
-                  <table className="ios-table text-[13px]">
-                    <thead>
-                      <tr>
-                        <th>阶段</th>
-                        <th>名称</th>
-                        <th>金额</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailContract.splitStages.map((stage, index) => (
-                        <tr key={index}>
-                          <td className="text-[#78716C]">P{index + 1}</td>
-                          <td>{stage.name || "-"}</td>
-                          <td className="font-semibold">
-                            {formatAmount(stage.amount)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#78716C]" />
-                  <p className="text-[13px] font-semibold text-[#1C1917]">
-                    开票登记 ({contractInvoices.length})
-                  </p>
-                </div>
-                <button
-                  className="ios-btn ios-btn-primary ios-btn-sm"
-                  onClick={() => {
-                    setInvoiceError("");
-                    setInvoiceForm({
-                      invoiceNo: "",
-                      invoiceCode: "",
-                      invoiceType: "增值税专用发票",
-                      invoiceDate: new Date().toISOString().split("T")[0],
-                      amount: "",
-                      taxRate: "6",
-                      taxAmount: "",
-                      totalAmount: "",
-                      buyerName: detailContract.customer?.name || "",
-                      buyerTaxNo: "",
-                      remark: "",
-                      attachments: [],
-                    });
-                    setInvoiceUploadName("");
-                    setShowInvoiceModal(true);
-                  }}
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  开票
-                </button>
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="w-4 h-4 text-[#78716C]" />
+                <p className="text-[13px] font-semibold text-[#1C1917]">
+                  开票登记 ({contractInvoices.length})
+                </p>
               </div>
 
               {contractInvoices.length > 0 ? (
@@ -1696,16 +1563,6 @@ export default function IncomeContractsPage() {
               )}
             </div>
 
-            {(detailContract.status === "已批准" || detailContract.status === "合同归档" || detailContract.status === "生效") && (
-              <div className="flex justify-end pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary"
-                  onClick={() => router.push(`/contracts/change-orders/new?contractType=income_contract&contractId=${detailContract.id}`)}
-                >
-                  发起变更
-                </button>
-              </div>
-            )}
           </DetailPageLayout>
         ) : (
           <div className="text-center py-10 text-[#78716C]">

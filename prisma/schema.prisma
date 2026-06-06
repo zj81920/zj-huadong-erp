@@ -126,7 +126,7 @@ model UserRole {
 
 model Supplier {
   id               String   @id @default(cuid())
-  name             String
+  name             String   @unique
   supplierType     String   @default("企业") @map("supplier_type")
   status           String   @default("当前有效") @map("status")
   contactPerson    String?  @map("contact_person")
@@ -148,8 +148,34 @@ model Supplier {
   expenseContracts  ExpenseContract[]
   outsourcingTasks  OutsourcingTask[]
   supplierQuotes    SupplierQuote[]
+  changes           SupplierChange[]
 
   @@map("suppliers")
+}
+
+model SupplierChange {
+  id              String   @id @default(cuid())
+  supplierId      String   @map("supplier_id")
+  name            String
+  supplierType    String   @map("supplier_type")
+  status          String
+  contactPerson   String?  @map("contact_person")
+  phone           String?
+  email           String?
+  address         String?
+  bankName        String?  @map("bank_name")
+  bankAccount     String?  @map("bank_account")
+  remark          String?
+  attachmentUrl   String?  @map("attachment_url")
+  approvalStatus  String   @default("草稿") @map("approval_status")
+  approvalInstanceId String? @map("approval_instance_id")
+  createdById     String?  @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+
+  @@map("supplier_changes")
 }
 
 model Customer {
@@ -205,6 +231,7 @@ model ProjectLead {
   updatedAt             DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
   createdById         String?   @map("created_by")
+  organizationId     String?   @map("organization_id")
 
   customer   Customer     @relation(fields: [customerId], references: [id])
   project    Project?
@@ -271,7 +298,7 @@ model Project {
   id                String    @id @default(cuid())
   projectSourceId   String    @unique @map("project_source_id")
   projectCode       String    @unique @map("project_code")
-  name              String
+  name              String    @unique
   customerId        String    @map("customer_id")
   type              String?
   address           String?
@@ -786,7 +813,6 @@ model LoanRequest {
   reason             String?  @db.Text
   expectedReturnDate DateTime @map("expected_return_date")
   status             String   @default("草稿")
-  approvalInstanceId String?  @map("approval_instance_id")
   repaidAmount       Decimal  @default(0) @map("repaid_amount") @db.Decimal(15, 2)
   remainingAmount    Decimal  @db.Decimal(15, 2) @map("remaining_amount")
   createdAt          DateTime @default(now()) @map("created_at")
@@ -1216,7 +1242,7 @@ model SalaryBatchItem {
 model ApprovalFlowDefinition {
   id           String   @id @default(cuid())
   businessType String   @map("business_type")
-  flowLevel    String   @default("project") @map("flow_level")
+  flowLevel    String   @default("common") @map("flow_level")
   nodeOrder    Int      @map("node_order")
   nodeName     String   @map("node_name")
   approverRole String   @map("approver_role")
@@ -1233,11 +1259,13 @@ model ApprovalInstance {
   id           String   @id @default(cuid())
   businessType String   @map("business_type")
   businessId   String   @map("business_id")
-  flowLevel    String   @default("project") @map("flow_level")
+  flowLevel    String   @default("common") @map("flow_level")
   currentNode  Int      @default(0) @map("current_node")
   status       String   @default("审批中")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  businessTitle String? @map("business_title")
+  parentInstanceId String? @map("parent_instance_id")
   lastModifiedBy     String?   @map("last_modified_by")
 
   actions ApprovalAction[]
@@ -1443,7 +1471,7 @@ model Organization {
 
 model InterOrgContract {
   id                  String    @id @default(cuid())
-  contractNo          String    @map("contract_no")
+  contractNo          String    @unique @map("contract_no")
   contractName        String    @map("contract_name")
   fromOrgId           String    @map("from_org_id")
   toOrgId             String    @map("to_org_id")

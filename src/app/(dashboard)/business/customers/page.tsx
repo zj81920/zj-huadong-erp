@@ -15,9 +15,11 @@ import {
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
-import { getUserModulePerms } from "@/lib/types/permissions";
+import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface Customer {
   id: string;
@@ -46,13 +48,6 @@ interface CustomerFormData {
   customerGrade: string;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 const emptyForm: CustomerFormData = {
   name: "",
   address: "",
@@ -77,15 +72,12 @@ const industryLabelMap: Record<string, string> = {
 
 export default function CustomersPage() {
   const { user } = useAuth();
-  const rolePerms = getUserModulePerms(user, "customers");
+  const rolePerms = getUserModulePerms(user, "customer");
+  const isAdminUser = user?.roles?.some((r: any) => r.code === "admin") || user?.username === "admin";
+  const hasFlow = false;
 
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -112,8 +104,8 @@ export default function CustomersPage() {
       if (search) params.set("search", search);
       if (filterIndustry) params.set("industryType", filterIndustry);
       if (filterGrade) params.set("customerGrade", filterGrade);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/customers?${params}`);
       const json = await res.json();
@@ -127,7 +119,7 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterIndustry, filterGrade, pagination.page, pagination.pageSize]);
+  }, [search, filterIndustry, filterGrade, page, pageSize]);
 
   useEffect(() => {
     fetchCustomers();
@@ -253,7 +245,7 @@ export default function CustomersPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -263,7 +255,7 @@ export default function CustomersPage() {
             value={filterIndustry}
             onChange={(e) => {
               setFilterIndustry(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部行业</option>
@@ -276,7 +268,7 @@ export default function CustomersPage() {
             value={filterGrade}
             onChange={(e) => {
               setFilterGrade(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部等级</option>
@@ -286,7 +278,7 @@ export default function CustomersPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录
           </div>
         </div>
 
@@ -365,20 +357,24 @@ export default function CustomersPage() {
                           <Eye className="w-3.5 h-3.5" />
                           详情
                         </button>
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm"
-                          onClick={() => handleOpenEdit(customer)}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                          编辑
-                        </button>
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
-                          onClick={() => setDeleteConfirm(customer)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          删除
-                        </button>
+                        {canEditFrontend(hasFlow, rolePerms, "", user?.id ?? "", customer.createdById ?? null, isAdminUser) && (
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm"
+                            onClick={() => handleOpenEdit(customer)}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                            编辑
+                          </button>
+                        )}
+                        {canDeleteFrontend(hasFlow, rolePerms, "", user?.id ?? "", customer.createdById ?? null, isAdminUser) && (
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
+                            onClick={() => setDeleteConfirm(customer)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            删除
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td className="text-[#78716C] text-[12px] whitespace-nowrap">
@@ -392,27 +388,7 @@ export default function CustomersPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
 

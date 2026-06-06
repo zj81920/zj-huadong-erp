@@ -86,9 +86,9 @@ const navSections: NavSection[] = [
     icon: <UserCircle className="w-4.5 h-4.5" />,
     items: [
       { label: "员工档案", href: "/hr/employees" },
-      { label: "办公用品", href: "/admin/supplies" },
-      { label: "证照管理", href: "/admin/certificates" },
-      { label: "印章管理", href: "/admin/seals" },
+      { label: "办公用品", href: "/hr/supplies" },
+      { label: "证照管理", href: "/hr/certificates" },
+      { label: "印章管理", href: "/hr/seals" },
     ],
   },
   {

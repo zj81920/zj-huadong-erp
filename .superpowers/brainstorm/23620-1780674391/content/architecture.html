@@ -1,0 +1,59 @@
+<h2>整体架构</h2>
+<p class="subtitle">新增 3 个文件，改造 29 个页面 + 3 个 API</p>
+
+<div class="section">
+  <h3>新增文件</h3>
+  <table class="mock-content" style="width:100%;border-collapse:collapse;">
+    <tr><td style="padding:6px 12px;font-family:monospace;">src/lib/types/pagination.ts</td><td style="padding:6px 12px;">PaginationInfo、PaginationParams 类型定义</td></tr>
+    <tr><td style="padding:6px 12px;font-family:monospace;">src/hooks/usePagination.ts</td><td style="padding:6px 12px;">分页状态管理 hook</td></tr>
+    <tr><td style="padding:6px 12px;font-family:monospace;">src/components/shared/PaginationBar.tsx</td><td style="padding:6px 12px;">分页栏 UI 组件</td></tr>
+  </table>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">usePagination Hook 用法（页面侧）</div>
+  <div class="mockup-body">
+    <pre style="font-size:13px;line-height:1.6;margin:0;background:#f8f9fa;padding:12px;border-radius:8px;">
+<span style="color:#999">// 每个列表页面只需这样用</span>
+<span style="color:#6f42c1">const</span> { page, pageSize, <span style="color:#6f42c1">set</span>Page, <span style="color:#6f42c1">set</span>PageSize, pagination, <span style="color:#6f42c1">set</span>Pagination }
+  = <span style="color:#d63384">usePagination</span>({ defaultPageSize: <span style="color:#0550ae">20</span> });
+
+<span style="color:#999">// fetch 数据时传参数</span>
+<span style="color:#6f42c1">const</span> res = <span style="color:#6f42c1">await</span> <span style="color:#d63384">fetch</span>(<span style="color:#0a3069">`/api/items?page=</span><span style="color:#0550ae">${page}</span><span style="color:#0a3069">&pageSize=</span><span style="color:#0550ae">${pageSize}</span><span style="color:#0a3069">`</span>);
+<span style="color:#6f42c1">const</span> { pagination } = <span style="color:#6f42c1">await</span> res.<span style="color:#d63384">json</span>();
+<span style="color:#d63384">setPagination</span>(pagination);  <span style="color:#999">// 更新总数等信息</span>
+
+<span style="color:#999">// 筛选条件变化时自动重置到第1页</span>
+<span style="color:#6f42c1">const</span> <span style="color:#7950f2">handleFilterChange</span> = () => {
+  <span style="color:#d63384">setFilters</span>(newFilters);
+  <span style="color:#d63384">setPage</span>(<span style="color:#0550ae">1</span>);  
+};</pre>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:24px;">
+  <div class="mockup-header">PaginationBar 组件 UI</div>
+  <div class="mockup-body" style="padding:16px;background:white;border-radius:8px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:14px;color:#374151;">
+      <span style="color:#6b7280;">共 <strong style="color:#111827;">156</strong> 条记录</span>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <span class="mock-button" style="opacity:0.4;">&laquo; 上一页</span>
+        <span style="padding:4px 10px;background:#e5e7eb;border-radius:6px;">1</span>
+        <span style="padding:4px 10px;border-radius:6px;">2</span>
+        <span style="padding:4px 10px;border-radius:6px;">3</span>
+        <span style="padding:4px 10px;">...</span>
+        <span style="padding:4px 10px;border-radius:6px;">8</span>
+        <span class="mock-button">下一页 &raquo;</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="color:#6b7280;">每页</span>
+        <select style="border:1px solid #d1d5db;border-radius:6px;padding:4px 8px;">
+          <option>20</option>
+          <option>50</option>
+          <option>100</option>
+        </select>
+        <span style="color:#6b7280;">条</span>
+      </div>
+    </div>
+  </div>
+</div>

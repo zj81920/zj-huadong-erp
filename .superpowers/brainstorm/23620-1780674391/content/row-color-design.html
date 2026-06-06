@@ -1,0 +1,90 @@
+<h2>列表行底色设计方案</h2>
+<p class="subtitle">柔和整行底色 + 集中颜色映射 + 通用 row class</p>
+
+<div class="section">
+  <h3>颜色映射（全局集中）</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <tr style="background:#f3f4f6;"><td style="padding:6px 10px;font-weight:600;">状态</td><td style="padding:6px 10px;font-weight:600;">行底色</td><td style="padding:6px 10px;font-weight:600;">CSS Class</td></tr>
+    <tr><td style="padding:4px 10px;">草稿</td><td style="padding:4px 10px;background:#fafaf9;">#FAFAF9 默认白</td><td style="padding:4px 10px;font-family:monospace;">.row-status-draft</td></tr>
+    <tr><td style="padding:4px 10px;">审批中</td><td style="padding:4px 10px;background:#fef9e7;">#FEF9E7 极淡黄</td><td style="padding:4px 10px;font-family:monospace;">.row-status-pending</td></tr>
+    <tr><td style="padding:4px 10px;">已批准</td><td style="padding:4px 10px;background:#f0fdf4;">#F0FDF4 极淡绿</td><td style="padding:4px 10px;font-family:monospace;">.row-status-approved</td></tr>
+    <tr><td style="padding:4px 10px;">已驳回</td><td style="padding:4px 10px;background:#fef2f2;">#FEF2F2 极淡红</td><td style="padding:4px 10px;font-family:monospace;">.row-status-rejected</td></tr>
+    <tr><td style="padding:4px 10px;">已归档/已生效</td><td style="padding:4px 10px;background:#f0f4ff;">#F0F4FF 极淡蓝</td><td style="padding:4px 10px;font-family:monospace;">.row-status-archived</td></tr>
+    <tr><td style="padding:4px 10px;">逾期</td><td style="padding:4px 10px;background:#fff7ed;">#FFF7ED 极淡橙</td><td style="padding:4px 10px;font-family:monospace;">.row-status-overdue</td></tr>
+  </table>
+  <p style="font-size:12px;color:#6b7280;margin-top:6px;">各业务特有状态（如「当前有效」「执行」「未收」等）按语义归类到上述 6 种中。</p>
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <h3>实现方式</h3>
+  <p>只需 <strong>2 个文件改动就可以覆盖全部页面</strong>：</p>
+
+  <div style="background:#f8f9fa;padding:12px;border-radius:8px;margin-bottom:12px;">
+    <strong style="font-family:monospace;">src/lib/status-colors.ts</strong> — 集中映射
+    <pre style="font-size:12px;background:#1e293b;color:#e2e8f0;padding:10px;border-radius:6px;margin:8px 0 0 0;">
+<span style="color:#94a3b8;">// 状态 → row class 映射（全局唯一）</span>
+<span style="color:#c084fc">export const</span> <span style="color:#38bdf8">STATUS_ROW_COLORS</span>: <span style="color:#fbbf24">Record</span>&lt;<span style="color:#fbbf24">string</span>, <span style="color:#fbbf24">string</span>&gt; = {
+  <span style="color:#a5d6ff">"草稿"</span>:     <span style="color:#a5d6ff">"row-status-draft"</span>,
+  <span style="color:#a5d6ff">"审批中"</span>:   <span style="color:#a5d6ff">"row-status-pending"</span>,
+  <span style="color:#a5d6ff">"已批准"</span>:   <span style="color:#a5d6ff">"row-status-approved"</span>,
+  <span style="color:#a5d6ff">"已驳回"</span>:   <span style="color:#a5d6ff">"row-status-rejected"</span>,
+  <span style="color:#a5d6ff">"已归档"</span>:   <span style="color:#a5d6ff">"row-status-archived"</span>,
+  <span style="color:#a5d6ff">"合同归档"</span>: <span style="color:#a5d6ff">"row-status-archived"</span>,
+  <span style="color:#a5d6ff">"已生效"</span>:   <span style="color:#a5d6ff">"row-status-archived"</span>,
+  <span style="color:#94a3b8;">// ... 其他状态归类</span>
+};
+
+<span style="color:#94a3b8;">// 工具函数：根据状态获取行 class</span>
+<span style="color:#c084fc">export function</span> <span style="color:#38bdf8">getRowStatusClass</span>(status: <span style="color:#fbbf24">string</span> | <span style="color:#fbbf24">null</span>): <span style="color:#fbbf24">string</span> {
+  <span style="color:#c084fc">return</span> status ? <span style="color:#38bdf8">(</span>STATUS_ROW_COLORS[status] ?? <span style="color:#a5d6ff">""</span><span style="color:#38bdf8">)</span> : <span style="color:#a5d6ff">""</span>;
+}
+</pre>
+  </div>
+
+  <div style="background:#f8f9fa;padding:12px;border-radius:8px;">
+    <strong style="font-family:monospace;">src/app/globals.css</strong> — 新增 6 个 row class
+    <pre style="font-size:12px;background:#1e293b;color:#e2e8f0;padding:10px;border-radius:6px;margin:8px 0 0 0;">
+<span style="color:#94a3b8;">/* 行底色区分 */</span>
+<span style="color:#c084fc">.row-status-pending</span>  { <span style="color:#67e8f9">background</span>: <span style="color:#a5d6ff">#FEF9E7</span>; } <span style="color:#94a3b8;">/* 审批中 - 极淡黄 */</span>
+<span style="color:#c084fc">.row-status-approved</span> { <span style="color:#67e8f9">background</span>: <span style="color:#a5d6ff">#F0FDF4</span>; } <span style="color:#94a3b8;">/* 已批准 - 极淡绿 */</span>
+<span style="color:#c084fc">.row-status-rejected</span> { <span style="color:#67e8f9">background</span>: <span style="color:#a5d6ff">#FEF2F2</span>; } <span style="color:#94a3b8;">/* 已驳回 - 极淡红 */</span>
+<span style="color:#c084fc">.row-status-archived</span> { <span style="color:#67e8f9">background</span>: <span style="color:#a5d6ff">#F0F4FF</span>; } <span style="color:#94a3b8;">/* 已归档 - 极淡蓝 */</span>
+<span style="color:#c084fc">.row-status-overdue</span>  { <span style="color:#67e8f9">background</span>: <span style="color:#a5d6ff">#FFF7ED</span>; } <span style="color:#94a3b8;">/* 逾期 - 极淡橙 */</span>
+<span style="color:#c084fc">.row-status-draft</span>    { <span style="color:#67e8f9">background</span>: <span style="color:#a5d6ff">#FAFAF9</span>; } <span style="color:#94a3b8;">/* 草稿 - 默认白 */</span>
+</pre>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <h3>页面使用（一行代码）</h3>
+  <pre style="font-size:12px;background:#1e293b;color:#e2e8f0;padding:10px;border-radius:6px;margin:0;">
+<span style="color:#94a3b8;">// 在每个列表页面中，给 &lt;tr&gt; 加一个 class</span>
+{items.<span style="color:#38bdf8">map</span>(item =&gt; (
+  &lt;<span style="color:#fbbf24">tr</span> <span style="color:#67e8f9">key</span>={item.<span style="color:#38bdf8">id</span>} <span style="color:#67e8f9">className</span>={<span style="color:#38bdf8">getRowStatusClass</span>(item.<span style="color:#38bdf8">status</span>)}&gt;
+    ...
+  &lt;/<span style="color:#fbbf24">tr</span>&gt;
+))}
+</pre>
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <h3>特殊场景</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <tr style="background:#f3f4f6;"><td style="padding:6px 10px;font-weight:600;">场景</td><td style="padding:6px 10px;font-weight:600;">处理方式</td></tr>
+    <tr><td style="padding:4px 10px;">无 status 模块</td><td style="padding:4px 10px;">不传 className，白色默认</td></tr>
+    <tr><td style="padding:4px 10px;">待办-待处理</td><td style="padding:4px 10px;">按优先级：紧急→淡红、重要→淡黄、普通→白</td></tr>
+    <tr><td style="padding:4px 10px;">待办-已处理</td><td style="padding:4px 10px;">按审批状态正常映射</td></tr>
+    <tr><td style="padding:4px 10px;">hover 效果</td><td style="padding:4px 10px;">保持原有 hover 浅灰，叠加在底色上</td></tr>
+  </table>
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <h3>改动范围</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <tr style="background:#f3f4f6;"><td style="padding:6px 10px;font-weight:600;">文件</td><td style="padding:6px 10px;font-weight:600;">改动</td></tr>
+    <tr><td style="padding:4px 10px;font-family:monospace;">src/lib/status-colors.ts</td><td style="padding:4px 10px;">新增文件，集中映射</td></tr>
+    <tr><td style="padding:4px 10px;font-family:monospace;">src/app/globals.css</td><td style="padding:4px 10px;">新增 6 个 row-status-* class</td></tr>
+    <tr><td style="padding:4px 10px;font-family:monospace;">各列表页面 page.tsx</td><td style="padding:4px 10px;">&lt;tr&gt; 加 className=getRowStatusClass()</td></tr>
+    <tr><td style="padding:4px 10px;font-family:monospace;">approvals/page.tsx</td><td style="padding:4px 10px;">待处理按优先级、已处理按状态</td></tr>
+  </table>
+</div>

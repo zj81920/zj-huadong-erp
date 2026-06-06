@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Modal from "@/components/Modal";
 
-const CONTRACT_MODULES = ["income_contract", "expense_contract"];
+const CONTRACT_MODULES = ["income_contract", "expense_contract", "inter_org_contract", "contract_change_order"];
 
 const FINANCE_MODULES = [
   "non_contract_expense", "payment_application", "expense_report",
@@ -83,11 +83,13 @@ export default function ApprovalFlowPage() {
   const currentModule = moduleGroups.flatMap(g => g.modules).find((m) => m.type === selectedModule);
 
   useEffect(() => {
-    // 从 API 加载模块列表
-    fetch("/api/approval-module-config")
-      .then(r => r.json())
-      .then(json => {
-        const data: { moduleKey: string; moduleName: string; groupName: string; hasFlow: boolean }[] = json.data || [];
+    // 从 API 加载模块列表和流程数据
+    (async () => {
+      try {
+        // 1. 加载模块列表
+        const modRes = await fetch("/api/approval-module-config");
+        const modJson = await modRes.json();
+        const data: { moduleKey: string; moduleName: string; groupName: string; hasFlow: boolean }[] = modJson.data || [];
         const grouped: Record<string, { type: string; name: string }[]> = {};
         for (const m of data) {
           if (!grouped[m.groupName]) grouped[m.groupName] = [];
@@ -95,11 +97,41 @@ export default function ApprovalFlowPage() {
         }
         const groups = Object.entries(grouped).map(([label, modules]) => ({ label, modules }));
         setModuleGroups(groups);
-        if (data.length > 0 && !selectedModule) {
-          setSelectedModule(data[0].moduleKey);
+
+        const firstModule = data.length > 0 ? data[0].moduleKey : "";
+        if (firstModule) {
+          setSelectedModule(firstModule);
         }
-      })
-      .catch(() => {});
+
+        // 2. 加载所有模块的流程数据
+        const flowRes = await fetch("/api/approval-flows?flowLevel=common");
+        if (flowRes.ok) {
+          const flowJson = await flowRes.json();
+          const records: Array<{ businessType: string; nodeOrder: number; nodeName: string; approverRole: string; nodeType?: string }> = flowJson.data || [];
+          const flowGrouped: Record<string, Array<{ nodeOrder: number; nodeName: string; approverRole: string; nodeType?: string }>> = {};
+          for (const rec of records) {
+            if (!flowGrouped[rec.businessType]) flowGrouped[rec.businessType] = [];
+            flowGrouped[rec.businessType].push({
+              nodeOrder: rec.nodeOrder,
+              nodeName: rec.nodeName,
+              approverRole: rec.approverRole,
+              nodeType: rec.nodeType,
+            });
+          }
+          const mapped: SavedFlows = {};
+          for (const [bt, flowNodes] of Object.entries(flowGrouped)) {
+            mapped[bt] = flowNodes.sort((a, b) => a.nodeOrder - b.nodeOrder).map((n) => ({
+              ...n,
+              nodeType: n.nodeType as "approval" | "archive" | "payment" | undefined,
+            }));
+          }
+          setSavedFlows(mapped);
+          // 用第一个模块的 key 正确设置 nodes
+          const initial = mapped[firstModule];
+          setNodes(initial ? initial.map((n) => ({ ...n })) : []);
+        }
+      } catch {}
+    })();
   }, []);
 
   useEffect(() => {
@@ -120,40 +152,37 @@ export default function ApprovalFlowPage() {
     loadRoles();
   }, []);
 
-  useEffect(() => {
-    async function fetchFlows() {
-      try {
-        const res = await fetch("/api/approval-flows?flowLevel=common");
-        if (res.ok) {
-          const json = await res.json();
-          const records: Array<{ businessType: string; nodeOrder: number; nodeName: string; approverRole: string; nodeType?: string }> = json.data || [];
-          const grouped: Record<string, Array<{ nodeOrder: number; nodeName: string; approverRole: string; nodeType?: string }>> = {};
-          for (const rec of records) {
-            if (!grouped[rec.businessType]) grouped[rec.businessType] = [];
-            grouped[rec.businessType].push({
-              nodeOrder: rec.nodeOrder,
-              nodeName: rec.nodeName,
-              approverRole: rec.approverRole,
-              nodeType: rec.nodeType,
-            });
-          }
-          const mapped: SavedFlows = {};
-          for (const [bt, nodes] of Object.entries(grouped)) {
-            mapped[bt] = nodes.sort((a, b) => a.nodeOrder - b.nodeOrder).map((n) => ({
-              ...n,
-              nodeType: n.nodeType as "approval" | "archive" | "payment" | undefined,
-            }));
-          }
-          setSavedFlows(mapped);
-          // 初始化当前选中模块的节点
-          const initial = mapped[selectedModule];
-          setNodes(initial ? initial.map((n) => ({ ...n })) : []);
+  // 重新加载所有模块的流程数据，并刷新当前选中模块的显示
+  const refreshFlows = async (currentModule: string) => {
+    try {
+      const res = await fetch("/api/approval-flows?flowLevel=common");
+      if (res.ok) {
+        const json = await res.json();
+        const records: Array<{ businessType: string; nodeOrder: number; nodeName: string; approverRole: string; nodeType?: string }> = json.data || [];
+        const grouped: Record<string, Array<{ nodeOrder: number; nodeName: string; approverRole: string; nodeType?: string }>> = {};
+        for (const rec of records) {
+          if (!grouped[rec.businessType]) grouped[rec.businessType] = [];
+          grouped[rec.businessType].push({
+            nodeOrder: rec.nodeOrder,
+            nodeName: rec.nodeName,
+            approverRole: rec.approverRole,
+            nodeType: rec.nodeType,
+          });
         }
-      } catch {
+        const mapped: SavedFlows = {};
+        for (const [bt, flowNodes] of Object.entries(grouped)) {
+          mapped[bt] = flowNodes.sort((a, b) => a.nodeOrder - b.nodeOrder).map((n) => ({
+            ...n,
+            nodeType: n.nodeType as "approval" | "archive" | "payment" | undefined,
+          }));
+        }
+        setSavedFlows(mapped);
+        // 用传入的 currentModule（而非闭包中的 selectedModule）确保拿到正确值
+        const initial = mapped[currentModule];
+        setNodes(initial ? initial.map((n) => ({ ...n })) : []);
       }
-    }
-    fetchFlows();
-  }, []);
+    } catch {}
+  };
 
   const handleModuleSelect = (moduleType: string) => {
     if (moduleType === selectedModule) return;
@@ -247,7 +276,42 @@ export default function ApprovalFlowPage() {
     setSaveMsg(null);
   };
 
-  const handleBatchApply = () => {
+  const handleBatchApply = async () => {
+    // 先自动保存当前模块的流程，确保批量应用时源数据已入库
+    const terminalType = getTerminalNodeType(selectedModule);
+    const processedNodes: FlowNode[] = nodes.map((n, i) => ({
+      ...n,
+      nodeType: (i === nodes.length - 1 && terminalType ? terminalType : "approval") as "approval" | "archive" | "payment",
+    }));
+
+    if (processedNodes.length > 0) {
+      try {
+        const res = await fetch("/api/approval-flows", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            businessType: selectedModule,
+            flowLevel,
+            nodes: processedNodes,
+          }),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          setSaveMsg({ type: "error", text: errData?.error || "保存当前流程失败，无法批量应用" });
+          return;
+        }
+        // 同步本地缓存
+        setSavedFlows((prev) => ({
+          ...prev,
+          [selectedModule]: processedNodes.map((n) => ({ ...n })),
+        }));
+        setNodes(processedNodes);
+      } catch {
+        setSaveMsg({ type: "error", text: "网络错误，无法批量应用" });
+        return;
+      }
+    }
+
     const targets: Record<string, string[]> = {};
     const allModules = moduleGroups.flatMap(g => g.modules);
     allModules.forEach((m) => {
@@ -284,25 +348,37 @@ export default function ApprovalFlowPage() {
   const handleBatchConfirm = async () => {
     setBatchApplying(true);
     try {
-      const applyItems: { businessType: string; flowLevel: string; nodes: FlowNode[] }[] = [];
+      const targets: { businessType: string; flowLevel: string }[] = [];
       Object.entries(batchTargets).forEach(([modType, levels]) => {
         levels.forEach((level) => {
-          applyItems.push({
-            businessType: modType,
-            flowLevel: level,
-            nodes: nodes.map((n) => ({ ...n })),
-          });
+          targets.push({ businessType: modType, flowLevel: level });
         });
       });
-      await fetch("/api/approval-flows/apply", {
+
+      const res = await fetch("/api/approval-flows/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: applyItems }),
+        body: JSON.stringify({
+          sourceBusinessType: selectedModule,
+          sourceFlowLevel: "common",
+          targets,
+        }),
       });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "批量应用失败");
+      }
+
       setBatchModalOpen(false);
       setSaveMsg({ type: "success", text: "批量应用成功" });
-    } catch {
-      setSaveMsg({ type: "error", text: "批量应用失败，请重试" });
+      // 清空编辑缓存（批量应用改变了多个模块的数据，旧缓存已失效）
+      setEditCache({});
+      // 刷新流程数据，确保所有模块（含源模块）显示最新状态
+      await refreshFlows(selectedModule);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "批量应用失败，请重试";
+      setSaveMsg({ type: "error", text: msg });
     } finally {
       setBatchApplying(false);
     }

@@ -58,9 +58,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("获取非合同收入列表失败:", error);
+    console.error("获取其他收入列表失败:", error);
     return NextResponse.json(
-      { error: "获取非合同收入列表失败" },
+      { error: "获取其他收入列表失败" },
       { status: 500 }
     );
   }
@@ -114,9 +114,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: record }, { status: 201 });
   } catch (error) {
-    console.error("创建非合同收入失败:", error);
+    console.error("创建其他收入失败:", error);
     return NextResponse.json(
-      { error: "创建非合同收入失败" },
+      { error: "创建其他收入失败" },
       { status: 500 }
     );
   }

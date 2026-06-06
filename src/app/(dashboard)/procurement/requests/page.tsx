@@ -31,6 +31,9 @@ import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
 
 interface PurchaseRequestItem {
   id: string;
@@ -92,13 +95,6 @@ interface ProjectLeadItem {
   project: { id: string; projectCode: string; name: string; status: string; projectCategory: string | null } | null;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 const emptyItem: PurchaseRequestItemData = {
   materialName: "",
   spec: "",
@@ -145,12 +141,7 @@ export default function PurchaseRequestsPage() {
   const hasFlow = user?.moduleFlowStatus?.["purchase_request"] ?? false;
   const { configured: flowConfigured } = useFlowConfigured("purchase_request");
   const [records, setRecords] = useState<PurchaseRequest[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, pageSize, pagination, setPage, setPageSize, setPagination } = usePagination();
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -195,8 +186,8 @@ export default function PurchaseRequestsPage() {
       if (search) params.set("search", search);
       if (filterStatus) params.set("status", filterStatus);
       if (filterProject) params.set("projectSourceId", filterProject);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/purchase-requests?${params}`);
       const json = await res.json();
@@ -210,7 +201,7 @@ export default function PurchaseRequestsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterStatus, filterProject, pagination.page, pagination.pageSize]);
+  }, [search, filterStatus, filterProject, page, pageSize]);
 
   const fetchProjectLeads = useCallback(async () => {
     try {
@@ -532,7 +523,7 @@ export default function PurchaseRequestsPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -542,7 +533,7 @@ export default function PurchaseRequestsPage() {
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部状态</option>
@@ -558,7 +549,7 @@ export default function PurchaseRequestsPage() {
             value={filterProject}
             onChange={(e) => {
               setFilterProject(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部项目</option>
@@ -570,7 +561,7 @@ export default function PurchaseRequestsPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录
           </div>
         </div>
 
@@ -607,7 +598,7 @@ export default function PurchaseRequestsPage() {
                   const isExpanded = expandedRows.has(record.id);
                   return (
                     <Fragment key={record.id}>
-                      <tr className={`${isExpanded ? "bg-[#FAFAF9]/60" : ""} ${isSelected(record.id) ? "bg-[#1C1917]/5" : ""}`}>
+                      <tr className={`${isExpanded ? "bg-[#FAFAF9]/60" : ""} ${isSelected(record.id) ? "bg-[#1C1917]/5" : ""} ${getRowStatusClass(record.status)}`}>
                         {rolePerms.delete && (
                           <td className="w-10">
                             <input type="checkbox" className="ios-checkbox" checked={isSelected(record.id)} onChange={() => toggleSelect(record.id)} />
@@ -662,9 +653,10 @@ export default function PurchaseRequestsPage() {
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm"
                               onClick={() => handleViewDetail(record)}
+                              title="查看"
                             >
                               <Eye className="w-3.5 h-3.5" />
-                              详情
+                              查看
                             </button>
                             {record.status === "已批准" && (
                               <button
@@ -762,27 +754,11 @@ export default function PurchaseRequestsPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar
+              pagination={pagination}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </div>
         )}
 

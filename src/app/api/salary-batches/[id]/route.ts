@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 const batchSelect = {
   id: true,
@@ -168,6 +169,7 @@ export async function DELETE(
       return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
+    await cleanupBusinessApprovalRecords("salary_payment", id);
     await prisma.salaryBatch.delete({ where: { id } });
     return NextResponse.json({ message: "批次已删除" });
   } catch (error) {

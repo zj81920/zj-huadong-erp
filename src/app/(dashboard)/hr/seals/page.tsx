@@ -6,123 +6,133 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Package,
+  Stamp,
   Eye,
   MapPin,
   FileText,
+  User,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
 
-interface OfficeSupply {
+interface Seal {
   id: string;
   name: string;
-  category: string | null;
-  spec: string | null;
-  unit: string | null;
-  quantity: number;
-  unitPrice: string | null;
-  totalPrice: string | null;
-  storeLocation: string | null;
+  sealType: string;
+  custodian: string | null;
+  location: string | null;
+  status: string;
   remark: string | null;
   createdAt: string;
   updatedAt: string;
   lastModifiedBy: string | null;
 }
 
-interface OfficeSupplyFormData {
+interface SealFormData {
   name: string;
-  category: string;
-  spec: string;
-  unit: string;
-  quantity: string;
-  unitPrice: string;
-  storeLocation: string;
+  sealType: string;
+  custodian: string;
+  location: string;
+  status: string;
   remark: string;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
-const emptyForm: OfficeSupplyFormData = {
+const emptyForm: SealFormData = {
   name: "",
-  category: "",
-  spec: "",
-  unit: "",
-  quantity: "0",
-  unitPrice: "0",
-  storeLocation: "",
+  sealType: "",
+  custodian: "",
+  location: "",
+  status: "在库",
   remark: "",
 };
 
-const categoryOptions = [
-  { value: "文具", label: "文具" },
-  { value: "打印耗材", label: "打印耗材" },
-  { value: "办公设备", label: "办公设备" },
-  { value: "清洁用品", label: "清洁用品" },
+const sealTypeOptions = [
+  { value: "公章", label: "公章" },
+  { value: "财务章", label: "财务章" },
+  { value: "合同章", label: "合同章" },
+  { value: "法人章", label: "法人章" },
+  { value: "项目章", label: "项目章" },
   { value: "其他", label: "其他" },
 ];
 
-const categoryColorMap: Record<string, string> = {
-  文具: "ios-badge-blue",
-  打印耗材: "ios-badge-orange",
-  办公设备: "ios-badge-green",
-  清洁用品: "ios-badge-purple",
+const statusOptions = [
+  { value: "在库", label: "在库" },
+  { value: "使用中", label: "使用中" },
+  { value: "外借", label: "外借" },
+  { value: "报废", label: "报废" },
+];
+
+const sealTypeColorMap: Record<string, string> = {
+  公章: "ios-badge-red",
+  财务章: "ios-badge-blue",
+  合同章: "ios-badge-orange",
+  法人章: "ios-badge-purple",
+  项目章: "ios-badge-green",
   其他: "ios-badge-gray",
 };
 
-export default function SuppliesPage() {
-  const [supplies, setSupplies] = useState<OfficeSupply[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+const statusColorMap: Record<string, string> = {
+  在库: "ios-badge-green",
+  使用中: "ios-badge-blue",
+  外借: "ios-badge-orange",
+  报废: "ios-badge-gray",
+};
+
+export default function SealsPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "seals");
+
+  const [seals, setSeals] = useState<Seal[]>([]);
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
+  const [filterSealType, setFilterSealType] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
 
   const [showModal, setShowModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<OfficeSupply | null>(null);
-  const [form, setForm] = useState<OfficeSupplyFormData>(emptyForm);
+  const [editingItem, setEditingItem] = useState<Seal | null>(null);
+  const [form, setForm] = useState<SealFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const [detailItem, setDetailItem] = useState<OfficeSupply | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<OfficeSupply | null>(null);
+  const [detailItem, setDetailItem] = useState<Seal | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Seal | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [users, setUsers] = useState<{id: string; username: string; realName: string}[]>([]);
 
-  const fetchSupplies = useCallback(async () => {
+  const fetchSeals = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      if (filterCategory) params.set("category", filterCategory);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      if (filterSealType) params.set("sealType", filterSealType);
+      if (filterStatus) params.set("status", filterStatus);
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
-      const res = await fetch(`/api/office-supplies?${params}`);
+      const res = await fetch(`/api/seals?${params}`);
       const json = await res.json();
 
       if (res.ok) {
-        setSupplies(json.data);
+        setSeals(json.data);
         setPagination(json.pagination);
       }
     } catch (err) {
-      console.error("获取办公用品列表失败:", err);
+      console.error("获取印章列表失败:", err);
     } finally {
       setLoading(false);
     }
-  }, [search, filterCategory, pagination.page, pagination.pageSize]);
+  }, [search, filterSealType, filterStatus, page, pageSize]);
 
   useEffect(() => {
-    fetchSupplies();
-  }, [fetchSupplies]);
+    fetchSeals();
+    fetch("/api/settings/users").then(res => res.json()).then(json => setUsers(json.data || []));
+  }, [fetchSeals]);
 
   const handleOpenCreate = () => {
     setEditingItem(null);
@@ -131,57 +141,46 @@ export default function SuppliesPage() {
     setShowModal(true);
   };
 
-  const handleOpenEdit = (item: OfficeSupply) => {
+  const handleOpenEdit = (item: Seal) => {
     setEditingItem(item);
     setForm({
       name: item.name,
-      category: item.category || "",
-      spec: item.spec || "",
-      unit: item.unit || "",
-      quantity: String(item.quantity),
-      unitPrice: item.unitPrice || "0",
-      storeLocation: item.storeLocation || "",
+      sealType: item.sealType,
+      custodian: item.custodian || "",
+      location: item.location || "",
+      status: item.status,
       remark: item.remark || "",
     });
     setFormError("");
     setShowModal(true);
   };
 
-  const calcTotalPrice = (qty: string, price: string): string => {
-    const q = parseFloat(qty) || 0;
-    const p = parseFloat(price) || 0;
-    return (q * p).toFixed(2);
-  };
-
   const handleSubmit = async () => {
     if (!form.name.trim()) {
-      setFormError("名称不能为空");
+      setFormError("印章名称不能为空");
+      return;
+    }
+    if (!form.sealType) {
+      setFormError("印章类型不能为空");
       return;
     }
 
     setSaving(true);
     setFormError("");
 
-    const quantity = parseInt(form.quantity) || 0;
-    const unitPrice = parseFloat(form.unitPrice) || 0;
-    const totalPrice = quantity * unitPrice;
-
     try {
       const payload = {
         name: form.name.trim(),
-        category: form.category || null,
-        spec: form.spec.trim() || null,
-        unit: form.unit.trim() || null,
-        quantity,
-        unitPrice: unitPrice > 0 ? unitPrice : null,
-        totalPrice: totalPrice > 0 ? totalPrice : null,
-        storeLocation: form.storeLocation.trim() || null,
+        sealType: form.sealType,
+        custodian: form.custodian.trim() || null,
+        location: form.location.trim() || null,
+        status: form.status || "在库",
         remark: form.remark.trim() || null,
       };
 
       const url = editingItem
-        ? `/api/office-supplies/${editingItem.id}`
-        : "/api/office-supplies";
+        ? `/api/seals/${editingItem.id}`
+        : "/api/seals";
       const method = editingItem ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -194,7 +193,7 @@ export default function SuppliesPage() {
 
       if (res.ok) {
         setShowModal(false);
-        fetchSupplies();
+        fetchSeals();
       } else {
         setFormError(json.error || "操作失败");
       }
@@ -210,13 +209,13 @@ export default function SuppliesPage() {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/office-supplies/${deleteConfirm.id}`, {
+      const res = await fetch(`/api/seals/${deleteConfirm.id}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
         setDeleteConfirm(null);
-        fetchSupplies();
+        fetchSeals();
       } else {
         const json = await res.json();
         alert(json.error || "删除失败");
@@ -230,7 +229,7 @@ export default function SuppliesPage() {
     }
   };
 
-  const updateForm = (field: keyof OfficeSupplyFormData, value: string) => {
+  const updateForm = (field: keyof SealFormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (formError) setFormError("");
   };
@@ -240,23 +239,17 @@ export default function SuppliesPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  const formatDecimal = (val: string | null) => {
-    if (!val) return "-";
-    const num = parseFloat(val);
-    return isNaN(num) ? "-" : num.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-
   return (
     <>
       <div className="page-header">
         <div className="flex items-center justify-between">
           <div>
-            <h1>办公用品管理</h1>
-            <p>管理公司办公用品库存信息</p>
+            <h1>印章管理</h1>
+            <p>管理公司印章信息及使用状态</p>
           </div>
           <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
             <Plus className="w-4 h-4" />
-            新增用品
+            新增印章
           </button>
         </div>
       </div>
@@ -268,31 +261,45 @@ export default function SuppliesPage() {
             <input
               type="text"
               className="ios-input pl-10"
-              placeholder="搜索名称、规格、存放位置..."
+              placeholder="搜索印章名称、保管人..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
 
           <select
             className="ios-select w-[140px]"
-            value={filterCategory}
+            value={filterSealType}
             onChange={(e) => {
-              setFilterCategory(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setFilterSealType(e.target.value);
+              setPage(1);
             }}
           >
-            <option value="">全部分类</option>
-            {categoryOptions.map((opt) => (
+            <option value="">全部类型</option>
+            {sealTypeOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+
+          <select
+            className="ios-select w-[140px]"
+            value={filterStatus}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">全部状态</option>
+            {statusOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录
           </div>
         </div>
 
@@ -301,56 +308,68 @@ export default function SuppliesPage() {
             <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
             <p>加载中...</p>
           </div>
-        ) : supplies.length === 0 ? (
+        ) : seals.length === 0 ? (
           <div className="empty-state">
             <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
-              <Package className="w-8 h-8 text-[#78716C]" />
+              <Stamp className="w-8 h-8 text-[#78716C]" />
             </div>
-            <p>{search || filterCategory ? "没有匹配的办公用品记录" : "暂无办公用品，点击右上角新增"}</p>
+            <p>{search || filterSealType || filterStatus ? "没有匹配的印章记录" : "暂无印章，点击右上角新增"}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="ios-table">
               <thead>
                 <tr>
-                  <th>名称</th>
-                  <th>分类</th>
-                  <th>规格</th>
-                  <th>单位</th>
-                  <th>数量</th>
-                  <th>单价</th>
-                  <th>总价</th>
+                  <th>印章名称</th>
+                  <th>类型</th>
+                  <th>保管人</th>
                   <th>存放位置</th>
+                  <th>状态</th>
                   <th>操作</th>
                   <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
-                {supplies.map((item) => (
+                {seals.map((item) => (
                   <tr key={item.id}>
                     <td>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-[#1C1917]/10 flex items-center justify-center flex-shrink-0">
-                          <Package className="w-4 h-4 text-[#1C1917]" />
+                          <Stamp className="w-4 h-4 text-[#1C1917]" />
                         </div>
                         <span className="font-semibold">{item.name}</span>
                       </div>
                     </td>
                     <td>
-                      {item.category ? (
-                        <span className={`ios-badge ${categoryColorMap[item.category] || "ios-badge-gray"}`}>
-                          {item.category}
-                        </span>
+                      <span className={`ios-badge ${sealTypeColorMap[item.sealType] || "ios-badge-gray"}`}>
+                        {item.sealType}
+                      </span>
+                    </td>
+                    <td>
+                      {item.custodian ? (
+                        <div className="flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5 text-[#78716C]" />
+                          <span>{users.find(u => u.id === item.custodian)?.realName || item.custodian}</span>
+                        </div>
                       ) : (
                         <span className="text-[#78716C]">-</span>
                       )}
                     </td>
-                    <td>{item.spec || "-"}</td>
-                    <td>{item.unit || "-"}</td>
-                    <td>{item.quantity}</td>
-                    <td>{formatDecimal(item.unitPrice)}</td>
-                    <td className="font-semibold">{formatDecimal(item.totalPrice)}</td>
-                    <td>{item.storeLocation || "-"}</td>
+                    <td>
+                      {item.location ? (
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-[#78716C]" />
+                          <span>{item.location}</span>
+                        </div>
+                      ) : (
+                        <span className="text-[#78716C]">-</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`ios-badge ${statusColorMap[item.status] || "ios-badge-gray"}`}>
+                        {item.status}
+                      </span>
+                    </td>
                     <td>
                       <div className="flex items-center gap-1">
                         <button
@@ -360,6 +379,7 @@ export default function SuppliesPage() {
                           <Eye className="w-3.5 h-3.5" />
                           详情
                         </button>
+                        {canEditFrontend(false, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
                         <button
                           className="ios-btn ios-btn-ghost ios-btn-sm"
                           onClick={() => handleOpenEdit(item)}
@@ -367,6 +387,8 @@ export default function SuppliesPage() {
                           <Pencil className="w-3.5 h-3.5" />
                           编辑
                         </button>
+                        )}
+                        {canDeleteFrontend(false, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
                         <button
                           className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                           onClick={() => setDeleteConfirm(item)}
@@ -374,6 +396,7 @@ export default function SuppliesPage() {
                           <Trash2 className="w-3.5 h-3.5" />
                           删除
                         </button>
+                        )}
                       </div>
                     </td>
                     <td className="text-[#78716C] text-[12px] whitespace-nowrap">
@@ -387,27 +410,7 @@ export default function SuppliesPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
       </div>
@@ -415,7 +418,7 @@ export default function SuppliesPage() {
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title={editingItem ? "编辑办公用品" : "新增办公用品"}
+        title={editingItem ? "编辑印章" : "新增印章"}
         maxWidth="600px"
       >
         <div className="space-y-4">
@@ -428,98 +431,68 @@ export default function SuppliesPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                名称 <span className="text-[#78716C]">*</span>
+                印章名称 <span className="text-[#78716C]">*</span>
               </label>
               <input
                 type="text"
                 className="ios-input"
-                placeholder="请输入名称"
+                placeholder="请输入印章名称"
                 value={form.name}
                 onChange={(e) => updateForm("name", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">分类</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                印章类型 <span className="text-[#78716C]">*</span>
+              </label>
               <select
                 className="ios-select"
-                value={form.category}
-                onChange={(e) => updateForm("category", e.target.value)}
+                value={form.sealType}
+                onChange={(e) => updateForm("sealType", e.target.value)}
               >
                 <option value="">请选择</option>
-                {categoryOptions.map((opt) => (
+                {sealTypeOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">规格</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="规格型号"
-                value={form.spec}
-                onChange={(e) => updateForm("spec", e.target.value)}
-              />
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">状态</label>
+              <select
+                className="ios-select"
+                value={form.status}
+                onChange={(e) => updateForm("status", e.target.value)}
+              >
+                {statusOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">单位</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="如：个、箱、盒"
-                value={form.unit}
-                onChange={(e) => updateForm("unit", e.target.value)}
-              />
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">保管人</label>
+              <select
+                className="ios-select"
+                value={form.custodian}
+                onChange={(e) => updateForm("custodian", e.target.value)}
+              >
+                <option value="">请选择保管人</option>
+                {users.map(u => <option key={u.id} value={u.id}>{u.realName}</option>)}
+              </select>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">数量</label>
-              <input
-                type="number"
-                className="ios-input"
-                placeholder="0"
-                min="0"
-                value={form.quantity}
-                onChange={(e) => updateForm("quantity", e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">单价（元）</label>
-              <input
-                type="number"
-                className="ios-input"
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                value={form.unitPrice}
-                onChange={(e) => updateForm("unitPrice", e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">总价（自动计算）</label>
-              <input
-                type="text"
-                className="ios-input bg-[#FAFAF9]"
-                value={`¥ ${calcTotalPrice(form.quantity, form.unitPrice)}`}
-                readOnly
-              />
-            </div>
-
-            <div className="col-span-2">
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">存放位置</label>
               <div className="relative">
-                <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-[#78716C]" />
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                 <input
                   type="text"
                   className="ios-input pl-10"
                   placeholder="存放位置"
-                  value={form.storeLocation}
-                  onChange={(e) => updateForm("storeLocation", e.target.value)}
+                  value={form.location}
+                  onChange={(e) => updateForm("location", e.target.value)}
                 />
               </div>
             </div>
@@ -550,7 +523,7 @@ export default function SuppliesPage() {
               onClick={handleSubmit}
               disabled={saving}
             >
-              {saving ? "保存中..." : editingItem ? "保存修改" : "创建用品"}
+              {saving ? "保存中..." : editingItem ? "保存修改" : "创建印章"}
             </button>
           </div>
         </div>
@@ -559,47 +532,39 @@ export default function SuppliesPage() {
       <Modal
         isOpen={!!detailItem}
         onClose={() => setDetailItem(null)}
-        title="用品详情"
+        title="印章详情"
         maxWidth="500px"
       >
         {detailItem && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">名称</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">印章名称</p>
                 <p className="text-[14px] font-semibold text-[#1C1917]">{detailItem.name}</p>
               </div>
               <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">分类</p>
-                <p>{detailItem.category ? (
-                  <span className={`ios-badge ${categoryColorMap[detailItem.category] || "ios-badge-gray"}`}>
-                    {detailItem.category}
+                <p className="text-[12px] text-[#78716C] mb-0.5">类型</p>
+                <p>
+                  <span className={`ios-badge ${sealTypeColorMap[detailItem.sealType] || "ios-badge-gray"}`}>
+                    {detailItem.sealType}
                   </span>
-                ) : "-"}</p>
+                </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">规格</p>
-                <p className="text-[14px] text-[#1C1917]">{detailItem.spec || "-"}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">单位</p>
-                <p className="text-[14px] text-[#1C1917]">{detailItem.unit || "-"}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">数量</p>
-                <p className="text-[14px] text-[#1C1917]">{detailItem.quantity}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">单价</p>
-                <p className="text-[14px] text-[#1C1917]">{formatDecimal(detailItem.unitPrice)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">总价</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDecimal(detailItem.totalPrice)}</p>
+                <p className="text-[12px] text-[#78716C] mb-0.5">保管人</p>
+                <p className="text-[14px] text-[#1C1917]">{users.find(u => u.id === detailItem.custodian)?.realName || detailItem.custodian || "-"}</p>
               </div>
               <div>
                 <p className="text-[12px] text-[#78716C] mb-0.5">存放位置</p>
-                <p className="text-[14px] text-[#1C1917]">{detailItem.storeLocation || "-"}</p>
+                <p className="text-[14px] text-[#1C1917]">{detailItem.location || "-"}</p>
+              </div>
+              <div>
+                <p className="text-[12px] text-[#78716C] mb-0.5">状态</p>
+                <p>
+                  <span className={`ios-badge ${statusColorMap[detailItem.status] || "ios-badge-gray"}`}>
+                    {detailItem.status}
+                  </span>
+                </p>
               </div>
               <div className="col-span-2">
                 <p className="text-[12px] text-[#78716C] mb-0.5">备注</p>
@@ -629,7 +594,7 @@ export default function SuppliesPage() {
             <Trash2 className="w-7 h-7 text-[#78716C]" />
           </div>
           <p className="text-[15px] text-[#1C1917] mb-1">
-            确定要删除办公用品 <span className="font-semibold">{deleteConfirm?.name}</span> 吗？
+            确定要删除印章 <span className="font-semibold">{deleteConfirm?.name}</span> 吗？
           </p>
           <p className="text-[13px] text-[#78716C] mb-6">此操作不可撤销</p>
           <div className="flex justify-center gap-3">

@@ -52,7 +52,7 @@ const BUSINESS_TYPE_MAP: Record<string, string> = {
   purchase_request: "采购需求",
   income_contract: "收入合同",
   expense_contract: "支出合同",
-  non_contract_income: "非合同收入",
+  non_contract_income: "其他收入",
   non_contract_expense: "其他支付",
   payment_application: "合同支付",
   expense_report: "费用报销",

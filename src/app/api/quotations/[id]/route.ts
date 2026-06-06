@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   _request: NextRequest,
@@ -100,6 +101,7 @@ export async function DELETE(
       return NextResponse.json({ error: "已批准的报价单不能删除" }, { status: 400 });
     }
 
+    await cleanupBusinessApprovalRecords("quotation", id);
     await prisma.quotation.delete({ where: { id } });
 
     return NextResponse.json({ message: "删除成功" });

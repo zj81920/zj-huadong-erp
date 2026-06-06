@@ -7,6 +7,8 @@ export async function GET(request: Request) {
   const type = searchParams.get('type');
   const orgId = searchParams.get('orgId');
   const relatedContractId = searchParams.get('relatedContractId');
+  const page = parseInt(searchParams.get('page') || '1');
+  const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   const where: Record<string, unknown> = {};
   if (status) where.status = status;
@@ -16,11 +18,16 @@ export async function GET(request: Request) {
     where.OR = [{ fromOrgId: orgId }, { toOrgId: orgId }];
   }
 
-  const contracts = await prisma.interOrgContract.findMany({
-    where,
-    include: { fromOrg: true, toOrg: true },
-    orderBy: { createdAt: 'desc' },
-  });
+  const [contracts, total] = await Promise.all([
+    prisma.interOrgContract.findMany({
+      where,
+      include: { fromOrg: true, toOrg: true },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.interOrgContract.count({ where }),
+  ]);
 
   // 如果有关联收入合同，补充收入合同信息
   for (const contract of contracts as any[]) {
@@ -33,7 +40,15 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ data: contracts });
+  return NextResponse.json({
+    data: contracts,
+    pagination: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.ceil(total / pageSize),
+    },
+  });
 }
 
 export async function POST(request: Request) {
@@ -45,6 +60,13 @@ export async function POST(request: Request) {
   const tax = parseFloat(body.taxBurden || 0);
   const other = parseFloat(body.otherFee || 0);
   const settlementAmount = parseFloat((mainAmount - mgmtFee - tax - other).toFixed(2));
+
+  const existingContract = await prisma.interOrgContract.findUnique({
+    where: { contractNo: body.contractNo.trim() },
+  });
+  if (existingContract) {
+    return NextResponse.json({ error: "合同编号已存在" }, { status: 409 });
+  }
 
   const contract = await prisma.interOrgContract.create({
     data: {

@@ -25,6 +25,10 @@ import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { ExpenseContractDetailCard } from '@/components/detail-cards';
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
 
 interface Supplier {
   id: string;
@@ -124,13 +128,6 @@ interface ContractFormData {
   organizationId: string;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 const emptyForm: ContractFormData = {
   contractNo: "",
   projectSourceId: "",
@@ -178,12 +175,7 @@ export default function ExpenseContractsPage() {
   const fromInquiryId = searchParams.get("fromInquiry");
 
   const [contracts, setContracts] = useState<ExpenseContract[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, pageSize, pagination, setPage, setPageSize, setPagination } = usePagination();
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -287,8 +279,8 @@ export default function ExpenseContractsPage() {
       if (filterProject) params.set("projectSourceId", filterProject);
       if (filterContractType) params.set("contractType", filterContractType);
       if (filterOrg) params.set("organizationId", filterOrg);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/expense-contracts?${params}`);
       const json = await res.json();
@@ -308,8 +300,8 @@ export default function ExpenseContractsPage() {
     filterProject,
     filterContractType,
     filterOrg,
-    pagination.page,
-    pagination.pageSize,
+    page,
+    pageSize,
   ]);
 
   useEffect(() => {
@@ -636,10 +628,11 @@ export default function ExpenseContractsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          businessType: "expense_contract",
-          businessId: contract.id,
-          flowLevel: "common",
-        }),
+        businessType: "expense_contract",
+        businessId: contract.id,
+        businessTitle: contract.contractNo,
+        flowLevel: "common",
+      }),
       });
       const json = await res.json();
       if (res.ok) {
@@ -882,7 +875,7 @@ export default function ExpenseContractsPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -892,7 +885,7 @@ export default function ExpenseContractsPage() {
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部状态</option>
@@ -908,7 +901,7 @@ export default function ExpenseContractsPage() {
             value={filterProject}
             onChange={(e) => {
               setFilterProject(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部项目</option>
@@ -925,7 +918,7 @@ export default function ExpenseContractsPage() {
             value={filterContractType}
             onChange={(e) => {
               setFilterContractType(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部类型</option>
@@ -941,7 +934,7 @@ export default function ExpenseContractsPage() {
             value={filterOrg || ''}
             onChange={(e) => {
               setFilterOrg(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部主体</option>
@@ -953,7 +946,7 @@ export default function ExpenseContractsPage() {
           <div className="ml-auto text-[13px] text-[#78716C]">
             共{" "}
             <span className="font-semibold text-[#1C1917]">
-              {pagination.total}
+              {pagination?.total ?? 0}
             </span>{" "}
             条记录
           </div>
@@ -994,7 +987,7 @@ export default function ExpenseContractsPage() {
               </thead>
               <tbody>
                 {contracts.map((contract) => (
-                  <tr key={contract.id} className={isSelected(contract.id) ? "bg-[#1C1917]/5" : ""}>
+                  <tr key={contract.id} className={`${isSelected(contract.id) ? "bg-[#1C1917]/5" : ""} ${getRowStatusClass(contract.status)}`}>
                     {rolePerms.delete && <td className="w-10"><input type="checkbox" className="ios-checkbox" checked={isSelected(contract.id)} onChange={() => toggleSelect(contract.id)} /></td>}
                     <td>
                       <div className="flex items-center gap-2">
@@ -1097,6 +1090,45 @@ export default function ExpenseContractsPage() {
                             <ChevronRight className="w-3 h-3" />
                           </button>
                         )}
+                        {contract.status === "已批准" && (
+                          <>
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm"
+                              onClick={() => {
+                                setDetailContract(contract);
+                                setContractInvoices([]);
+                                setInvoiceError("");
+                                setInvoiceForm({
+                                  invoiceNo: "",
+                                  invoiceCode: "",
+                                  invoiceType: "增值税专用发票",
+                                  invoiceDate: new Date().toISOString().split("T")[0],
+                                  amount: "",
+                                  taxRate: "6",
+                                  taxAmount: "",
+                                  totalAmount: "",
+                                  sellerName: contract.supplier?.name || "",
+                                  sellerTaxNo: "",
+                                  remark: "",
+                                  attachments: [],
+                                });
+                                setInvoiceUploadName("");
+                                setShowInvoiceModal(true);
+                              }}
+                            >
+                              <FileCheck className="w-3.5 h-3.5" />
+                              登记发票
+                            </button>
+                          </>
+                        )}
+                        {contract.status === "合同归档" && (
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm"
+                            onClick={() => router.push(`/contracts/change-orders/new?contractType=expense_contract&contractId=${contract.id}`)}
+                          >
+                            发起变更
+                          </button>
+                        )}
                         {contract.status === "生效" &&
                           statusActionsMap["生效"] &&
                           statusActionsMap["生效"].length > 1 && (
@@ -1122,31 +1154,11 @@ export default function ExpenseContractsPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() =>
-                    setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
-                  }
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() =>
-                    setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
-                  }
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar
+              pagination={pagination}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </div>
         )}
 
@@ -1538,58 +1550,7 @@ export default function ExpenseContractsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">合同类型</p>
-                <p className="text-[14px]">
-                  <span className="ios-badge ios-badge-blue">
-                    {detailContract.contractType}
-                  </span>
-                </p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">供应商</p>
-                <p className="text-[14px] font-medium text-[#1C1917] flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-[#78716C]" />
-                  {detailContract.supplier?.name || "-"}
-                </p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">合同金额</p>
-                <p className="text-[14px] font-bold text-[#1C1917]">
-                  {formatAmount(detailContract.totalAmount)}
-                </p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">签订日期</p>
-                <p className="text-[14px] text-[#1C1917]">
-                  {formatDate(detailContract.signedDate)}
-                </p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#1C1917]">
-                  {formatDate(detailContract.createdAt)}
-                </p>
-              </div>
-              {detailContract.project && (
-                <div>
-                  <p className="text-[12px] text-[#78716C] mb-0.5">关联项目</p>
-                  <p className="text-[14px] text-[#1C1917]">
-                    {detailContract.project.name} ({detailContract.project.projectCode})
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {detailContract.paymentTerms && (
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">付款条款</p>
-                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap">
-                  {detailContract.paymentTerms}
-                </p>
-              </div>
-            )}
+            <ExpenseContractDetailCard data={detailContract} />
 
             {detailContract.scannedUrl && (
               <div>
@@ -1696,38 +1657,11 @@ export default function ExpenseContractsPage() {
             )}
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-2">
                   <FileText className="w-4 h-4 text-[#78716C]" />
                   <p className="text-[13px] font-semibold text-[#1C1917]">
                     发票登记 ({contractInvoices.length})
-                    </p>
-                  </div>
-                  <button
-                    className="ios-btn ios-btn-primary ios-btn-sm"
-                    onClick={() => {
-                      setInvoiceError("");
-                      setInvoiceForm({
-                        invoiceNo: "",
-                        invoiceCode: "",
-                        invoiceType: "增值税专用发票",
-                        invoiceDate: new Date().toISOString().split("T")[0],
-                        amount: "",
-                        taxRate: "6",
-                        taxAmount: "",
-                        totalAmount: "",
-                        sellerName: detailContract.supplier?.name || "",
-                        sellerTaxNo: "",
-                        remark: "",
-                        attachments: [],
-                      });
-                      setInvoiceUploadName("");
-                      setShowInvoiceModal(true);
-                    }}
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    登记发票
-                  </button>
+                  </p>
                 </div>
 
                 {contractInvoices.length > 0 ? (
@@ -1835,16 +1769,6 @@ export default function ExpenseContractsPage() {
               </div>
             )}
 
-            {(detailContract.status === "已批准" || detailContract.status === "合同归档" || detailContract.status === "生效") && (
-              <div className="flex justify-end pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary"
-                  onClick={() => router.push(`/contracts/change-orders/new?contractType=expense_contract&contractId=${detailContract.id}`)}
-                >
-                  发起变更
-                </button>
-              </div>
-            )}
           </DetailPageLayout>
         ) : (
           <div className="text-center py-10 text-[#78716C]">

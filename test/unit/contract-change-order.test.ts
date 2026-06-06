@@ -4,6 +4,7 @@ import {
   checkOverCollection,
   applyFinancialAdjustment,
   mergeArchivedFiles,
+  isArchiveFileRequired,
 } from '../../src/lib/change-order';
 
 describe('calculateAmountDifference', () => {
@@ -85,5 +86,27 @@ describe('mergeArchivedFiles', () => {
     const existing = ['https://oss.com/a.pdf'];
     const result = mergeArchivedFiles(JSON.stringify(existing), []);
     expect(result).toEqual(existing);
+  });
+});
+
+describe('isArchiveFileRequired', () => {
+  it('收入合同归档必须上传文件', () => {
+    expect(isArchiveFileRequired('income_contract')).toBe(true);
+  });
+
+  it('支出合同归档必须上传文件', () => {
+    expect(isArchiveFileRequired('expense_contract')).toBe(true);
+  });
+
+  it('内部结算合同归档必须上传文件', () => {
+    expect(isArchiveFileRequired('inter_org_contract')).toBe(true);
+  });
+
+  it('合同变更归档不需要强制上传文件', () => {
+    expect(isArchiveFileRequired('contract_change_order')).toBe(false);
+  });
+
+  it('未知类型默认需要上传文件（安全）', () => {
+    expect(isArchiveFileRequired('unknown_type')).toBe(true);
   });
 });

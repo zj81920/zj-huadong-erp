@@ -20,6 +20,9 @@ import {
 import Modal from "@/components/Modal";
 import ProjectPicker from "@/components/ProjectPicker";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
 
 interface Invoice {
   id: string;
@@ -65,13 +68,6 @@ interface InvoiceFormData {
   sourceType: string;
   remark: string;
   attachments: string[];
-}
-
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
 }
 
 interface ProjectLeadItem {
@@ -171,12 +167,7 @@ export default function FinanceInvoicesPage() {
   const isAdminUser = user?.username === "admin";
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -208,8 +199,8 @@ export default function FinanceInvoicesPage() {
       if (search) params.set("search", search);
       if (filterCategory) params.set("invoiceCategory", filterCategory);
       if (filterStatus) params.set("status", filterStatus);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/invoices?${params}`);
       const json = await res.json();
@@ -222,7 +213,7 @@ export default function FinanceInvoicesPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterCategory, filterStatus, pagination.page, pagination.pageSize]);
+  }, [search, filterCategory, filterStatus, page, pageSize]);
 
   const fetchProjectLeads = useCallback(async () => {
     try {
@@ -450,7 +441,7 @@ export default function FinanceInvoicesPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -467,7 +458,7 @@ export default function FinanceInvoicesPage() {
                 }`}
                 onClick={() => {
                   setFilterCategory(f.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
+                  setPage(1);
                 }}
               >
                 {f.label}
@@ -487,7 +478,7 @@ export default function FinanceInvoicesPage() {
                 }`}
                 onClick={() => {
                   setFilterStatus(f.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
+                  setPage(1);
                 }}
               >
                 {f.label}
@@ -496,7 +487,7 @@ export default function FinanceInvoicesPage() {
           </div>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录
           </div>
         </div>
 
@@ -556,7 +547,7 @@ export default function FinanceInvoicesPage() {
               return (
                 <div
                   key={inv.id}
-                  className="bg-white rounded-2xl shadow-sm border border-[#E7E5E4] overflow-hidden transition-all duration-200"
+                  className={`bg-white rounded-2xl shadow-sm border border-[#E7E5E4] overflow-hidden transition-all duration-200 ${getRowStatusClass(inv.status)}`}
                 >
                   <div
                     className="p-4 cursor-pointer hover:bg-[#FFFFFF] transition-colors duration-150"
@@ -785,31 +776,7 @@ export default function FinanceInvoicesPage() {
               );
             })}
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() =>
-                    setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
-                  }
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() =>
-                    setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
-                  }
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
       </div>

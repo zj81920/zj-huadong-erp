@@ -80,3 +80,12 @@ export function mergeArchivedFiles(
   }
   return [...existing, ...newFiles];
 }
+
+/**
+ * 判断归档节点是否要求上传文件
+ * 正常合同(收入/支出/内部结算) → 必须上传
+ * 合同变更 → 可选
+ */
+export function isArchiveFileRequired(businessType: string): boolean {
+  return businessType !== "contract_change_order";
+}

@@ -1,0 +1,57 @@
+<h2>行底色区分方案</h2>
+<p class="subtitle">三种不同的视觉风格，你更喜欢哪种？</p>
+
+<h3>参考：当前状态 badge 颜色</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+  <span style="background:#F5F5F4;color:#78716C;padding:4px 10px;border-radius:4px;font-size:12px;">草稿</span>
+  <span style="background:#FEF3C7;color:#D97706;padding:4px 10px;border-radius:4px;font-size:12px;">审批中</span>
+  <span style="background:#DCFCE7;color:#16A34A;padding:4px 10px;border-radius:4px;font-size:12px;">已批准</span>
+  <span style="background:#FEE2E2;color:#DC2626;padding:4px 10px;border-radius:4px;font-size:12px;">已驳回</span>
+  <span style="background:#E0E7FF;color:#4338CA;padding:4px 10px;border-radius:4px;font-size:12px;">已归档</span>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="soft-bg" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>柔和整行底色（推荐）</h3>
+      <p>整行用极淡的状态底色（同 badge 色但更淡），和 badge 标签颜色呼应。</p>
+      <div style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-top:8px;">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <tr style="background:#f0fdf4;"><td style="padding:6px 10px;">✅</td><td style="padding:6px 10px;">合同 #001</td><td style="padding:6px 10px;"><span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:3px;">已批准</span></td></tr>
+          <tr style="background:#fef9e7;"><td style="padding:6px 10px;">⏳</td><td style="padding:6px 10px;">合同 #002</td><td style="padding:6px 10px;"><span style="background:#FEF3C7;color:#D97706;padding:2px 6px;border-radius:3px;">审批中</span></td></tr>
+          <tr style="background:#fafaf9;"><td style="padding:6px 10px;">📄</td><td style="padding:6px 10px;">合同 #003</td><td style="padding:6px 10px;"><span style="background:#F5F5F4;color:#78716C;padding:2px 6px;border-radius:3px;">草稿</span></td></tr>
+          <tr style="background:#fef2f2;"><td style="padding:6px 10px;">❌</td><td style="padding:6px 10px;">合同 #004</td><td style="padding:6px 10px;"><span style="background:#FEE2E2;color:#DC2626;padding:2px 6px;border-radius:3px;">已驳回</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="left-border" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>左侧色条 + 白色背景</h3>
+      <p>行左侧加 3px 竖色条指示状态，行背景保持白色。比整行底色更克制。</p>
+      <div style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-top:8px;">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <tr style="border-left:3px solid #16A34A;"><td style="padding:6px 10px;">✅</td><td style="padding:6px 10px;">合同 #001</td><td style="padding:6px 10px;"><span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:3px;">已批准</span></td></tr>
+          <tr style="border-left:3px solid #D97706;"><td style="padding:6px 10px;">⏳</td><td style="padding:6px 10px;">合同 #002</td><td style="padding:6px 10px;"><span style="background:#FEF3C7;color:#D97706;padding:2px 6px;border-radius:3px;">审批中</span></td></tr>
+          <tr style="border-left:3px solid #A8A29E;"><td style="padding:6px 10px;">📄</td><td style="padding:6px 10px;">合同 #003</td><td style="padding:6px 10px;"><span style="background:#F5F5F4;color:#78716C;padding:2px 6px;border-radius:3px;">草稿</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="dot" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>状态圆点 + 白色背景</h3>
+      <p>名称前加一个彩色圆点指示状态，行背景保持白色。最简洁。</p>
+      <div style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-top:8px;">
+        <table style="width:100%;font-size:12px;border-collapse:collapse;">
+          <tr><td style="padding:6px 10px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16A34A;"></span></td><td style="padding:6px 10px;">合同 #001</td><td style="padding:6px 10px;"><span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:3px;">已批准</span></td></tr>
+          <tr><td style="padding:6px 10px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#D97706;"></span></td><td style="padding:6px 10px;">合同 #002</td><td style="padding:6px 10px;"><span style="background:#FEF3C7;color:#D97706;padding:2px 6px;border-radius:3px;">审批中</span></td></tr>
+          <tr><td style="padding:6px 10px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#A8A29E;"></span></td><td style="padding:6px 10px;">合同 #003</td><td style="padding:6px 10px;"><span style="background:#F5F5F4;color:#78716C;padding:2px 6px;border-radius:3px;">草稿</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

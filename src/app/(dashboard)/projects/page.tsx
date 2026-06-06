@@ -20,6 +20,10 @@ import {
 import Modal from "@/components/Modal";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
+import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface Customer {
   id: string;
@@ -98,13 +102,6 @@ interface ProjectFormData {
   infoSource: string;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 const emptyForm: ProjectFormData = {
   projectSourceId: "",
   projectCode: "",
@@ -146,10 +143,10 @@ const sourceOptions = [
 export default function ProjectsPage() {
   const { user: currentUser } = useAuth();
   const isAdminUser = currentUser?.username === "admin" || currentUser?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(currentUser, "projects_list");
+  const hasFlow = false;
   const [projects, setProjects] = useState<Project[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1, pageSize: 20, total: 0, totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -229,8 +226,8 @@ export default function ProjectsPage() {
       if (filterType) params.set("type", filterType);
       if (filterCategory) params.set("projectCategory", filterCategory);
       if (filterSource) params.set("source", filterSource);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/projects?${params}`);
       const json = await res.json();
@@ -242,7 +239,7 @@ export default function ProjectsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterStatus, filterType, filterCategory, filterSource, pagination.page, pagination.pageSize]);
+  }, [search, filterStatus, filterType, filterCategory, filterSource, page, pageSize]);
 
   useEffect(() => {
     fetchCustomers();
@@ -494,7 +491,7 @@ export default function ProjectsPage() {
   };
 
   const stats = {
-    total: pagination.total,
+    total: pagination?.total ?? 0,
     executing: projects.filter((p) => p.status === "执行").length,
     paused: projects.filter((p) => p.status === "暂停").length,
   };
@@ -568,7 +565,7 @@ export default function ProjectsPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -578,7 +575,7 @@ export default function ProjectsPage() {
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部状态</option>
@@ -592,7 +589,7 @@ export default function ProjectsPage() {
             value={filterType}
             onChange={(e) => {
               setFilterType(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部类型</option>
@@ -605,7 +602,7 @@ export default function ProjectsPage() {
             value={filterCategory}
             onChange={(e) => {
               setFilterCategory(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部类别</option>
@@ -619,7 +616,7 @@ export default function ProjectsPage() {
             value={filterSource}
             onChange={(e) => {
               setFilterSource(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部来源</option>
@@ -628,7 +625,7 @@ export default function ProjectsPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 个项目
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 个项目
           </div>
         </div>
 
@@ -765,16 +762,20 @@ export default function ProjectsPage() {
                             <Eye className="w-3.5 h-3.5" />
                             详情
                           </button>
-                          <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(project)}>
-                            <Pencil className="w-3.5 h-3.5" />
-                            编辑
-                          </button>
-                          <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
-                            onClick={() => setDeleteConfirm(project)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {canEditFrontend(hasFlow, rolePerms, "", currentUser?.id ?? "", null, isAdminUser) && (
+                            <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(project)}>
+                              <Pencil className="w-3.5 h-3.5" />
+                              编辑
+                            </button>
+                          )}
+                          {canDeleteFrontend(hasFlow, rolePerms, "", currentUser?.id ?? "", null, isAdminUser) && (
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
+                              onClick={() => setDeleteConfirm(project)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="text-[#78716C] text-[12px] whitespace-nowrap">
@@ -789,27 +790,7 @@ export default function ProjectsPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
       </div>

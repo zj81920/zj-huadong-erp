@@ -22,6 +22,9 @@ import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
@@ -147,13 +150,6 @@ interface BankAccount {
   isActive: boolean;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 type TabType = "contractIncome" | "otherIncome" | "shareholderCapital" | "otherBorrowing";
 
 const receivableStatusConfig: Record<string, { color: string; label: string }> = {
@@ -233,12 +229,11 @@ export default function FinanceIncomePage() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [users, setUsers] = useState<{id: string; username: string; realName: string}[]>([]);
 
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  // 每个 Tab 独立的分页实例
+  const contractPg = usePagination({});
+  const otherIncomePg = usePagination({});
+  const shareholderPg = usePagination({});
+  const borrowingPg = usePagination({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -296,62 +291,78 @@ export default function FinanceIncomePage() {
     try {
       const params = new URLSearchParams();
       params.set("sourceType", "income_contract");
-      params.set("pageSize", "200");
+      params.set("page", contractPg.page.toString());
+      params.set("pageSize", contractPg.pageSize.toString());
       const res = await fetch(`/api/receivables?${params}`);
       const json = await res.json();
-      if (res.ok) setReceivables(json.data || []);
+      if (res.ok) {
+        setReceivables(json.data || []);
+        if (json.pagination) contractPg.setPagination(json.pagination);
+      }
     } catch (err) {
       console.error("获取应收记录失败:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [contractPg.page, contractPg.pageSize]);
 
   const fetchOtherIncomes = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", otherIncomePg.page.toString());
+      params.set("pageSize", otherIncomePg.pageSize.toString());
       const res = await fetch(`/api/non-contract-incomes?${params}`);
       const json = await res.json();
       if (res.ok) {
         setOtherIncomes(json.data || []);
-        if (json.pagination) setPagination(json.pagination);
+        if (json.pagination) otherIncomePg.setPagination(json.pagination);
       }
     } catch (err) {
       console.error("获取其他收入失败:", err);
     } finally {
       setLoading(false);
     }
-  }, [search, pagination.page, pagination.pageSize]);
+  }, [search, otherIncomePg.page, otherIncomePg.pageSize]);
 
   const fetchContributions = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/capital-contributions?pageSize=200");
+      const params = new URLSearchParams();
+      params.set("page", shareholderPg.page.toString());
+      params.set("pageSize", shareholderPg.pageSize.toString());
+      const res = await fetch(`/api/capital-contributions?${params}`);
       const json = await res.json();
-      if (res.ok) setContributions(json.data || []);
+      if (res.ok) {
+        setContributions(json.data || []);
+        if (json.pagination) shareholderPg.setPagination(json.pagination);
+      }
     } catch (err) {
       console.error("获取出资记录失败:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [shareholderPg.page, shareholderPg.pageSize]);
 
   const fetchBorrowings = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/other-borrowings?pageSize=200");
+      const params = new URLSearchParams();
+      params.set("page", borrowingPg.page.toString());
+      params.set("pageSize", borrowingPg.pageSize.toString());
+      const res = await fetch(`/api/other-borrowings?${params}`);
       const json = await res.json();
-      if (res.ok) setBorrowings(json.data || []);
+      if (res.ok) {
+        setBorrowings(json.data || []);
+        if (json.pagination) borrowingPg.setPagination(json.pagination);
+      }
     } catch (err) {
       console.error("获取借入款失败:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [borrowingPg.page, borrowingPg.pageSize]);
 
   const fetchReferenceData = useCallback(async () => {
     try {
@@ -415,7 +426,10 @@ export default function FinanceIncomePage() {
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     setSearch("");
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    contractPg.setPage(1);
+    otherIncomePg.setPage(1);
+    shareholderPg.setPage(1);
+    borrowingPg.setPage(1);
   };
 
   const getSelectedReceivable = (): Receivable | undefined => {
@@ -559,7 +573,7 @@ export default function FinanceIncomePage() {
 
   const handleDeleteOtherIncome = async () => {
     if (!deleteConfirm) return;
-    if (!canDeleteFrontend(otherIncomeHasFlow, otherIncomePerms, deleteConfirm.status, currentUser?.id ?? "", deleteConfirm.createdById ?? null, isAdmin)) {
+    if (!canDeleteFrontend(false, otherIncomePerms, deleteConfirm.status, currentUser?.id ?? "", deleteConfirm.createdById ?? null, isAdmin)) {
       alert("无权删除该记录");
       setDeleteConfirm(null);
       return;
@@ -761,7 +775,6 @@ export default function FinanceIncomePage() {
   const isAdmin = currentUser?.roles?.some((r: any) => r.code === "admin") || currentUser?.username === "admin";
   // 各子模块权限
   const otherIncomePerms = getUserModulePerms(currentUser, "non_contract_income");
-  const otherIncomeHasFlow = currentUser?.moduleFlowStatus?.["non_contract_income"] ?? false;
   const tabs = (!hasTabPermissions || isAdmin) ? allTabs : allTabs.filter((tab) => userModules.includes(TAB_PERMISSION_MAP[tab.key]));
 
   const getPrimaryBtnLabel = () => {
@@ -843,7 +856,7 @@ export default function FinanceIncomePage() {
                 </thead>
                 <tbody>
                   {receivables.map((r) => (
-                    <tr key={r.id}>
+                    <tr key={r.id} className={getRowStatusClass(r.status)}>
                       <td className="font-mono text-[13px] font-semibold text-[#1C1917]">
                         {r.sourceContract?.contractNo || r.sourceId}
                       </td>
@@ -909,6 +922,7 @@ export default function FinanceIncomePage() {
                   ))}
                 </tbody>
               </table>
+              <PaginationBar pagination={contractPg.pagination} onPageChange={contractPg.setPage} onPageSizeChange={contractPg.setPageSize} />
             </div>
           )}
         </div>
@@ -927,12 +941,12 @@ export default function FinanceIncomePage() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setPagination((prev) => ({ ...prev, page: 1 }));
+                  otherIncomePg.setPage(1);
                 }}
               />
             </div>
             <div className="ml-auto text-[13px] text-[#78716C]">
-              共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+              共 <span className="font-semibold text-[#1C1917]">{otherIncomePg.pagination?.total ?? 0}</span> 条记录
             </div>
           </div>
 
@@ -974,7 +988,7 @@ export default function FinanceIncomePage() {
                 </thead>
                 <tbody>
                   {otherIncomes.map((item) => (
-                    <tr key={item.id} className={isSelected(item.id) ? "bg-[#1C1917]/5" : ""}>
+                    <tr key={item.id} className={`${getRowStatusClass(item.status)} ${isSelected(item.id) ? "bg-[#1C1917]/5" : ""}`}>
                       {otherIncomePerms.delete && (
                         <td className="w-10">
                           <input
@@ -1012,7 +1026,7 @@ export default function FinanceIncomePage() {
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          {canDeleteFrontend(otherIncomeHasFlow, otherIncomePerms, item.status, currentUser?.id ?? "", item.createdById ?? null, isAdmin) && (
+                          {canDeleteFrontend(false, otherIncomePerms, item.status, currentUser?.id ?? "", item.createdById ?? null, isAdmin) && (
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                               onClick={() => setDeleteConfirm(item)}
@@ -1026,25 +1040,7 @@ export default function FinanceIncomePage() {
                   ))}
                 </tbody>
               </table>
-              {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                  <button
-                    className="ios-btn ios-btn-secondary ios-btn-sm"
-                    disabled={pagination.page <= 1}
-                    onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                  >
-                    上一页
-                  </button>
-                  <span className="text-[13px] text-[#78716C] px-3">{pagination.page} / {pagination.totalPages}</span>
-                  <button
-                    className="ios-btn ios-btn-secondary ios-btn-sm"
-                    disabled={pagination.page >= pagination.totalPages}
-                    onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                  >
-                    下一页
-                  </button>
-                </div>
-              )}
+              <PaginationBar pagination={otherIncomePg.pagination} onPageChange={otherIncomePg.setPage} onPageSizeChange={otherIncomePg.setPageSize} />
             </div>
           )}
         </div>
@@ -1114,6 +1110,7 @@ export default function FinanceIncomePage() {
                   ))}
                 </tbody>
               </table>
+              <PaginationBar pagination={shareholderPg.pagination} onPageChange={shareholderPg.setPage} onPageSizeChange={shareholderPg.setPageSize} />
             </div>
           )}
         </div>
@@ -1150,7 +1147,7 @@ export default function FinanceIncomePage() {
                 </thead>
                 <tbody>
                   {borrowings.map((b) => (
-                    <tr key={b.id}>
+                    <tr key={b.id} className={getRowStatusClass(b.status)}>
                       <td className="font-semibold">{b.lenderName}</td>
                       <td className="text-[#78716C] font-semibold">{formatAmount(b.amount)}</td>
                       <td className="font-semibold">{formatAmount(b.returnedAmount)}</td>
@@ -1186,6 +1183,7 @@ export default function FinanceIncomePage() {
                   ))}
                 </tbody>
               </table>
+              <PaginationBar pagination={borrowingPg.pagination} onPageChange={borrowingPg.setPage} onPageSizeChange={borrowingPg.setPageSize} />
             </div>
           )}
         </div>

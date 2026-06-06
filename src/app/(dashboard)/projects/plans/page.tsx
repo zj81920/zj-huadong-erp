@@ -18,6 +18,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import ProjectPicker, { ProjectLeadItem } from "@/components/ProjectPicker";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
+import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface Project {
   id: string;
@@ -51,13 +55,6 @@ interface PlanFormData {
   responsibleId: string;
   actualProgress: string;
   status: string;
-}
-
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
 }
 
 const emptyForm: PlanFormData = {
@@ -94,10 +91,10 @@ const progressColor = (value: number) => {
 export default function ProjectPlansPage() {
   const { user } = useAuth();
   const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "projects.plans");
+  const hasFlow = false;
   const [plans, setPlans] = useState<ProjectPlan[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1, pageSize: 20, total: 0, totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -150,8 +147,8 @@ export default function ProjectPlansPage() {
       if (filterProject) params.set("projectSourceId", filterProject);
       if (filterPlanType) params.set("planType", filterPlanType);
       if (filterStatus) params.set("status", filterStatus);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/projects/plans?${params}`);
       const json = await res.json();
@@ -164,7 +161,7 @@ export default function ProjectPlansPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterProject, filterPlanType, filterStatus, pagination.page, pagination.pageSize]);
+  }, [search, filterProject, filterPlanType, filterStatus, page, pageSize]);
 
   useEffect(() => {
     fetchProjects();
@@ -300,7 +297,7 @@ export default function ProjectPlansPage() {
   };
 
   const stats = {
-    total: pagination.total,
+    total: pagination?.total ?? 0,
     inProgress: plans.filter((p) => p.status === "进行中").length,
     completed: plans.filter((p) => p.status === "已完成").length,
   };
@@ -361,7 +358,7 @@ export default function ProjectPlansPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -371,7 +368,7 @@ export default function ProjectPlansPage() {
             value={filterProject}
             onChange={(e) => {
               setFilterProject(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部项目</option>
@@ -387,7 +384,7 @@ export default function ProjectPlansPage() {
             value={filterPlanType}
             onChange={(e) => {
               setFilterPlanType(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部类型</option>
@@ -401,7 +398,7 @@ export default function ProjectPlansPage() {
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部状态</option>
@@ -412,7 +409,7 @@ export default function ProjectPlansPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条计划
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条计划
           </div>
         </div>
 
@@ -512,16 +509,20 @@ export default function ProjectPlansPage() {
                             <Eye className="w-3.5 h-3.5" />
                             详情
                           </button>
-                          <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(plan)}>
-                            <Pencil className="w-3.5 h-3.5" />
-                            编辑
-                          </button>
-                          <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
-                            onClick={() => setDeleteConfirm(plan)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {canEditFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
+                            <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(plan)}>
+                              <Pencil className="w-3.5 h-3.5" />
+                              编辑
+                            </button>
+                          )}
+                          {canDeleteFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
+                              onClick={() => setDeleteConfirm(plan)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -530,27 +531,7 @@ export default function ProjectPlansPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
       </div>

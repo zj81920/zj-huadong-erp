@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
 import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   _request: NextRequest,
@@ -168,6 +169,7 @@ export async function DELETE(
       return NextResponse.json({ error: "该需求已关联询价，无法删除" }, { status: 400 });
     }
 
+    await cleanupBusinessApprovalRecords("purchase_request", id);
     await prisma.purchaseRequest.delete({ where: { id } });
 
     return NextResponse.json({ message: "删除成功" });

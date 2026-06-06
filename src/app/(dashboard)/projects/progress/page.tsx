@@ -15,6 +15,10 @@ import Modal from "@/components/Modal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getRowStatusClass } from "@/lib/status-colors";
+import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface Project {
   id: string;
@@ -44,13 +48,6 @@ interface ProgressFormData {
   delayDays: string;
 }
 
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 const emptyForm: ProgressFormData = {
   projectSourceId: "",
   taskNode: "",
@@ -67,10 +64,10 @@ const alertStatusConfig: Record<string, { color: string; label: string }> = {
 export default function ProjectProgressPage() {
   const { user } = useAuth();
   const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "projects.progress");
+  const hasFlow = false;
   const [records, setRecords] = useState<ProjectProgress[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1, pageSize: 20, total: 0, totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -114,8 +111,8 @@ export default function ProjectProgressPage() {
       if (search) params.set("search", search);
       if (filterProject) params.set("projectSourceId", filterProject);
       if (filterAlert) params.set("alertStatus", filterAlert);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/projects/progress?${params}`);
       const json = await res.json();
@@ -128,7 +125,7 @@ export default function ProjectProgressPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterProject, filterAlert, pagination.page, pagination.pageSize]);
+  }, [search, filterProject, filterAlert, page, pageSize]);
 
   useEffect(() => {
     fetchProjects();
@@ -261,7 +258,7 @@ export default function ProjectProgressPage() {
   };
 
   const stats = {
-    total: pagination.total,
+    total: pagination?.total ?? 0,
     normal: records.filter((r) => r.alertStatus === "正常").length,
     delayed: records.filter((r) => r.alertStatus === "滞后").length,
   };
@@ -322,7 +319,7 @@ export default function ProjectProgressPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -332,7 +329,7 @@ export default function ProjectProgressPage() {
             value={filterProject}
             onChange={(e) => {
               setFilterProject(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部项目</option>
@@ -348,7 +345,7 @@ export default function ProjectProgressPage() {
             value={filterAlert}
             onChange={(e) => {
               setFilterAlert(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部状态</option>
@@ -357,7 +354,7 @@ export default function ProjectProgressPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录
           </div>
         </div>
 
@@ -455,16 +452,20 @@ export default function ProjectProgressPage() {
                             <Eye className="w-3.5 h-3.5" />
                             详情
                           </button>
-                          <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(record)}>
-                            <Pencil className="w-3.5 h-3.5" />
-                            编辑
-                          </button>
-                          <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
-                            onClick={() => setDeleteConfirm(record)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {canEditFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
+                            <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(record)}>
+                              <Pencil className="w-3.5 h-3.5" />
+                              编辑
+                            </button>
+                          )}
+                          {canDeleteFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
+                            <button
+                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
+                              onClick={() => setDeleteConfirm(record)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="text-[#78716C] text-[12px] whitespace-nowrap">
@@ -479,27 +480,11 @@ export default function ProjectProgressPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar
+              pagination={pagination}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </div>
         )}
       </div>

@@ -10,6 +10,10 @@ import {
   Building2,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
+import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 
 interface BankAccount {
   id: string;
@@ -30,13 +34,6 @@ interface BankAccountFormData {
   accountNo: string;
   accountType: string;
   remark: string;
-}
-
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
 }
 
 const emptyForm: BankAccountFormData = {
@@ -63,13 +60,12 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function BankAccountsPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.roles?.some((r: any) => r.code === "admin") || user?.username === "admin";
+  const rolePerms = getUserModulePerms(user, "bank_account");
+  const hasFlow = false;
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -92,8 +88,8 @@ export default function BankAccountsPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (filterAccountType) params.set("accountType", filterAccountType);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/bank-accounts?${params}`);
       const json = await res.json();
@@ -107,7 +103,7 @@ export default function BankAccountsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterAccountType, pagination.page, pagination.pageSize]);
+  }, [search, filterAccountType, page, pageSize]);
 
   useEffect(() => {
     fetchBankAccounts();
@@ -263,7 +259,7 @@ export default function BankAccountsPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -273,7 +269,7 @@ export default function BankAccountsPage() {
             value={filterAccountType}
             onChange={(e) => {
               setFilterAccountType(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部类型</option>
@@ -283,7 +279,7 @@ export default function BankAccountsPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录
           </div>
         </div>
 
@@ -351,20 +347,24 @@ export default function BankAccountsPage() {
                     </td>
                     <td>
                       <div className="flex items-center gap-1">
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm"
-                          onClick={() => handleOpenEdit(item)}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                          编辑
-                        </button>
-                        <button
-                          className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
-                          onClick={() => setDeleteConfirm(item)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          删除
-                        </button>
+                        {canEditFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm"
+                            onClick={() => handleOpenEdit(item)}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                            编辑
+                          </button>
+                        )}
+                        {canDeleteFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
+                            onClick={() => setDeleteConfirm(item)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            删除
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td className="text-[#78716C] text-[12px] whitespace-nowrap">
@@ -378,27 +378,7 @@ export default function BankAccountsPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
           </div>
         )}
       </div>

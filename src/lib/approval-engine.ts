@@ -1,22 +1,25 @@
 import prisma from "./prisma";
 
 const BUSINESS_TYPE_LABELS: Record<string, string> = {
-  quotation: "商务报价",
   supplier: "供应商审批",
+  supplier_change: "供应商变更",
   outsourcing: "外包任务",
   purchase_request: "采购需求",
+  inquiries: "采购单",
   delivery_receipt: "到货验收",
   income_contract: "收入合同",
   expense_contract: "支出合同",
   inter_org_contract: "内部结算合同",
-  non_contract_income: "非合同收入",
+  contract_change_order: "合同变更",
   non_contract_expense: "其他支付",
+  non_contract_income: "其他收入",
+  other_borrowing: "其他借入款",
   payment_application: "合同支付",
   expense_report: "费用报销",
-  other_borrowing: "其他借入款",
   lending_out: "借出款",
   salary_payment: "工资发放",
   borrowing_return_application: "借入资金归还",
+  quotation: "商务报价",
 };
 
 function getBusinessTypeLabel(type: string): string {
@@ -88,20 +91,28 @@ export async function shouldSkipNode(
   return false;
 }
 
-// 创建审批实例：第一节点永远自动跳过（发起节点），从第二节点开始审批
+// 创建审批实例：节点1即为第一个审批节点，发起人不会自动跳过任何节点
 export async function startApprovalFlow(params: {
   businessType: string;
   businessId: string;
   flowLevel: string;
   initiatorId: string;
   projectSourceId?: string;
+  businessTitle?: string;
+  parentInstanceId?: string;
 }): Promise<{
   instanceId: string;
   currentNode: number;
   status: string;
   approverIds: string[];
 }> {
-  const { businessType, businessId, flowLevel, initiatorId, projectSourceId } = params;
+  const { businessType, businessId, flowLevel, initiatorId, projectSourceId, businessTitle, parentInstanceId } = params;
+
+  // 查询既存实例（任意状态）
+  const existing = await prisma.approvalInstance.findFirst({
+    where: { businessType, businessId },
+    orderBy: { createdAt: "desc" },
+  });
 
   const flowNodes = await prisma.approvalFlowDefinition.findMany({
     where: { businessType, flowLevel, isActive: true },
@@ -114,85 +125,80 @@ export async function startApprovalFlow(params: {
 
   const startNode = flowNodes[0];
 
-  // 获取发起人的角色 code 列表
-  const userRoles = await prisma.userRole.findMany({
-    where: { userId: initiatorId },
-    include: { role: { select: { code: true } } },
-  });
-  const userRoleCodes = new Set(userRoles.map((ur) => ur.role.code));
+  // A. 已驳回 → 复用同一条实例
+  if (existing && existing.status === "已驳回") {
+    const approverIds = await resolveApproverIds(startNode.approverRole, projectSourceId);
 
-  // 确定起始节点：跳过发起人自己角色匹配的连续节点
-  // 从第一个节点开始，逐个检查是否需要跳过
-  let startNodeOrder = 1; // nodeOrder 从 1 开始
-  for (const node of flowNodes) {
-    // 归档和支付节点永远不跳过
-    if (node.nodeType === "archive" || node.nodeType === "payment") break;
+    await prisma.approvalInstance.update({
+      where: { id: existing.id },
+      data: { status: "审批中", currentNode: startNode.nodeOrder },
+    });
 
-    // 检查发起人角色是否匹配该节点的审批角色
-    const nodeRoles = node.approverRole.split(",").map((r) => r.trim()).filter(Boolean);
-    const isSelf = nodeRoles.some((r) => userRoleCodes.has(r));
-
-    if (isSelf) {
-      startNodeOrder = node.nodeOrder + 1;
-    } else {
-      break; // 遇到第一个不匹配的节点就停止跳过
-    }
-  }
-
-  // 限制到有效范围
-  if (startNodeOrder > flowNodes[flowNodes.length - 1].nodeOrder) {
-    startNodeOrder = flowNodes[flowNodes.length - 1].nodeOrder;
-  }
-
-  const skippedCount = startNodeOrder - startNode.nodeOrder; // 被跳过的节点数（从 nodeOrder 1 到 startNodeOrder-1）
-  const actualNode = flowNodes.find((n) => n.nodeOrder === startNodeOrder);
-
-  if (!actualNode) {
-    throw new Error(`未找到 nodeOrder=${startNodeOrder} 的节点配置`);
-  }
-
-  // 所有节点都被跳过 -> 直接完成
-  if (skippedCount >= flowNodes.length) {
-    const instance = await prisma.approvalInstance.create({
+    // 追加 resubmit action，不删除任何历史 action
+    await prisma.approvalAction.create({
       data: {
-        businessType,
-        businessId,
-        flowLevel,
-        currentNode: flowNodes[flowNodes.length - 1].nodeOrder,
-        status: "已批准",
+        instanceId: existing.id,
+        nodeId: startNode.nodeOrder,
+        nodeName: startNode.nodeName,
+        approverId: initiatorId,
+        action: "resubmit",
+        actedAt: new Date(),
       },
     });
 
-    for (let i = 0; i < flowNodes.length; i++) {
-      await prisma.approvalAction.create({
-        data: {
-          instanceId: instance.id,
-          nodeId: flowNodes[i].nodeOrder,
-          nodeName: flowNodes[i].nodeName,
-          approverId: initiatorId,
-          action: "auto_skip",
-          comment: "发起人自动跳过",
-          actedAt: new Date(),
-        },
-      });
+    await updateBusinessStatus(businessType, businessId, "审批中", undefined, existing.id);
+
+    // 发起人自动跳过连续的自身审批节点
+    const finalNodeOrder = await skipConsecutiveSelfNodes(
+      existing.id, flowNodes, startNode.nodeOrder, initiatorId, projectSourceId
+    );
+    await prisma.approvalInstance.update({
+      where: { id: existing.id },
+      data: { currentNode: finalNodeOrder },
+    });
+
+    // 通知最终停留节点的审批人
+    const finalNode = flowNodes.find((n) => n.nodeOrder === finalNodeOrder);
+    if (finalNode) {
+      const finalApproverIds = await resolveApproverIds(finalNode.approverRole, projectSourceId);
+      if (finalApproverIds.length > 0) {
+        await prisma.notification.createMany({
+          data: finalApproverIds.map((aid: string) => ({
+            userId: aid,
+            title: `${getBusinessTypeLabel(businessType)}${businessTitle ? `：${businessTitle}` : ""} 待审批`,
+            description: `${getBusinessTypeLabel(businessType)} 流程已到达您这里，请及时处理`,
+            type: "approval_pending",
+            relatedId: existing.id,
+          })),
+        });
+      }
+      return { instanceId: existing.id, currentNode: finalNodeOrder, status: "审批中", approverIds: finalApproverIds };
     }
 
-    return { instanceId: instance.id, currentNode: flowNodes[flowNodes.length - 1].nodeOrder, status: "已批准", approverIds: [] };
+    return { instanceId: existing.id, currentNode: finalNodeOrder, status: "审批中", approverIds };
   }
 
-  const approverIds = await resolveApproverIds(actualNode.approverRole, projectSourceId);
+  // B. 已有活动实例 → 拒绝重复提交
+  if (existing && ["审批中", "待归档", "待支付"].includes(existing.status)) {
+    throw new Error("该业务已有审批中的流程，不能重复提交");
+  }
+
+  // C. 首次提交或已批准/已生效/已归档 → 正常创建新实例
+  const approverIds = await resolveApproverIds(startNode.approverRole, projectSourceId);
 
   const instance = await prisma.approvalInstance.create({
     data: {
       businessType,
       businessId,
       flowLevel,
-      currentNode: actualNode.nodeOrder,
+      currentNode: startNode.nodeOrder,
       status: "审批中",
+      businessTitle: businessTitle || null,
+      parentInstanceId: parentInstanceId || null,
     },
   });
 
-  // 为发起节点创建 initiate 动作
+  // 为节点1创建 initiate 动作（仅作记录，不在时间线渲染为审批节点）
   await prisma.approvalAction.create({
     data: {
       instanceId: instance.id,
@@ -204,27 +210,120 @@ export async function startApprovalFlow(params: {
     },
   });
 
-  // 为跳过的节点创建 auto_skip 动作（跳过发起节点之后的、发起人角色匹配的节点）
-  for (let i = 0; i < skippedCount; i++) {
-    const skippedNode = flowNodes[i];
-    // 发起节点已经记录为 initiate，跳过它
-    if (i === 0) continue;
+  await updateBusinessStatus(businessType, businessId, "审批中", undefined, instance.id);
+
+  // 发起人自动跳过连续的自身审批节点
+  const finalNodeOrder = await skipConsecutiveSelfNodes(
+    instance.id, flowNodes, startNode.nodeOrder, initiatorId, projectSourceId
+  );
+  await prisma.approvalInstance.update({
+    where: { id: instance.id },
+    data: { currentNode: finalNodeOrder },
+  });
+
+  // 通知最终停留节点的审批人
+  const finalNode = flowNodes.find((n) => n.nodeOrder === finalNodeOrder);
+  if (finalNode) {
+    const finalApproverIds = await resolveApproverIds(finalNode.approverRole, projectSourceId);
+    if (finalApproverIds.length > 0) {
+      await prisma.notification.createMany({
+        data: finalApproverIds.map((aid: string) => ({
+          userId: aid,
+          title: `${getBusinessTypeLabel(businessType)}${businessTitle ? `：${businessTitle}` : ""} 待审批`,
+          description: `${getBusinessTypeLabel(businessType)} 流程已到达您这里，请及时处理`,
+          type: "approval_pending",
+          relatedId: instance.id,
+        })),
+      });
+    }
+    return { instanceId: instance.id, currentNode: finalNodeOrder, status: "审批中", approverIds: finalApproverIds };
+  }
+
+  return { instanceId: instance.id, currentNode: finalNodeOrder, status: "审批中", approverIds };
+}
+
+// 发起人自动跳过：检查发起人角色是否匹配当前节点，如果匹配则创建 auto_skip action
+// 返回 true 表示已跳过（调用方应继续前进到下一个节点）
+async function autoSkipInitiator(
+  instanceId: string,
+  nodeOrder: number,
+  initiatorId: string,
+  projectSourceId?: string
+): Promise<boolean> {
+  const instance = await prisma.approvalInstance.findUnique({
+    where: { id: instanceId },
+    select: { businessType: true, flowLevel: true },
+  });
+  if (!instance) return false;
+
+  const flowNode = await prisma.approvalFlowDefinition.findFirst({
+    where: {
+      businessType: instance.businessType,
+      flowLevel: instance.flowLevel,
+      nodeOrder,
+      isActive: true,
+    },
+  });
+  if (!flowNode) return false;
+
+  // 归档和支付节点不跳过
+  if (flowNode.nodeType === "archive" || flowNode.nodeType === "payment") return false;
+
+  // 检查发起人角色是否匹配该节点的审批角色
+  const nodeRoles = flowNode.approverRole.split(",").map((r) => r.trim()).filter(Boolean);
+  const userRoles = await prisma.userRole.findMany({
+    where: { userId: initiatorId },
+    include: { role: { select: { code: true } } },
+  });
+  const userRoleCodes = new Set(userRoles.map((ur) => ur.role.code));
+  const isSelf = nodeRoles.some((r) => userRoleCodes.has(r));
+
+  if (isSelf) {
     await prisma.approvalAction.create({
       data: {
-        instanceId: instance.id,
-        nodeId: skippedNode.nodeOrder,
-        nodeName: skippedNode.nodeName,
+        instanceId,
+        nodeId: nodeOrder,
+        nodeName: flowNode.nodeName,
         approverId: initiatorId,
         action: "auto_skip",
         comment: "发起人自动跳过",
         actedAt: new Date(),
       },
     });
+    return true;
   }
+  return false;
+}
 
-  await updateBusinessStatus(businessType, businessId, "审批中", undefined, instance.id);
-
-  return { instanceId: instance.id, currentNode: actualNode.nodeOrder, status: "审批中", approverIds };
+// 跳过连续的发起人节点：从 startNodeOrder 开始，逐个检查并跳过
+// 返回最终停留的 nodeOrder
+async function skipConsecutiveSelfNodes(
+  instanceId: string,
+  flowNodes: { nodeOrder: number; nodeType?: string; approverRole: string }[],
+  startNodeOrder: number,
+  initiatorId: string,
+  projectSourceId?: string
+): Promise<number> {
+  let currentNodeOrder = startNodeOrder;
+  for (const node of flowNodes) {
+    if (node.nodeOrder < startNodeOrder) continue;
+    const skipped = await autoSkipInitiator(instanceId, node.nodeOrder, initiatorId, projectSourceId);
+    if (skipped) {
+      // 找下一个节点
+      const nextNode = flowNodes.find((n) => n.nodeOrder > node.nodeOrder);
+      if (nextNode) {
+        currentNodeOrder = nextNode.nodeOrder;
+      } else {
+        // 没有下一个节点了，停在当前
+        currentNodeOrder = node.nodeOrder;
+        break;
+      }
+    } else {
+      currentNodeOrder = node.nodeOrder;
+      break;
+    }
+  }
+  return currentNodeOrder;
 }
 
 // 会签检查：判断当前节点的所有角色用户是否都已完成审批
@@ -238,12 +337,21 @@ async function checkCountersignComplete(
   const roleCodes = approverRoleStr.split(",").map((r) => r.trim()).filter(Boolean);
   if (roleCodes.length === 0) return true;
 
-  // 获取该实例上当前节点已有的审批动作
+  // === 找到本轮起始时间（最后一次 initiate 或 resubmit） ===
+  const lastStart = await prisma.approvalAction.findFirst({
+    where: { instanceId, action: { in: ["initiate", "resubmit"] } },
+    orderBy: { actedAt: "desc" },
+    select: { actedAt: true }
+  });
+  const sinceAt = lastStart?.actedAt || new Date(0);
+
+  // 仅取本轮（lastStart 之后）的 approve 动作
   const actions = await prisma.approvalAction.findMany({
     where: {
       instanceId,
       nodeId: nodeOrder,
-      action: { in: ["approve", "initiate"] },
+      action: "approve",
+      actedAt: { gte: sinceAt }
     },
   });
 
@@ -362,7 +470,7 @@ export async function processApprovalAction(params: {
       await prisma.notification.create({
         data: {
           userId: archiveInitiator.approverId,
-          title: `${getBusinessTypeLabel(instance.businessType)} 审批已完成`,
+          title: `${getBusinessTypeLabel(instance.businessType)}${instance.businessTitle ? `：${instance.businessTitle}` : ""} 审批已完成`,
           description: "您的审批申请已全部通过并归档",
           type: "approval_completed",
           relatedId: instanceId,
@@ -430,7 +538,7 @@ export async function processApprovalAction(params: {
       await prisma.notification.create({
         data: {
           userId: rejectInitiator.approverId,
-          title: `${getBusinessTypeLabel(instance.businessType)} 审批被驳回`,
+          title: `${getBusinessTypeLabel(instance.businessType)}${instance.businessTitle ? `：${instance.businessTitle}` : ""} 审批被驳回`,
           description: comment ? `原因：${comment}` : "您的审批申请已被驳回",
           type: "approval_rejected",
           relatedId: instanceId,
@@ -498,7 +606,7 @@ export async function processApprovalAction(params: {
       await prisma.notification.createMany({
         data: result.nextApproverIds.map((approverId: string) => ({
           userId: approverId,
-          title: `${getBusinessTypeLabel(instance.businessType)} 待审批`,
+          title: `${getBusinessTypeLabel(instance.businessType)}${instance.businessTitle ? `：${instance.businessTitle}` : ""} 待审批`,
           description: `${getBusinessTypeLabel(instance.businessType)} 流程已到达您这里，请及时处理`,
           type: "approval_pending",
           relatedId: instanceId,
@@ -533,7 +641,7 @@ export async function processApprovalAction(params: {
       await prisma.notification.createMany({
         data: result.nextApproverIds.map((approverId: string) => ({
           userId: approverId,
-          title: `${getBusinessTypeLabel(instance.businessType)} 待审批`,
+          title: `${getBusinessTypeLabel(instance.businessType)}${instance.businessTitle ? `：${instance.businessTitle}` : ""} 待审批`,
           description: `${getBusinessTypeLabel(instance.businessType)} 流程已到达您这里，请及时处理`,
           type: "approval_pending",
           relatedId: instanceId,
@@ -553,20 +661,42 @@ export async function processApprovalAction(params: {
     projectSourceId
   );
 
+  // 获取发起人 ID（用于自动跳过检查）
+  const initiatorAction = await prisma.approvalAction.findFirst({
+    where: { instanceId, action: { in: ["initiate", "resubmit"] } },
+    orderBy: { actedAt: "desc" },
+    select: { approverId: true },
+  });
+  const initiatorId = initiatorAction?.approverId;
+
+  // 发起人自动跳过：如果下一节点需要发起人审批，则跳过并继续前进
+  let actualNextNodeOrder = nextNode.nodeOrder;
+  if (initiatorId) {
+    const skippedNodeOrder = await skipConsecutiveSelfNodes(
+      instanceId, flowNodes, nextNode.nodeOrder, initiatorId, projectSourceId
+    );
+    actualNextNodeOrder = skippedNodeOrder;
+  }
+
+  const actualNode = flowNodes.find((n) => n.nodeOrder === actualNextNodeOrder) || nextNode;
+  const actualApproverIds = actualNode.nodeOrder === nextNode.nodeOrder
+    ? nextApproverIds
+    : await resolveApproverIds(actualNode.approverRole, projectSourceId);
+
   await prisma.approvalInstance.update({
     where: { id: instanceId },
     data: {
-      currentNode: nextNode.nodeOrder,
+      currentNode: actualNextNodeOrder,
       status: "审批中",
     },
   });
 
-  // 通知下一节点审批人
-  if (nextApproverIds && nextApproverIds.length > 0) {
+  // 通知最终节点的审批人
+  if (actualApproverIds && actualApproverIds.length > 0) {
     await prisma.notification.createMany({
-      data: nextApproverIds.map((approverId) => ({
+      data: actualApproverIds.map((approverId) => ({
         userId: approverId,
-        title: `${getBusinessTypeLabel(instance.businessType)} 待审批`,
+        title: `${getBusinessTypeLabel(instance.businessType)}${instance.businessTitle ? `：${instance.businessTitle}` : ""} 待审批`,
         description: `${getBusinessTypeLabel(instance.businessType)} 流程已到达您这里，请及时处理`,
         type: "approval_pending",
         relatedId: instanceId,
@@ -576,8 +706,8 @@ export async function processApprovalAction(params: {
 
   return {
     status: "审批中",
-    currentNode: nextNode.nodeOrder,
-    nextApproverIds,
+    currentNode: actualNextNodeOrder,
+    nextApproverIds: actualApproverIds,
   };
 }
 
@@ -692,18 +822,9 @@ async function updateBusinessStatus(
       }
       break;
     }
-    case "quotation": {
-      const qt = await prisma.quotation.findUnique({ where: { id: businessId } });
-      if (qt) {
-        await prisma.quotation.update({ where: { id: businessId }, data: updateData });
-      } else {
-        await prisma.bidding.update({
-          where: { id: businessId },
-          data: { updatedAt: new Date() },
-        });
-      }
+    case "inquiries":
+      await prisma.inquiry.update({ where: { id: businessId }, data: updateData });
       break;
-    }
     case "supplier": {
       const supplierData: Record<string, unknown> = {};
       if (status === "已批准") {
@@ -720,6 +841,12 @@ async function updateBusinessStatus(
       await prisma.supplier.update({ where: { id: businessId }, data: supplierData });
       break;
     }
+    case "supplier_change":
+      await prisma.supplierChange.update({
+        where: { id: businessId },
+        data: { approvalStatus: status },
+      });
+      break;
     case "outsourcing": {
       const outsourceData: Record<string, unknown> = { approvalStatus: status };
       if (instanceId) outsourceData.approvalInstanceId = instanceId;
@@ -793,9 +920,6 @@ async function updateBusinessStatus(
       if (paymentMethod) updateData.paymentMethod = paymentMethod;
       await prisma.expenseReport.update({ where: { id: businessId }, data: updateData });
       break;
-    case "non_contract_income":
-      await prisma.nonContractIncome.update({ where: { id: businessId }, data: updateData });
-      break;
     case "non_contract_expense": {
       if (bankAccountId) updateData.bankAccountId = bankAccountId;
       if (paymentMethod) updateData.paymentMethod = paymentMethod;
@@ -821,9 +945,6 @@ async function updateBusinessStatus(
       }
       break;
     }
-    case "other_borrowing":
-      await prisma.otherBorrowing.update({ where: { id: businessId }, data: updateData });
-      break;
     case "lending_out": {
       if (bankAccountId) updateData.bankAccountId = bankAccountId;
       if (paymentMethod) updateData.paymentMethod = paymentMethod;
@@ -902,6 +1023,12 @@ async function updateBusinessStatus(
           });
         }
       }
+      break;
+    case "non_contract_income":
+      await prisma.nonContractIncome.update({ where: { id: businessId }, data: updateData });
+      break;
+    case "other_borrowing":
+      await prisma.otherBorrowing.update({ where: { id: businessId }, data: updateData });
       break;
     case "delivery_receipt":
       await prisma.deliveryReceipt.update({ where: { id: businessId }, data: updateData });
@@ -992,11 +1119,14 @@ async function updateBusinessStatus(
             data: { archivedUrl: JSON.stringify(merged) },
           });
         }
-
-        // 4. 变更单状态更新为"已生效"
+      } else if (status === "已归档") {
+        // 归档完成，变更单标记为"已生效"，可选保存归档文件
         await prisma.contractChangeOrder.update({
           where: { id: businessId },
-          data: { status: "已生效" },
+          data: {
+            status: "已生效",
+            ...(archivedUrl ? { archivedUrl } : {}),
+          },
         });
       }
       break;
@@ -1076,14 +1206,15 @@ export async function getPendingApprovals(userId: string) {
 
   const roleCodes = userRoles.map((ur) => ur.role.code).filter((code) => code !== "admin");
 
-  // 获取所有审批中/待归档的实例
+  // 获取所有审批中/待归档/已驳回的实例
   const instances = await prisma.approvalInstance.findMany({
-    where: { status: { in: ["审批中", "待归档"] } },
+    where: { status: { in: ["审批中", "待归档", "已驳回"] } },
     include: {
       actions: {
         include: {
           approver: { select: { realName: true } },
         },
+        orderBy: { actedAt: "asc" },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -1093,6 +1224,35 @@ export async function getPendingApprovals(userId: string) {
   const pending = [];
 
   for (const inst of instances) {
+    // 找到最后一轮的起始时间（最后一次 initiate 或 resubmit）
+    const lastRoundStart = [...inst.actions]
+      .reverse()
+      .find((a) => a.action === "initiate" || a.action === "resubmit");
+
+    // === 已驳回：只有发起人需要操作（重新提交）===
+    if (inst.status === "已驳回") {
+      const isInitiator = inst.actions.some(
+        (a) => a.approverId === userId && (a.action === "initiate" || a.action === "resubmit")
+      );
+      if (!isInitiator) continue;
+
+      const initiatorName = lastRoundStart?.approver?.realName || "未知";
+      pending.push({
+        id: inst.id,
+        businessType: inst.businessType,
+        businessId: inst.businessId,
+        flowLevel: inst.flowLevel,
+        currentNode: inst.currentNode,
+        nodeName: "重新提交",
+        nodeType: "resubmit" as const,
+        createdAt: inst.createdAt,
+        initiatorName,
+        businessTitle: inst.businessTitle || "",
+      });
+      continue;
+    }
+
+    // === 审批中/待归档：审批人需要操作 ===
     // 获取当前节点的角色
     const flowNode = await prisma.approvalFlowDefinition.findFirst({
       where: {
@@ -1105,12 +1265,14 @@ export async function getPendingApprovals(userId: string) {
 
     if (!flowNode) continue;
 
-    // 检查用户是否已有该节点的审批动作（避免重复审批）
+    // 检查用户是否在本轮已有该节点的审批动作（避免重复审批）
+    // 只看最后一轮（lastRoundStart 之后）的操作
+    const lastRoundTime = lastRoundStart?.actedAt || new Date(0);
     const existingAction = inst.actions.find(
       (a) =>
         a.nodeId === inst.currentNode &&
         a.approverId === userId &&
-        a.action !== "auto_skip"
+        (a.actedAt ? new Date(a.actedAt) : new Date(0)) >= new Date(lastRoundTime)
     );
     if (existingAction) continue;
 
@@ -1118,9 +1280,7 @@ export async function getPendingApprovals(userId: string) {
     const nodeRoles = flowNode.approverRole.split(",").map((r) => r.trim()).filter(Boolean);
     const hasMatch = nodeRoles.some((r) => roleCodes.includes(r));
     if (hasMatch) {
-      // 获取发起人姓名
-      const initiateAction = inst.actions.find((a) => a.action === "initiate");
-      const initiatorName = initiateAction?.approver?.realName || "未知";
+      const initiatorName = lastRoundStart?.approver?.realName || "未知";
       pending.push({
         id: inst.id,
         businessType: inst.businessType,
@@ -1131,6 +1291,7 @@ export async function getPendingApprovals(userId: string) {
         nodeType: flowNode.nodeType || "approval",
         createdAt: inst.createdAt,
         initiatorName,
+        businessTitle: inst.businessTitle || "",
       });
     }
   }
@@ -1138,8 +1299,31 @@ export async function getPendingApprovals(userId: string) {
   return pending;
 }
 
+// businessType（审批流用的模块标识）→ modulePermissions key（角色权限 JSON 的 key）
+// 审批流 businessType 如 "supplier" 和 modulePermissions 的 key 如 "business" 不一致，需要映射
+const BUSINESS_TYPE_TO_MODULE_KEY: Record<string, string> = {
+  supplier: "business",
+  supplier_change: "business",
+  outsourcing: "projects",
+  purchase_request: "procurement",
+  inquiries: "procurement",
+  delivery_receipt: "procurement",
+  income_contract: "contracts",
+  expense_contract: "contracts",
+  inter_org_contract: "contracts",
+  contract_change_order: "contracts",
+  non_contract_expense: "finance",
+  non_contract_income: "finance",
+  payment_application: "finance",
+  lending_out: "finance",
+  expense_report: "finance",
+  salary_payment: "finance",
+  borrowing_return_application: "finance",
+  other_borrowing: "finance",
+};
+
 // 检查用户是否有权限发起某个业务流程
-// 第一节点角色 = 发起权限控制
+// 发起权限（开始节点）= 角色 modulePermissions.create，不依赖审批第一节点角色
 export async function canInitiateFlow(params: {
   businessType: string;
   flowLevel: string;
@@ -1147,20 +1331,37 @@ export async function canInitiateFlow(params: {
 }): Promise<boolean> {
   const { businessType, flowLevel, userId } = params;
 
+  // 1. 必须有活跃的审批流定义
   const firstNode = await prisma.approvalFlowDefinition.findFirst({
     where: { businessType, flowLevel, isActive: true },
     orderBy: { nodeOrder: "asc" },
   });
-
   if (!firstNode) return false;
 
-  const roleCodes = firstNode.approverRole.split(",").map((r) => r.trim()).filter(Boolean);
-  if (roleCodes.length === 0) return true;
-
+  // 2. 查询用户所有角色（含 modulePermissions JSON）
   const userRoles = await prisma.userRole.findMany({
     where: { userId },
-    include: { role: { select: { code: true } } },
+    include: { role: { select: { code: true, modulePermissions: true } } },
   });
+
+  // 3. 发起权限 = 角色对所属模块有 create 权限
+  // modulePermissions key 是模块级（如 "business"），不是 businessType（如 "supplier"）
+  const moduleKey = BUSINESS_TYPE_TO_MODULE_KEY[businessType] || businessType;
+  const hasCreatePermission = userRoles.some((ur) => {
+    try {
+      const parsed = typeof ur.role.modulePermissions === "string"
+        ? JSON.parse(ur.role.modulePermissions)
+        : ur.role.modulePermissions;
+      return parsed[moduleKey]?.create === true;
+    } catch {
+      return false;
+    }
+  });
+  if (hasCreatePermission) return true;
+
+  // 4. 兜底：审批流第一节点角色匹配（兼容未配置 modulePermissions 的情况）
+  const roleCodes = firstNode.approverRole.split(",").map((r) => r.trim()).filter(Boolean);
+  if (roleCodes.length === 0) return true;
 
   const userRoleCodes = userRoles.map((ur) => ur.role.code);
   return roleCodes.some((rc) => userRoleCodes.includes(rc));

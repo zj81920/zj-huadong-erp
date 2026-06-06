@@ -97,6 +97,50 @@ function SignatureImage({ src, name }: { src: string; name?: string }) {
   );
 }
 
+/** 审批详情信息面板 - 展示当前节点/提交人/优先级/节点类型/提交时间 */
+export function ApprovalInfoPanel({ instance }: { instance: InstanceDetail | null }) {
+  if (!instance) return null;
+
+  const { flowNodes = [], actions = [], currentNode, status, createdAt } = instance;
+  const initiateAction = actions.find((a) => a.action === "initiate");
+  const initiatorName = initiateAction?.approver?.realName || "—";
+
+  const currentNodeDef = flowNodes.find((n) => n.nodeOrder === currentNode);
+  const nodeName = currentNodeDef?.nodeName || "—";
+  const nodeType = currentNodeDef?.nodeType || "approval";
+
+  const diff = Date.now() - new Date(createdAt).getTime();
+  const hours = Math.floor(diff / 3600000);
+  const priorityLabel = hours >= 48 ? "紧急" : hours >= 24 ? "重要" : "普通";
+  const priorityClass = hours >= 48 ? "ios-badge ios-badge-red" : hours >= 24 ? "ios-badge ios-badge-yellow" : "ios-badge ios-badge-gray";
+  const nodeTypeLabel = nodeType === "archive" ? "归档" : nodeType === "payment" ? "支付" : "审批";
+
+  return (
+    <div className="grid grid-cols-2 gap-3 bg-[#FAFAF9] rounded-lg p-3 text-[13px]">
+      <div className="flex items-center gap-2">
+        <span className="text-[#78716C]">当前节点</span>
+        <span className="font-medium text-[#1C1917]">{status === "已驳回" ? "已驳回" : nodeName}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-[#78716C]">提交人</span>
+        <span className="font-medium text-[#1C1917]">{initiatorName}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-[#78716C]">优先级</span>
+        <span className={priorityClass}>{priorityLabel}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-[#78716C]">节点类型</span>
+        <span className="ios-badge ios-badge-gray">{nodeTypeLabel}</span>
+      </div>
+      <div className="flex items-center gap-2 col-span-2">
+        <span className="text-[#78716C]">提交时间</span>
+        <span className="font-medium text-[#1C1917]">{new Date(createdAt).toLocaleString("zh-CN")}</span>
+      </div>
+    </div>
+  );
+}
+
 interface ApprovalTimelineProps {
   instance: InstanceDetail | null;
   loading?: boolean;
@@ -122,8 +166,13 @@ export function ApprovalTimeline({ instance, loading }: ApprovalTimelineProps) {
 
   const { flowNodes = [], actions = [], currentNode, status } = instance;
 
+  // 获取发起人信息（从 initiate action 中提取）
+  const initiateAction = actions.find((a) => a.action === "initiate");
+  const initiatorName = initiateAction?.approver?.realName || "—";
+  const initiatorTime = initiateAction?.actedAt;
+
   const getActionForNode = (nodeOrder: number) => {
-    return actions.filter((a) => a.nodeId === nodeOrder);
+    return actions.filter((a) => a.nodeId === nodeOrder && a.action !== "initiate" && a.action !== "resubmit");
   };
 
   const getNodeStatus = (nodeOrder: number): "done" | "current" | "pending" | "rejected" => {
@@ -145,20 +194,20 @@ export function ApprovalTimeline({ instance, loading }: ApprovalTimelineProps) {
 
   const getActionLabel = (action: string) => {
     switch (action) {
-      case "initiate": return "发起";
       case "approve": return "通过";
       case "reject": return "驳回";
       case "auto_skip": return "自动跳过";
+      case "resubmit": return "重新提交";
       default: return action;
     }
   };
 
   const getActionColor = (action: string) => {
     switch (action) {
-      case "initiate": return "text-[#1C1917]";
       case "approve": return "text-[#78716C]";
       case "reject": return "text-[#78716C]";
       case "auto_skip": return "text-[#78716C]";
+      case "resubmit": return "text-[#2563EB]";
       default: return "text-[#78716C]";
     }
   };
@@ -189,6 +238,62 @@ export function ApprovalTimeline({ instance, loading }: ApprovalTimelineProps) {
 
       {expanded && (
         <div className="mt-4 space-y-3">
+          {/* 流程发起人行 */}
+          <div className="rounded-xl border-l-[3px] border-l-[#1C1917] bg-[#FAFAF9] px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-white bg-[#1C1917] shrink-0">
+                <Send className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[13px] font-semibold text-[#1C1917]">
+                流程发起人：{initiatorName}
+              </span>
+              {initiatorTime && (
+                <span className="text-[11px] text-[#78716C]">
+                  {formatActionTime(initiatorTime)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* 重新提交记录 */}
+          {actions.filter((a) => a.action === "resubmit").map((ra) => (
+            <div key={ra.id}>
+              <div className="rounded-xl border-l-[3px] border-l-[#2563EB] bg-[#EFF6FF] px-4 py-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white bg-[#2563EB] shrink-0">
+                    <Send className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[13px] font-semibold text-[#2563EB]">
+                    重新提交：{ra.approver?.realName || "—"}
+                  </span>
+                  {ra.actedAt && (
+                    <span className="text-[11px] text-[#78716C]">
+                      {formatActionTime(ra.actedAt)}
+                    </span>
+                  )}
+                </div>
+                {ra.comment && (
+                  <div className="mt-1.5 ml-8.5 flex items-start gap-1.5">
+                    <MessageSquare className="w-3 h-3 text-[#78716C] shrink-0 mt-0.5" />
+                    <p className="text-[12px] text-[#48484A] bg-white/60 rounded-lg px-2.5 py-1.5 border border-[#E7E5E4]">
+                      {ra.comment}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-center py-1">
+                <div className="w-0.5 h-3 rounded-full bg-[#78716C]" />
+              </div>
+            </div>
+          ))}
+
+          {/* 发起人与审批节点之间的连接线 */}
+          {flowNodes.length > 0 && (
+            <div className="flex justify-center py-1">
+              <div className="w-0.5 h-3 rounded-full bg-[#78716C]" />
+            </div>
+          )}
+
           {flowNodes.map((node, idx) => {
             const nodeStatus = getNodeStatus(node.nodeOrder);
             const nodeActions = getActionForNode(node.nodeOrder);

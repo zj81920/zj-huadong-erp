@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
 import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   _request: NextRequest,
@@ -297,6 +298,7 @@ export async function DELETE(
       );
     }
 
+    await cleanupBusinessApprovalRecords("inquiries", id);
     await prisma.inquiry.delete({ where: { id } });
 
     await prisma.purchaseRequest.update({

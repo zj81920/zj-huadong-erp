@@ -1,0 +1,108 @@
+<h2>三种方案对比</h2>
+<p class="subtitle">基于你的需求：查看=纯只读 + 审批人看完整内容</p>
+
+<div class="section">
+  <h3>方案 A：纯查看 + 操作栏分离 <span style="background:#1C1917;color:white;padding:2px 10px;border-radius:12px;font-size:12px">推荐</span></h3>
+  <div class="mockup">
+    <div class="mockup-header">核心思路：查看就是看，操作就是操作</div>
+    <div class="mockup-body" style="padding:16px">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <tr>
+          <td style="width:50%;vertical-align:top;padding-right:12px">
+            <div style="background:#F5F5F4;padding:12px;border-radius:8px">
+              <div style="font-weight:600;margin-bottom:8px">📋 列表行操作栏</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap">
+                <span style="background:#E8E8E8;padding:3px 10px;border-radius:4px;font-size:12px">👁 查看</span>
+                <span style="background:#E8E8E8;padding:3px 10px;border-radius:4px;font-size:12px">✏️ 编辑</span>
+                <span style="background:#E8E8E8;padding:3px 10px;border-radius:4px;font-size:12px">🗑 删除</span>
+                <span style="background:#E8E8E8;padding:3px 10px;border-radius:4px;font-size:12px">➕ 提交审批</span>
+                <span style="background:#E8E8E8;padding:3px 10px;border-radius:4px;font-size:12px">📄 登记发票</span>
+                <span style="background:#E8E8E8;padding:3px 10px;border-radius:4px;font-size:12px">🔄 发起变更</span>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:#666">所有操作按钮都在这里，一目了然</div>
+            </div>
+          </td>
+          <td style="width:50%;vertical-align:top;padding-left:12px">
+            <div style="background:#F5F5F4;padding:12px;border-radius:8px">
+              <div style="font-weight:600;margin-bottom:8px">👁 点击"查看"后的弹窗</div>
+              <div style="display:grid;grid-template-columns:1fr 2fr;gap:4px;font-size:12px">
+                <span style="color:#888">合同编号:</span><span>ZC-2026-001</span>
+                <span style="color:#888">供应商:</span><span>某某公司</span>
+                <span style="color:#888">金额:</span><span>¥100,000.00</span>
+              </div>
+              <div style="margin-top:8px;padding-top:8px;border-top:1px solid #E5E5E4">
+                <div style="background:#E3F2FD;padding:8px;border-radius:6px;font-size:12px">
+                  ✅ 审批区块（仅供审批人操作）
+                </div>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:#666">纯信息展示，无操作按钮</div>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <div style="margin-top:12px;padding:10px;background:#E8F5E9;border-radius:8px;font-size:13px">
+        <strong>优点：</strong>职责清晰、统一标准、审批人直接看到完整业务信息
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>方案 B：轻量查看 + 独立操作入口</h3>
+  <div class="mockup">
+    <div class="mockup-header">查看弹窗只展示关键摘要，完整详情跳转到独立页面</div>
+    <div class="mockup-body" style="padding:16px">
+      <div style="display:flex;gap:16px">
+        <div style="flex:1;background:#F5F5F4;padding:12px;border-radius:8px">
+          <div style="font-weight:600;margin-bottom:8px">👁 查看弹窗（摘要）</div>
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:4px;font-size:12px">
+            <span style="color:#888">编号:</span><span>ZC-2026-001</span>
+            <span style="color:#888">金额:</span><span>¥100,000.00</span>
+            <span style="color:#888">状态:</span><span>审批中</span>
+          </div>
+          <div style="margin-top:8px;text-align:center">
+            <span style="background:#1C1917;color:white;padding:4px 12px;border-radius:4px;font-size:12px">查看完整详情 →</span>
+          </div>
+        </div>
+        <div style="flex:1;background:#FFE;padding:12px;border-radius:8px">
+          <div style="font-weight:600;margin-bottom:8px">完整详情页面（路由）</div>
+          <div style="font-size:12px;color:#666">独立页面，展示所有业务信息、审批进度、关联单据...</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px;background:#FFF8E1;border-radius:8px;font-size:13px">
+        <strong>权衡：</strong>弹窗轻量但需要二次跳转才能看全，审批人需要点两次
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>方案 C：标签页式详情视图</h3>
+  <div class="mockup">
+    <div class="mockup-header">查看弹窗内部使用标签页组织内容</div>
+    <div class="mockup-body" style="padding:16px">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <span style="background:#1C1917;color:white;padding:6px 16px;border-radius:6px;font-size:13px">📋 业务信息</span>
+        <span style="background:#E8E8E8;padding:6px 16px;border-radius:6px;font-size:13px">📎 关联单据 (3)</span>
+        <span style="background:#E8E8E8;padding:6px 16px;border-radius:6px;font-size:13px">⏳ 审批进度</span>
+        <span style="background:#E8E8E8;padding:6px 16px;border-radius:6px;font-size:13px">📜 变更记录</span>
+      </div>
+      <div style="background:#F5F5F4;padding:12px;border-radius:8px;font-size:13px">
+        内容按标签页分类展示，结构清晰
+      </div>
+      <div style="margin-top:12px;padding:10px;background:#FFF8E1;border-radius:8px;font-size:13px">
+        <strong>权衡：</strong>信息组织好，但额外标签点击，审批人需要来回切标签看完整内容
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="background:#F0FDF4;padding:16px;border-radius:8px;border:1px solid #86EFAC">
+  <p style="font-size:14px;font-weight:600">推荐方案 A 的理由：</p>
+  <ul style="font-size:13px">
+    <li><strong>职责最清晰</strong> — 操作在操作栏、查看只管展示，用户直觉无歧义</li>
+    <li><strong>审批人体验最佳</strong> — 审批时直接看到和"查看"一样的完整业务信息 + 审批区块，无需跳转</li>
+    <li><strong>改动范围可控</strong> — 主要是把现有"查看"弹窗里的操作按钮移到操作栏，内容保持不变</li>
+    <li><strong>各模块统一</strong> — 不管有没有审批流程，查看的内容标准一致</li>
+  </ul>
+</div>

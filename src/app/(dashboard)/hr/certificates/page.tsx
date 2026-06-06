@@ -14,6 +14,10 @@ import {
   User,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { usePagination } from "@/hooks/usePagination";
+import PaginationBar from "@/components/PaginationBar";
 
 interface Certificate {
   id: string;
@@ -43,13 +47,6 @@ interface CertificateFormData {
   status: string;
   location: string;
   remark: string;
-}
-
-interface PaginationInfo {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
 }
 
 const emptyForm: CertificateFormData = {
@@ -107,13 +104,12 @@ function computeStatus(expireDate: string | null, currentStatus: string): string
 }
 
 export default function CertificatesPage() {
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
+  const rolePerms = getUserModulePerms(user, "certificates");
+
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -138,8 +134,8 @@ export default function CertificatesPage() {
       if (search) params.set("search", search);
       if (filterStatus) params.set("status", filterStatus);
       if (filterCertType) params.set("certType", filterCertType);
-      params.set("page", pagination.page.toString());
-      params.set("pageSize", pagination.pageSize.toString());
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
 
       const res = await fetch(`/api/certificates?${params}`);
       const json = await res.json();
@@ -153,7 +149,7 @@ export default function CertificatesPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterStatus, filterCertType, pagination.page, pagination.pageSize]);
+  }, [search, filterStatus, filterCertType, page, pageSize]);
 
   useEffect(() => {
     fetchCertificates();
@@ -296,7 +292,7 @@ export default function CertificatesPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPagination((prev) => ({ ...prev, page: 1 }));
+                setPage(1);
               }}
             />
           </div>
@@ -306,7 +302,7 @@ export default function CertificatesPage() {
             value={filterStatus}
             onChange={(e) => {
               setFilterStatus(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部状态</option>
@@ -320,7 +316,7 @@ export default function CertificatesPage() {
             value={filterCertType}
             onChange={(e) => {
               setFilterCertType(e.target.value);
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPage(1);
             }}
           >
             <option value="">全部类型</option>
@@ -330,7 +326,7 @@ export default function CertificatesPage() {
           </select>
 
           <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination.total}</span> 条记录
+            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条记录
           </div>
         </div>
 
@@ -406,6 +402,7 @@ export default function CertificatesPage() {
                             <Eye className="w-3.5 h-3.5" />
                             详情
                           </button>
+                          {canEditFrontend(false, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
                           <button
                             className="ios-btn ios-btn-ghost ios-btn-sm"
                             onClick={() => handleOpenEdit(item)}
@@ -413,6 +410,8 @@ export default function CertificatesPage() {
                             <Pencil className="w-3.5 h-3.5" />
                             编辑
                           </button>
+                          )}
+                          {canDeleteFrontend(false, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
                           <button
                             className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                             onClick={() => setDeleteConfirm(item)}
@@ -420,6 +419,7 @@ export default function CertificatesPage() {
                             <Trash2 className="w-3.5 h-3.5" />
                             删除
                           </button>
+                          )}
                         </div>
                       </td>
                       <td className="text-[#78716C] text-[12px] whitespace-nowrap">
@@ -434,27 +434,11 @@ export default function CertificatesPage() {
               </tbody>
             </table>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#F5F5F4]">
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page <= 1}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                >
-                  上一页
-                </button>
-                <span className="text-[13px] text-[#78716C] px-3">
-                  {pagination.page} / {pagination.totalPages}
-                </span>
-                <button
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  disabled={pagination.page >= pagination.totalPages}
-                  onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                >
-                  下一页
-                </button>
-              </div>
-            )}
+            <PaginationBar
+              pagination={pagination}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </div>
         )}
       </div>

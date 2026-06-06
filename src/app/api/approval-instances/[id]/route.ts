@@ -42,10 +42,42 @@ export async function GET(
       orderBy: { nodeOrder: "asc" },
     });
 
+    // 递归加载父链 actions，合并完整审批历史
+    const allActions = [...instance.actions];
+    const parentInstances: { id: string; status: string; createdAt: string }[] = [];
+    let currentParentId = instance.parentInstanceId;
+    while (currentParentId) {
+      const parent = await prisma.approvalInstance.findUnique({
+        where: { id: currentParentId },
+        include: {
+          actions: {
+            include: {
+              approver: {
+                select: { id: true, realName: true, username: true },
+              },
+            },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+      });
+      if (!parent) break;
+      parentInstances.push({ id: parent.id, status: parent.status, createdAt: parent.createdAt.toISOString() });
+      allActions.push(...parent.actions);
+      currentParentId = parent.parentInstanceId;
+    }
+    // 按时间排序
+    allActions.sort((a, b) => {
+      const timeA = a.actedAt ? new Date(a.actedAt).getTime() : new Date(a.createdAt).getTime();
+      const timeB = b.actedAt ? new Date(b.actedAt).getTime() : new Date(b.createdAt).getTime();
+      return timeA - timeB;
+    });
+
     return NextResponse.json({
       data: {
         ...instance,
+        actions: allActions,
         flowNodes,
+        parentInstances,
       },
     });
   } catch (error) {

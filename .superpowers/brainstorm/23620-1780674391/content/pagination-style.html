@@ -1,0 +1,33 @@
+<h2>分页交互风格选择</h2>
+<p class="subtitle">ERP 系统中列表分页有几种主流风格，你更偏好哪种？</p>
+
+<div class="options">
+  <div class="option" data-choice="traditional" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>传统分页（页码翻页）</h3>
+      <p>底部显示页码、上一页/下一页按钮、总数统计。适合需要精确定位、跳转到特定页的 ERP 场景。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="load-more" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>加载更多（按钮触发）</h3>
+      <p>底部一个「加载更多」按钮，点击追加数据。简洁但无法快速跳到后面的数据。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="infinite" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>无限滚动（触底自动加载）</h3>
+      <p>滚动到底部自动加载下一页。现代感强但不适合需要查看总数、精确翻页的 ERP 场景。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="hybrid" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>传统分页 + 每页条数可选</h3>
+      <p>在传统分页基础上，允许用户选择每页显示条数（20/50/100），灵活性最高，ERP 推荐方案。</p>
+    </div>
+  </div>
+</div>

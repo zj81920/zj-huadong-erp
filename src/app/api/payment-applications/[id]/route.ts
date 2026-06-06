@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
 import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   _request: NextRequest,
@@ -108,6 +109,7 @@ export async function DELETE(
       return NextResponse.json({ error: "该付款申请已有付款凭证，无法删除" }, { status: 400 });
     }
 
+    await cleanupBusinessApprovalRecords("payment_application", id);
     await prisma.paymentApplication.delete({ where: { id } });
 
     return NextResponse.json({ message: "删除成功" });

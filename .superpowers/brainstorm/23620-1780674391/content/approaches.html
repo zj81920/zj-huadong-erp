@@ -1,0 +1,38 @@
+<h2>三种实现方案对比</h2>
+<p class="subtitle">均基于：传统分页 + 每页条数可选(20/50/100) + 筛选联动 + 全量改造</p>
+
+<div class="options">
+  <div class="option" data-choice="hooks" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>共享 Hook + 组件（推荐）</h3>
+      <p>创建 <code>usePagination</code> hook + <code>PaginationBar</code> 组件。每个页面引入 hook 管理状态，引入组件渲染分页栏。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优势</h4><ul><li>改动最小，每个页面只需替换部分代码</li><li>灵活性高，各页面仍可自己控制表格列</li><li>不改变现有页面结构</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>每个页面仍需写 fetch 调用代码</li><li>hook 用法需保持一致</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="container" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>容器组件模式</h3>
+      <p>创建 <code>&lt;PaginatedList&gt;</code> 容器，传入 fetch 函数 + 列定义，容器统一管理分页、加载、空状态。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优势</h4><ul><li>极简页面代码，只需传配置</li><li>分页、加载态、空状态统一处理</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>侵入性强，现有页面需大规模重构</li><li>复杂列表（多 Tab、特殊列）适配困难</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="url" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>URL 参数驱动</h3>
+      <p>分页参数存入 URL query string（?page=1&pageSize=20），利用 Next.js <code>useSearchParams</code> 驱动。</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>优势</h4><ul><li>刷新保留分页位置</li><li>可分享带分页状态的链接</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>引入额外复杂度</li><li>ERP 场景极少需要分享分页链接</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

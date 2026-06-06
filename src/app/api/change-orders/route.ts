@@ -33,6 +33,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "变更原因不能为空" }, { status: 400 });
     }
 
+    // 检查该合同是否已有审批中的变更
+    const activeChange = await prisma.contractChangeOrder.findFirst({
+      where: { contractId: body.contractId, status: "审批中" },
+    });
+    if (activeChange) {
+      return NextResponse.json({ error: "该合同已有审批中的变更，请等待审批完成" }, { status: 400 });
+    }
+
     const data = await prisma.contractChangeOrder.create({
       data: {
         changeNo: `BG-${Date.now()}`,

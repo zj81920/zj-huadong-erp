@@ -1,0 +1,114 @@
+<h2>当前问题：各模块的"查看"与"详情"不一致</h2>
+<p class="subtitle">同一个操作（查看记录内容），在不同的模块表现不同</p>
+
+<div class="section">
+  <h3>问题一：按钮文字/图标不统一</h3>
+  <div class="mockup">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="background:#F5F5F4">
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid #E5E5E4">模块</th>
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid #E5E5E4">操作栏按钮</th>
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid #E5E5E4">打开方式</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:#FFF4E5">
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">hr/员工</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE"><span style="background:#E8E8E8;padding:2px 8px;border-radius:4px">👁 详情</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">Modal弹窗</td>
+        </tr>
+        <tr style="background:#FFF4E5">
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">finance/发票</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE"><span style="background:#E8E8E8;padding:2px 8px;border-radius:4px">👁 查看</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">展开+Modal</td>
+        </tr>
+        <tr style="background:#FFF4E5">
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">business/供应商</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE"><span style="background:#E8E8E8;padding:2px 8px;border-radius:4px">👁 (无文字)</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">Modal (含审批)</td>
+        </tr>
+        <tr style="background:#FFF4E5">
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">contracts/收入合同</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE"><span style="background:#E8E8E8;padding:2px 8px;border-radius:4px">👁 (无文字)</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">Modal (含审批)</td>
+        </tr>
+        <tr style="background:#FFF4E5">
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">admin/办公用品</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE"><span style="background:#E8E8E8;padding:2px 8px;border-radius:4px">👁 详情</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">Modal弹窗</td>
+        </tr>
+        <tr style="background:#E8F5E9">
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">contracts/内部结算</td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE"><span style="background:#E8E8E8;padding:2px 8px;border-radius:4px">➡️ (跳转)</span></td>
+          <td style="padding:8px 12px;border-bottom:1px solid #F0EFEE">独立路由页面</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h3>问题二："详情"和"查看"展示的内容标准不统一</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">某些模块（如员工、办公用品）</div>
+      <div class="mockup-body" style="padding:16px">
+        <div style="background:#F5F5F4;padding:12px;border-radius:8px">
+          <div style="font-weight:600;margin-bottom:8px">👁 点击"详情"</div>
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:4px;font-size:13px">
+            <span style="color:#888">姓名:</span><span>张三</span>
+            <span style="color:#888">部门:</span><span>技术部</span>
+            <span style="color:#888">职位:</span><span>工程师</span>
+            <span style="color:#888">入职日期:</span><span>2024-01-15</span>
+          </div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #E5E5E4;color:#999;font-size:12px;text-align:center">
+            ⚠️ 只有业务信息，没有审批上下文
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">另一些模块（如供应商、合同）</div>
+      <div class="mockup-body" style="padding:16px">
+        <div style="background:#F5F5F4;padding:12px;border-radius:8px">
+          <div style="font-weight:600;margin-bottom:8px">👁 点击眼睛图标</div>
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:4px;font-size:13px">
+            <span style="color:#888">供应商:</span><span>某某公司</span>
+            <span style="color:#888">联系人:</span><span>李四</span>
+          </div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #E5E5E4">
+            <div style="background:#E3F2FD;padding:8px;border-radius:6px;font-size:12px">
+              <div style="font-weight:600;margin-bottom:4px">📋 审批区块</div>
+              <div>状态: 审批中</div>
+              <div>当前节点: 部门经理审批</div>
+              <div style="font-size:11px;color:#666;margin-top:4px">含审批时间线 + 操作按钮</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>问题三：审批人究竟应该看到什么？</h3>
+  <div class="mockup" style="border:2px solid #FF9800">
+    <div class="mockup-header">审批中心的"处理审批"</div>
+    <div class="mockup-body" style="padding:16px">
+      <p style="font-size:13px">审批人点击"处理审批"后，看到的内容是审批专用的数据摘要 + 审批流程，但看不到完整的业务详情。</p>
+      <p style="font-size:13px;margin-top:8px;color:#D32F2F"><strong>矛盾点：</strong></p>
+      <ul style="font-size:13px">
+        <li>列表页点 👁 眼睛 → 看到的是业务详情（可能含审批区）</li>
+        <li>审批中心点 👁 眼睛 → 看到的是审批专用视图</li>
+        <li><strong>那么审批人审批时，到底应该以哪个视图为准？</strong></li>
+        <li><strong>如果两个视图内容不一样，审批人怎么能做出正确决策？</strong></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="background:#FFF8E1;padding:16px;border-radius:8px;border:1px solid #FFE082">
+  <p style="font-size:14px;font-weight:600">💡 核心矛盾总结：</p>
+  <p style="font-size:13px">整个应用存在 <strong>3 种不同的查看视图</strong>，但用户（尤其是审批人）搞不清楚它们之间有什么区别，为什么不一样，应该用哪一个。</p>
+</div>
