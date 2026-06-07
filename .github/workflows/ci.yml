@@ -84,8 +84,10 @@ jobs:
       - name: 种子化测试数据 + 启动服务
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/epc_test?schema=public
-          NODE_ENV: production
-          STORAGE_PATH: /tmp
+          STORAGE_MODE: local
+          UPLOAD_DIR: /tmp/uploads
+          APP_SECRET: ci-test-secret-key
+          APP_URL: http://localhost:3000
         run: |
           echo "🌱 种子化数据库..."
           npx prisma db seed
