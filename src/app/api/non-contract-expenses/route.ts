@@ -58,9 +58,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("获取非合同支出列表失败:", error);
+    console.error("获取其他支出列表失败:", error);
     return NextResponse.json(
-      { error: "获取非合同支出列表失败" },
+      { error: "获取其他支出列表失败" },
       { status: 500 }
     );
   }
@@ -118,9 +118,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: record }, { status: 201 });
   } catch (error) {
-    console.error("创建非合同支出失败:", error);
+    console.error("创建其他支出失败:", error);
     return NextResponse.json(
-      { error: "创建非合同支出失败" },
+      { error: "创建其他支出失败" },
       { status: 500 }
     );
   }

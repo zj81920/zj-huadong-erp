@@ -313,7 +313,7 @@ const sourceTypeMap: Record<string, string> = {
   loan_request: "备用金借款",
   income_contract: "收入合同",
   non_contract_income: "其他收入",
-  non_contract_expense: "非合同支出",
+  non_contract_expense: "其他支出",
 };
 
 const appStatusConfig: Record<string, { color: string; label: string }> = {

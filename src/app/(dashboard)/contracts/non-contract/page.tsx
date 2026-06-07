@@ -454,7 +454,7 @@ export default function NonContractPage() {
     return <span className={`ios-badge ${config.color}`}>{config.label}</span>;
   };
 
-  const tabLabel = activeTab === "income" ? "其他收入" : "非合同支出";
+  const tabLabel = activeTab === "income" ? "其他收入" : "其他支出";
   const isIncome = activeTab === "income";
 
   return (
@@ -463,7 +463,7 @@ export default function NonContractPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1>非合同收支</h1>
-            <p>管理其他收入与非合同支出，支持按项目或公司级记录</p>
+            <p>管理其他收入与其他支出，支持按项目或公司级记录</p>
           </div>
           <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
             <Plus className="w-4 h-4" />
@@ -485,7 +485,7 @@ export default function NonContractPage() {
           onClick={() => handleTabChange("expense")}
         >
           <ArrowDownCircle className="w-4 h-4" />
-          非合同支出
+          其他支出
         </button>
       </div>
 

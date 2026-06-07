@@ -637,7 +637,7 @@ export async function processApprovalAction(params: {
         where: { id: instanceId },
         data: { status: "已批准", currentNode: currentNode.nodeOrder },
       });
-      await updateBusinessStatus(instance.businessType, instance.businessId, "已批准", undefined, isFinanceApprove ? bankAccountId : undefined, isFinanceApprove ? paymentMethod : undefined);
+      await updateBusinessStatus(instance.businessType, instance.businessId, "已批准", undefined, undefined, isFinanceApprove ? bankAccountId : undefined, isFinanceApprove ? paymentMethod : undefined);
     });
 
     return { status: "已批准", currentNode: currentNode.nodeOrder };
@@ -653,7 +653,7 @@ export async function processApprovalAction(params: {
     );
 
     const result = await prisma.$transaction(async (tx) => {
-      await updateBusinessStatus(instance.businessType, instance.businessId, "已批准", undefined, isFinanceApprove ? bankAccountId : undefined, isFinanceApprove ? paymentMethod : undefined);
+      await updateBusinessStatus(instance.businessType, instance.businessId, "已批准", undefined, undefined, isFinanceApprove ? bankAccountId : undefined, isFinanceApprove ? paymentMethod : undefined);
       await tx.approvalInstance.update({
         where: { id: instanceId },
         data: { currentNode: nextNode.nodeOrder, status: "审批中" },
@@ -688,7 +688,7 @@ export async function processApprovalAction(params: {
     );
 
     const result = await prisma.$transaction(async (tx) => {
-      await updateBusinessStatus(instance.businessType, instance.businessId, "已批准", undefined, isFinanceApprove ? bankAccountId : undefined, isFinanceApprove ? paymentMethod : undefined);
+      await updateBusinessStatus(instance.businessType, instance.businessId, "已批准", undefined, undefined, isFinanceApprove ? bankAccountId : undefined, isFinanceApprove ? paymentMethod : undefined);
       await tx.approvalInstance.update({
         where: { id: instanceId },
         data: { currentNode: nextNode.nodeOrder, status: "审批中" },

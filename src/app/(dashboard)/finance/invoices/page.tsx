@@ -118,7 +118,7 @@ const sourceTypeOptions = [
   { value: "expense_contract", label: "支出合同收票" },
   { value: "inter_org_contract", label: "内部结算开票" },
   { value: "delivery_receipt", label: "到货验收收票" },
-  { value: "non_contract_expense", label: "非合同支出收票" },
+  { value: "non_contract_expense", label: "其他支出收票" },
   { value: "expense_report", label: "员工报销" },
   { value: "manual", label: "手工录入" },
 ];
@@ -128,7 +128,7 @@ const sourceTypeMap: Record<string, string> = {
   expense_contract: "支出合同",
   inter_org_contract: "内部结算",
   delivery_receipt: "到货验收",
-  non_contract_expense: "非合同支出",
+  non_contract_expense: "其他支出",
   expense_report: "员工报销",
   manual: "手工录入",
 };

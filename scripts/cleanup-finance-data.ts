@@ -107,9 +107,9 @@ async function cleanup() {
   deleted = await prisma.nonContractIncome.deleteMany({});
   console.log(`  删除非合同收入: ${deleted.count} 条`);
 
-  // 非合同支出
+  // 其他支出
   deleted = await prisma.nonContractExpense.deleteMany({});
-  console.log(`  删除非合同支出: ${deleted.count} 条`);
+  console.log(`  删除其他支出: ${deleted.count} 条`);
 
   // 发票
   deleted = await prisma.invoice.deleteMany({});

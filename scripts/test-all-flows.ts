@@ -30,7 +30,7 @@ const MODULE_LABELS: Record<string, string> = {
   income_contract: "收入合同",
   expense_contract: "支出合同",
   non_contract_income: "非合同收入",
-  non_contract_expense: "非合同支出",
+  non_contract_expense: "其他支出",
   payment_application: "付款申请",
   expense_report: "费用报销",
   other_borrowing: "其他借入款",

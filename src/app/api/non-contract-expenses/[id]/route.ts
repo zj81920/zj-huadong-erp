@@ -20,16 +20,16 @@ export async function GET(
 
     if (!record) {
       return NextResponse.json(
-        { error: "非合同支出记录不存在" },
+        { error: "其他支出记录不存在" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({ data: record });
   } catch (error) {
-    console.error("获取非合同支出详情失败:", error);
+    console.error("获取其他支出详情失败:", error);
     return NextResponse.json(
-      { error: "获取非合同支出详情失败" },
+      { error: "获取其他支出详情失败" },
       { status: 500 }
     );
   }
@@ -49,7 +49,7 @@ export async function PUT(
 
     if (!existing) {
       return NextResponse.json(
-        { error: "非合同支出记录不存在" },
+        { error: "其他支出记录不存在" },
         { status: 404 }
       );
     }
@@ -90,9 +90,9 @@ export async function PUT(
 
     return NextResponse.json({ data: record });
   } catch (error) {
-    console.error("更新非合同支出失败:", error);
+    console.error("更新其他支出失败:", error);
     return NextResponse.json(
-      { error: "更新非合同支出失败" },
+      { error: "更新其他支出失败" },
       { status: 500 }
     );
   }
@@ -112,7 +112,7 @@ export async function DELETE(
 
     if (!existing) {
       return NextResponse.json(
-        { error: "非合同支出记录不存在" },
+        { error: "其他支出记录不存在" },
         { status: 404 }
       );
     }
@@ -129,9 +129,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: "删除成功" });
   } catch (error) {
-    console.error("删除非合同支出失败:", error);
+    console.error("删除其他支出失败:", error);
     return NextResponse.json(
-      { error: "删除非合同支出失败" },
+      { error: "删除其他支出失败" },
       { status: 500 }
     );
   }
