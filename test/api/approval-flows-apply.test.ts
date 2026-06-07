@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import prisma from '../../src/lib/prisma'
 
 const BASE_URL = 'http://localhost:3000'
 let sessionCookie = ''
@@ -29,7 +30,6 @@ function authFetch(url: string, options?: RequestInit) {
 
 // 辅助：确保源模块有流程节点
 async function ensureSourceFlow(businessType: string, flowLevel: string) {
-  // 先删除已有节点
   await authFetch(`${BASE_URL}/api/approval-flows`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -44,15 +44,27 @@ async function ensureSourceFlow(businessType: string, flowLevel: string) {
   })
 }
 
-// 辅助：删除指定模块的流程节点
-async function cleanupFlow(businessType: string, flowLevel: string) {
-  // 通过覆盖为空数组来清除
-  await authFetch(`${BASE_URL}/api/approval-flows?businessType=${businessType}&flowLevel=${flowLevel}`)
-}
+// 使用 supplier_change 作为 apply 目标（避免与真实业务数据冲突导致 409）
+const TARGET_MODULE = 'supplier_change'
 
 describe('POST /api/approval-flows/apply - 批量应用审批流程', () => {
   beforeAll(async () => {
     await login()
+    // 清理目标模块的活跃审批实例和流程定义，避免 409 冲突
+    await prisma.approvalInstance.deleteMany({
+      where: { businessType: TARGET_MODULE, flowLevel: 'common' },
+    })
+    await prisma.approvalFlowDefinition.deleteMany({
+      where: { businessType: TARGET_MODULE, flowLevel: 'common' },
+    })
+  })
+
+  afterAll(async () => {
+    // 清理测试数据
+    await prisma.approvalFlowDefinition.deleteMany({
+      where: { businessType: TARGET_MODULE, flowLevel: 'common' },
+    })
+    await prisma.$disconnect()
   })
 
   it('缺少必要参数时返回 400', async () => {
@@ -91,7 +103,7 @@ describe('POST /api/approval-flows/apply - 批量应用审批流程', () => {
       body: JSON.stringify({
         sourceBusinessType: 'supplier',
         sourceFlowLevel: 'common',
-        targets: [{ businessType: 'outsourcing', flowLevel: 'common' }],
+        targets: [{ businessType: TARGET_MODULE, flowLevel: 'common' }],
       }),
     })
 
@@ -100,14 +112,14 @@ describe('POST /api/approval-flows/apply - 批量应用审批流程', () => {
     expect(json.data.appliedCount).toBe(1)
 
     // 验证目标模块确实有流程节点了
-    const checkRes = await authFetch(`${BASE_URL}/api/approval-flows?businessType=outsourcing&flowLevel=common`)
+    const checkRes = await authFetch(`${BASE_URL}/api/approval-flows?businessType=${TARGET_MODULE}&flowLevel=common`)
     const checkJson = await checkRes.json()
     expect(checkJson.data.length).toBe(2) // 2个节点被复制过来
     expect(checkJson.data[0].nodeName).toBe('部门主管审批')
     expect(checkJson.data[1].nodeName).toBe('总经理审批')
   })
 
-  it('空 targets 数组时返回 400', async () => {
+  it('空 targets 数组时返回 200 且 appliedCount 为 0', async () => {
     await ensureSourceFlow('supplier', 'common')
 
     const res = await authFetch(`${BASE_URL}/api/approval-flows/apply`, {
@@ -119,7 +131,6 @@ describe('POST /api/approval-flows/apply - 批量应用审批流程', () => {
         targets: [],
       }),
     })
-    // 空数组是合法的 Array，但 appliedCount 为 0，后端会正常返回
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.data.appliedCount).toBe(0)
