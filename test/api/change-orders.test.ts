@@ -40,9 +40,24 @@ describe('合同变更单 API', () => {
     if (contract) {
       testContractId = contract.id;
     } else {
-      // 如果没有已批准的，找任意一个
-      const anyContract = await prisma.incomeContract.findFirst();
-      testContractId = anyContract!.id;
+      // 没有已批准的合同，先创建一个客户和收入合同
+      let customer = await prisma.customer.findFirst({ where: { isActive: true } });
+      if (!customer) {
+        customer = await prisma.customer.create({
+          data: { name: '测试客户-变更单', contactPerson: '测试', phone: '13800000000' },
+        });
+      }
+      const org = await prisma.organization.findFirst();
+      const newContract = await prisma.incomeContract.create({
+        data: {
+          contractNo: `TEST-CO-${Date.now()}`,
+          customerId: customer.id,
+          organizationId: org!.id,
+          totalAmount: 100000,
+          status: '已批准',
+        },
+      });
+      testContractId = newContract.id;
     }
   });
 
