@@ -116,4 +116,34 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/epc_test?schema=public
           TEST_BASE_URL: http://localhost:3000
-        run: npx vitest run test/api/ --reporter=verbose
+        run: npx vitest run test/api/ --reporter=verbose 2>&1 | tee /tmp/api-test.log
+        continue-on-error: true
+
+      - name: 上传 API 测试日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-log
+          path: /tmp/api-test.log
+          retention-days: 3
+
+      - name: 上传服务日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log
+          path: /tmp/server.log
+          retention-days: 3
+
+      - name: API 测试结果判定
+        if: always()
+        run: |
+          if grep -Eq "^[[:space:]]*Tests[[:space:]]+[0-9]+[[:space:]]+failed" /tmp/api-test.log 2>/dev/null; then
+            echo "❌ API 测试有失败"
+            echo "=== 失败详情 ==="
+            grep -A 10 "FAIL\|Error\|expected\|TypeError\|AssertionError" /tmp/api-test.log | head -60
+            echo "=== 服务日志（最后 30 行）==="
+            tail -30 /tmp/server.log 2>/dev/null || echo "无服务日志"
+            exit 1
+          fi
+          echo "✅ API 测试全部通过"
