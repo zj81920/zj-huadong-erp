@@ -56,6 +56,8 @@ pgdata/
 
 # Prisma
 prisma/migrations/
+prisma/dev.db
+prisma/dev.db-journal
 
 # 设计系统文档（非代码）
 design-system/
