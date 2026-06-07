@@ -64,9 +64,9 @@ jobs:
       - name: 单元测试结果判定
         if: always()
         run: |
-          if grep -q "Tests.*failed" /tmp/unit-test.log 2>/dev/null; then
+          if grep -Eq "^[[:space:]]*Tests[[:space:]]+[0-9]+[[:space:]]+failed" /tmp/unit-test.log 2>/dev/null; then
             echo "❌ 单元测试有失败"
-            grep "FAIL\|Error\|failed" /tmp/unit-test.log | head -20
+            grep "FAIL\|Error" /tmp/unit-test.log | head -20
             exit 1
           fi
           echo "✅ 单元测试全部通过"
