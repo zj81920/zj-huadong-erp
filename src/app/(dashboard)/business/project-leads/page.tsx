@@ -464,17 +464,17 @@ export default function ProjectLeadsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="ios-table" style={{ minWidth: 1100 }}>
+            <table className="ios-table" style={{ minWidth: 1100, width: '100%' }}>
               <colgroup>
-                <col style={{ minWidth: 110 }} />
-                <col style={{ minWidth: 180 }} />
-                <col style={{ minWidth: 120 }} />
-                <col style={{ minWidth: 140 }} />
-                <col style={{ minWidth: 100 }} />
-                <col style={{ minWidth: 80 }} />
-                <col style={{ minWidth: 100 }} />
-                <col style={{ minWidth: 100 }} />
-                <col style={{ minWidth: 170 }} />
+                <col style={{ width: 110 }} />
+                <col style={{ width: 'auto' }} />
+                <col style={{ width: 120 }} />
+                <col style={{ width: 140 }} />
+                <col style={{ width: 100 }} />
+                <col style={{ width: 80 }} />
+                <col style={{ width: 100 }} />
+                <col style={{ width: 100 }} />
+                <col style={{ width: 170 }} />
               </colgroup>
               <thead>
                 <tr>

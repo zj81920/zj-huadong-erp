@@ -644,21 +644,21 @@ export default function ProjectsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="ios-table" style={{ minWidth: 1400 }}>
+            <table className="ios-table" style={{ minWidth: 1400, width: '100%' }}>
               <colgroup>
-                <col style={{ minWidth: 110 }} />
-                <col style={{ minWidth: 100 }} />
-                <col style={{ minWidth: 160 }} />
-                <col style={{ minWidth: 120 }} />
-                <col style={{ minWidth: 70 }} />
-                <col style={{ minWidth: 70 }} />
-                <col style={{ minWidth: 80 }} />
-                <col style={{ minWidth: 80 }} />
-                <col style={{ minWidth: 80 }} />
-                <col style={{ minWidth: 120 }} />
-                <col style={{ minWidth: 100 }} />
-                <col style={{ minWidth: 100 }} />
-                <col style={{ minWidth: 170 }} />
+                <col style={{ width: 110 }} />
+                <col style={{ width: 100 }} />
+                <col style={{ width: 'auto' }} />
+                <col style={{ width: 120 }} />
+                <col style={{ width: 70 }} />
+                <col style={{ width: 70 }} />
+                <col style={{ width: 80 }} />
+                <col style={{ width: 80 }} />
+                <col style={{ width: 80 }} />
+                <col style={{ width: 120 }} />
+                <col style={{ width: 100 }} />
+                <col style={{ width: 100 }} />
+                <col style={{ width: 170 }} />
               </colgroup>
               <thead>
                 <tr>

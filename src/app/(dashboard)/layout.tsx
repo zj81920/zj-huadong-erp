@@ -28,7 +28,7 @@ export default function DashboardLayout({
       <Header />
       <div className="flex pt-14">
         <Sidebar />
-        <main className="ml-[240px] flex-1 min-h-[calc(100vh-56px)] p-6">
+        <main className="ml-[240px] flex-1 min-w-0 min-h-[calc(100vh-56px)] p-6">
           <div className="mb-6 -mt-2">
             <AISearchBar />
           </div>
