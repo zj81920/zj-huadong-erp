@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 
-const BASE_URL = 'http://localhost:3001'
+const BASE_URL = 'http://localhost:3000'
 let sessionCookie = ''
 
 async function login() {
