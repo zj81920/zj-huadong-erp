@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
+import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
 import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
@@ -39,6 +40,11 @@ export async function PUT(
     const existing = await prisma.quotation.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "报价单不存在" }, { status: 404 });
+    }
+
+    const editCheck = await checkEditPermission("quotation", undefined, existing.approvalStatus, existing.createdById);
+    if (!editCheck.allowed) {
+      return NextResponse.json({ error: editCheck.error }, { status: 403 });
     }
 
     const updateData: Record<string, unknown> = {};
@@ -99,6 +105,11 @@ export async function DELETE(
 
     if (existing.approvalStatus === "已批准" && !isAdmin(adminUser)) {
       return NextResponse.json({ error: "已批准的报价单不能删除" }, { status: 400 });
+    }
+
+    const deleteCheck = await checkDeletePermission("quotation", undefined, existing.approvalStatus, existing.createdById);
+    if (!deleteCheck.allowed) {
+      return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
     await cleanupBusinessApprovalRecords("quotation", id);

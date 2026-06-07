@@ -16,7 +16,6 @@ import {
   FileCheck,
 } from "lucide-react";
 import Modal from "@/components/Modal";
-import AdminStatusOverride from "@/components/AdminStatusOverride";
 import { DetailPageLayout } from "@/components/DetailPageLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
@@ -293,10 +292,12 @@ export default function IncomeContractsPage() {
 
     const fetchOrganizations = async () => {
       try {
-        const res = await fetch("/api/organizations");
+        const res = await fetch("/api/bank-accounts?pageSize=200");
         if (res.ok) {
           const json = await res.json();
-          setOrganizations(json.data || []);
+          // 从银行账户中筛选公司账户，作为所属主体数据源
+          const companyAccounts = (json.data || []).filter((a: any) => a.accountType === "公司账户");
+          setOrganizations(companyAccounts);
         }
       } catch {
         setOrganizations([]);
@@ -785,7 +786,7 @@ export default function IncomeContractsPage() {
           >
             <option value="">全部主体</option>
             {organizations.map((org: any) => (
-              <option key={org.id} value={org.id}>{org.name}</option>
+              <option key={org.id} value={org.id}>{org.accountName}</option>
             ))}
           </select>
 
@@ -1036,7 +1037,7 @@ export default function IncomeContractsPage() {
                 <option value="">请选择主体</option>
                 {organizations.map((org: any) => (
                   <option key={org.id} value={org.id}>
-                    {org.name}
+                    {org.accountName}
                   </option>
                 ))}
               </select>
@@ -1429,16 +1430,7 @@ export default function IncomeContractsPage() {
                   </p>
                 </div>
               </div>
-              <AdminStatusOverride
-                businessType="income_contract"
-                businessId={detailContract.id}
-                currentStatus={detailContract.status}
-                onStatusChanged={(newStatus) => {
-                  setDetailContract(prev => prev ? { ...prev, status: newStatus } : prev);
-                  setContracts(prev => prev.map(r => r.id === detailContract.id ? { ...r, status: newStatus } : r));
-                }}
-                size="md"
-              />
+
             </div>
 
             <IncomeContractDetailCard data={detailContract} />

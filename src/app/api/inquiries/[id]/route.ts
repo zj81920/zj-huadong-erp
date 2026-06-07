@@ -197,9 +197,9 @@ export async function PUT(
     if (attachments !== undefined) {
       updateData.attachments = attachments;
     }
-    if (currentRound !== undefined) updateData.currentRound = parseInt(currentRound);
+    if (currentRound !== undefined) { const r = parseInt(currentRound); if (!isNaN(r)) updateData.currentRound = r; }
     if (confirmedSupplierId !== undefined) updateData.confirmedSupplierId = confirmedSupplierId || null;
-    if (confirmedRound !== undefined) updateData.confirmedRound = confirmedRound ? parseInt(confirmedRound) : null;
+    if (confirmedRound !== undefined) { const r = parseInt(confirmedRound); if (!isNaN(r)) updateData.confirmedRound = r; else if (!confirmedRound) updateData.confirmedRound = null; }
     if (inquiryStatus !== undefined) updateData.status = inquiryStatus;
 
     const inquiry = await prisma.$transaction(async (tx) => {
@@ -213,18 +213,21 @@ export async function PUT(
           const { supplierId: sqSupplierId, round: sqRound, items: sqItems, ...sqFields } = sq;
           if (!sqSupplierId || !sqRound) continue;
 
+          const sqRoundNum = parseInt(sqRound);
+          if (isNaN(sqRoundNum)) continue;
+
           await tx.supplierQuote.upsert({
             where: {
               inquiryId_supplierId_round: {
                 inquiryId: id,
                 supplierId: sqSupplierId,
-                round: parseInt(sqRound),
+                round: sqRoundNum,
               },
             },
             create: {
               inquiryId: id,
               supplierId: sqSupplierId,
-              round: parseInt(sqRound),
+              round: sqRoundNum,
               ...sqFields,
               items: Array.isArray(sqItems) && sqItems.length > 0
                 ? {

@@ -21,7 +21,6 @@ import {
   File,
 } from "lucide-react";
 import Modal from "@/components/Modal";
-import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
 import { DetailPageLayout } from "@/components/DetailPageLayout";
 import * as XLSX from "xlsx";
@@ -34,6 +33,7 @@ import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
+import { PurchaseRequestDetailCard } from '@/components/detail-cards';
 
 interface PurchaseRequestItem {
   id: string;
@@ -638,16 +638,7 @@ export default function PurchaseRequestsPage() {
                             {formatDate(record.requiredDate)}
                           </span>
                         </td>
-                        <td>
-                          <AdminStatusOverride
-                            businessType="purchase_request"
-                            businessId={record.id}
-                            currentStatus={record.status}
-                            onStatusChanged={(newStatus) => {
-                              setRecords(prev => prev.map(r => r.id === record.id ? { ...r, status: newStatus } : r));
-                            }}
-                          />
-                        </td>
+
                         <td>
                           <div className="flex items-center gap-1">
                             <button
@@ -1055,87 +1046,7 @@ export default function PurchaseRequestsPage() {
             businessType="purchase_request"
             businessId={detailRecord.id}
           >
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-[12px] text-[#78716C] mb-1">计划单号</label>
-                <p className="text-[15px] font-mono font-semibold text-[#1C1917]">{detailRecord.requestNo}</p>
-              </div>
-              <div>
-                <label className="block text-[12px] text-[#78716C] mb-1">项目源ID</label>
-                <p className="text-[15px] font-mono">{detailRecord.projectSourceId}</p>
-              </div>
-              <div>
-                <label className="block text-[12px] text-[#78716C] mb-1">项目名称</label>
-                <p className="text-[15px] font-semibold">{detailRecord.project?.name || "-"}</p>
-              </div>
-              <div>
-                <label className="block text-[12px] text-[#78716C] mb-1">需求日期</label>
-                <p className="text-[15px]">{formatDate(detailRecord.requiredDate)}</p>
-              </div>
-              <div>
-                <label className="block text-[12px] text-[#78716C] mb-1">状态</label>
-                <span className={`ios-badge ${statusColorMap[detailRecord.status] || "ios-badge-gray"}`}>
-                  {detailRecord.status}
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-3">
-                <Package className="w-4 h-4 inline mr-1.5 -mt-0.5" />
-                物资明细（{detailRecord.items?.length || 0} 项）
-              </label>
-              <div className="overflow-x-auto border border-[#E7E5E4] rounded-xl">
-                <table className="w-full text-[13px]">
-                  <thead className="bg-[#FAFAF9]">
-                    <tr>
-                      <th className="py-2 px-3 text-center font-semibold text-[#78716C] w-[44px]">序号</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">物资名称</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">规格型号</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">材质</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">品牌</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">适用标准号</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">单位</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">数量</th>
-                      <th className="py-2 px-3 text-left font-semibold text-[#1C1917]">备注</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(detailRecord.items || [])
-                      .sort((a, b) => a.sortOrder - b.sortOrder)
-                      .map((item, index) => (
-                        <tr key={item.id} className="border-t border-[#F5F5F4]">
-                          <td className="py-2 px-3 text-center text-[#78716C]">{index + 1}</td>
-                          <td className="py-2 px-3 font-semibold">{item.materialName}</td>
-                          <td className="py-2 px-3">{item.spec || "-"}</td>
-                          <td className="py-2 px-3">{item.material || "-"}</td>
-                          <td className="py-2 px-3">{item.brand || "-"}</td>
-                          <td className="py-2 px-3">{item.standardNo || "-"}</td>
-                          <td className="py-2 px-3">{item.unit || "-"}</td>
-                          <td className="py-2 px-3 font-mono">{item.quantity || "-"}</td>
-                          <td className="py-2 px-3 text-[#78716C]">{item.remark || "-"}</td>
-                        </tr>
-                      ))}
-                    {(!detailRecord.items || detailRecord.items.length === 0) && (
-                      <tr>
-                        <td colSpan={9} className="py-6 text-center text-[#78716C]">
-                          暂无物资明细
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {detailRecord.inquiry && (
-              <div className="p-4 rounded-xl bg-[#FAFAF9] border border-[#E7E5E4]">
-                <p className="text-[13px] font-semibold text-[#1C1917] mb-2">已关联询价单</p>
-                <a href="/procurement/inquiries" className="text-[13px] text-[#1C1917] hover:underline">
-                  点击查看询价详情 →
-                </a>
-              </div>
-            )}
+            <PurchaseRequestDetailCard data={detailRecord} />
 
             {detailRecord.attachments && Array.isArray(detailRecord.attachments) && detailRecord.attachments.length > 0 && (
               <div>
@@ -1151,6 +1062,15 @@ export default function PurchaseRequestsPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {detailRecord.inquiry && (
+              <div className="p-4 rounded-xl bg-[#FAFAF9] border border-[#E7E5E4]">
+                <p className="text-[13px] font-semibold text-[#1C1917] mb-2">已关联询价单</p>
+                <a href="/procurement/inquiries" className="text-[13px] text-[#1C1917] hover:underline">
+                  点击查看询价详情 →
+                </a>
               </div>
             )}
 

@@ -16,7 +16,6 @@ import {
   FileCheck,
 } from "lucide-react";
 import Modal from "@/components/Modal";
-import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
 import { useAuth } from "@/contexts/AuthContext";
 import { DetailPageLayout } from '@/components/DetailPageLayout';
@@ -365,10 +364,12 @@ export default function ExpenseContractsPage() {
 
     const fetchOrganizations = async () => {
       try {
-        const res = await fetch("/api/organizations");
+        const res = await fetch("/api/bank-accounts?pageSize=200");
         if (res.ok) {
           const json = await res.json();
-          setOrganizations(json.data || []);
+          // 从银行账户中筛选公司账户，作为所属主体数据源
+          const companyAccounts = (json.data || []).filter((a: any) => a.accountType === "公司账户");
+          setOrganizations(companyAccounts);
         }
       } catch {
         setOrganizations([]);
@@ -939,7 +940,7 @@ export default function ExpenseContractsPage() {
           >
             <option value="">全部主体</option>
             {organizations.map((org: any) => (
-              <option key={org.id} value={org.id}>{org.name}</option>
+              <option key={org.id} value={org.id}>{org.accountName}</option>
             ))}
           </select>
 
@@ -1032,16 +1033,7 @@ export default function ExpenseContractsPage() {
                     <td className="text-[#78716C]">
                       {formatDate(contract.signedDate)}
                     </td>
-                    <td>
-                      <AdminStatusOverride
-                        businessType="expense_contract"
-                        businessId={contract.id}
-                        currentStatus={contract.status}
-                        onStatusChanged={(newStatus) => {
-                          setContracts(prev => prev.map(r => r.id === contract.id ? { ...r, status: newStatus } : r));
-                        }}
-                      />
-                    </td>
+
                     <td>
                       <div className="flex items-center gap-1">
                         <button
@@ -1204,7 +1196,7 @@ export default function ExpenseContractsPage() {
                 <option value="">请选择主体</option>
                 {organizations.map((org: any) => (
                   <option key={org.id} value={org.id}>
-                    {org.name}
+                    {org.accountName}
                   </option>
                 ))}
               </select>

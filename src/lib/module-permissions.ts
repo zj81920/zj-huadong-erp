@@ -289,6 +289,10 @@ export const API_TO_SUB_MODULE: Record<string, SubModuleKey> = {
   "inter_org_contract": "contracts.income",
   "supplier_change": "business.suppliers",
   "contract_change_order": "contracts.income",
+  "projects.progress": "projects.progress",
+  "bank_account": "finance.bank_accounts",
+  "projects.plans": "projects.plans",
+  "project_lead": "business.project_leads",
 };
 
 // === 业务模块定义（供流程设置页面使用）===

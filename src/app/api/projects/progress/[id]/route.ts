@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   _request: NextRequest,
@@ -82,6 +83,7 @@ export async function DELETE(
       return NextResponse.json({ error: "进度记录不存在" }, { status: 404 });
     }
 
+    await cleanupBusinessApprovalRecords("project_progress", id);
     await prisma.projectProgress.delete({ where: { id } });
 
     return NextResponse.json({ message: "删除成功" });

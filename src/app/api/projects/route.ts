@@ -235,6 +235,7 @@ export async function POST(request: NextRequest) {
         plannedEndDate: plannedEndDate ? new Date(plannedEndDate) : null,
         actualCloseDate: actualCloseDate ? new Date(actualCloseDate) : null,
         lastModifiedBy: currentUser?.realName || null,
+        createdById: currentUser?.id || null,
       },
       include: {
         customer: { select: { id: true, name: true, industryType: true } },

@@ -101,8 +101,15 @@ export async function DELETE(
       return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
-    // 物理删除：先级联清理审批记录，再删除业务记录
+    // 物理删除：先清理审批记录和关联子表，再删除业务记录
     await cleanupBusinessApprovalRecords("supplier", id);
+
+    // 级联清理关联子表（避免外键约束阻止删除）
+    await prisma.supplierChange.deleteMany({ where: { supplierId: id } });
+    await prisma.supplierQuote.deleteMany({ where: { supplierId: id } });
+    await prisma.expenseContract.updateMany({ where: { supplierId: id }, data: { supplierId: null } });
+    await prisma.outsourcingTask.updateMany({ where: { supplierId: id }, data: { supplierId: null } });
+
     await prisma.supplier.delete({ where: { id } });
 
     return NextResponse.json({ message: "删除成功" });

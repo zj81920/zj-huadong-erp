@@ -116,11 +116,12 @@ function MarkdownRenderer({ content }: { content: string }) {
       flushList();
     } else {
       flushList();
+      const escaped = boldLine.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       elements.push(
         <p
           key={idx}
           className="text-[13px] text-[#1C1917] leading-relaxed mb-1"
-          dangerouslySetInnerHTML={{ __html: boldLine.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") }}
+          dangerouslySetInnerHTML={{ __html: escaped.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>") }}
         />
       );
     }

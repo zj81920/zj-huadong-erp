@@ -6,6 +6,7 @@ import Modal from "@/components/Modal";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
+import { QuotationDetailCard } from "@/components/detail-cards";
 
 interface Customer {
   id: string;
@@ -168,17 +169,7 @@ export default function QuotationsPage() {
 
       <Modal isOpen={!!detailQuotation} onClose={() => setDetailQuotation(null)} title="报价单详情" maxWidth="680px">
         {detailQuotation && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">关联项目</p><p className="text-[14px] font-semibold text-[#1C1917]">{detailQuotation.projectLead ? detailQuotation.projectLead.projectName : "（无关联）"}</p></div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">报价总金额</p><p className="text-[14px] font-semibold text-[#1C1917]">{formatMoney(detailQuotation.totalAmount)}</p></div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">利润率</p><p className="text-[14px] font-semibold text-[#78716C]">{detailQuotation.profitMargin ? `${detailQuotation.profitMargin}%` : "-"}</p></div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">报价状态</p><span className={`ios-badge ${quotationStatusConfig[detailQuotation.status]?.color || "ios-badge-gray"}`}>{quotationStatusConfig[detailQuotation.status]?.label || detailQuotation.status}</span></div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">版本</p><p className="text-[14px] font-semibold text-[#1C1917]">v{detailQuotation.version}</p></div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">创建时间</p><p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailQuotation.createdAt)}</p></div>
-            </div>
-            {detailQuotation.adjustmentReason && <div className="p-3 rounded-xl bg-[#FAFAF9]"><p className="text-[12px] text-[#78716C] mb-1">调整原因</p><p className="text-[14px] font-semibold text-[#1C1917]">{detailQuotation.adjustmentReason}</p></div>}
-          </div>
+          <QuotationDetailCard data={detailQuotation} />
         )}
       </Modal>
     </>

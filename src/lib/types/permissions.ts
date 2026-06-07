@@ -151,9 +151,13 @@ export function canDeleteFrontend(
   isAdmin: boolean = false
 ): boolean {
   if (isAdmin) return true
-  const isOwner = currentUserId === recordCreatorId
-  if (!isOwner) return false
-  if (hasFlow) return recordStatus === "草稿" || recordStatus === "已驳回"
+  if (hasFlow) {
+    // 有审批流：仅创建者可操作，且仅限草稿/已驳回
+    const isOwner = currentUserId === recordCreatorId
+    if (!isOwner) return false
+    return recordStatus === "草稿" || recordStatus === "已驳回"
+  }
+  // 无审批流：直接看角色权限
   return rolePerms.delete === true
 }
 
@@ -167,9 +171,13 @@ export function canEditFrontend(
   isAdmin: boolean = false
 ): boolean {
   if (isAdmin) return true
-  const isOwner = currentUserId === recordCreatorId
-  if (!isOwner) return false
-  if (hasFlow) return recordStatus === "草稿" || recordStatus === "已驳回"
+  if (hasFlow) {
+    // 有审批流：仅创建者可操作，且仅限草稿/已驳回
+    const isOwner = currentUserId === recordCreatorId
+    if (!isOwner) return false
+    return recordStatus === "草稿" || recordStatus === "已驳回"
+  }
+  // 无审批流：直接看角色权限
   return rolePerms.update === true
 }
 

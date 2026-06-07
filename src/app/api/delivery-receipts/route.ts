@@ -120,13 +120,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (contract.status !== "已批准") {
-      return NextResponse.json(
-        { error: "只有已批准状态的费用合同才能创建验收记录" },
-        { status: 400 }
-      );
-    }
-
     const contractItemMap = new Map(
       contract.items.map((ci) => [ci.id, ci])
     );

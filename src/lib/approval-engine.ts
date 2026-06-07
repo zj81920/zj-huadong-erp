@@ -152,6 +152,20 @@ export async function startApprovalFlow(params: {
     const finalNodeOrder = await skipConsecutiveSelfNodes(
       existing.id, flowNodes, startNode.nodeOrder, initiatorId, projectSourceId
     );
+
+    // 检查是否所有节点都被跳过（发起人匹配了所有节点）→ 自动批准
+    const autoSkipAtFinal = await prisma.approvalAction.findFirst({
+      where: { instanceId: existing.id, nodeId: finalNodeOrder, action: "auto_skip" },
+    });
+    if (autoSkipAtFinal) {
+      await prisma.approvalInstance.update({
+        where: { id: existing.id },
+        data: { status: "已批准", currentNode: finalNodeOrder },
+      });
+      await updateBusinessStatus(businessType, businessId, "已批准", undefined, existing.id);
+      return { instanceId: existing.id, currentNode: finalNodeOrder, status: "已批准", approverIds: [] };
+    }
+
     await prisma.approvalInstance.update({
       where: { id: existing.id },
       data: { currentNode: finalNodeOrder },
@@ -216,6 +230,20 @@ export async function startApprovalFlow(params: {
   const finalNodeOrder = await skipConsecutiveSelfNodes(
     instance.id, flowNodes, startNode.nodeOrder, initiatorId, projectSourceId
   );
+
+  // 检查是否所有节点都被跳过（发起人匹配了所有节点）→ 自动批准
+  const autoSkipAtFinal = await prisma.approvalAction.findFirst({
+    where: { instanceId: instance.id, nodeId: finalNodeOrder, action: "auto_skip" },
+  });
+  if (autoSkipAtFinal) {
+    await prisma.approvalInstance.update({
+      where: { id: instance.id },
+      data: { status: "已批准", currentNode: finalNodeOrder },
+    });
+    await updateBusinessStatus(businessType, businessId, "已批准", undefined, instance.id);
+    return { instanceId: instance.id, currentNode: finalNodeOrder, status: "已批准", approverIds: [] };
+  }
+
   await prisma.approvalInstance.update({
     where: { id: instance.id },
     data: { currentNode: finalNodeOrder },
@@ -406,6 +434,38 @@ export async function processApprovalAction(params: {
 
   if (instance.status !== "审批中" && instance.status !== "待归档") {
     throw new Error(`当前状态为"${instance.status}"，无法操作`);
+  }
+
+  // 权限校验：调用 resolveUserApprovalCapabilities 检查操作者是否有权审批
+  const capabilities = await resolveUserApprovalCapabilities({
+    instanceId,
+    userId: approverId,
+    projectSourceId,
+  });
+
+  if (action === "approve" && !capabilities.canApprove) {
+    if (capabilities.isInitiator) {
+      throw new Error("发起人不能审批自己的申请");
+    }
+    if (capabilities.hasActedThisRound) {
+      throw new Error("您已在本轮审批过此节点");
+    }
+    throw new Error("您没有权限审批此节点");
+  }
+  if (action === "reject" && !capabilities.canReject) {
+    if (capabilities.isInitiator) {
+      throw new Error("发起人不能审批自己的申请");
+    }
+    if (capabilities.hasActedThisRound) {
+      throw new Error("您已在本轮审批过此节点");
+    }
+    throw new Error("您没有权限审批此节点");
+  }
+  if (action === "archive" && !capabilities.canArchive) {
+    throw new Error("当前节点不是归档节点或您没有归档权限");
+  }
+  if (action === "payment" && !capabilities.canPayment) {
+    throw new Error("当前节点不是支付节点或您没有支付权限");
   }
 
   // 获取审批流节点
@@ -841,12 +901,42 @@ async function updateBusinessStatus(
       await prisma.supplier.update({ where: { id: businessId }, data: supplierData });
       break;
     }
-    case "supplier_change":
+    case "supplier_change": {
+      const scUpdate: Record<string, unknown> = { approvalStatus: status };
+      if (instanceId) scUpdate.approvalInstanceId = instanceId;
       await prisma.supplierChange.update({
         where: { id: businessId },
-        data: { approvalStatus: status },
+        data: scUpdate,
       });
+
+      // 审批通过后，将变更数据回写到原供应商
+      if (status === "已批准") {
+        const change = await prisma.supplierChange.findUnique({
+          where: { id: businessId },
+        });
+        if (change) {
+          await prisma.supplier.update({
+            where: { id: change.supplierId },
+            data: {
+              name: change.name,
+              supplierType: change.supplierType,
+              status: change.status,
+              contactPerson: change.contactPerson,
+              phone: change.phone,
+              email: change.email,
+              address: change.address,
+              bankName: change.bankName,
+              bankAccount: change.bankAccount,
+              remark: change.remark,
+              ...(change.attachmentUrl !== undefined && change.attachmentUrl !== null
+                ? { attachmentUrl: change.attachmentUrl }
+                : {}),
+            },
+          });
+        }
+      }
       break;
+    }
     case "outsourcing": {
       const outsourceData: Record<string, unknown> = { approvalStatus: status };
       if (instanceId) outsourceData.approvalInstanceId = instanceId;
@@ -986,11 +1076,12 @@ async function updateBusinessStatus(
             });
             const contribution = await prisma.capitalContribution.findUnique({ where: { id: app.sourceId } });
             if (contribution) {
+              const retAmt = Number(app.returnAmount || 0);
               await prisma.capitalContribution.update({
                 where: { id: app.sourceId },
                 data: {
-                  returnedAmount: Number(contribution.returnedAmount) + Number(app.returnAmount),
-                  remainingAmount: Number(contribution.remainingAmount) - Number(app.returnAmount),
+                  returnedAmount: Number(contribution.returnedAmount || 0) + retAmt,
+                  remainingAmount: Number(contribution.remainingAmount || 0) - retAmt,
                 },
               });
             }
@@ -1006,11 +1097,12 @@ async function updateBusinessStatus(
             });
             const borrowing = await prisma.otherBorrowing.findUnique({ where: { id: app.sourceId } });
             if (borrowing) {
-              const newRemaining = Number(borrowing.remainingAmount) - Number(app.returnAmount);
+              const retAmt = Number(app.returnAmount || 0);
+              const newRemaining = Number(borrowing.remainingAmount || 0) - retAmt;
               await prisma.otherBorrowing.update({
                 where: { id: app.sourceId },
                 data: {
-                  returnedAmount: Number(borrowing.returnedAmount) + Number(app.returnAmount),
+                  returnedAmount: Number(borrowing.returnedAmount || 0) + retAmt,
                   remainingAmount: newRemaining,
                   ...(newRemaining <= 0 ? { status: "已还清" } : {}),
                 },
@@ -1365,6 +1457,126 @@ export async function canInitiateFlow(params: {
 
   const userRoleCodes = userRoles.map((ur) => ur.role.code);
   return roleCodes.some((rc) => userRoleCodes.includes(rc));
+}
+
+// 审批权限统一判断函数（后端驱动核心）
+// 集中处理：角色匹配、轮次感知、发起人排除
+export async function resolveUserApprovalCapabilities(params: {
+  instanceId: string;
+  userId: string;
+  projectSourceId?: string;
+}): Promise<{
+  canApprove: boolean;
+  canReject: boolean;
+  canArchive: boolean;
+  canPayment: boolean;
+  isInitiator: boolean;
+  hasActedThisRound: boolean;
+}> {
+  const { instanceId, userId, projectSourceId } = params;
+
+  const instance = await prisma.approvalInstance.findUnique({
+    where: { id: instanceId },
+    include: {
+      actions: {
+        include: { approver: { select: { id: true, realName: true } } },
+        orderBy: { actedAt: "asc" },
+      },
+    },
+  });
+
+  const noPermission = {
+    canApprove: false, canReject: false, canArchive: false, canPayment: false,
+    isInitiator: false, hasActedThisRound: false,
+  };
+
+  if (!instance) return noPermission;
+
+  // 找到最后一轮起始（最后一次 initiate 或 resubmit）
+  const lastRoundStart = [...instance.actions]
+    .reverse()
+    .find((a) => a.action === "initiate" || a.action === "resubmit");
+
+  const isInitiator = lastRoundStart?.approverId === userId;
+
+  // 非可操作状态 → 全部 false（但返回 isInitiator）
+  if (!["审批中", "待归档"].includes(instance.status)) {
+    return { ...noPermission, isInitiator };
+  }
+
+  // 发起人在普通审批节点上不能审批自己的申请，但在 payment/archive 节点上可以操作
+  // （autoSkipInitiator 已确保 payment/archive 节点不自动跳过，发起人必须能操作）
+  if (isInitiator) {
+    const currentNodeDef = await prisma.approvalFlowDefinition.findFirst({
+      where: {
+        businessType: instance.businessType,
+        flowLevel: instance.flowLevel,
+        nodeOrder: instance.currentNode,
+        isActive: true,
+      },
+    });
+    if (currentNodeDef?.nodeType === "payment") {
+      return { canApprove: false, canReject: false, canArchive: false, canPayment: true, isInitiator: true, hasActedThisRound: false };
+    }
+    if (currentNodeDef?.nodeType === "archive") {
+      return { canApprove: false, canReject: false, canArchive: true, canPayment: false, isInitiator: true, hasActedThisRound: false };
+    }
+    return { ...noPermission, isInitiator: true };
+  }
+
+  // 获取当前节点定义
+  const flowNode = await prisma.approvalFlowDefinition.findFirst({
+    where: {
+      businessType: instance.businessType,
+      flowLevel: instance.flowLevel,
+      nodeOrder: instance.currentNode,
+      isActive: true,
+    },
+  });
+
+  if (!flowNode) {
+    return { ...noPermission, isInitiator };
+  }
+
+  // 检查本轮是否已操作（轮次感知）
+  const lastRoundTime = lastRoundStart?.actedAt || new Date(0);
+  const hasActedThisRound = instance.actions.some(
+    (a) =>
+      a.nodeId === instance.currentNode &&
+      a.approverId === userId &&
+      (a.action === "approve" || a.action === "reject") &&
+      (a.actedAt ? new Date(a.actedAt) : new Date(0)) >= new Date(lastRoundTime)
+  );
+
+  if (hasActedThisRound) {
+    return { ...noPermission, isInitiator, hasActedThisRound: true };
+  }
+
+  // 检查用户角色是否匹配当前节点
+  const userRoles = await prisma.userRole.findMany({
+    where: { userId },
+    include: { role: { select: { code: true } } },
+  });
+  const roleCodes = userRoles.map((ur) => ur.role.code).filter((code) => code !== "admin");
+  const nodeRoles = flowNode.approverRole.split(",").map((r) => r.trim()).filter(Boolean);
+  const hasRoleMatch = nodeRoles.some((r) => roleCodes.includes(r));
+
+  if (!hasRoleMatch) {
+    return { ...noPermission, isInitiator };
+  }
+
+  // 根据节点类型返回可用操作
+  const isArchiveNode = flowNode.nodeType === "archive";
+  const isPaymentNode = flowNode.nodeType === "payment";
+
+  return {
+    canApprove: !isArchiveNode && !isPaymentNode,
+    canReject: !isArchiveNode && !isPaymentNode,
+    canArchive: isArchiveNode,
+    canPayment: isPaymentNode,
+    isInitiator,
+    hasActedThisRound: false,
+  };
 }
 
 // 管理员强制推进：跳过当前会签节点，直接推进到下一节点

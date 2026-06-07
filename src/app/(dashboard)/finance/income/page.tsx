@@ -20,13 +20,13 @@ import {
 import Modal from "@/components/Modal";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
-import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { NonContractIncomeDetailCard, OtherBorrowingDetailCard } from "@/components/detail-cards";
 
 interface IncomeContract {
   id: string;
@@ -1004,20 +1004,7 @@ export default function FinanceIncomePage() {
                       <td className="text-[#78716C]">{formatDate(item.transactionDate)}</td>
                       <td className="text-[#78716C] max-w-[200px] truncate">{item.description || "-"}</td>
                       <td className="text-[#78716C]">{item.project?.name || item.projectSourceId || "-"}</td>
-                      <td>
-                        <AdminStatusOverride
-                          businessType="non_contract_income"
-                          businessId={item.id}
-                          currentStatus={item.status}
-                          onStatusChanged={(newStatus) => {
-                            setOtherIncomes((prev) =>
-                              prev.map((i) =>
-                                i.id === item.id ? { ...i, status: newStatus } : i
-                              )
-                            );
-                          }}
-                        />
-                      </td>
+
                       <td>
                         <div className="flex items-center gap-1">
                           <button
@@ -1154,20 +1141,7 @@ export default function FinanceIncomePage() {
                       <td className="font-semibold text-[#78716C]">{formatAmount(b.remainingAmount)}</td>
                       <td className="text-[#78716C]">{formatDate(b.borrowingDate)}</td>
                       <td className="text-[#78716C]">{formatDate(b.expectedReturnDate)}</td>
-                      <td>
-                        <AdminStatusOverride
-                          businessType="other_borrowing"
-                          businessId={b.id}
-                          currentStatus={b.status}
-                          onStatusChanged={(newStatus) => {
-                            setBorrowings((prev) =>
-                              prev.map((br) =>
-                                br.id === b.id ? { ...br, status: newStatus } : br
-                              )
-                            );
-                          }}
-                        />
-                      </td>
+
                       <td>
                         {b.remainingAmount > 0 && (
                           <button
@@ -1603,27 +1577,25 @@ export default function FinanceIncomePage() {
           {formError && (
             <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">{formError}</div>
           )}
-          {(returnTargetContribution || returnTargetBorrowing) && (() => {
-            const source = returnTargetContribution || returnTargetBorrowing!;
-            const sourceName = returnTargetContribution ? returnTargetContribution.shareholder?.name : returnTargetBorrowing!.lenderName;
-            const sourceType = returnTargetContribution ? "股东出资" : "其他借入款";
-            return (
-              <div className="p-3.5 rounded-xl bg-[#FAFAF9] space-y-2 text-[13px]">
-                <div className="flex items-center gap-2">
-                  <span className="text-[#78716C]">来源类型:</span>
-                  <span className="font-semibold text-[#1C1917]">{sourceType}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[#78716C]">来源名称:</span>
-                  <span className="font-semibold text-[#1C1917]">{sourceName}</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-[#78716C]">原始金额: <span className="font-semibold text-[#1C1917]">{formatAmount(source.amount)}</span></span>
-                  <span className="text-[#78716C]">剩余金额: <span className="font-semibold text-[#78716C]">{formatAmount(source.remainingAmount)}</span></span>
-                </div>
+          {returnTargetContribution && (
+            <div className="p-3.5 rounded-xl bg-[#FAFAF9] space-y-2 text-[13px]">
+              <div className="flex items-center gap-2">
+                <span className="text-[#78716C]">来源类型:</span>
+                <span className="font-semibold text-[#1C1917]">股东出资</span>
               </div>
-            );
-          })()}
+              <div className="flex items-center gap-2">
+                <span className="text-[#78716C]">来源名称:</span>
+                <span className="font-semibold text-[#1C1917]">{returnTargetContribution.shareholder?.name}</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-[#78716C]">原始金额: <span className="font-semibold text-[#1C1917]">{formatAmount(returnTargetContribution.amount)}</span></span>
+                <span className="text-[#78716C]">剩余金额: <span className="font-semibold text-[#78716C]">{formatAmount(returnTargetContribution.remainingAmount)}</span></span>
+              </div>
+            </div>
+          )}
+          {returnTargetBorrowing && (
+            <OtherBorrowingDetailCard data={returnTargetBorrowing} />
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">归还金额（元） <span className="text-[#78716C]">*</span></label>
@@ -1746,11 +1718,7 @@ export default function FinanceIncomePage() {
             确定要删除该收入记录吗？此操作不可撤销。
           </p>
           {deleteConfirm && (
-            <div className="p-3 rounded-xl bg-[#FAFAF9] text-[13px]">
-              <p>交易对方: <span className="font-semibold">{deleteConfirm.counterparty || "-"}</span></p>
-              <p>金额: <span className="font-semibold text-[#78716C]">{formatAmount(deleteConfirm.amount)}</span></p>
-              <p>日期: <span className="font-semibold">{formatDate(deleteConfirm.transactionDate)}</span></p>
-            </div>
+            <NonContractIncomeDetailCard data={deleteConfirm} />
           )}
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
             <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>

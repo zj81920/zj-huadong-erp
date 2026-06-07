@@ -176,9 +176,9 @@ export default function ProjectProgressPage() {
       const payload: Record<string, unknown> = {
         projectSourceId: form.projectSourceId,
         taskNode: form.taskNode.trim(),
-        plannedPercentage: parseInt(form.plannedPercentage),
-        actualPercentage: form.actualPercentage ? parseInt(form.actualPercentage) : 0,
-        delayDays: form.delayDays ? parseInt(form.delayDays) : 0,
+        plannedPercentage: parseInt(form.plannedPercentage) || 0,
+        actualPercentage: parseInt(form.actualPercentage) || 0,
+        delayDays: parseInt(form.delayDays) || 0,
       };
 
       const url = editingRecord

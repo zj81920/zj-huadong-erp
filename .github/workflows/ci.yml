@@ -1,0 +1,97 @@
+name: CI 自动测试
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: epc_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci --legacy-peer-deps
+
+      - name: 生成 Prisma Client + 同步 Schema
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/epc_test?schema=public
+        run: |
+          npx prisma generate
+          npx prisma db push
+
+      - name: 代码规范检查
+        run: npm run lint || echo "Lint 有警告，继续"
+
+      - name: 运行单元测试
+        run: npx vitest run test/unit/ --reporter=verbose
+
+      - name: 运行 DB 模型测试
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/epc_test?schema=public
+        run: npx vitest run test/db/ --reporter=verbose
+
+      - name: 构建 Next.js
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/epc_test?schema=public
+        run: npm run build
+
+      - name: 种子化测试数据 + 启动服务
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/epc_test?schema=public
+          NODE_ENV: production
+          STORAGE_PATH: /tmp
+        run: |
+          echo "🌱 种子化数据库..."
+          npx prisma db seed
+
+          echo "🚀 启动 Next.js 服务（端口 3001）..."
+          npx next start -p 3001 > /tmp/server.log 2>&1 &
+          SERVER_PID=$!
+
+          echo "⏳ 等待服务就绪（最多 120 秒）..."
+          for i in $(seq 1 60); do
+            HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:3001/login 2>/dev/null || echo "000")
+            echo "  [${i}/60] GET /login → HTTP ${HTTP_CODE}"
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ 服务就绪"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "❌ 服务启动超时！日志："
+              tail -30 /tmp/server.log
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - name: 运行 API 集成测试
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/epc_test?schema=public
+          TEST_BASE_URL: http://localhost:3001
+        run: npx vitest run test/api/ --reporter=verbose

@@ -72,7 +72,7 @@ const industryLabelMap: Record<string, string> = {
 
 export default function CustomersPage() {
   const { user } = useAuth();
-  const rolePerms = getUserModulePerms(user, "customer");
+  const rolePerms = getUserModulePerms(user, "customers");
   const isAdminUser = user?.roles?.some((r: any) => r.code === "admin") || user?.username === "admin";
   const hasFlow = false;
 

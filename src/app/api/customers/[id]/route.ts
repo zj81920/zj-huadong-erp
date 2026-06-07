@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
 import { checkDeletePermission, checkEditPermission } from "@/lib/permission-check";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   _request: NextRequest,
@@ -104,10 +105,9 @@ export async function DELETE(
       );
     }
 
-    await prisma.customer.update({
-      where: { id },
-      data: { isActive: false },
-    });
+    // 物理删除：先级联清理审批记录，再删除业务记录
+    await cleanupBusinessApprovalRecords("customer", id);
+    await prisma.customer.delete({ where: { id } });
 
     return NextResponse.json({ message: "删除成功" });
   } catch (error) {

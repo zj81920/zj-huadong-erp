@@ -25,7 +25,6 @@ import {
 import Modal from "@/components/Modal";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
-import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
 import { ApprovalTimeline } from "@/components/ApprovalComponents";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
@@ -34,6 +33,7 @@ import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
+import { NonContractExpenseDetailCard, LendingOutDetailCard, ExpenseReportDetailCard, SalaryPaymentDetailCard, BorrowingReturnDetailCard } from '@/components/detail-cards';
 
 interface ExpenseContract {
   id: string;
@@ -1282,7 +1282,7 @@ export default function FinanceExpensePage() {
       if (res.ok) {
         const json = await res.json();
         setBatchPreviewItems(
-          json.data.items.map((item: SalaryBatchItem) => ({ ...item, excluded: false }))
+          json.data?.items?.map((item: SalaryBatchItem) => ({ ...item, excluded: false })) || []
         );
       }
     } catch {
@@ -1862,20 +1862,7 @@ export default function FinanceExpensePage() {
                         <td className="text-[#78716C]">{formatDate(item.transactionDate)}</td>
                         <td className="text-[#78716C] max-w-[200px] truncate">{item.description || "-"}</td>
                         <td className="text-[#78716C]">{item.project?.name || item.projectSourceId || "-"}</td>
-                        <td>
-                          <AdminStatusOverride
-                            businessType="non_contract_expense"
-                            businessId={item.id}
-                            currentStatus={item.status}
-                            onStatusChanged={(newStatus) => {
-                              setNonContractExpenses((prev) =>
-                                prev.map((e) =>
-                                  e.id === item.id ? { ...e, status: newStatus } : e
-                                )
-                              );
-                            }}
-                          />
-                        </td>
+
                         <td>
                           <div className="flex items-center gap-1 flex-wrap">
                             <button
@@ -2005,20 +1992,6 @@ export default function FinanceExpensePage() {
                         <td className="font-semibold">{formatAmount(item.returnedAmount)}</td>
                         <td className="font-semibold text-[#78716C]">{formatAmount(item.remainingAmount)}</td>
                         <td className="text-[#78716C]">{formatDate(item.lendingDate)}</td>
-                        <td>
-                          <AdminStatusOverride
-                            businessType="lending_out"
-                            businessId={item.id}
-                            currentStatus={item.status}
-                            onStatusChanged={(newStatus) => {
-                              setLendingOuts((prev) =>
-                                prev.map((l) =>
-                                  l.id === item.id ? { ...l, status: newStatus } : l
-                                )
-                              );
-                            }}
-                          />
-                        </td>
                         <td>
                           <div className="flex items-center gap-1 flex-wrap">
                             <button
@@ -2163,20 +2136,6 @@ export default function FinanceExpensePage() {
                         </td>
                         <td className="text-[#78716C] font-semibold">{formatAmount(item.amount)}</td>
                         <td>
-                          <AdminStatusOverride
-                            businessType="expense_report"
-                            businessId={item.id}
-                            currentStatus={item.status}
-                            onStatusChanged={(newStatus) => {
-                              setExpenseReports((prev) =>
-                                prev.map((r) =>
-                                  r.id === item.id ? { ...r, status: newStatus } : r
-                                )
-                              );
-                            }}
-                          />
-                        </td>
-                        <td>
                           <div className="flex items-center gap-1 flex-wrap">
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm"
@@ -2320,18 +2279,6 @@ export default function FinanceExpensePage() {
                       <td className="font-semibold">{formatAmount(batch.totalNetSalary)}</td>
                       <td className="text-[#78716C]">{formatAmount(batch.totalBankOutflow)}</td>
                       <td>
-                        <AdminStatusOverride
-                          businessType="salary_payment"
-                          businessId={batch.id}
-                          currentStatus={batch.status}
-                          onStatusChanged={(newStatus) => {
-                            setSalaryBatches((prev) =>
-                              prev.map((b) => b.id === batch.id ? { ...b, status: newStatus } : b)
-                            );
-                          }}
-                        />
-                      </td>
-                      <td>
                         <div className="flex items-center gap-1 flex-wrap">
                           <button
                             className="ios-btn ios-btn-ghost ios-btn-sm"
@@ -2454,20 +2401,7 @@ export default function FinanceExpensePage() {
                       <td className="text-[#78716C] font-semibold">{formatAmount(parseFloat(item.returnAmount))}</td>
                       <td className="text-[#78716C]">{formatDate(item.returnDate)}</td>
                       <td>{getStatusBadge(item.status)}</td>
-                      <td>
-                        <AdminStatusOverride
-                          businessType="borrowing_return_application"
-                          businessId={item.id}
-                          currentStatus={item.status}
-                          onStatusChanged={(newStatus) => {
-                            setBorrowingReturnApps((prev) =>
-                              prev.map((a) =>
-                                a.id === item.id ? { ...a, status: newStatus } : a
-                              )
-                            );
-                          }}
-                        />
-                      </td>
+
                       <td>
                         <button
                           className="ios-btn ios-btn-ghost ios-btn-sm"
@@ -3487,115 +3421,9 @@ export default function FinanceExpensePage() {
         maxWidth="640px"
       >
         {detailOtherExpense && (
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#78716C]/10 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-[#78716C]" />
-                </div>
-                <div>
-                  <h3 className="text-[15px] font-bold text-[#1C1917]">{detailOtherExpense.counterparty || "未指定交易对方"}</h3>
-                  <p className="text-[13px] text-[#78716C]">非合同支出</p>
-                </div>
-              </div>
-              <AdminStatusOverride
-                businessType="non_contract_expense"
-                businessId={detailOtherExpense.id}
-                currentStatus={detailOtherExpense.status}
-                onStatusChanged={(newStatus) => {
-                  setDetailOtherExpense((prev) => prev ? { ...prev, status: newStatus } : prev);
-                  setNonContractExpenses((prev) =>
-                    prev.map((e) => e.id === detailOtherExpense.id ? { ...e, status: newStatus } : e)
-                  );
-                }}
-                size="md"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">支出金额</p>
-                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(detailOtherExpense.amount)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">交易日期</p>
-                <p className="text-[14px] text-[#1C1917]">{formatDate(detailOtherExpense.transactionDate)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">关联项目</p>
-                <p className="text-[14px] text-[#1C1917]">{detailOtherExpense.project?.name || detailOtherExpense.projectSourceId || "-"}</p>
-              </div>
-            </div>
-
-            {(detailOtherExpense.counterpartyBankName || detailOtherExpense.counterpartyBankAccount) && (
-              <div className="col-span-2 p-3 rounded-xl bg-[#FAFAF9] mt-2">
-                <p className="text-[12px] text-[#78716C] mb-1">对方银行信息</p>
-                <div className="flex items-center gap-4 text-[13px] text-[#1C1917]">
-                  {detailOtherExpense.counterpartyBankName && (
-                    <span>开户行：{detailOtherExpense.counterpartyBankName}</span>
-                  )}
-                  {detailOtherExpense.counterpartyBankAccount && (
-                    <span>账号：{detailOtherExpense.counterpartyBankAccount}</span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {detailOtherExpense.description && (
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">说明</p>
-                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">{detailOtherExpense.description}</p>
-              </div>
-            )}
-
-            {detailOtherExpense.bankAccountId && (
-              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#1C1917]/10">
-                <p className="text-[12px] font-semibold text-[#1C1917] mb-1">支付信息</p>
-                <div className="flex items-center gap-4 text-[13px]">
-                  <span>支付方式：{detailOtherExpense.paymentMethod || "-"}</span>
-                  {detailOtherExpense.bankAccount && (
-                    <span>银行账户：{detailOtherExpense.bankAccount.accountName} - {detailOtherExpense.bankAccount.bankName} (****{detailOtherExpense.bankAccount.accountNo.slice(-4)})</span>
-                  )}
-                  {detailOtherExpense.paidAt && (
-                    <span>支付时间：{formatDate(detailOtherExpense.paidAt)}</span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* 发票信息卡片 */}
-            {detailOtherExpense.invoiceStatus && detailOtherExpense.invoiceStatus !== "无需开票" && (
-              <div className="p-3 rounded-xl bg-[#FFF9F0] border border-[#1C1917]/8">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[12px] font-semibold text-[#1C1917]">
-                    发票状态：
-                    <span className={detailOtherExpense.invoiceStatus === "已收票" ? "text-green-600" : "text-[#F97316]"}>
-                      {detailOtherExpense.invoiceStatus}
-                    </span>
-                  </p>
-                  {detailOtherExpense.invoiceStatus === "待补票" && (
-                    <button
-                      className="ios-btn ios-btn-sm ios-btn-primary text-[12px]"
-                      onClick={() => {
-                        setInlineInvoiceForm(emptyInlineInvoiceForm);
-                        setModalType("supplementInvoice");
-                      }}
-                    >
-                      补录发票
-                    </button>
-                  )}
-                </div>
-                {detailOtherExpense.invoicedAmount != null && Number(detailOtherExpense.invoicedAmount) > 0 && (
-                  <p className="text-[12px] text-[#78716C]">
-                    已收票金额：{formatAmount(detailOtherExpense.invoicedAmount)}
-                  </p>
-                )}
-              </div>
-            )}
-
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-          </div>
+          <NonContractExpenseDetailCard data={detailOtherExpense} />
         )}
+        <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
       </Modal>
 
       {/* 补录发票弹窗 */}
@@ -3719,98 +3547,9 @@ export default function FinanceExpensePage() {
         maxWidth="640px"
       >
         {detailLendingOut && (
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#78716C]/10 flex items-center justify-center">
-                  <Landmark className="w-5 h-5 text-[#78716C]" />
-                </div>
-                <div>
-                  <h3 className="text-[15px] font-bold text-[#1C1917]">{detailLendingOut.borrowerName}</h3>
-                  <p className="text-[13px] text-[#78716C]">{detailLendingOut.lendingType}</p>
-                </div>
-              </div>
-              <AdminStatusOverride
-                businessType="lending_out"
-                businessId={detailLendingOut.id}
-                currentStatus={detailLendingOut.status}
-                onStatusChanged={(newStatus) => {
-                  setDetailLendingOut((prev) => prev ? { ...prev, status: newStatus } : prev);
-                  setLendingOuts((prev) =>
-                    prev.map((l) => l.id === detailLendingOut.id ? { ...l, status: newStatus } : l)
-                  );
-                }}
-                size="md"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">借出金额</p>
-                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(detailLendingOut.amount)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">已收回</p>
-                <p className="text-[14px] font-medium text-[#1C1917]">{formatAmount(detailLendingOut.returnedAmount)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">未收回</p>
-                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(detailLendingOut.remainingAmount)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">借出日期</p>
-                <p className="text-[14px] text-[#1C1917]">{formatDate(detailLendingOut.lendingDate)}</p>
-              </div>
-              {detailLendingOut.expectedReturnDate && (
-                <div>
-                  <p className="text-[12px] text-[#78716C] mb-0.5">预计归还日期</p>
-                  <p className="text-[14px] text-[#1C1917]">{formatDate(detailLendingOut.expectedReturnDate)}</p>
-                </div>
-              )}
-            </div>
-
-            {detailLendingOut.description && (
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">说明</p>
-                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">{detailLendingOut.description}</p>
-              </div>
-            )}
-
-            {detailLendingOut.returns && detailLendingOut.returns.length > 0 && (
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-2">归还记录</p>
-                <div className="space-y-2">
-                  {detailLendingOut.returns.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between p-2.5 bg-[#FAFAF9] rounded-xl">
-                      <div>
-                        <p className="text-[13px] font-medium text-[#1C1917]">{formatAmount(r.amount)}</p>
-                        <p className="text-[12px] text-[#78716C]">{formatDate(r.returnDate)}</p>
-                      </div>
-                      {r.remark && <p className="text-[12px] text-[#78716C]">{r.remark}</p>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {detailLendingOut.bankAccountId && (
-              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#1C1917]/10">
-                <p className="text-[12px] font-semibold text-[#1C1917] mb-1">支付信息</p>
-                <div className="flex items-center gap-4 text-[13px]">
-                  <span>支付方式：{detailLendingOut.paymentMethod || "-"}</span>
-                  {detailLendingOut.bankAccount && (
-                    <span>银行账户：{detailLendingOut.bankAccount.accountName} - {detailLendingOut.bankAccount.bankName} (****{detailLendingOut.bankAccount.accountNo.slice(-4)})</span>
-                  )}
-                  {detailLendingOut.paidAt && (
-                    <span>支付时间：{formatDate(detailLendingOut.paidAt)}</span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-          </div>
+          <LendingOutDetailCard data={detailLendingOut} />
         )}
+        <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
       </Modal>
 
       <Modal
@@ -3820,110 +3559,9 @@ export default function FinanceExpensePage() {
         maxWidth="960px"
       >
         {detailExpenseReport && (
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#5856D6]/10 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-[#5856D6]" />
-                </div>
-                <div>
-                  <h3 className="text-[15px] font-bold text-[#1C1917]">{detailExpenseReport.applicant?.realName || "-"}</h3>
-                  <p className="text-[13px] text-[#78716C]">{detailExpenseReport.expenseType}</p>
-                </div>
-              </div>
-              <AdminStatusOverride
-                businessType="expense_report"
-                businessId={detailExpenseReport.id}
-                currentStatus={detailExpenseReport.status}
-                onStatusChanged={(newStatus) => {
-                  setDetailExpenseReport((prev) => prev ? { ...prev, status: newStatus } : prev);
-                  setExpenseReports((prev) =>
-                    prev.map((r) => r.id === detailExpenseReport.id ? { ...r, status: newStatus } : r)
-                  );
-                }}
-                size="md"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">报销总金额</p>
-                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(detailExpenseReport.amount)}</p>
-              </div>
-              {detailExpenseReport.loanOffsetAmount > 0 && (
-                <div>
-                  <p className="text-[12px] text-[#78716C] mb-0.5">借款抵扣</p>
-                  <p className="text-[14px] text-[#78716C]">{formatAmount(detailExpenseReport.loanOffsetAmount)}</p>
-                </div>
-              )}
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#1C1917]">{formatDate(detailExpenseReport.createdAt)}</p>
-              </div>
-            </div>
-
-            {detailExpenseReport.items && detailExpenseReport.items.length > 0 && (
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-2">报销明细</p>
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[600px]">
-                    <thead>
-                      <tr className="border-b border-[#E7E5E4]">
-                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">费用说明</th>
-                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">关联项目</th>
-                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">报销金额</th>
-                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">费用类型</th>
-                        <th className="text-left py-2 px-2 text-[12px] font-semibold text-[#78716C]">发票附件</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailExpenseReport.items.map((it) => (
-                        <tr key={it.id} className="border-b border-[#F5F5F4]">
-                          <td className="py-2 px-2 text-[13px] text-[#1C1917]">{it.description || "-"}</td>
-                          <td className="py-2 px-2 text-[13px] text-[#1C1917]">{it.project?.name || it.projectSourceId || "-"}</td>
-                          <td className="py-2 px-2 text-[13px] font-medium text-[#78716C]">{formatAmount(it.amount)}</td>
-                          <td className="py-2 px-2">
-                            <span className="ios-badge ios-badge-blue text-[11px]">{it.expenseType}</span>
-                          </td>
-                          <td className="py-2 px-2">
-                            {it.invoiceAttachments && it.invoiceAttachments.length > 0 ? (
-                              <div className="flex flex-col gap-0.5">
-                                {it.invoiceAttachments.map((url: string, idx: number) => (
-                                  <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#1C1917] hover:underline">
-                                    发票{idx + 1}
-                                  </a>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-[12px] text-[#78716C]">-</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {detailExpenseReport.bankAccountId && (
-              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#1C1917]/10">
-                <p className="text-[12px] font-semibold text-[#1C1917] mb-1">支付信息</p>
-                <div className="flex items-center gap-4 text-[13px]">
-                  <span>支付方式：{detailExpenseReport.paymentMethod || "-"}</span>
-                  {detailExpenseReport.bankAccount && (
-                    <span>银行账户：{detailExpenseReport.bankAccount.accountName} - {detailExpenseReport.bankAccount.bankName} (****{detailExpenseReport.bankAccount.accountNo.slice(-4)})</span>
-                  )}
-                  {detailExpenseReport.paidAt && (
-                    <span>支付时间：{formatDate(detailExpenseReport.paidAt)}</span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-          </div>
+          <ExpenseReportDetailCard data={detailExpenseReport} />
         )}
+        <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
       </Modal>
 
       <Modal
@@ -3933,133 +3571,9 @@ export default function FinanceExpensePage() {
         maxWidth="95vw"
       >
         {salaryBatchDetail && (
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#78716C]/10 flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-[#78716C]" />
-                </div>
-                <div>
-                  <h3 className="text-[15px] font-bold text-[#1C1917]">{salaryBatchDetail.title}</h3>
-                  <p className="text-[13px] text-[#78716C]">{salaryBatchDetail.batchNo} · {salaryBatchDetail.period}</p>
-                </div>
-              </div>
-              <AdminStatusOverride
-                businessType="salary_payment"
-                businessId={salaryBatchDetail.id}
-                currentStatus={salaryBatchDetail.status}
-                onStatusChanged={(newStatus) => {
-                  setSalaryBatchDetail((prev) => prev ? { ...prev, status: newStatus } : prev);
-                  setSalaryBatches((prev) =>
-                    prev.map((b) => b.id === salaryBatchDetail.id ? { ...b, status: newStatus } : b)
-                  );
-                }}
-                size="md"
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-x-6 gap-y-3">
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">人数</p>
-                <p className="text-[14px] text-[#1C1917]">{salaryBatchDetail.employeeCount}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">应发总额</p>
-                <p className="text-[14px] font-medium text-[#1C1917]">{formatAmount(salaryBatchDetail.totalGrossSalary)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">实发总额</p>
-                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(salaryBatchDetail.totalNetSalary)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">社保个人合计</p>
-                <p className="text-[14px] text-[#1C1917]">{formatAmount(salaryBatchDetail.totalSocialInsurancePersonal)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">公积金个人合计</p>
-                <p className="text-[14px] text-[#1C1917]">{formatAmount(salaryBatchDetail.totalHousingFundPersonal)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">个税合计</p>
-                <p className="text-[14px] text-[#1C1917]">{formatAmount(salaryBatchDetail.totalIncomeTax)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">银行总支出</p>
-                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(salaryBatchDetail.totalBankOutflow)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#1C1917]">{formatDate(salaryBatchDetail.createdAt)}</p>
-              </div>
-            </div>
-
-            {salaryBatchDetail.remark && (
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">备注</p>
-                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">{salaryBatchDetail.remark}</p>
-              </div>
-            )}
-
-            {salaryBatchDetail.items && salaryBatchDetail.items.length > 0 && (
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-2">工资明细</p>
-                <div className="overflow-x-auto">
-                  <table className="ios-table text-[12px]">
-                    <thead>
-                      <tr>
-                        <th>员工</th>
-                        <th>基本工资</th>
-                        <th>奖金</th>
-                        <th>补贴</th>
-                        <th>应发合计</th>
-                        <th>社保个人</th>
-                        <th>公积金个人</th>
-                        <th>个税</th>
-                        <th>其他扣款</th>
-                        <th>扣款合计</th>
-                        <th>实发工资</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {salaryBatchDetail.items.map((item) => (
-                        <tr key={item.id}>
-                          <td className="font-semibold">{item.employee?.realName || "-"}</td>
-                          <td>{formatAmount(item.baseSalary)}</td>
-                          <td>{formatAmount(item.bonus)}</td>
-                          <td>{formatAmount(item.allowance)}</td>
-                          <td className="font-medium text-[#1C1917]">{formatAmount(item.grossSalary)}</td>
-                          <td>{formatAmount(item.socialInsurancePersonal)}</td>
-                          <td>{formatAmount(item.housingFundPersonal)}</td>
-                          <td>{formatAmount(item.incomeTax)}</td>
-                          <td>{formatAmount(item.otherDeduction)}</td>
-                          <td className="text-[#78716C]">{formatAmount(item.totalDeduction)}</td>
-                          <td className="font-semibold text-[#78716C]">{formatAmount(item.netSalary)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {salaryBatchDetail.bankAccountId && (
-              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#1C1917]/10">
-                <p className="text-[12px] font-semibold text-[#1C1917] mb-1">支付信息</p>
-                <div className="flex items-center gap-4 text-[13px]">
-                  <span>支付方式：{salaryBatchDetail.paymentMethod || "-"}</span>
-                  {salaryBatchDetail.bankAccount && (
-                    <span>银行账户：{salaryBatchDetail.bankAccount.accountName} - {salaryBatchDetail.bankAccount.bankName} (****{salaryBatchDetail.bankAccount.accountNo.slice(-4)})</span>
-                  )}
-                  {salaryBatchDetail.paidAt && (
-                    <span>支付时间：{formatDate(salaryBatchDetail.paidAt)}</span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-          </div>
+          <SalaryPaymentDetailCard data={salaryBatchDetail} />
         )}
+        <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
       </Modal>
 
       <Modal
@@ -4069,83 +3583,9 @@ export default function FinanceExpensePage() {
         maxWidth="640px"
       >
         {detailBorrowingReturnApp && (
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#1C1917]/10 flex items-center justify-center">
-                  <RotateCcw className="w-5 h-5 text-[#1C1917]" />
-                </div>
-                <div>
-                  <h3 className="text-[15px] font-bold text-[#1C1917]">{detailBorrowingReturnApp.sourceName}</h3>
-                  <p className="text-[13px] text-[#78716C]">{sourceTypeMap[detailBorrowingReturnApp.sourceType] || detailBorrowingReturnApp.sourceType}</p>
-                </div>
-              </div>
-              <AdminStatusOverride
-                businessType="borrowing_return_application"
-                businessId={detailBorrowingReturnApp.id}
-                currentStatus={detailBorrowingReturnApp.status}
-                onStatusChanged={(newStatus) => {
-                  setDetailBorrowingReturnApp((prev) => prev ? { ...prev, status: newStatus } : prev);
-                  setBorrowingReturnApps((prev) =>
-                    prev.map((a) =>
-                      a.id === detailBorrowingReturnApp.id ? { ...a, status: newStatus } : a
-                    )
-                  );
-                }}
-                size="md"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">原始金额</p>
-                <p className="text-[14px] font-medium text-[#1C1917]">{formatAmount(parseFloat(detailBorrowingReturnApp.sourceAmount))}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">归还金额</p>
-                <p className="text-[14px] font-bold text-[#78716C]">{formatAmount(parseFloat(detailBorrowingReturnApp.returnAmount))}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">归还日期</p>
-                <p className="text-[14px] text-[#1C1917]">{formatDate(detailBorrowingReturnApp.returnDate)}</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">创建时间</p>
-                <p className="text-[14px] text-[#1C1917]">{formatDate(detailBorrowingReturnApp.createdAt)}</p>
-              </div>
-              {detailBorrowingReturnApp.executedAt && (
-                <div>
-                  <p className="text-[12px] text-[#78716C] mb-0.5">执行时间</p>
-                  <p className="text-[14px] text-[#1C1917]">{formatDate(detailBorrowingReturnApp.executedAt)}</p>
-                </div>
-              )}
-            </div>
-
-            {detailBorrowingReturnApp.remark && (
-              <div>
-                <p className="text-[12px] text-[#78716C] mb-0.5">备注</p>
-                <p className="text-[14px] text-[#1C1917] whitespace-pre-wrap leading-relaxed bg-[#FAFAF9] p-3 rounded-xl">{detailBorrowingReturnApp.remark}</p>
-              </div>
-            )}
-
-            {detailBorrowingReturnApp.bankAccountId && (
-              <div className="p-3 rounded-xl bg-[#F0F9FF] border border-[#1C1917]/10">
-                <p className="text-[12px] font-semibold text-[#1C1917] mb-1">支付信息</p>
-                <div className="flex items-center gap-4 text-[13px]">
-                  <span>支付方式：{detailBorrowingReturnApp.paymentMethod || "-"}</span>
-                  {detailBorrowingReturnApp.bankAccount && (
-                    <span>银行账户：{detailBorrowingReturnApp.bankAccount.accountName} - {detailBorrowingReturnApp.bankAccount.bankName} (****{detailBorrowingReturnApp.bankAccount.accountNo.slice(-4)})</span>
-                  )}
-                  {detailBorrowingReturnApp.paidAt && (
-                    <span>支付时间：{formatDate(detailBorrowingReturnApp.paidAt)}</span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
-          </div>
+          <BorrowingReturnDetailCard data={detailBorrowingReturnApp} />
         )}
+        <ApprovalTimeline instance={approvalInstance} loading={approvalLoading} />
       </Modal>
 
       <Modal

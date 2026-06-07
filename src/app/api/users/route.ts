@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { isAdmin } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const employmentStatus = searchParams.get("employmentStatus") || "";
-    const pageSize = parseInt(searchParams.get("pageSize") || "200");
+    const pageSize = Math.max(1, parseInt(searchParams.get("pageSize") || "200") || 200);
 
     const where: Record<string, unknown> = { isActive: true };
 

@@ -319,10 +319,12 @@ export default function InternalSettlementPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("/api/organizations?pageSize=200");
+        const res = await fetch("/api/bank-accounts?pageSize=200");
         if (res.ok) {
           const json = await res.json();
-          setOrganizations(json.data || []);
+          // 从银行账户中筛选公司账户，作为所属主体数据源
+          const companyAccounts = (json.data || []).filter((a: any) => a.accountType === "公司账户");
+          setOrganizations(companyAccounts);
         }
       } catch {
         setOrganizations([]);

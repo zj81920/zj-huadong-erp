@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
+import { getCurrentUser, isAdmin } from "@/lib/auth";
 
 // POST /api/approval-flows/apply - 批量应用审批流到多个模块
 // Body: { sourceBusinessType, sourceFlowLevel, targets: [{ businessType, flowLevel }] }
 export async function POST(request: NextRequest) {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || !isAdmin(currentUser)) {
+      return NextResponse.json({ error: "仅管理员可执行此操作" }, { status: 403 });
+    }
+
     const body = await request.json();
     const { sourceBusinessType, sourceFlowLevel, targets } = body;
 
@@ -43,24 +49,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Apply to each target
+    // Apply to each target (每个 target 单独事务，保证原子性)
     for (const target of targets) {
-      // Delete existing nodes for target
-      await prisma.approvalFlowDefinition.deleteMany({
-        where: { businessType: target.businessType, flowLevel: target.flowLevel },
-      });
+      await prisma.$transaction(async (tx) => {
+        await tx.approvalFlowDefinition.deleteMany({
+          where: { businessType: target.businessType, flowLevel: target.flowLevel },
+        });
 
-      // Create new nodes from source
-      await prisma.approvalFlowDefinition.createMany({
-        data: sourceNodes.map((node) => ({
-          businessType: target.businessType,
-          flowLevel: target.flowLevel,
-          nodeOrder: node.nodeOrder,
-          nodeName: node.nodeName,
-          approverRole: node.approverRole,
-          nodeType: node.nodeType || "approval",
-          isActive: true,
-        })),
+        await tx.approvalFlowDefinition.createMany({
+          data: sourceNodes.map((node) => ({
+            businessType: target.businessType,
+            flowLevel: target.flowLevel,
+            nodeOrder: node.nodeOrder,
+            nodeName: node.nodeName,
+            approverRole: node.approverRole,
+            nodeType: node.nodeType || "approval",
+            isActive: true,
+          })),
+        });
       });
     }
 

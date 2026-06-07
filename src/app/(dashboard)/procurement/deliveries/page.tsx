@@ -21,6 +21,7 @@ import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
+import { DeliveryReceiptDetailCard } from '@/components/detail-cards';
 
 interface Supplier {
   id: string;
@@ -1076,134 +1077,7 @@ export default function DeliveryReceiptsPage() {
             businessType="delivery_receipt"
             businessId={detailReceipt.id}
           >
-            <div>
-              <h3 className="text-[13px] font-semibold text-[#78716C] uppercase tracking-wider mb-3">
-                合同信息
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-[12px] text-[#78716C]">支出合同编号</span>
-                  <p className="text-[14px] font-semibold text-[#1C1917]">
-                    {detailReceipt.expenseContract?.contractNo || "-"}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[12px] text-[#78716C]">供应商</span>
-                  <p className="text-[14px] font-semibold text-[#1C1917]">
-                    {detailReceipt.expenseContract?.supplier?.name || "-"}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[12px] text-[#78716C]">合同金额</span>
-                  <p className="text-[14px] font-semibold text-[#1C1917]">
-                    ¥{Number(detailReceipt.expenseContract?.totalAmount || 0).toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[12px] text-[#78716C]">合同状态</span>
-                  <p className="text-[14px]">
-                    <span className="ios-badge ios-badge-green">
-                      {detailReceipt.expenseContract?.status || "-"}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-[#F5F5F4] pt-4">
-              <h3 className="text-[13px] font-semibold text-[#78716C] uppercase tracking-wider mb-3">
-                验收信息
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-[12px] text-[#78716C]">到货日期</span>
-                  <p className="text-[14px] font-semibold text-[#1C1917]">
-                    {formatDate(detailReceipt.deliveryDate)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[12px] text-[#78716C]">实收数量</span>
-                  <p className="text-[14px] font-semibold text-[#1C1917]">
-                    {detailReceipt.items && detailReceipt.items.length > 0
-                      ? detailReceipt.items.reduce(
-                          (sum, item) => sum + (item.receivedQuantity || 0),
-                          0
-                        )
-                      : "-"}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[12px] text-[#78716C]">到货金额</span>
-                  <p className="text-[14px] font-semibold text-[#1C1917]">
-                    {detailReceipt.deliveryAmount
-                      ? `¥${Number(detailReceipt.deliveryAmount).toLocaleString()}`
-                      : "-"}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[12px] text-[#78716C]">检验结果</span>
-                  <p className="text-[14px]">
-                    <span
-                      className={`ios-badge ${inspectionColorMap[detailReceipt.inspectionResult] || "ios-badge-gray"}`}
-                    >
-                      {detailReceipt.inspectionResult}
-                    </span>
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[12px] text-[#78716C]">创建时间</span>
-                  <p className="text-[14px] font-semibold text-[#1C1917]">
-                    {formatDate(detailReceipt.createdAt)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {detailReceipt.items && detailReceipt.items.length > 0 && (
-              <div className="border-t border-[#F5F5F4] pt-4">
-                <h3 className="text-[13px] font-semibold text-[#78716C] uppercase tracking-wider mb-3">
-                  物资明细
-                </h3>
-                <div className="overflow-x-auto rounded-xl border border-[#E7E5E4]">
-                  <table className="ios-table text-[12px]">
-                    <thead>
-                      <tr>
-                        <th>物资名称</th>
-                        <th>规格</th>
-                        <th>单位</th>
-                        <th>合同数量</th>
-                        <th>实收数量</th>
-                        <th>合格数量</th>
-                        <th>检验结果</th>
-                        <th>备注</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailReceipt.items.map((item, idx) => (
-                        <tr key={idx}>
-                          <td className="font-medium whitespace-nowrap">
-                            {item.materialName}
-                          </td>
-                          <td className="whitespace-nowrap">{item.spec || "-"}</td>
-                          <td>{item.unit || "-"}</td>
-                          <td>{item.orderedQuantity ?? "-"}</td>
-                          <td>{item.receivedQuantity ?? "-"}</td>
-                          <td>{item.acceptedQuantity ?? "-"}</td>
-                          <td>
-                            <span
-                              className={`ios-badge ${inspectionColorMap[item.inspectionResult] || "ios-badge-gray"}`}
-                            >
-                              {item.inspectionResult}
-                            </span>
-                          </td>
-                          <td>{item.remark || "-"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+            <DeliveryReceiptDetailCard data={detailReceipt} />
 
             {receiptInvoices[detailReceipt.id] && receiptInvoices[detailReceipt.id].length > 0 && (
               <div className="border-t border-[#F5F5F4] pt-4">

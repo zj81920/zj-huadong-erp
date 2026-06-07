@@ -14,7 +14,6 @@ import {
   FileText,
 } from "lucide-react";
 import Modal from "@/components/Modal";
-import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker from "@/components/ProjectPicker";
 import { DetailPageLayout } from "@/components/DetailPageLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +22,7 @@ import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
+import { NonContractIncomeDetailCard, NonContractExpenseDetailCard } from "@/components/detail-cards";
 
 interface Project {
   id: string;
@@ -804,58 +804,13 @@ export default function NonContractPage() {
             businessType={isIncome ? "non_contract_income" : "non_contract_expense"}
             businessId={detailRecord.id}
           >
-            <div className="flex items-center justify-end mb-2">
-              <AdminStatusOverride
-                businessType={isIncome ? "non_contract_income" : "non_contract_expense"}
-                businessId={detailRecord.id}
-                currentStatus={detailRecord.status}
-                onStatusChanged={(newStatus) => {
-                  setDetailRecord(prev => prev ? { ...prev, status: newStatus as NonContractRecord["status"] } : prev);
-                  setRecords(prev => prev.map(r => r.id === detailRecord.id ? { ...r, status: newStatus as NonContractRecord["status"] } : r));
-                }}
-                size="md"
-              />
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">金额</p>
-                <p className={`text-[14px] font-semibold ${isIncome ? "text-[#78716C]" : "text-[#78716C]"}`}>
-                  ¥{Number(detailRecord.amount).toLocaleString("zh-CN")}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">交易日期</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">
-                  {formatDate(detailRecord.transactionDate)}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">项目源</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">
-                  {detailRecord.projectSourceId ? (
-                    <span>
-                      <span className="font-mono text-[#1C1917]">{detailRecord.projectSourceId}</span>
-                      {detailRecord.project && (
-                        <span className="text-[#78716C] text-[12px] ml-1.5">{detailRecord.project.name}</span>
-                      )}
-                    </span>
-                  ) : (
-                    <span className="ios-badge ios-badge-blue">公司级</span>
-                  )}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">创建时间</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailRecord.createdAt)}</p>
-              </div>
-              {detailRecord.description && (
-                <div className="p-3 rounded-xl bg-[#FAFAF9] col-span-2">
-                  <p className="text-[12px] text-[#78716C] mb-1">描述</p>
-                  <p className="text-[14px] font-semibold text-[#1C1917]">{detailRecord.description}</p>
-                </div>
-              )}
-            </div>
+
+            {isIncome ? (
+              <NonContractIncomeDetailCard data={detailRecord} />
+            ) : (
+              <NonContractExpenseDetailCard data={detailRecord} />
+            )}
 
             {!isIncome && (
               <div>

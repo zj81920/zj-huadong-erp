@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   _request: NextRequest,
@@ -103,6 +104,7 @@ export async function DELETE(
       );
     }
 
+    await cleanupBusinessApprovalRecords("bank_account", id);
     await prisma.bankAccount.delete({ where: { id } });
 
     return NextResponse.json({ message: "删除成功" });

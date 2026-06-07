@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(
   _request: NextRequest,
@@ -236,6 +237,8 @@ export async function DELETE(
 
       await tx.project.delete({ where: { id } });
     });
+
+    await cleanupBusinessApprovalRecords("project", id);
 
     return NextResponse.json({ message: "删除成功" });
   } catch (error) {

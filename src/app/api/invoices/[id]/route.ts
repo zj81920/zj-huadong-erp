@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -100,6 +101,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       await updateRelatedInvoicedAmount(existing.sourceType, existing.sourceId, Number(existing.totalAmount), "subtract");
     }
 
+    await cleanupBusinessApprovalRecords("invoice", id);
     await prisma.invoice.delete({ where: { id } });
 
     return NextResponse.json({ message: "删除成功" });

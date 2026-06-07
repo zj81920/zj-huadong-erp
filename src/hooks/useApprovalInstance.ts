@@ -29,6 +29,13 @@ interface InstanceDetail {
   createdAt: string
   actions: ActionRecord[]
   flowNodes: FlowNode[]
+  // 后端驱动的权限标志
+  canApprove?: boolean
+  canReject?: boolean
+  canArchive?: boolean
+  canPayment?: boolean
+  isInitiator?: boolean
+  hasActedThisRound?: boolean
 }
 
 interface UseApprovalInstanceResult {

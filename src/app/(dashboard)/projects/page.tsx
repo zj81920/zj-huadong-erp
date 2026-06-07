@@ -69,6 +69,7 @@ interface Project {
   createdAt: string;
   updatedAt: string;
   lastModifiedBy: string | null;
+  createdById: string | null;
   customer: Customer;
   projectLead: { projectSourceId: string; projectName: string; currentStatus: string } | null;
   designManager: { id: string; realName: string } | null;
@@ -762,13 +763,13 @@ export default function ProjectsPage() {
                             <Eye className="w-3.5 h-3.5" />
                             详情
                           </button>
-                          {canEditFrontend(hasFlow, rolePerms, "", currentUser?.id ?? "", null, isAdminUser) && (
+                          {canEditFrontend(hasFlow, rolePerms, "", currentUser?.id ?? "", project.createdById ?? null, isAdminUser) && (
                             <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(project)}>
                               <Pencil className="w-3.5 h-3.5" />
                               编辑
                             </button>
                           )}
-                          {canDeleteFrontend(hasFlow, rolePerms, "", currentUser?.id ?? "", null, isAdminUser) && (
+                          {canDeleteFrontend(hasFlow, rolePerms, "", currentUser?.id ?? "", project.createdById ?? null, isAdminUser) && (
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
                               onClick={() => setDeleteConfirm(project)}

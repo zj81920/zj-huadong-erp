@@ -88,7 +88,7 @@ export default function FinanceReportsPage() {
         fetch("/api/lending-outs?pageSize=500"),
         fetch("/api/salary-payments?pageSize=500"),
         fetch("/api/expense-reports?pageSize=500"),
-        fetch("/api/organizations"),
+        fetch("/api/bank-accounts?pageSize=200"),
       ]);
       if (receivablesRes.ok) {
         const json = await receivablesRes.json();
@@ -128,7 +128,9 @@ export default function FinanceReportsPage() {
       }
       if (orgsRes.ok) {
         const json = await orgsRes.json();
-        setOrganizations(json.data || []);
+        // 从银行账户中筛选公司账户，作为所属主体数据源
+        const companyAccounts = (json.data || []).filter((a: any) => a.accountType === "公司账户");
+        setOrganizations(companyAccounts);
       }
     } catch (err) {
       console.error("获取报表数据失败:", err);
@@ -347,8 +349,8 @@ export default function FinanceReportsPage() {
               onChange={(e) => setSelectedOrgId(e.target.value)}
             >
               <option value="">全部（合并报表）</option>
-              {organizations.map((org) => (
-                <option key={org.id} value={org.id}>{org.shortName || org.name}</option>
+              {organizations.map((org: any) => (
+                <option key={org.id} value={org.id}>{org.accountName}</option>
               ))}
             </select>
           </div>

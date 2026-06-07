@@ -15,7 +15,6 @@ import {
   Upload,
 } from "lucide-react";
 import Modal from "@/components/Modal";
-import AdminStatusOverride from "@/components/AdminStatusOverride";
 import ProjectPicker, { ProjectLeadItem } from "@/components/ProjectPicker";
 import { DetailPageLayout } from "@/components/DetailPageLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,6 +26,7 @@ import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { OutsourcingDetailCard } from "@/components/detail-cards";
 
 interface Project {
   id: string;
@@ -666,20 +666,7 @@ export default function OutsourcingPage() {
                       <td>
                         <span className={`ios-badge ${asc.color}`}>{asc.label}</span>
                       </td>
-                      <td>
-                        <AdminStatusOverride
-                          businessType="outsourcing"
-                          businessId={task.id}
-                          currentStatus={task.approvalStatus}
-                          onStatusChanged={(newStatus) => {
-                            setTasks((prev) =>
-                              prev.map((t) =>
-                                t.id === task.id ? { ...t, approvalStatus: newStatus } : t
-                              )
-                            );
-                          }}
-                        />
-                      </td>
+
                       <td>
                         <div className="flex items-center gap-1">
                           <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(task)} title="查看">
@@ -1049,111 +1036,7 @@ export default function OutsourcingPage() {
             businessType="outsourcing"
             businessId={detailTask.id}
           >
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
-              <div className="w-12 h-12 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
-                <Briefcase className="w-6 h-6 text-[#1C1917]" />
-              </div>
-              <div>
-                <p className="text-[17px] font-bold text-[#1C1917]">{detailTask.targetName}</p>
-                <p className="text-[13px] text-[#1C1917] font-mono font-semibold">{detailTask.projectSourceId}</p>
-              </div>
-              <span className={`ios-badge ml-auto ${typeConfig[detailTask.type]?.color || "ios-badge-gray"}`}>
-                {typeConfig[detailTask.type]?.label || detailTask.type}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">项目名称</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{detailTask.project.name}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">类型</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">
-                  {typeConfig[detailTask.type]?.label || detailTask.type}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">外包对象</p>
-                <div className="flex items-center gap-1.5">
-                  <p className="text-[14px] font-semibold text-[#1C1917]">{detailTask.targetName}</p>
-                  {detailTask.supplier?.supplierType && (
-                    <span className="ios-badge ios-badge-gray text-[10px]!">{detailTask.supplier.supplierType}</span>
-                  )}
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">
-                  {detailTask.type === "to_company" ? "关联合同" : "付款来源"}
-                </p>
-                {detailTask.type === "to_company" && detailTask.contractId ? (
-                  <p className="text-[14px] font-semibold text-[#1C1917]">
-                    已自动生成支出合同（审批通过后自动创建）
-                  </p>
-                ) : detailTask.type === "to_company" ? (
-                  <p className="text-[14px] text-[#78716C]">
-                    审批通过后将自动生成支出合同
-                  </p>
-                ) : detailTask.acceptanceStatus === "已验收" ? (
-                  <p className="text-[14px] font-semibold text-[#78716C]">
-                    已自动创建应付记录（验收通过后自动创建）
-                  </p>
-                ) : (
-                  <p className="text-[14px] text-[#78716C]">
-                    验收通过后将自动创建应付记录
-                  </p>
-                )}
-              </div>
-              <div className="col-span-2 p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">任务描述</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{detailTask.taskDescription}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">工作量</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{detailTask.workload || "-"}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">交付截止日</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailTask.deliveryDeadline)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">金额</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatMoney(detailTask.amount)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">验收状态</p>
-                <span className={`ios-badge ${acceptanceStatusConfig[detailTask.acceptanceStatus]?.color || "ios-badge-gray"}`}>
-                  {detailTask.acceptanceStatus}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">审批状态</p>
-                <AdminStatusOverride
-                  businessType="outsourcing"
-                  businessId={detailTask.id}
-                  currentStatus={detailTask.approvalStatus}
-                  onStatusChanged={(newStatus) => {
-                    setDetailTask((prev) =>
-                      prev ? { ...prev, approvalStatus: newStatus } : prev
-                    );
-                    setTasks((prev) =>
-                      prev.map((t) =>
-                        t.id === detailTask.id ? { ...t, approvalStatus: newStatus } : t
-                      )
-                    );
-                  }}
-                />
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">创建时间</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailTask.createdAt)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">更新时间</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailTask.updatedAt)}</p>
-              </div>
-            </div>
-
+            <OutsourcingDetailCard data={detailTask} />
           </DetailPageLayout>
         )}
       </Modal>

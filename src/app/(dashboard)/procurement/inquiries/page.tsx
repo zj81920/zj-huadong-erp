@@ -35,6 +35,7 @@ import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
+import { InquiryDetailCard } from '@/components/detail-cards';
 
 interface PurchaseRequestItem {
   id: string;
@@ -1249,108 +1250,7 @@ export default function InquiriesPage() {
             businessType="inquiries"
             businessId={detailInquiry.id}
           >
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
-              <div className="w-12 h-12 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
-                <HelpCircle className="w-6 h-6 text-[#1C1917]" />
-              </div>
-              <div>
-                <p className="text-[17px] font-bold text-[#1C1917]">{detailInquiry.purchaseRequest?.requestNo}</p>
-                <p className="text-[13px] text-[#1C1917] font-mono font-semibold">{detailInquiry.projectCode ? `${detailInquiry.projectCode} - ${detailInquiry.projectName}` : (detailInquiry.projectName || detailInquiry.projectSourceId)}</p>
-              </div>
-              {detailInquiry.inquiryMode === "online" && (
-                <span className="ios-badge ios-badge-blue ml-auto mr-2">线上询价</span>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">物资数量</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">
-                  {detailInquiry.purchaseRequest?.items?.length || 0} 项
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">
-                  <Calendar className="w-3 h-3 inline mr-1" />
-                  询价日期
-                </p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailInquiry.inquiryDate)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">
-                  <Calendar className="w-3 h-3 inline mr-1" />
-                  要求交货日期
-                </p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailInquiry.closingDate)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">项目名称</p>
-                <p className="text-[14px] font-semibold text-[#1C1917] font-mono">
-                  {detailInquiry.projectCode ? `${detailInquiry.projectCode} - ${detailInquiry.projectName}` : (detailInquiry.projectName || detailInquiry.projectSourceId) || "-"}
-                </p>
-              </div>
-              {detailInquiry.onlineDeadline && (
-                <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                  <p className="text-[12px] text-[#78716C] mb-1">
-                    <Globe className="w-3 h-3 inline mr-1" />
-                    线上截止时间
-                  </p>
-                  <p className="text-[14px] font-semibold text-[#1C1917]">
-                    {new Date(detailInquiry.onlineDeadline).toLocaleString("zh-CN")}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {detailInquiry.purchaseRequest?.items && detailInquiry.purchaseRequest?.items?.length > 0 && (
-              <div>
-                <p className="text-[13px] font-semibold text-[#1C1917] mb-2">
-                  采购需求物资明细
-                </p>
-                <div className="max-h-[260px] overflow-y-auto border border-[#E7E5E4] rounded-xl">
-                  <table className="ios-table text-[12px]">
-                    <thead>
-                      <tr>
-                        <th>物资名称</th>
-                        <th>规格型号</th>
-                        <th>材质</th>
-                        <th>品牌</th>
-                        <th>标准号</th>
-                        <th>数量</th>
-                        <th>单位</th>
-                        {detailInquiry.confirmedSupplierId && <th>单价(元)</th>}
-                        {detailInquiry.confirmedSupplierId && <th>明细总价(元)</th>}
-                        <th>备注</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailInquiry.purchaseRequest?.items?.map((item: PurchaseRequestItem) => (
-                        <tr key={item.id}>
-                          <td className="font-semibold">{item.materialName}</td>
-                          <td className="text-[#78716C]">{item.spec || "-"}</td>
-                          <td className="text-[#78716C]">{item.material || "-"}</td>
-                          <td className="text-[#78716C]">{item.brand || "-"}</td>
-                          <td className="text-[#78716C]">{item.standardNo || "-"}</td>
-                          <td>{item.quantity ?? "-"}</td>
-                          <td>{item.unit || "-"}</td>
-                          {detailInquiry.confirmedSupplierId && (
-                            <td className="font-mono">
-                              {item.unitPrice != null ? `¥${Number(item.unitPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
-                            </td>
-                          )}
-                          {detailInquiry.confirmedSupplierId && (
-                            <td className="font-mono font-semibold text-[#1C1917]">
-                              {item.totalPrice != null ? `¥${Number(item.totalPrice).toLocaleString("zh-CN", { minimumFractionDigits: 2 })}` : "-"}
-                            </td>
-                          )}
-                          <td className="text-[#78716C] max-w-[120px] truncate" title={item.remark || undefined}>{item.remark || "-"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+            <InquiryDetailCard data={detailInquiry} />
 
             {detailInquiry.attachments && detailInquiry.attachments.length > 0 && (
               <div>

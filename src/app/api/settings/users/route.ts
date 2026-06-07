@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { isAdmin } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "20");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1);
+    const pageSize = Math.max(1, parseInt(searchParams.get("pageSize") || "20") || 20);
 
     const where: Record<string, unknown> = {};
     if (search) {
@@ -65,6 +67,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || !isAdmin(currentUser)) {
+      return NextResponse.json({ error: "仅管理员可执行此操作" }, { status: 403 });
+    }
     const body = await request.json();
     const { username, realName, password, phone, email, department, roleIds, signatureUrl, avatarUrl } = body;
 

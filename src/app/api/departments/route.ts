@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { isAdmin } from "@/lib/auth";
 
 export async function GET() {
   try {
@@ -31,6 +33,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || !isAdmin(currentUser)) {
+      return NextResponse.json({ error: "仅管理员可执行此操作" }, { status: 403 });
+    }
     const body = await request.json();
     const { name, sort } = body;
     if (!name || !name.trim()) {

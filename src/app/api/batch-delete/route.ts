@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser, isAdmin } from "@/lib/auth";
+import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
 
 const BUSINESS_MODELS = [
   "supplier",
@@ -10,7 +11,7 @@ const BUSINESS_MODELS = [
   "non_contract_income",
   "non_contract_expense",
   "purchase_request",
-  "inquiry",
+  "inquiries",
   "delivery_receipt",
   "project",
   "outsourcing",
@@ -23,6 +24,9 @@ const BUSINESS_MODELS = [
   "lending_out",
   "salary_payment",
   "borrowing_return_application",
+  "supplier_change",
+  "inter_org_contract",
+  "contract_change_order",
   "invoice",
   "bank_account",
   "project_lead",
@@ -30,10 +34,9 @@ const BUSINESS_MODELS = [
 
 type BusinessType = (typeof BUSINESS_MODELS)[number];
 
-const SOFT_DELETE_TYPES: BusinessType[] = [
-  "supplier",
-  "customer",
-];
+// 注意：所有有审批流程的业务类型都应使用物理删除，否则会导致流程实例残留
+// supplier/customer 之前是软删除，已统一改为物理删除
+const SOFT_DELETE_TYPES: BusinessType[] = [];
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,23 +71,33 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleSoftDelete(businessType: BusinessType, ids: string[]) {
-  await prisma.$transaction(async (tx) => {
-    for (const id of ids) {
-      switch (businessType) {
-        case "supplier":
-          await tx.supplier.update({ where: { id }, data: { isActive: false } });
-          break;
-        case "customer":
-          await tx.customer.update({ where: { id }, data: { isActive: false } });
-          break;
-      }
-    }
-  });
+  // 所有业务统一改为物理删除 + 清理审批记录（确保无孤儿实例）
+  for (const id of ids) {
+    await cleanupBusinessApprovalRecords(businessType, id);
+  }
+  // handleSoftDelete 仅用于特殊场景，目前不使用软删除
 }
 
 async function handleHardDelete(businessType: BusinessType, ids: string[]) {
+  // 先清理所有业务对应的审批实例，避免流程配置页面"有活跃实例"误报
+  // 注意：cleanupBusinessApprovalRecords 内部有自己的事务，不能放在外层事务里（嵌套事务问题）
+  for (const id of ids) {
+    await cleanupBusinessApprovalRecords(businessType, id);
+  }
+
   await prisma.$transaction(async (tx) => {
     switch (businessType) {
+      case "supplier":
+        // 级联清理关联子表（避免外键约束阻止删除）
+        await tx.supplierChange.deleteMany({ where: { supplierId: { in: ids } } });
+        await tx.supplierQuote.deleteMany({ where: { supplierId: { in: ids } } });
+        await tx.expenseContract.updateMany({ where: { supplierId: { in: ids } }, data: { supplierId: null } });
+        await tx.outsourcingTask.updateMany({ where: { supplierId: { in: ids } }, data: { supplierId: null } });
+        await tx.supplier.deleteMany({ where: { id: { in: ids } } });
+        break;
+      case "customer":
+        await tx.customer.deleteMany({ where: { id: { in: ids } } });
+        break;
       case "income_contract":
         await tx.incomeContract.deleteMany({ where: { id: { in: ids } } });
         break;
@@ -100,7 +113,7 @@ async function handleHardDelete(businessType: BusinessType, ids: string[]) {
       case "purchase_request":
         await tx.purchaseRequest.deleteMany({ where: { id: { in: ids } } });
         break;
-      case "inquiry":
+      case "inquiries":
         await tx.inquiry.deleteMany({ where: { id: { in: ids } } });
         break;
       case "delivery_receipt":
@@ -142,6 +155,15 @@ async function handleHardDelete(businessType: BusinessType, ids: string[]) {
         break;
       case "borrowing_return_application":
         await tx.borrowingReturnApplication.deleteMany({ where: { id: { in: ids } } });
+        break;
+      case "supplier_change":
+        await tx.supplierChange.deleteMany({ where: { id: { in: ids } } });
+        break;
+      case "inter_org_contract":
+        await tx.interOrgContract.deleteMany({ where: { id: { in: ids } } });
+        break;
+      case "contract_change_order":
+        await tx.contractChangeOrder.deleteMany({ where: { id: { in: ids } } });
         break;
       case "invoice":
         await tx.invoice.deleteMany({ where: { id: { in: ids } } });

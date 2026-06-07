@@ -31,6 +31,13 @@ interface InstanceDetail {
   createdAt: string;
   actions: ActionRecord[];
   flowNodes: FlowNode[];
+  // 后端驱动的权限标志（前端只读，禁止自行计算）
+  canApprove?: boolean;
+  canReject?: boolean;
+  canArchive?: boolean;
+  canPayment?: boolean;
+  isInitiator?: boolean;
+  hasActedThisRound?: boolean;
 }
 
 interface ApprovalStatusBadgeProps {
@@ -447,14 +454,13 @@ export function ApprovalActionButton({
 
   const { user: currentUser } = useAuth();
 
-  const currentUserHasActedOnNode = (() => {
-    if (!approvalInstance || !currentUser || currentStatus !== "审批中") return false;
-    return approvalInstance.actions.some(
-      (a: any) => a.nodeId === approvalInstance.currentNode &&
-        a.approverId === currentUser.id &&
-        (a.action === "approve" || a.action === "reject")
-    );
-  })();
+  // 后端驱动的权限判断：直接读取 API 返回的标志，禁止前端自行计算
+  const backendCanApprove = approvalInstance?.canApprove ?? false;
+  const backendCanReject = approvalInstance?.canReject ?? false;
+  const backendCanArchive = approvalInstance?.canArchive ?? false;
+  const backendCanPayment = approvalInstance?.canPayment ?? false;
+  const backendIsInitiator = approvalInstance?.isInitiator ?? false;
+  const backendHasActedThisRound = approvalInstance?.hasActedThisRound ?? false;
 
   useEffect(() => {
     if (showConfirm && commentRef.current) {
@@ -462,7 +468,7 @@ export function ApprovalActionButton({
     }
   }, [showConfirm]);
 
-  // 判断当前节点是否是归档类型
+  // 判断当前节点是否是归档类型（从 flowNodes 中读取）
   const isArchiveNode = (() => {
     if (!approvalInstance || !approvalInstance.flowNodes) return false;
     const currentNode = approvalInstance.flowNodes.find(
@@ -699,7 +705,7 @@ export function ApprovalActionButton({
     );
   }
 
-  if (currentStatus === "审批中" && isArchiveNode) {
+  if (currentStatus === "审批中" && isArchiveNode && backendCanArchive) {
     return (
       <>
         <input
@@ -809,7 +815,7 @@ export function ApprovalActionButton({
     );
   }
 
-  if (currentStatus === "审批中" && isPaymentNode) {
+  if (currentStatus === "审批中" && isPaymentNode && backendCanPayment) {
     return (
       <button
         onClick={handlePayment}
@@ -823,7 +829,7 @@ export function ApprovalActionButton({
   }
 
   if (currentStatus === "审批中") {
-    if (currentUserHasActedOnNode) {
+    if (backendHasActedThisRound) {
       if (isAdmin && instanceId) {
         return (
           <div className="flex items-center gap-3">
@@ -870,9 +876,15 @@ export function ApprovalActionButton({
       );
     }
 
+    // 发起人或无审批权限 → 不显示操作按钮
+    if (!backendCanApprove && !backendCanReject) {
+      return null;
+    }
+
     return (
       <>
         <div className="flex gap-2">
+          {backendCanApprove && (
           <button
             onClick={() => openConfirm("approve")}
             disabled={loading}
@@ -881,6 +893,8 @@ export function ApprovalActionButton({
             <CheckCircle className="w-3.5 h-3.5" />
             {loading ? "处理中..." : "通过"}
           </button>
+          )}
+          {backendCanReject && (
           <button
             onClick={() => openConfirm("reject")}
             disabled={loading}
@@ -889,6 +903,7 @@ export function ApprovalActionButton({
             <XCircle className="w-3.5 h-3.5" />
             驳回
           </button>
+          )}
           {isAdmin && instanceId && (
             <button
               onClick={async () => {

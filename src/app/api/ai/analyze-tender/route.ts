@@ -96,9 +96,12 @@ async function fetchFileContent(url: string): Promise<string | null> {
     if (url.startsWith("/uploads/")) {
       const fs = await import("fs");
       const path = await import("path");
-      const filePath = path.join(process.cwd(), url);
-      if (fs.existsSync(filePath)) {
-        const buffer = fs.readFileSync(filePath);
+      const realPath = path.resolve(process.cwd(), url);
+      const uploadsDir = path.resolve(process.cwd(), "uploads");
+      // 防止路径遍历
+      if (!realPath.startsWith(uploadsDir)) return null;
+      if (fs.existsSync(realPath)) {
+        const buffer = fs.readFileSync(realPath);
         return buffer.toString("utf-8");
       }
       return null;
@@ -114,10 +117,7 @@ async function fetchFileContent(url: string): Promise<string | null> {
       }
     }
 
-    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
-    if (response.ok) {
-      return await response.text();
-    }
+    // 只允许 OSS 域名，禁止对任意 URL 发起请求（SSRF 防护）
     return null;
   } catch {
     return null;

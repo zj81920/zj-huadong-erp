@@ -99,7 +99,6 @@ const navSections: NavSection[] = [
       { label: "角色设置", href: "/settings/roles", group: "用户与权限" },
       { label: "部门设置", href: "/settings/departments", group: "用户与权限" },
       { label: "流程设置", href: "/settings/approval-flow", group: "审批配置" },
-      { label: "审批调试", href: "/settings/approval-debug", group: "审批配置" },
       { label: "个人设置", href: "/settings/profile", group: "基础数据" },
       { label: "往来信息管理", href: "/settings/counterparty", group: "基础数据" },
       { label: "AI 模型配置", href: "/settings/ai-model", group: "系统" },
