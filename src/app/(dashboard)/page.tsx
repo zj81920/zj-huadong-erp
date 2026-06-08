@@ -2,17 +2,14 @@
 
 import { useState, useEffect } from "react";
 import {
-  TrendingUp,
-  TrendingDown,
-  AlertCircle,
-  FileText,
-  DollarSign,
   Briefcase,
   Users,
-  ArrowUpRight,
-  ArrowDownRight,
-  Clock,
   Eye,
+  Sparkles,
+  RefreshCw,
+  ListTodo,
+  FileText,
+  ArrowRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -21,20 +18,14 @@ interface DashboardStats {
   projectByStatus: { status: string; count: number }[];
   employeeCount: number;
   activeEmployeeCount: number;
-  incomeContractTotal: number;
-  expenseContractTotal: number;
-  nonContractIncomeTotal: number;
-  nonContractExpenseTotal: number;
-  totalIncome: number;
-  totalExpense: number;
-  netAmount: number;
-  receivableTotal: number;
-  receivablePaid: number;
-  payableTotal: number;
-  payablePaid: number;
   pendingApprovals: number;
-  receivableOverdue: number;
-  payableOverdue: number;
+  pendingTodoList: {
+    id: string;
+    businessType: string;
+    businessTitle: string;
+    status: string;
+    createdAt: string;
+  }[];
   recentProjects: {
     id: string;
     name: string;
@@ -45,31 +36,39 @@ interface DashboardStats {
   }[];
 }
 
-function formatMoney(val: number): string {
-  if (val >= 10000) {
-    return `¥${(val / 10000).toFixed(1)}万`;
-  }
-  return `¥${val.toLocaleString("zh-CN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-}
-
 const statusLabelMap: Record<string, string> = {
-  "执行": "执行中",
-  "完工": "已完工",
-  "暂停": "已暂停",
-  "终止": "已终止",
-  "跟踪中": "跟踪中",
-  "投标中": "投标中",
-  "报价中": "报价中",
-  "已中标": "已中标",
-  "落地": "已落地",
-  "已立项": "已立项",
+  "执行": "执行",
+  "完工": "关闭",
+  "暂停": "暂停",
+  "终止": "终止",
 };
 
-const statusColorMap: Record<string, string> = {
-  "执行": "bg-[#78716C]",
+const statusBarColor: Record<string, string> = {
+  "执行": "bg-[#4338CA]",
   "完工": "bg-[#1C1917]",
-  "暂停": "bg-[#78716C]",
+  "暂停": "bg-[#D97706]",
   "终止": "bg-[#78716C]",
+};
+
+const businessTypeLabels: Record<string, string> = {
+  income_contract: "收入合同",
+  expense_contract: "支出合同",
+  non_contract_expense: "其他支出",
+  expense_report: "费用报销",
+  supplier: "供应商审批",
+  purchase_request: "采购需求",
+  delivery_receipt: "到货验收",
+  outsourcing: "外包任务",
+  payment_application: "合同支付",
+  lending_out: "借出款",
+  salary_payment: "工资发放",
+  borrowing_return_application: "借入资金归还",
+};
+
+const todoTypeIcons: Record<string, { icon: string; color: string }> = {
+  已驳回: { icon: "🟠", color: "text-[#D97706]" },
+  审批中: { icon: "🔵", color: "text-[#4338CA]" },
+  待归档: { icon: "🟢", color: "text-[#16A34A]" },
 };
 
 export default function Dashboard() {
@@ -89,66 +88,14 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const receivableUnpaid = (stats?.receivableTotal || 0) - (stats?.receivablePaid || 0);
-  const payableUnpaid = (stats?.payableTotal || 0) - (stats?.payablePaid || 0);
-
-  const kpiCards = [
-    {
-      title: "项目总数",
-      value: stats ? String(stats.projectCount) : "-",
-      subtitle: stats?.activeEmployeeCount ? `${stats.activeEmployeeCount} 名在职员工` : "",
-      icon: <Briefcase className="w-5 h-5" />,
-      tint: "#4338CA",
-      tintLight: "#EEF2FF",
-    },
-    {
-      title: "总收入",
-      value: stats ? formatMoney(stats.totalIncome) : "-",
-      subtitle: `合同 ${formatMoney(stats?.incomeContractTotal || 0)}`,
-      icon: <TrendingUp className="w-5 h-5" />,
-      tint: "#16A34A",
-      tintLight: "#F0FDF4",
-    },
-    {
-      title: "总支出",
-      value: stats ? formatMoney(stats.totalExpense) : "-",
-      subtitle: `合同 ${formatMoney(stats?.expenseContractTotal || 0)}`,
-      icon: <TrendingDown className="w-5 h-5" />,
-      tint: "#D97706",
-      tintLight: "#FFFBEB",
-    },
-    {
-      title: "待审批",
-      value: stats ? String(stats.pendingApprovals) : "-",
-      subtitle: "待您处理",
-      icon: <FileText className="w-5 h-5" />,
-      tint: "#DC2626",
-      tintLight: "#FEF2F2",
-      onClick: () => router.push("/approvals"),
-    },
-  ];
-
-  const alertItems: { title: string; description: string; level: "high" | "medium" }[] = [];
-  if (stats?.receivableOverdue && stats.receivableOverdue > 0) {
-    alertItems.push({
-      title: `${stats.receivableOverdue} 笔应收账款已逾期`,
-      description: `未收款金额 ${formatMoney(receivableUnpaid)}，请尽快跟进`,
-      level: "high",
-    });
-  }
-  if (stats?.payableOverdue && stats.payableOverdue > 0) {
-    alertItems.push({
-      title: `${stats.payableOverdue} 笔应付账款已逾期`,
-      description: `未付款金额 ${formatMoney(payableUnpaid)}，请及时处理`,
-      level: "high",
-    });
-  }
+  const totalProjects = stats?.projectCount || 0;
+  const projectByStatus = stats?.projectByStatus || [];
 
   return (
     <>
       <div className="page-header">
         <h1>总览仪表板</h1>
-        <p>系统核心数据概览</p>
+        <p>工作概览与待办事项</p>
       </div>
 
       {loading ? (
@@ -157,144 +104,64 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="space-y-5">
-          <div className="grid grid-cols-4 gap-5">
-            {kpiCards.map((card, index) => (
-              <div
-                key={index}
-                className="bento-card glow-soft cursor-pointer flex flex-col justify-between h-full"
-                onClick={card.onClick}
-              >
-                <div className="relative z-10 flex flex-col h-full">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[12px] font-medium text-text-secondary">{card.title}</span>
-                    <div
-                      className="w-7 h-7 rounded flex items-center justify-center"
-                      style={{ backgroundColor: card.tintLight, color: card.tint }}
-                    >
-                      {card.icon}
-                    </div>
-                  </div>
-                  <div className="text-[24px] font-semibold text-text-primary leading-none mb-2">
-                    {card.value}
-                  </div>
-                  <div className="mt-auto">
-                    <span className="text-[11px] text-text-tertiary">{card.subtitle}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-5">
-            <div className="bento-card">
+          {/* AI 工作概览 */}
+          <div className="relative rounded-2xl p-[1.5px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+            <div className="rounded-2xl bg-white p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-[#78716C]" />
-                  <h3 className="text-[15px] font-bold text-[#1C1917]">财务概览</h3>
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="text-[15px] font-bold text-[#1C1917]">AI 工作概览</h3>
                 </div>
+                <button className="flex items-center gap-1 text-[12px] text-text-secondary hover:text-text-primary transition-colors">
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  重新生成
+                </button>
               </div>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="p-3 rounded border border-border-primary">
-                  <p className="text-[12px] text-text-secondary mb-1">总收入</p>
-                  <p className="text-[16px] font-semibold text-text-primary">{formatMoney(stats?.totalIncome || 0)}</p>
-                </div>
-                <div className="p-3 rounded border border-border-primary">
-                  <p className="text-[12px] text-text-secondary mb-1">总支出</p>
-                  <p className="text-[16px] font-semibold text-text-primary">{formatMoney(stats?.totalExpense || 0)}</p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="p-3 rounded border border-border-primary">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[13px] text-text-secondary">净额</span>
-                    <span className="text-[15px] font-semibold text-text-primary">
-                      {formatMoney(stats?.netAmount || 0)}
-                    </span>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  {
+                    label: "项目提醒",
+                    content: totalProjects > 0
+                      ? `当前共有 ${totalProjects} 个项目，其中 ${projectByStatus.find(p => p.status === "执行")?.count || 0} 个执行中`
+                      : "暂无进行中的项目",
+                  },
+                  {
+                    label: "审批提醒",
+                    content: stats?.pendingApprovals
+                      ? `您有 ${stats.pendingApprovals} 条待审批事项需要处理`
+                      : "暂无待审批事项",
+                  },
+                  {
+                    label: "团队动态",
+                    content: stats?.activeEmployeeCount
+                      ? `${stats.activeEmployeeCount} 名在职员工，团队运转正常`
+                      : "暂无团队数据",
+                  },
+                ].map((item, i) => (
+                  <div key={i} className="p-3 rounded-xl bg-[#FAFAF9]">
+                    <p className="text-[12px] font-medium text-text-secondary mb-1">{item.label}</p>
+                    <p className="text-[13px] text-text-primary leading-relaxed">{item.content}</p>
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded border border-border-primary">
-                    <p className="text-[12px] text-text-secondary mb-1">待收款</p>
-                    <p className="text-[15px] font-semibold text-text-primary">{formatMoney(receivableUnpaid)}</p>
-                    <p className="text-[11px] text-text-tertiary mt-0.5">应收总额 {formatMoney(stats?.receivableTotal || 0)}</p>
-                  </div>
-                  <div className="p-3 rounded border border-border-primary">
-                    <p className="text-[12px] text-text-secondary mb-1">待付款</p>
-                    <p className="text-[15px] font-semibold text-text-primary">{formatMoney(payableUnpaid)}</p>
-                    <p className="text-[11px] text-text-tertiary mt-0.5">应付总额 {formatMoney(stats?.payableTotal || 0)}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bento-card">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-text-secondary" />
-                  <h3 className="text-[15px] font-semibold text-text-primary">预警事项</h3>
-                  {alertItems.length > 0 && (
-                    <span className="ml-auto text-[12px] font-medium text-text-primary bg-bg-tertiary px-2 py-0.5 rounded">
-                      {alertItems.length} 项
-                    </span>
-                  )}
-                </div>
-              </div>
-              {alertItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10">
-                  <DollarSign className="w-7 h-7 text-text-secondary mb-3" />
-                  <p className="text-[14px] font-medium text-text-primary">暂无预警</p>
-                  <p className="text-[12px] text-text-secondary mt-1">所有款项均正常</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {alertItems.map((alert, index) => (
-                    <div key={index} className="flex gap-3 p-3 rounded bg-bg-secondary hover:bg-bg-tertiary transition-colors duration-150">
-                      <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 bg-text-secondary" />
-                      <div>
-                        <p className="text-[13px] font-medium text-text-primary">{alert.title}</p>
-                        <p className="text-[12px] text-text-secondary mt-0.5">{alert.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="mt-4 pt-4 border-t border-border-light">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-text-secondary" />
-                    <h3 className="text-[15px] font-semibold text-text-primary">团队概况</h3>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded border border-border-primary">
-                    <p className="text-[12px] text-text-secondary mb-1">员工总数</p>
-                    <p className="text-[16px] font-semibold text-text-primary">{stats?.employeeCount || 0}</p>
-                  </div>
-                  <div className="p-3 rounded border border-border-primary">
-                    <p className="text-[12px] text-text-secondary mb-1">在职人数</p>
-                    <p className="text-[16px] font-semibold text-text-primary">{stats?.activeEmployeeCount || 0}</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
 
+          {/* 项目概况 */}
           <div className="bento-card">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Briefcase className="w-5 h-5 text-text-secondary" />
-                <h3 className="text-[15px] font-semibold text-text-primary">项目概况</h3>
+                <h3 className="text-[15px] font-bold text-[#1C1917]">项目概况</h3>
               </div>
-              <div className="flex items-center gap-3">
-                {stats?.projectByStatus.map((ps) => (
-                  <span key={ps.status} className="flex items-center gap-1 text-[12px]">
-                    <span className="w-2 h-2 rounded-full bg-text-secondary" />
-                    <span className="text-text-secondary">{statusLabelMap[ps.status] || ps.status}</span>
-                    <span className="font-medium text-text-primary">{ps.count}</span>
-                  </span>
-                ))}
-              </div>
+              <button
+                className="text-[12px] text-text-secondary hover:text-text-primary flex items-center gap-1 transition-colors"
+                onClick={() => router.push("/projects")}
+              >
+                查看全部 <ArrowRight className="w-3 h-3" />
+              </button>
             </div>
 
             {stats?.recentProjects && stats.recentProjects.length > 0 ? (
@@ -342,6 +209,116 @@ export default function Dashboard() {
               <div className="flex flex-col items-center justify-center py-8">
                 <Briefcase className="w-10 h-10 text-text-secondary mb-2" />
                 <p className="text-[13px] text-text-secondary">暂无项目</p>
+              </div>
+            )}
+          </div>
+
+          {/* 项目状态分布 + 团队概况 */}
+          <div className="grid grid-cols-2 gap-5">
+            {/* 项目状态分布 - 柱状图 */}
+            <div className="bento-card">
+              <div className="flex items-center gap-2 mb-4">
+                <Briefcase className="w-5 h-5 text-text-secondary" />
+                <h3 className="text-[15px] font-bold text-[#1C1917]">项目状态分布</h3>
+              </div>
+              {projectByStatus.length > 0 ? (
+                <div className="space-y-3">
+                  {projectByStatus.map((ps) => {
+                    const pct = totalProjects > 0 ? Math.round((ps.count / totalProjects) * 100) : 0;
+                    return (
+                      <div key={ps.status} className="flex items-center gap-3">
+                        <span className="text-[13px] text-text-secondary w-12 flex-shrink-0">
+                          {statusLabelMap[ps.status] || ps.status}
+                        </span>
+                        <div className="flex-1 h-7 bg-[#F5F5F4] rounded-full overflow-hidden relative">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${statusBarColor[ps.status] || "bg-[#78716C]"}`}
+                            style={{ width: `${Math.max(pct, 2)}%` }}
+                          />
+                          <span className="absolute inset-0 flex items-center justify-end pr-2 text-[11px] font-medium text-text-primary">
+                            {ps.count} 个 · {pct}%
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <p className="text-[13px] text-text-secondary">暂无项目数据</p>
+                </div>
+              )}
+            </div>
+
+            {/* 团队概况 */}
+            <div className="bento-card">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-5 h-5 text-text-secondary" />
+                <h3 className="text-[15px] font-bold text-[#1C1917]">团队概况</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-[#FAFAF9] text-center">
+                  <p className="text-[28px] font-bold text-text-primary">{stats?.employeeCount || 0}</p>
+                  <p className="text-[12px] text-text-secondary mt-1">员工总数</p>
+                </div>
+                <div className="p-4 rounded-xl bg-[#FAFAF9] text-center">
+                  <p className="text-[28px] font-bold text-text-primary">{stats?.activeEmployeeCount || 0}</p>
+                  <p className="text-[12px] text-text-secondary mt-1">在职人数</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 我的待办 */}
+          <div className="bento-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <ListTodo className="w-5 h-5 text-text-secondary" />
+                <h3 className="text-[15px] font-bold text-[#1C1917]">我的待办</h3>
+                {stats?.pendingTodoList && stats.pendingTodoList.length > 0 && (
+                  <span className="text-[12px] font-medium text-text-primary bg-bg-tertiary px-2 py-0.5 rounded">
+                    {stats.pendingTodoList.length} 项
+                  </span>
+                )}
+              </div>
+              <button
+                className="text-[12px] text-text-secondary hover:text-text-primary flex items-center gap-1 transition-colors"
+                onClick={() => router.push("/approvals")}
+              >
+                查看全部 <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {stats?.pendingTodoList && stats.pendingTodoList.length > 0 ? (
+              <div className="space-y-2">
+                {stats.pendingTodoList.slice(0, 5).map((todo) => {
+                  const typeInfo = todoTypeIcons[todo.status] || { icon: "⚪", color: "text-text-secondary" };
+                  return (
+                    <div
+                      key={todo.id}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-[#FAFAF9] hover:bg-[#F5F5F4] transition-colors cursor-pointer"
+                      onClick={() => router.push("/approvals")}
+                    >
+                      <span className="text-[14px]">{typeInfo.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-text-primary truncate">
+                          {todo.businessTitle || businessTypeLabels[todo.businessType] || todo.businessType}
+                        </p>
+                        <p className="text-[11px] text-text-secondary mt-0.5">
+                          {businessTypeLabels[todo.businessType] || todo.businessType} · {new Date(todo.createdAt).toLocaleDateString("zh-CN")}
+                        </p>
+                      </div>
+                      <span className={`text-[11px] font-medium ${typeInfo.color} flex-shrink-0`}>
+                        {todo.status === "已驳回" ? "待重新提交" : todo.status === "待归档" ? "待归档" : "待审批"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8">
+                <FileText className="w-8 h-8 text-text-secondary mb-2" />
+                <p className="text-[13px] text-text-secondary">暂无待办事项</p>
               </div>
             )}
           </div>

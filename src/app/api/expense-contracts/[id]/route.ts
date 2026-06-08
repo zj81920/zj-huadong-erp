@@ -113,6 +113,10 @@ export async function PUT(
       updateData.invoicedAmount = parseFloat(body.invoicedAmount);
     if (body.settlementStatus !== undefined)
       updateData.settlementStatus = body.settlementStatus;
+    if (body.reviewResult !== undefined)
+      updateData.reviewResult = body.reviewResult || null;
+    if (body.reviewedAt !== undefined)
+      updateData.reviewedAt = body.reviewedAt ? new Date(body.reviewedAt) : null;
 
     if (updateData.contractNo) {
       const duplicate = await prisma.expenseContract.findFirst({

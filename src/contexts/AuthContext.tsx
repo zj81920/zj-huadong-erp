@@ -25,6 +25,7 @@ interface CurrentUser {
   email: string | null;
   department: string | null;
   avatarUrl: string | null;
+  aiFileSearch: boolean;
   roles: UserRole[];
   moduleFlowStatus: Record<string, boolean>;
 }

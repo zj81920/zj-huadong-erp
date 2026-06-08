@@ -12,15 +12,7 @@ export async function GET() {
       projectByStatus,
       employeeCount,
       activeEmployeeCount,
-      incomeContractTotal,
-      expenseContractTotal,
-      receivableTotal,
-      payableTotal,
       recentProjects,
-      nonContractIncomeTotal,
-      nonContractExpenseTotal,
-      receivableOverdue,
-      payableOverdue,
     ] = await Promise.all([
       prisma.project.count(),
 
@@ -39,26 +31,6 @@ export async function GET() {
         },
       }),
 
-      prisma.incomeContract.aggregate({
-        _sum: { totalAmount: true },
-        where: { status: { not: "已作废" } },
-      }),
-
-      prisma.expenseContract.aggregate({
-        _sum: { totalAmount: true },
-        where: { status: { not: "已作废" } },
-      }),
-
-      prisma.receivable.aggregate({
-        _sum: { amount: true, paidAmount: true },
-        where: { status: { not: "已收" } },
-      }),
-
-      prisma.payable.aggregate({
-        _sum: { amount: true, paidAmount: true },
-        where: { status: { not: "已付" } },
-      }),
-
       prisma.project.findMany({
         take: 5,
         orderBy: { createdAt: "desc" },
@@ -71,40 +43,29 @@ export async function GET() {
           customer: { select: { name: true } },
         },
       }),
-
-      prisma.nonContractIncome.aggregate({
-        _sum: { amount: true },
-        where: { status: { not: "已作废" } },
-      }),
-
-      prisma.nonContractExpense.aggregate({
-        _sum: { amount: true },
-        where: { status: { not: "已作废" } },
-      }),
-
-      prisma.receivable.count({
-        where: {
-          status: { not: "已收" },
-          dueDate: { lt: new Date() },
-        },
-      }),
-
-      prisma.payable.count({
-        where: {
-          status: { not: "已付" },
-          dueDate: { lt: new Date() },
-        },
-      }),
     ]);
 
+    // 获取待办列表（当前用户需要处理的审批事项）
     let pendingApprovals = 0;
+    let pendingTodoList: {
+      id: string;
+      businessType: string;
+      businessTitle: string;
+      status: string;
+      createdAt: string;
+    }[] = [];
+
     if (currentUser) {
       const pending = await getPendingApprovals(currentUser.id);
       pendingApprovals = pending.length;
+      pendingTodoList = pending.map((p) => ({
+        id: p.id,
+        businessType: p.businessType,
+        businessTitle: p.businessTitle || "",
+        status: p.nodeType === "resubmit" ? "已驳回" : "审批中",
+        createdAt: new Date(p.createdAt).toISOString(),
+      }));
     }
-
-    const totalIncome = Number(incomeContractTotal._sum.totalAmount || 0) + Number(nonContractIncomeTotal._sum.amount || 0);
-    const totalExpense = Number(expenseContractTotal._sum.totalAmount || 0) + Number(nonContractExpenseTotal._sum.amount || 0);
 
     return NextResponse.json({
       projectCount,
@@ -114,20 +75,8 @@ export async function GET() {
       })),
       employeeCount,
       activeEmployeeCount,
-      incomeContractTotal: Number(incomeContractTotal._sum.totalAmount || 0),
-      expenseContractTotal: Number(expenseContractTotal._sum.totalAmount || 0),
-      nonContractIncomeTotal: Number(nonContractIncomeTotal._sum.amount || 0),
-      nonContractExpenseTotal: Number(nonContractExpenseTotal._sum.amount || 0),
-      totalIncome,
-      totalExpense,
-      netAmount: totalIncome - totalExpense,
-      receivableTotal: Number(receivableTotal._sum.amount || 0),
-      receivablePaid: Number(receivableTotal._sum.paidAmount || 0),
-      payableTotal: Number(payableTotal._sum.amount || 0),
-      payablePaid: Number(payableTotal._sum.paidAmount || 0),
       pendingApprovals,
-      receivableOverdue,
-      payableOverdue,
+      pendingTodoList,
       recentProjects,
     });
   } catch (error) {

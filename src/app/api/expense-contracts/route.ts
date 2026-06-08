@@ -124,6 +124,8 @@ export async function POST(request: NextRequest) {
       taxRate,
       pricingMethod,
       contractSummary,
+      reviewResult,
+      reviewedAt,
     } = body;
 
     if (!contractNo || !contractNo.trim()) {
@@ -320,6 +322,8 @@ export async function POST(request: NextRequest) {
           taxRate: taxRate || null,
           pricingMethod: pricingMethod || null,
           contractSummary: contractSummary || null,
+          reviewResult: reviewResult || null,
+          reviewedAt: reviewedAt ? new Date(reviewedAt) : null,
           createdById: currentUser?.id || null,
           ...(contractItemsData.length > 0 && {
             items: {

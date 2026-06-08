@@ -76,6 +76,8 @@ interface IncomeContract {
   pricingMethod: string | null;
   contractSummary: string | null;
   paymentTerms: string | null;
+  reviewResult: string | null;
+  reviewedAt: string | null;
   organizationId: string | null;
   lastModifiedBy: string | null;
   createdById: string | null;
@@ -96,6 +98,8 @@ interface ContractFormData {
   pricingMethod: string;
   contractSummary: string;
   paymentTerms: string;
+  reviewResult: string;
+  reviewedAt: string;
   organizationId: string;
 }
 
@@ -110,6 +114,8 @@ const emptyForm: ContractFormData = {
   pricingMethod: "",
   contractSummary: "",
   paymentTerms: "",
+  reviewResult: "",
+  reviewedAt: "",
   organizationId: "",
 };
 
@@ -212,6 +218,12 @@ export default function IncomeContractsPage() {
 
   const [uploading, setUploading] = useState(false);
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [aiReviewing, setAiReviewing] = useState(false);
+  const [reviewResult, setReviewResult] = useState<{
+    riskLevel: string;
+    riskSummary: string;
+    items: { category: string; riskLevel: string; detail: string }[];
+  } | null>(null);
   const draftFileRef = useRef<HTMLInputElement>(null);
 
   const { toggleSelect, selectAll, clearSelection, isAllSelected, selectedCount, isSelected } = useBatchSelection(contracts.map((d) => d.id));
@@ -339,8 +351,18 @@ export default function IncomeContractsPage() {
       pricingMethod: contract.pricingMethod || "",
       contractSummary: contract.contractSummary || "",
       paymentTerms: contract.paymentTerms || "",
+      reviewResult: contract.reviewResult || "",
+      reviewedAt: contract.reviewedAt ? new Date(contract.reviewedAt).toISOString() : "",
       organizationId: contract.organizationId || "",
     });
+    // 如果有审查结果，渲染到 UI
+    if (contract.reviewResult) {
+      try {
+        setReviewResult(JSON.parse(contract.reviewResult));
+      } catch { /* ignore */ }
+    } else {
+      setReviewResult(null);
+    }
     setFormError("");
     setShowModal(true);
   };
@@ -1273,6 +1295,96 @@ export default function IncomeContractsPage() {
             <div className="flex items-center gap-2 p-3 rounded-xl bg-[#1C1917]/5 text-[#1C1917] text-[13px]">
               <div className="w-4 h-4 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
               AI 正在分析合同内容...
+            </div>
+          )}
+
+          {/* AI 智能审查 */}
+          {form.draftFiles.length > 0 && (
+            <div className="space-y-3">
+              <button
+                type="button"
+                className="ios-btn ios-btn-secondary w-full flex items-center justify-center gap-2"
+                disabled={aiReviewing}
+                onClick={async () => {
+                  setAiReviewing(true);
+                  try {
+                    const res = await fetch("/api/ai/review-contract", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ fileUrls: form.draftFiles }),
+                    });
+                    const json = await res.json();
+                    if (res.ok && json.data) {
+                      setReviewResult(json.data);
+                      // 同步保存到合同记录
+                      setForm((prev) => ({
+                        ...prev,
+                        reviewResult: JSON.stringify(json.data),
+                        reviewedAt: new Date().toISOString(),
+                      }));
+                    }
+                  } catch {
+                    // 审查失败不阻塞
+                  } finally {
+                    setAiReviewing(false);
+                  }
+                }}
+              >
+                {aiReviewing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-[#4338CA] border-t-transparent rounded-full animate-spin" />
+                    AI 审查中...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z"/></svg>
+                    {reviewResult ? "重新审查" : "AI 智能审查"}
+                  </>
+                )}
+              </button>
+
+              {/* 审查结果展示 */}
+              {reviewResult && (
+                <div className="rounded-xl border overflow-hidden">
+                  <div className={`px-4 py-3 flex items-center justify-between ${
+                    reviewResult.riskLevel === "high" ? "bg-red-50 border-l-4 border-l-red-500" :
+                    reviewResult.riskLevel === "medium" ? "bg-yellow-50 border-l-4 border-l-yellow-500" :
+                    "bg-green-50 border-l-4 border-l-green-500"
+                  }`}>
+                    <div>
+                      <span className={`text-[13px] font-semibold ${
+                        reviewResult.riskLevel === "high" ? "text-red-700" :
+                        reviewResult.riskLevel === "medium" ? "text-yellow-700" :
+                        "text-green-700"
+                      }`}>
+                        {reviewResult.riskLevel === "high" ? "高风险" : reviewResult.riskLevel === "medium" ? "中风险" : "低风险"}
+                      </span>
+                      <p className="text-[12px] text-text-secondary mt-0.5">{reviewResult.riskSummary}</p>
+                    </div>
+                  </div>
+                  <div className="p-4 space-y-2 bg-white">
+                    {reviewResult.items?.map((item, i) => (
+                      <div key={i} className={`p-3 rounded-lg border-l-4 ${
+                        item.riskLevel === "high" ? "border-l-red-500 bg-red-50/50" :
+                        item.riskLevel === "medium" ? "border-l-yellow-500 bg-yellow-50/50" :
+                        "border-l-green-500 bg-green-50/50"
+                      }`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[12px] font-semibold text-text-primary">{item.category}</span>
+                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                            item.riskLevel === "high" ? "bg-red-100 text-red-700" :
+                            item.riskLevel === "medium" ? "bg-yellow-100 text-yellow-700" :
+                            "bg-green-100 text-green-700"
+                          }`}>
+                            {item.riskLevel === "high" ? "高风险" : item.riskLevel === "medium" ? "中风险" : "低风险"}
+                          </span>
+                        </div>
+                        <p className="text-[12px] text-text-secondary leading-relaxed">{item.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -83,6 +83,8 @@ export async function POST(request: NextRequest) {
       pricingMethod,
       contractSummary,
       paymentTerms,
+      reviewResult,
+      reviewedAt,
       organizationId,
     } = body;
 
@@ -156,6 +158,8 @@ export async function POST(request: NextRequest) {
         pricingMethod: pricingMethod || null,
         contractSummary: contractSummary || null,
         paymentTerms: paymentTerms || null,
+        reviewResult: reviewResult || null,
+        reviewedAt: reviewedAt ? new Date(reviewedAt) : null,
         organizationId: organizationId || null,
         lastModifiedBy: currentUser?.realName || null,
         createdById: currentUser?.id || null,

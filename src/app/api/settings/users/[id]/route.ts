@@ -8,7 +8,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { realName, password, phone, email, department, roleIds, signatureUrl, avatarUrl, isActive } = body;
+    const { realName, password, phone, email, department, roleIds, signatureUrl, avatarUrl, isActive, aiFileSearch } = body;
 
     const existing = await prisma.user.findUnique({ where: { id } });
     if (!existing) {
@@ -24,6 +24,7 @@ export async function PUT(
     if (signatureUrl !== undefined) updateData.signatureUrl = signatureUrl || null;
     if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl || null;
     if (isActive !== undefined) updateData.isActive = isActive;
+    if ("aiFileSearch" in body) updateData.aiFileSearch = Boolean(aiFileSearch);
 
     if (roleIds !== undefined) {
       await prisma.userRole.deleteMany({ where: { userId: id } });

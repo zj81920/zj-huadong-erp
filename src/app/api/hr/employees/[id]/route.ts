@@ -27,6 +27,7 @@ const select = {
   housingFundCompanyRate: true,
   taxDeduction: true,
   remark: true,
+  aiFileSearch: true,
   createdAt: true,
   updatedAt: true,
   lastModifiedBy: true,
@@ -65,7 +66,7 @@ export async function PUT(
       idNumber, birthDate, position, employmentStatus, hireDate,
       leaveDate, bankName, bankAccount, baseSalary, socialInsuranceBase,
       housingFundBase, housingFundRate, socialInsuranceCompanyRate,
-      housingFundCompanyRate, taxDeduction, remark } = body;
+      housingFundCompanyRate, taxDeduction, remark, aiFileSearch } = body;
 
     const existing = await prisma.user.findUnique({ where: { id } });
     if (!existing) {
@@ -110,6 +111,7 @@ export async function PUT(
         ...(housingFundCompanyRate !== undefined && { housingFundCompanyRate: housingFundCompanyRate ? parseFloat(housingFundCompanyRate) : null }),
         ...(taxDeduction !== undefined && { taxDeduction: taxDeduction ? parseFloat(taxDeduction) : null }),
         ...(remark !== undefined && { remark: remark?.trim() || null }),
+        ...(aiFileSearch !== undefined && { aiFileSearch: !!aiFileSearch }),
         lastModifiedBy: (await getCurrentUser())?.realName || null,
       },
       select,

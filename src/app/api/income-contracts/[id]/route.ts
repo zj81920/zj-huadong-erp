@@ -93,6 +93,10 @@ export async function PUT(
       updateData.contractSummary = body.contractSummary || null;
     if (body.paymentTerms !== undefined)
       updateData.paymentTerms = body.paymentTerms || null;
+    if (body.reviewResult !== undefined)
+      updateData.reviewResult = body.reviewResult || null;
+    if (body.reviewedAt !== undefined)
+      updateData.reviewedAt = body.reviewedAt ? new Date(body.reviewedAt) : null;
 
     updateData.lastModifiedBy = currentUser?.realName || null;
 

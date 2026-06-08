@@ -190,12 +190,12 @@ export default function AiModelSettingsPage() {
               <input
                 type="text"
                 className="ios-input"
-                placeholder="例如：qwen-long、qwen-plus、qwen-max"
+                placeholder="例如：qwen-long、deepseek-chat"
                 value={settings.ai_model_id}
                 onChange={(e) => updateField("ai_model_id", e.target.value)}
               />
               <p className="mt-1 text-[12px] text-[#78716C]">
-                填写阿里云百炼平台的模型名称
+                填写模型名称，支持 OpenAI 兼容接口
               </p>
             </div>
 
@@ -236,7 +236,7 @@ export default function AiModelSettingsPage() {
                 </button>
               </div>
               <p className="mt-1 text-[12px] text-[#78716C]">
-                阿里云百炼平台API Key，输入后仅显示后4位
+                API Key，输入后仅显示后4位
               </p>
             </div>
 
@@ -247,7 +247,7 @@ export default function AiModelSettingsPage() {
               <input
                 type="text"
                 className="ios-input"
-                placeholder="例如：https://dashscope.aliyuncs.com/compatible-mode/v1"
+                placeholder="例如：https://api.deepseek.com/v1"
                 value={settings.ai_base_url}
                 onChange={(e) => updateField("ai_base_url", e.target.value)}
               />

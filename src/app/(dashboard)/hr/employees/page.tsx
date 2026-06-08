@@ -48,6 +48,7 @@ interface Employee {
   housingFundCompanyRate: number | null;
   taxDeduction: number | null;
   remark: string | null;
+  aiFileSearch: boolean;
 }
 
 interface EmployeeAttachmentItem {
@@ -81,6 +82,7 @@ interface EmployeeFormData {
   housingFundCompanyRate: string;
   taxDeduction: string;
   remark: string;
+  aiFileSearch: boolean;
 }
 
 const emptyForm: EmployeeFormData = {
@@ -105,6 +107,7 @@ const emptyForm: EmployeeFormData = {
   housingFundCompanyRate: "",
   taxDeduction: "",
   remark: "",
+  aiFileSearch: false,
 };
 
 const roleOptions = [
@@ -290,6 +293,7 @@ export default function EmployeesPage() {
       housingFundCompanyRate: employee.housingFundCompanyRate != null ? String(employee.housingFundCompanyRate) : "",
       taxDeduction: employee.taxDeduction != null ? String(employee.taxDeduction) : "",
       remark: employee.remark || "",
+      aiFileSearch: employee.aiFileSearch || false,
     });
     setFormError("");
     setFormTab("basic");
@@ -453,7 +457,7 @@ export default function EmployeesPage() {
     }
   };
 
-  const updateForm = (field: keyof EmployeeFormData, value: string) => {
+  const updateForm = (field: keyof EmployeeFormData, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (formError) setFormError("");
   };
@@ -946,6 +950,23 @@ export default function EmployeesPage() {
                   value={form.remark}
                   onChange={(e) => updateForm("remark", e.target.value)}
                 />
+              </div>
+
+              {/* AI 功能权限 */}
+              <div className="p-3 rounded-xl bg-[#FAFAF9]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#1C1917]">AI 文件检索</p>
+                    <p className="text-[11px] text-text-secondary mt-0.5">开启后该用户可使用全局 AI 文件搜索功能</p>
+                  </div>
+                  <button
+                    type="button"
+                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${form.aiFileSearch ? "bg-[#4338CA]" : "bg-[#D6D3D1]"}`}
+                    onClick={() => updateForm("aiFileSearch", !form.aiFileSearch)}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${form.aiFileSearch ? "translate-x-5" : ""}`} />
+                  </button>
+                </div>
               </div>
             </div>
           )}

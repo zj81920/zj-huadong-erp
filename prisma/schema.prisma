@@ -55,6 +55,7 @@ model User {
   housingFundCompanyRate     Decimal? @map("housing_fund_company_rate") @db.Decimal(5, 4)
   taxDeduction       Decimal?  @map("tax_deduction") @db.Decimal(15, 2)
   remark             String?
+  aiFileSearch       Boolean  @default(false) @map("ai_file_search")
 
   expenseReportsAsApplicant  ExpenseReport[]       @relation("ExpenseReportApplicant")
   loanRequestsAsApplicant    LoanRequest[]         @relation("LoanRequestApplicant")
@@ -616,6 +617,8 @@ model IncomeContract {
   pricingMethod      String?   @map("pricing_method")
   contractSummary    String?   @map("contract_summary") @db.Text
   paymentTerms       String?   @map("payment_terms") @db.Text
+  reviewResult       String?   @map("review_result") @db.Text
+  reviewedAt         DateTime? @map("reviewed_at")
   lastModifiedBy     String?   @map("last_modified_by")
   createdById         String?   @map("created_by")
   organizationId     String?   @map("organization_id")
@@ -650,6 +653,8 @@ model ExpenseContract {
   settledAmount      Decimal?  @default(0) @map("settled_amount") @db.Decimal(15, 2)
   invoicedAmount     Decimal?  @default(0) @map("invoiced_amount") @db.Decimal(15, 2)
   settlementStatus   String    @default("unsettled") @map("settlement_status")
+  reviewResult       String?   @map("review_result") @db.Text
+  reviewedAt         DateTime? @map("reviewed_at")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")

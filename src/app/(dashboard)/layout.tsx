@@ -10,7 +10,11 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { loading } = useAuth();
+  const { loading, user } = useAuth();
+
+  // admin 或有 aiFileSearch 权限的用户才能看到 AI 文件检索
+  const isAdmin = user?.roles?.some((r) => r.code === "admin");
+  const canFileSearch = isAdmin || user?.aiFileSearch;
 
   if (loading) {
     return (
@@ -30,7 +34,7 @@ export default function DashboardLayout({
         <Sidebar />
         <main className="ml-[240px] flex-1 min-w-0 min-h-[calc(100vh-56px)] p-6">
           <div className="mb-6 -mt-2">
-            <AISearchBar />
+            {canFileSearch && <AISearchBar />}
           </div>
           {children}
         </main>

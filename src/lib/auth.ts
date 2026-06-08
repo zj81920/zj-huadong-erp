@@ -11,6 +11,7 @@ export interface CurrentUser {
   email: string | null;
   department: string | null;
   avatarUrl: string | null;
+  aiFileSearch: boolean;
   roles: { id: string; code: string; name: string; modulePermissions: string; isGlobalVisible: boolean }[];
   moduleFlowStatus: Record<string, boolean>;  // moduleKey → hasFlow
 }
@@ -65,6 +66,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       email: user.email,
       department: user.department,
       avatarUrl: user.avatarUrl,
+      aiFileSearch: user.aiFileSearch,
       roles: user.userRoles.map((ur) => ({
         id: ur.role.id,
         code: ur.role.code,
