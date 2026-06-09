@@ -43,6 +43,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/epc_test?schema=public
         run: |
           npx prisma generate
+          echo 'CREATE EXTENSION IF NOT EXISTS vector;' | PGPASSWORD=postgres psql -h localhost -U postgres -d epc_test
           npx prisma db push
 
       - name: 代码规范检查
