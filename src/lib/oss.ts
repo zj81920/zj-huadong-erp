@@ -118,7 +118,7 @@ export async function searchFiles(
   <MaxResults>${maxResults}</MaxResults>
 </MetaQuery>`;
 
-  const result = await client.request({
+  const result = await (client as any).request({
     method: "POST",
     bucket,
     subres: "metaQuery",
