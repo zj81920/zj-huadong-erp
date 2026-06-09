@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           project: true,
+          bankAccount: true,
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,

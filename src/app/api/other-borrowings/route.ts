@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const currentUser = await getCurrentUser();
-    const { lenderName, amount, borrowingDate, expectedReturnDate, description } = body;
+    const { lenderName, amount, borrowingDate, expectedReturnDate, description, lenderBankName, lenderBankAccount, bankAccountId } = body;
 
     if (!lenderName) {
       return NextResponse.json({ error: "必须提供出借人名称" }, { status: 400 });
@@ -76,9 +76,13 @@ export async function POST(request: NextRequest) {
         description: description || null,
         status: "草稿",
         createdById: currentUser?.id || null,
+        lenderBankName: lenderBankName || null,
+        lenderBankAccount: lenderBankAccount || null,
+        bankAccountId: bankAccountId || null,
       },
       include: {
         returns: true,
+        bankAccount: true,
       },
     });
 

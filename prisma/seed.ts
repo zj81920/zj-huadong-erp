@@ -22,21 +22,6 @@ async function main() {
   }
   console.log(`✅ 已同步 ${orgs.length} 个经营主体`);
 
-  // 仅创建管理员账号，角色由管理员在系统设置中自行配置
-  await prisma.user.upsert({
-    where: { username: "admin" },
-    update: { password: "admin123" },
-    create: {
-      username: "admin",
-      password: "admin123",
-      realName: "系统管理员",
-      department: "信息部",
-      role: "admin",
-      isActive: true,
-    },
-  });
-  console.log("✅ 已创建管理员账号 admin/admin123");
-
   // 创建预设系统角色（admin + finance）
   const systemRoles = [
     { code: "admin", name: "管理员", description: "系统管理员角色" },
@@ -50,6 +35,35 @@ async function main() {
     });
   }
   console.log(`✅ 已同步 ${systemRoles.length} 个系统预设角色`);
+
+  // 仅创建管理员账号，角色由管理员在系统设置中自行配置
+  const adminUser = await prisma.user.upsert({
+    where: { username: "admin" },
+    update: { password: "admin123" },
+    create: {
+      username: "admin",
+      password: "admin123",
+      realName: "系统管理员",
+      department: "信息部",
+      role: "admin",
+      isActive: true,
+    },
+  });
+  console.log("✅ 已创建管理员账号 admin/admin123");
+
+  // 将 admin 用户关联到 admin 角色（确保页面权限检查通过）
+  const adminRole = await prisma.role.findUnique({ where: { code: "admin" } });
+  if (adminRole) {
+    const existingLink = await prisma.userRole.findUnique({
+      where: { userId_roleId: { userId: adminUser.id, roleId: adminRole.id } },
+    });
+    if (!existingLink) {
+      await prisma.userRole.create({
+        data: { userId: adminUser.id, roleId: adminRole.id },
+      });
+      console.log("✅ 已关联管理员账号到管理员角色");
+    }
+  }
 
   // 同步模块清单到 approval_module_config 表
   console.log("📋 同步模块清单...");

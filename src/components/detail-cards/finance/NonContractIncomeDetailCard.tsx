@@ -11,6 +11,9 @@ export function NonContractIncomeDetailCard({ data }: Props) {
     { label: "交易日期", value: data?.transactionDate ? formatDate(data.transactionDate) : "-" },
     { label: "关联项目", value: data?.project?.name || data?.projectSourceId || "-" },
     { label: "对方单位", value: data?.counterparty || "-" },
+    { label: "对方开户行", value: data?.counterpartyBankName || "-" },
+    { label: "对方银行账号", value: data?.counterpartyBankAccount || "-" },
+    { label: "入账账户", value: data?.bankAccount ? `${data.bankAccount.bankName} - ${data.bankAccount.accountName}` : "-" },
   ];
   return (
     <div className="space-y-3">

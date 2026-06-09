@@ -27,6 +27,7 @@ import { getRowStatusClass } from "@/lib/status-colors";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 import { NonContractIncomeDetailCard, OtherBorrowingDetailCard } from "@/components/detail-cards";
+import CounterpartySearch from "@/components/CounterpartySearch";
 
 interface IncomeContract {
   id: string;
@@ -80,6 +81,10 @@ interface NonContractIncome {
   status: string;
   project: { name: string } | null;
   createdById: string | null;
+  counterpartyBankName: string | null;
+  counterpartyBankAccount: string | null;
+  bankAccountId: string | null;
+  bankAccount: { accountName: string; bankName: string; accountNo: string } | null;
 }
 
 interface Shareholder {
@@ -101,6 +106,10 @@ interface CapitalContribution {
   remark: string | null;
   shareholder: { name: string };
   returns?: CapitalReturn[];
+  shareholderBankName: string | null;
+  shareholderBankAccount: string | null;
+  bankAccountId: string | null;
+  bankAccount: { accountName: string; bankName: string; accountNo: string } | null;
 }
 
 interface CapitalReturn {
@@ -122,6 +131,10 @@ interface OtherBorrowing {
   description: string | null;
   status: string;
   returns?: BorrowingReturn[];
+  lenderBankName: string | null;
+  lenderBankAccount: string | null;
+  bankAccountId: string | null;
+  bankAccount: { accountName: string; bankName: string; accountNo: string } | null;
 }
 
 interface BorrowingReturn {
@@ -191,6 +204,9 @@ const emptyOtherIncomeForm = {
   transactionDate: "",
   description: "",
   projectSourceId: "",
+  counterpartyBankName: "",
+  counterpartyBankAccount: "",
+  bankAccountId: "",
 };
 
 const emptyContributionForm = {
@@ -199,6 +215,9 @@ const emptyContributionForm = {
   contributeDate: "",
   method: "",
   remark: "",
+  shareholderBankName: "",
+  shareholderBankAccount: "",
+  bankAccountId: "",
 };
 
 const emptyBorrowingForm = {
@@ -207,6 +226,9 @@ const emptyBorrowingForm = {
   borrowingDate: "",
   expectedReturnDate: "",
   description: "",
+  lenderBankName: "",
+  lenderBankAccount: "",
+  bankAccountId: "",
 };
 
 const emptyReturnAppForm = {
@@ -526,6 +548,9 @@ export default function FinanceIncomePage() {
       transactionDate: formatDate(item.transactionDate).replace(/-/g, ""),
       description: item.description || "",
       projectSourceId: item.projectSourceId || "",
+      counterpartyBankName: item.counterpartyBankName || "",
+      counterpartyBankAccount: item.counterpartyBankAccount || "",
+      bankAccountId: item.bankAccountId || "",
     });
     setFormError("");
     setShowModal(true);
@@ -545,6 +570,9 @@ export default function FinanceIncomePage() {
         transactionDate: otherIncomeForm.transactionDate || new Date().toISOString(),
         description: otherIncomeForm.description.trim() || null,
         projectSourceId: otherIncomeForm.projectSourceId || null,
+        counterpartyBankName: otherIncomeForm.counterpartyBankName || null,
+        counterpartyBankAccount: otherIncomeForm.counterpartyBankAccount || null,
+        bankAccountId: otherIncomeForm.bankAccountId || null,
       };
       const url = editingOtherIncome
         ? `/api/non-contract-incomes/${editingOtherIncome.id}`
@@ -561,6 +589,18 @@ export default function FinanceIncomePage() {
         setOtherIncomeForm(emptyOtherIncomeForm);
         setEditingOtherIncome(null);
         fetchOtherIncomes();
+        // 自动保存到往来信息库
+        if (otherIncomeForm.counterparty) {
+          fetch("/api/counterparty", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: otherIncomeForm.counterparty.trim(),
+              bankName: otherIncomeForm.counterpartyBankName || null,
+              bankAccount: otherIncomeForm.counterpartyBankAccount || null,
+            }),
+          }).catch(() => {});
+        }
       } else {
         setFormError(json.error || "操作失败");
       }
@@ -633,6 +673,9 @@ export default function FinanceIncomePage() {
           contributeDate: contributionForm.contributeDate || new Date().toISOString(),
           method: contributionForm.method || null,
           remark: contributionForm.remark || null,
+          shareholderBankName: contributionForm.shareholderBankName || null,
+          shareholderBankAccount: contributionForm.shareholderBankAccount || null,
+          bankAccountId: contributionForm.bankAccountId || null,
         }),
       });
       const json = await res.json();
@@ -730,6 +773,9 @@ export default function FinanceIncomePage() {
           borrowingDate: borrowingForm.borrowingDate || new Date().toISOString(),
           expectedReturnDate: borrowingForm.expectedReturnDate || null,
           description: borrowingForm.description.trim() || null,
+          lenderBankName: borrowingForm.lenderBankName || null,
+          lenderBankAccount: borrowingForm.lenderBankAccount || null,
+          bankAccountId: borrowingForm.bankAccountId || null,
         }),
       });
       const json = await res.json();
@@ -737,6 +783,18 @@ export default function FinanceIncomePage() {
         setShowModal(false);
         setBorrowingForm(emptyBorrowingForm);
         fetchBorrowings();
+        // 自动保存到往来信息库
+        if (borrowingForm.lenderName) {
+          fetch("/api/counterparty", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: borrowingForm.lenderName.trim(),
+              bankName: borrowingForm.lenderBankName || null,
+              bankAccount: borrowingForm.lenderBankAccount || null,
+            }),
+          }).catch(() => {});
+        }
       } else {
         setFormError(json.error || "操作失败");
       }
@@ -1446,14 +1504,30 @@ export default function FinanceIncomePage() {
             </div>
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">交易对方</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入交易对方"
+              <CounterpartySearch
                 value={otherIncomeForm.counterparty}
-                onChange={(e) => setOtherIncomeForm((p) => ({ ...p, counterparty: e.target.value }))}
+                onChange={(name) => setOtherIncomeForm((p: any) => ({ ...p, counterparty: name }))}
+                onSelect={(record: any) => setOtherIncomeForm((p: any) => ({ ...p, counterpartyBankName: record.bankName || p.counterpartyBankName, counterpartyBankAccount: record.bankAccount || p.counterpartyBankAccount }))}
+                placeholder="请输入交易对方"
               />
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">对方开户行</label>
+              <input type="text" className="ios-input" placeholder="请输入开户行" value={otherIncomeForm.counterpartyBankName} onChange={(e) => setOtherIncomeForm((p: any) => ({ ...p, counterpartyBankName: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">对方银行账号</label>
+              <input type="text" className="ios-input" placeholder="请输入银行账号" value={otherIncomeForm.counterpartyBankAccount} onChange={(e) => setOtherIncomeForm((p: any) => ({ ...p, counterpartyBankAccount: e.target.value }))} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">入账账户</label>
+            <select className="ios-input" value={otherIncomeForm.bankAccountId} onChange={(e) => setOtherIncomeForm((p: any) => ({ ...p, bankAccountId: e.target.value }))}>
+              <option value="">请选择入账账户</option>
+              {bankAccounts.map(ba => <option key={ba.id} value={ba.id}>{ba.bankName} - {ba.accountName} ({ba.accountNo.slice(-4)})</option>)}
+            </select>
           </div>
           <div>
             <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">交易日期</label>
@@ -1511,6 +1585,23 @@ export default function FinanceIncomePage() {
               {shareholders.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}{s.shareRatio ? ` (${s.shareRatio}%)` : ""}</option>
               ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">股东开户行</label>
+              <input type="text" className="ios-input" placeholder="请输入股东开户行" value={contributionForm.shareholderBankName} onChange={(e) => setContributionForm((p: any) => ({ ...p, shareholderBankName: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">股东银行账号</label>
+              <input type="text" className="ios-input" placeholder="请输入股东银行账号" value={contributionForm.shareholderBankAccount} onChange={(e) => setContributionForm((p: any) => ({ ...p, shareholderBankAccount: e.target.value }))} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">入账账户</label>
+            <select className="ios-input" value={contributionForm.bankAccountId} onChange={(e) => setContributionForm((p: any) => ({ ...p, bankAccountId: e.target.value }))}>
+              <option value="">请选择入账账户</option>
+              {bankAccounts.map(ba => <option key={ba.id} value={ba.id}>{ba.bankName} - {ba.accountName} ({ba.accountNo.slice(-4)})</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -1649,13 +1740,29 @@ export default function FinanceIncomePage() {
           )}
           <div>
             <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">出借方名称 <span className="text-[#78716C]">*</span></label>
-            <input
-              type="text"
-              className="ios-input"
-              placeholder="请输入出借方名称"
+            <CounterpartySearch
               value={borrowingForm.lenderName}
-              onChange={(e) => setBorrowingForm((p) => ({ ...p, lenderName: e.target.value }))}
+              onChange={(name) => setBorrowingForm((p: any) => ({ ...p, lenderName: name }))}
+              onSelect={(record: any) => setBorrowingForm((p: any) => ({ ...p, lenderBankName: record.bankName || p.lenderBankName, lenderBankAccount: record.bankAccount || p.lenderBankAccount }))}
+              placeholder="请输入出借方名称"
             />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">出借方开户行</label>
+              <input type="text" className="ios-input" placeholder="请输入开户行" value={borrowingForm.lenderBankName} onChange={(e) => setBorrowingForm((p: any) => ({ ...p, lenderBankName: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">出借方银行账号</label>
+              <input type="text" className="ios-input" placeholder="请输入银行账号" value={borrowingForm.lenderBankAccount} onChange={(e) => setBorrowingForm((p: any) => ({ ...p, lenderBankAccount: e.target.value }))} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">入账账户</label>
+            <select className="ios-input" value={borrowingForm.bankAccountId} onChange={(e) => setBorrowingForm((p: any) => ({ ...p, bankAccountId: e.target.value }))}>
+              <option value="">请选择入账账户</option>
+              {bankAccounts.map(ba => <option key={ba.id} value={ba.id}>{ba.bankName} - {ba.accountName} ({ba.accountNo.slice(-4)})</option>)}
+            </select>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

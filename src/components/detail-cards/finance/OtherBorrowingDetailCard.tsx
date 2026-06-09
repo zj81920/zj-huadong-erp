@@ -8,6 +8,9 @@ interface Props {
 export function OtherBorrowingDetailCard({ data }: Props) {
   const fields = [
     { label: "出借方", value: data?.lenderName || "-" },
+    { label: "出借方开户行", value: data?.lenderBankName || "-" },
+    { label: "出借方银行账号", value: data?.lenderBankAccount || "-" },
+    { label: "入账账户", value: data?.bankAccount ? `${data.bankAccount.bankName} - ${data.bankAccount.accountName}` : "-" },
     { label: "借入金额", value: data?.amount ? formatAmount(data.amount) : "-" },
     { label: "已归还", value: data?.returnedAmount ? formatAmount(data.returnedAmount) : "-" },
     { label: "剩余金额", value: data?.remainingAmount ? formatAmount(data.remainingAmount) : "-" },

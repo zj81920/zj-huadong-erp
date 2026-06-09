@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { shareholderId, amount, contributeDate, method, remark } = body;
+    const { shareholderId, amount, contributeDate, method, remark, shareholderBankName, shareholderBankAccount, bankAccountId } = body;
 
     if (!shareholderId) {
       return NextResponse.json({ error: "必须选择股东" }, { status: 400 });
@@ -70,8 +70,11 @@ export async function POST(request: NextRequest) {
         contributeDate: new Date(contributeDate),
         method: method || null,
         remark: remark || null,
+        shareholderBankName: shareholderBankName || null,
+        shareholderBankAccount: shareholderBankAccount || null,
+        bankAccountId: bankAccountId || null,
       },
-      include: { shareholder: true },
+      include: { shareholder: true, bankAccount: true },
     });
 
     return NextResponse.json({ data: contribution }, { status: 201 });

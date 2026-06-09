@@ -79,6 +79,7 @@ const navSections: NavSection[] = [
       { label: "发票管理", href: "/finance/invoices" },
       { label: "财务报表", href: "/finance/reports" },
       { label: "银行账户", href: "/finance/bank-accounts" },
+      { label: "股东管理", href: "/finance/shareholders" },
     ],
   },
   {
