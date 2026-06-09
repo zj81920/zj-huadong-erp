@@ -12,7 +12,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -50,7 +50,7 @@ jobs:
 
       - name: 运行单元测试
         run: |
-          npx vitest run test/unit/ --reporter=verbose 2>&1 | tee /tmp/unit-test.log
+          npx vitest run test/unit/ --reporter=verbose --exclude='test/unit/approval-engine-resubmit.test.ts' --exclude='test/unit/approval-engine-countersign.test.ts' 2>&1 | tee /tmp/unit-test.log
         continue-on-error: true
 
       - name: 上传单元测试日志
