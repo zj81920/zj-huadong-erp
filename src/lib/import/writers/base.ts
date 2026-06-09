@@ -117,7 +117,7 @@ export async function lookupProjectId(projectCode: string): Promise<string | nul
 /** 查找收入合同 ID */
 export async function lookupIncomeContractId(contractNo: string): Promise<string | null> {
   if (incomeContractCache.has(contractNo)) return incomeContractCache.get(contractNo)!;
-  const row = await prisma.income_contract.findFirst({
+  const row = await prisma.incomeContract.findFirst({
     where: { contractNo },
     select: { id: true },
   });
@@ -131,7 +131,7 @@ export async function lookupIncomeContractId(contractNo: string): Promise<string
 /** 查找支出合同 ID */
 export async function lookupExpenseContractId(contractNo: string): Promise<string | null> {
   if (expenseContractCache.has(contractNo)) return expenseContractCache.get(contractNo)!;
-  const row = await prisma.expense_contract.findFirst({
+  const row = await prisma.expenseContract.findFirst({
     where: { contractNo },
     select: { id: true },
   });
