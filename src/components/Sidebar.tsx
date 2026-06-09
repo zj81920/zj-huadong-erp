@@ -102,6 +102,7 @@ const navSections: NavSection[] = [
       { label: "流程设置", href: "/settings/approval-flow", group: "审批配置" },
       { label: "个人设置", href: "/settings/profile", group: "基础数据" },
       { label: "往来信息管理", href: "/settings/counterparty", group: "基础数据" },
+      { label: "数据导入", href: "/settings/data-import", group: "系统" },
       { label: "AI 模型配置", href: "/settings/ai-model", group: "系统" },
     ],
   },
