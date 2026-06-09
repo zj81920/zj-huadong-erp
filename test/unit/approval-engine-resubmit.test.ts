@@ -10,7 +10,8 @@ import prisma from "@/lib/prisma";
 import { startApprovalFlow, processApprovalAction } from "@/lib/approval-engine";
 
 // 使用真实用户 ID（finance 角色有非 admin 用户，resolveApproverIds 不会返回空）
-const FINANCE_USER_ID = "cmptzx1we00068osumwlkjhyh"; // zhangjing@hcec.group
+// 注意：测试前需确保有 finance 角色的用户存在
+let FINANCE_USER_ID: string;
 const INITIATOR_ID = "cmptzy3in00098osuivaaam7m"; // lijue@hcec.group
 
 describe("approval-engine resubmit reuse", () => {
@@ -25,16 +26,58 @@ describe("approval-engine resubmit reuse", () => {
     await prisma.approvalFlowDefinition.deleteMany({ where: { businessType, flowLevel } });
     await prisma.supplier.deleteMany({ where: { id: businessId } });
 
+    // 清理之前测试可能残留的到此角色用户
+    await prisma.userRole.deleteMany({ where: { role: { code: flowLevel } } });
+    await prisma.approvalFlowDefinition.deleteMany({ where: { businessType, flowLevel } });
+
     // 创建测试供应商（updateBusinessStatus 需要该记录存在）
     await prisma.supplier.create({
       data: { id: businessId, name: "测试供应商-RESUBMIT" },
     });
 
-    // 创建2个审批节点（使用 finance 角色，该角色有非 admin 用户）
+    // 创建独立测试角色（避免不同测试共享 finance 角色互相干扰）
+    await prisma.role.upsert({
+      where: { code: flowLevel },
+      update: {},
+      create: { code: flowLevel, name: "测试角色-重提" },
+    });
+    const testRole = await prisma.role.findUniqueOrThrow({ where: { code: flowLevel } });
+
+    // 创建测试用户并关联角色
+    const testUser = await prisma.user.create({
+      data: {
+        username: `test-resubmit-approver-${Date.now()}`,
+        realName: "测试审批人",
+        password: "test",
+        role: flowLevel,
+        isActive: true,
+      },
+    });
+    await prisma.userRole.create({
+      data: { userId: testUser.id, roleId: testRole.id },
+    });
+    FINANCE_USER_ID = testUser.id;
+
+    // 检查发起人用户是否存在
+    const initiatorExists = await prisma.user.findUnique({ where: { id: INITIATOR_ID } });
+    if (!initiatorExists) {
+      await prisma.user.create({
+        data: {
+          id: INITIATOR_ID,
+          username: `test-initiator-${Date.now()}`,
+          realName: "测试发起人",
+          password: "test",
+          role: "admin",
+          isActive: true,
+        },
+      });
+    }
+
+    // 创建2个审批节点（使用独立测试角色）
     await prisma.approvalFlowDefinition.createMany({
       data: [
-        { businessType, flowLevel, nodeOrder: 1, nodeName: "节点1", approverRole: "finance", nodeType: "approval", isActive: true },
-        { businessType, flowLevel, nodeOrder: 2, nodeName: "节点2", approverRole: "finance", nodeType: "approval", isActive: true },
+        { businessType, flowLevel, nodeOrder: 1, nodeName: "节点1", approverRole: flowLevel, nodeType: "approval", isActive: true },
+        { businessType, flowLevel, nodeOrder: 2, nodeName: "节点2", approverRole: flowLevel, nodeType: "approval", isActive: true },
       ],
     });
   });
@@ -45,6 +88,10 @@ describe("approval-engine resubmit reuse", () => {
     await prisma.approvalInstance.deleteMany({ where: { businessType, businessId } });
     await prisma.approvalFlowDefinition.deleteMany({ where: { businessType, flowLevel } });
     await prisma.supplier.deleteMany({ where: { id: businessId } });
+    if (FINANCE_USER_ID) {
+      await prisma.userRole.deleteMany({ where: { userId: FINANCE_USER_ID } });
+      await prisma.user.deleteMany({ where: { id: FINANCE_USER_ID } });
+    }
   });
 
   it("驳回后重提复用同一条 ApprovalInstance，追加 resubmit action", async () => {
