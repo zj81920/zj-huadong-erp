@@ -1,9 +1,7 @@
 // src/lib/import/writers/projects.ts
 import type { WriteResult } from "./base";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { lookupCustomerId, parseDate, lookupOrganizationId } from "./base";
-
-const prisma = new PrismaClient();
 
 export interface ProjectImportRow {
   projectCode: string;

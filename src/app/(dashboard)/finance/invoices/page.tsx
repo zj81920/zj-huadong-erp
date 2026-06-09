@@ -23,6 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 
 interface Invoice {
   id: string;
@@ -310,7 +311,8 @@ export default function FinanceInvoicesPage() {
     }
   };
 
-  const handleRemoveAttachment = (index: number) => {
+  const handleRemoveAttachment = async (index: number) => {
+    await deleteUploadedFile(form.attachments[index]);
     setForm((prev) => ({
       ...prev,
       attachments: prev.attachments.filter((_, i) => i !== index),

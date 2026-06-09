@@ -27,6 +27,7 @@ import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import ProjectPicker from "@/components/ProjectPicker";
 import { ApprovalTimeline } from "@/components/ApprovalComponents";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
 import { getUserModulePerms } from "@/lib/types/permissions";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
@@ -1205,7 +1206,9 @@ export default function FinanceExpensePage() {
     }
   };
 
-  const removeAttachment = (itemIndex: number, attachIndex: number) => {
+  const removeAttachment = async (itemIndex: number, attachIndex: number) => {
+    const urlToDelete = expenseReportForm.items[itemIndex]?.invoiceAttachments?.[attachIndex];
+    if (urlToDelete) await deleteUploadedFile(urlToDelete);
     setExpenseReportForm((prev) => {
       const items = [...prev.items];
       const attachments = items[itemIndex].invoiceAttachments || [];

@@ -1,9 +1,7 @@
 // src/lib/import/writers/finance.ts
 import type { WriteResult } from "./base";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { lookupProjectId, lookupIncomeContractId, lookupExpenseContractId, parseDate, parseDecimal, lookupOrganizationId } from "./base";
-
-const prisma = new PrismaClient();
 
 // ==================== 应收款 ====================
 

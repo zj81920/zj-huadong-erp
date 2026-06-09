@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 import {
   Search,
   Plus,
@@ -704,7 +705,7 @@ export default function ExpenseContractsPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const res = await fetch("/api/upload?module=contracts", { method: "POST", body: formData });
       const json = await res.json();
       if (res.ok) {
         setSupplierAttachmentUrl(json.url);
@@ -790,7 +791,7 @@ export default function ExpenseContractsPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const res = await fetch("/api/upload?module=contracts", { method: "POST", body: formData });
       const json = await res.json();
       if (res.ok) {
         setInvoiceForm(prev => ({ ...prev, attachments: [...prev.attachments, json.url] }));
@@ -1403,7 +1404,7 @@ export default function ExpenseContractsPage() {
                 try {
                   const formData = new FormData();
                   formData.append("file", file);
-                  const res = await fetch("/api/upload", { method: "POST", body: formData });
+                  const res = await fetch("/api/upload?module=contracts", { method: "POST", body: formData });
                   const json = await res.json();
                   if (res.ok) {
                     const newFiles = [...form.draftFiles, json.url];
@@ -1448,7 +1449,10 @@ export default function ExpenseContractsPage() {
                     <button
                       type="button"
                       className="text-[#78716C] hover:text-[#78716C]"
-                      onClick={() => setForm((prev) => ({ ...prev, draftFiles: prev.draftFiles.filter((_, i) => i !== idx) }))}
+                      onClick={async () => {
+                        await deleteUploadedFile(url);
+                        setForm((prev) => ({ ...prev, draftFiles: prev.draftFiles.filter((_, i) => i !== idx) }));
+                      }}
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -2256,7 +2260,7 @@ export default function ExpenseContractsPage() {
                       <button
                         type="button"
                         className="text-[#78716C] hover:text-[#78716C]"
-                        onClick={() => setInvoiceForm(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== idx) }))}
+                        onClick={async () => { await deleteUploadedFile(url); setInvoiceForm(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== idx) })) }}
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -2309,7 +2313,7 @@ export default function ExpenseContractsPage() {
           try {
             const formData = new FormData();
             formData.append("file", file);
-            const res = await fetch("/api/upload", { method: "POST", body: formData });
+            const res = await fetch("/api/upload?module=contracts", { method: "POST", body: formData });
             const json = await res.json();
             if (res.ok) {
               setArchiveFiles(prev => [...prev, json.url]);
@@ -2351,7 +2355,10 @@ export default function ExpenseContractsPage() {
                       <button
                         type="button"
                         className="text-[#78716C] hover:text-[#78716C]"
-                        onClick={() => setArchiveFiles(prev => prev.filter((_, i) => i !== idx))}
+                        onClick={async () => {
+                          await deleteUploadedFile(url);
+                          setArchiveFiles(prev => prev.filter((_, i) => i !== idx));
+                        }}
                       >
                         <X className="w-3 h-3" />
                       </button>

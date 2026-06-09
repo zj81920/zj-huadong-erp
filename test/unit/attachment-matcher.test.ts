@@ -57,8 +57,8 @@ describe("detectModuleFromDirName", () => {
   it("'invoice'（英文）映射到 invoices", () => {
     expect(detectModuleFromDirName("invoice")).toBe("invoices");
   });
-  it("'财务' 映射到 finance", () => {
-    expect(detectModuleFromDirName("财务")).toBe("finance");
+  it("'财务'（容器文件夹）返回 null", () => {
+    expect(detectModuleFromDirName("财务")).toBeNull();
   });
   it("未识别的目录名返回 null", () => {
     expect(detectModuleFromDirName("未知目录")).toBeNull();

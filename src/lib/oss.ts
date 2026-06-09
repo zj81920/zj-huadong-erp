@@ -24,10 +24,28 @@ export function getOSSClient(): OSSClient {
     accessKeySecret,
     bucket,
     secure: true,
+    authorizationV4: true,
   });
 
   return ossClient;
 }
+
+const MIME_MAP: Record<string, string> = {
+  '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xls': 'application/vnd.ms-excel',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.bmp': 'image/bmp',
+  '.svg': 'image/svg+xml',
+  '.txt': 'text/plain',
+  '.csv': 'text/csv',
+};
 
 export async function uploadToOSS(
   file: Buffer,
@@ -36,10 +54,13 @@ export async function uploadToOSS(
 ): Promise<{ url: string; key: string }> {
   const client = getOSSClient();
   const key = `${folder}/${Date.now()}-${fileName}`;
+  const ext = fileName.includes('.') ? fileName.slice(fileName.lastIndexOf('.')).toLowerCase() : '';
+  const contentType = MIME_MAP[ext] || 'application/octet-stream';
 
   const result = await client.put(key, file, {
     headers: {
       "Content-Disposition": "inline",
+      "Content-Type": contentType,
     },
   });
 
@@ -54,12 +75,24 @@ export async function deleteFromOSS(key: string): Promise<void> {
   await client.delete(key);
 }
 
+// 检查 OSS 文件是否存在
+export async function ossFileExists(key: string): Promise<boolean> {
+  const client = getOSSClient();
+  try {
+    await client.head(key);
+    return true;
+  } catch (e: any) {
+    if (e.code === 'NoSuchKey' || e.status === 404) return false;
+    throw e;
+  }
+}
+
 export function getSignedUrl(key: string, expires: number = 3600): string {
   const client = getOSSClient();
   return client.signatureUrl(key, {
     expires,
     response: {
-      "content-disposition": "inline",
+      'content-disposition': 'inline',
     },
   });
 }
@@ -85,9 +118,14 @@ export async function searchFiles(
   <MaxResults>${maxResults}</MaxResults>
 </MetaQuery>`;
 
-  const result = await (client as any).request("POST", `/?metaQuery`, xmlBody, {
+  const result = await client.request({
+    method: "POST",
+    bucket,
+    subres: "metaQuery",
+    content: xmlBody,
     headers: { "Content-Type": "application/xml" },
     timeout: 30000,
+    successStatuses: [200],
   });
 
   return parseSearchResponse(result.data?.toString() || "");

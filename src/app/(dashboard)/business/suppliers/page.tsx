@@ -19,6 +19,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 import { useAuth } from "@/contexts/AuthContext";
 import { DetailPageLayout } from "@/components/DetailPageLayout";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
@@ -393,7 +394,7 @@ export default function SuppliersPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/upload", {
+      const res = await fetch("/api/upload?module=suppliers", {
         method: "POST",
         body: formData,
       });
@@ -861,7 +862,8 @@ export default function SuppliersPage() {
                     <button
                       type="button"
                       className="text-[#78716C] hover:text-[#78716C]"
-                      onClick={() => {
+                      onClick={async () => {
+                        await deleteUploadedFile(form.attachmentUrl);
                         setForm((prev) => ({ ...prev, attachmentUrl: "" }));
                         setUploadFileName("");
                       }}

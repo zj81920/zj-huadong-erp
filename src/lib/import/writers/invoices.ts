@@ -1,9 +1,7 @@
 // src/lib/import/writers/invoices.ts
 import type { WriteResult } from "./base";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { lookupProjectId, lookupIncomeContractId, lookupExpenseContractId, parseDate, parseDecimal } from "./base";
-
-const prisma = new PrismaClient();
 
 export interface InvoiceImportRow {
   invoiceNo: string;

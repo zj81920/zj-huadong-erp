@@ -1,9 +1,7 @@
 // src/lib/import/writers/expense-contracts.ts
 import type { WriteResult } from "./base";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { lookupSupplierId, lookupProjectId, parseDate, parseDecimal, lookupOrganizationId } from "./base";
-
-const prisma = new PrismaClient();
 
 export interface ExpenseContractImportRow {
   contractNo: string;

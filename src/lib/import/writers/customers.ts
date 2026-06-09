@@ -1,9 +1,7 @@
 // src/lib/import/writers/customers.ts
 import type { WriteResult } from "./base";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { getModuleConfig } from "../module-registry";
-
-const prisma = new PrismaClient();
 
 export interface CustomerImportRow {
   name: string;

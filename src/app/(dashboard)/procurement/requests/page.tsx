@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import ProjectPicker from "@/components/ProjectPicker";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 import { DetailPageLayout } from "@/components/DetailPageLayout";
 import * as XLSX from "xlsx";
 import { useAuth } from "@/contexts/AuthContext";
@@ -237,7 +238,7 @@ export default function PurchaseRequestsPage() {
       for (const file of Array.from(files)) {
         const formData = new FormData();
         formData.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const res = await fetch("/api/upload?module=procurement", { method: "POST", body: formData });
         const json = await res.json();
         if (res.ok) {
           setForm((prev) => ({
@@ -255,7 +256,8 @@ export default function PurchaseRequestsPage() {
     }
   };
 
-  const handleRemoveAttachment = (index: number) => {
+  const handleRemoveAttachment = async (index: number) => {
+    await deleteUploadedFile(form.attachments[index].url);
     setForm((prev) => ({
       ...prev,
       attachments: prev.attachments.filter((_, i) => i !== index),

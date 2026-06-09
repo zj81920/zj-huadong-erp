@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 import {
   Search,
   Plus,
@@ -1373,7 +1374,7 @@ export default function InternalSettlementPage() {
           try {
             const formData = new FormData();
             formData.append("file", file);
-            const res = await fetch("/api/upload", {
+            const res = await fetch("/api/upload?module=contracts", {
               method: "POST",
               body: formData,
             });
@@ -1421,7 +1422,10 @@ export default function InternalSettlementPage() {
                       <button
                         type="button"
                         className="text-[#78716C] hover:text-[#78716C]"
-                        onClick={() => setArchiveFiles((prev) => prev.filter((_, i) => i !== idx))}
+                        onClick={async () => {
+                          await deleteUploadedFile(url);
+                          setArchiveFiles((prev) => prev.filter((_, i) => i !== idx));
+                        }}
                       >
                         <X className="w-3 h-3" />
                       </button>

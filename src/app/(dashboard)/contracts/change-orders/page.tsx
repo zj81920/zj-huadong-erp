@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 import { Plus, Search, Eye, Pencil, Trash2, FileText, ChevronRight, Building2, User, Upload, FileCheck, X } from "lucide-react";
 import Modal from "@/components/Modal";
 import { ContractChangeOrderDetailCard } from "@/components/detail-cards";
@@ -764,7 +765,7 @@ export default function ChangeOrdersPage() {
           try {
             const formData = new FormData();
             formData.append("file", file);
-            const res = await fetch("/api/upload", {
+            const res = await fetch("/api/upload?module=contracts", {
               method: "POST",
               body: formData,
             });
@@ -812,7 +813,10 @@ export default function ChangeOrdersPage() {
                       <button
                         type="button"
                         className="text-[#78716C] hover:text-[#78716C]"
-                        onClick={() => setArchiveFiles((prev) => prev.filter((_, i) => i !== idx))}
+                        onClick={async () => {
+                          await deleteUploadedFile(url);
+                          setArchiveFiles((prev) => prev.filter((_, i) => i !== idx));
+                        }}
                       >
                         <X className="w-3 h-3" />
                       </button>

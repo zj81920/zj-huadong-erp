@@ -18,6 +18,7 @@ import {
   Power,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 
 interface Role {
   id: string;
@@ -299,7 +300,8 @@ export default function UsersSettingsPage() {
     }
   };
 
-  const handleRemoveSignature = () => {
+  const handleRemoveSignature = async () => {
+    if (form.signatureUrl) await deleteUploadedFile(form.signatureUrl);
     setForm((prev) => ({ ...prev, signatureUrl: "" }));
     setSignaturePreview("");
   };
@@ -340,7 +342,8 @@ export default function UsersSettingsPage() {
     }
   };
 
-  const handleRemoveAvatar = () => {
+  const handleRemoveAvatar = async () => {
+    if (form.avatarUrl) await deleteUploadedFile(form.avatarUrl);
     setForm((prev) => ({ ...prev, avatarUrl: "" }));
     setAvatarPreview("");
   };

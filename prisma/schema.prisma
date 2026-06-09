@@ -1543,3 +1543,40 @@ model ContractChangeOrder {
 
   @@map("contract_change_orders")
 }
+
+enum IndexStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+model FileIndexRecord {
+  id          String       @id @default(cuid())
+  fileKey     String       @map("file_key")
+  fileName    String       @map("file_name")
+  fileSize    Int          @map("file_size")
+  fileType    String       @map("file_type")
+  status      IndexStatus  @default(pending)
+  chunkCount  Int          @default(0)    @map("chunk_count")
+  errorMsg    String?      @map("error_msg")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt     @map("updated_at")
+  chunks      FileChunk[]
+
+  @@unique([fileKey])
+  @@map("file_index_records")
+}
+
+model FileChunk {
+  id            String   @id @default(cuid())
+  recordId      String   @map("record_id")
+  chunkIndex    Int      @map("chunk_index")
+  chunkText     String   @map("chunk_text")
+  embedding     Unsupported("vector(1536)")?
+  tokenCount    Int      @map("token_count")
+  record        FileIndexRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId])
+  @@map("file_chunks")
+}

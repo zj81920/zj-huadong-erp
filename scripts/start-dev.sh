@@ -1,6 +1,8 @@
 #!/bin/bash
 # 一键启动本地开发环境
-# 使用方法: bash scripts/start-dev.sh
+# 使用方法: bash scripts/start-dev.sh [端口号]
+#   默认端口 3000，可通过参数指定其他端口
+#   示例: bash scripts/start-dev.sh 3003
 
 set -e
 
@@ -8,8 +10,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_DIR"
 
+# 端口配置：优先使用命令行参数，其次用环境变量 PORT，默认 3000
+PORT="${1:-${PORT:-3000}}"
+
 echo "========================================"
-echo "  🚀 启动本地开发环境"
+echo "  🚀 启动本地开发环境 (端口: $PORT)"
 echo "========================================"
 
 # 1. 检查 SSH 隧道
@@ -33,44 +38,44 @@ else
   echo "  ✅ SSH 隧道已启动"
 fi
 
-# 2. 检查端口 3000 是否已被占用
+# 2. 检查目标端口是否已被占用
 echo ""
 echo "[2/3] 检查开发服务器..."
-if lsof -i :3000 -P -n 2>/dev/null | grep -q LISTEN; then
+if lsof -i :$PORT -P -n 2>/dev/null | grep -q LISTEN; then
   # 检查是否是 Next.js 进程
-  NEXT_PID=$(lsof -i :3000 -P -n -t 2>/dev/null | xargs -I {} ps -p {} -o pid= -o comm= 2>/dev/null | grep -i "node\|next" | awk '{print $1}')
+  NEXT_PID=$(lsof -i :$PORT -P -n -t 2>/dev/null | xargs -I {} ps -p {} -o pid= -o comm= 2>/dev/null | grep -i "node\|next" | awk '{print $1}')
   if [ -n "$NEXT_PID" ]; then
-    echo "  ✅ 开发服务器已在运行 (http://localhost:3000)"
+    echo "  ✅ 开发服务器已在运行 (http://localhost:$PORT)"
   else
-    echo "  ⚠️  端口 3000 被其他进程占用:"
-    lsof -i :3000 -P -n 2>/dev/null | grep LISTEN
+    echo "  ⚠️  端口 $PORT 被其他进程占用:"
+    lsof -i :$PORT -P -n 2>/dev/null | grep LISTEN
     echo ""
     read -p "  是否杀掉占用进程并重启? (y/n): " KILL_IT
     if [ "$KILL_IT" = "y" ] || [ "$KILL_IT" = "Y" ]; then
-      OCCUPY_PID=$(lsof -i :3000 -P -n -t 2>/dev/null | head -1)
+      OCCUPY_PID=$(lsof -i :$PORT -P -n -t 2>/dev/null | head -1)
       kill -9 "$OCCUPY_PID" 2>/dev/null
       sleep 1
-      echo "  ✅ 已清理端口 3000"
+      echo "  ✅ 已清理端口 $PORT"
     else
-      echo "  ❌ 请手动释放端口 3000 后重试"
+      echo "  ❌ 请手动释放端口 $PORT 后重试"
       exit 1
     fi
   fi
 fi
 
 # 如果端口未被占用（或已清理），启动服务器
-if ! lsof -i :3000 -P -n 2>/dev/null | grep -q LISTEN; then
+if ! lsof -i :$PORT -P -n 2>/dev/null | grep -q LISTEN; then
   echo "  📦 正在启动 Next.js 开发服务器..."
-  npm run dev &
+  PORT=$PORT npm run dev &
   # 等待服务器启动
   for i in $(seq 1 30); do
-    if lsof -i :3000 -P -n 2>/dev/null | grep -q LISTEN; then
+    if lsof -i :$PORT -P -n 2>/dev/null | grep -q LISTEN; then
       echo "  ✅ 开发服务器已启动"
       break
     fi
     sleep 1
   done
-  if ! lsof -i :3000 -P -n 2>/dev/null | grep -q LISTEN; then
+  if ! lsof -i :$PORT -P -n 2>/dev/null | grep -q LISTEN; then
     echo "  ⚠️  开发服务器启动较慢，正在后台继续启动..."
   fi
 fi
@@ -78,12 +83,12 @@ fi
 # 3. 打开浏览器
 echo ""
 echo "[3/3] 打开浏览器..."
-open "http://localhost:3000/login"
+open "http://localhost:$PORT/login"
 
 echo ""
 echo "========================================"
 echo "  ✅ 启动完成！"
-echo "  应用地址: http://localhost:3000"
+echo "  应用地址: http://localhost:$PORT"
 echo "  登录用户: admin / admin123"
 echo "========================================"
 echo ""

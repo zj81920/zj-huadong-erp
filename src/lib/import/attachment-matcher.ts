@@ -30,8 +30,6 @@ const DIR_MODULE_MAP: Record<string, ImportModule> = {
   "发票": "invoices",
   "invoice": "invoices",
   "invoices": "invoices",
-  "财务": "finance",
-  "finance": "finance",
   "应收款": "receivables",
   "receivable": "receivables",
   "receivables": "receivables",

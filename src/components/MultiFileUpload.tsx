@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, FileText, X, Loader2, Plus } from "lucide-react";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 
 export interface FileItem {
   url: string;
@@ -112,7 +113,9 @@ export default function MultiFileUpload({
     setDragOver(false);
   };
 
-  const handleRemove = (index: number) => {
+  const handleRemove = async (index: number) => {
+    const file = value[index];
+    if (file) await deleteUploadedFile(file.url);
     const updated = [...value];
     updated.splice(index, 1);
     onChange(updated);

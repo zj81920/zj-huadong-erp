@@ -1,20 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, Sparkles, FileText, Image, File, X, Loader2 } from "lucide-react";
+import { Search, Sparkles, FileText, Image, File, X, Loader2, MessageSquare } from "lucide-react";
 
-interface SearchResult {
-  key: string;
-  name: string;
-  size: number;
-  lastModified: string;
-  score?: number;
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+interface SourceFile {
+  fileKey: string;
+  fileName: string;
+  fileType: string;
+  score: number;
+  previewUrl: string;
 }
 
 function getFileIcon(name: string) {
@@ -31,16 +25,10 @@ function getFileIcon(name: string) {
   return <File className="w-4 h-4 text-[#78716C]" />;
 }
 
-function getScoreColor(score?: number): string {
-  if (!score) return "bg-[#78716C]";
-  if (score >= 0.8) return "bg-[#78716C]";
-  if (score >= 0.5) return "bg-[#78716C]";
-  return "bg-[#78716C]";
-}
-
 export default function AISearchBar() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [answer, setAnswer] = useState("");
+  const [sources, setSources] = useState<SourceFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,9 +36,10 @@ export default function AISearchBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const doSearch = useCallback(async (q: string) => {
+  const doAsk = useCallback(async (q: string) => {
     if (!q.trim()) {
-      setResults([]);
+      setAnswer("");
+      setSources([]);
       setIsOpen(false);
       return;
     }
@@ -58,21 +47,65 @@ export default function AISearchBar() {
     setLoading(true);
     setError(null);
     setIsOpen(true);
+    setAnswer("");
+    setSources([]);
 
     try {
-      const res = await fetch(`/api/file/search?q=${encodeURIComponent(q.trim())}&max=10`);
-      const data = await res.json();
+      const res = await fetch("/api/ai/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: q.trim() }),
+      });
 
       if (!res.ok) {
-        setError(data.error || "检索失败");
-        setResults([]);
-      } else {
-        setResults(data.results || []);
-        setError(null);
+        const data = await res.json().catch(() => ({}));
+        setError((data as any).error || "问答失败");
+        setAnswer("");
+        setSources([]);
+        return;
+      }
+
+      // 流式读取 SSE 响应
+      const reader = res.body?.getReader();
+      if (!reader) {
+        setError("无法读取响应流");
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (parsed.type === "token") {
+              setAnswer((prev) => prev + parsed.data);
+            } else if (parsed.type === "sources") {
+              setSources(parsed.data);
+            } else if (parsed.type === "error") {
+              setError(parsed.data);
+            }
+            // type: "done" → 忽略，流自然结束
+          } catch {
+            // 跳过无法解析的行
+          }
+        }
       }
     } catch {
       setError("网络请求失败");
-      setResults([]);
+      setAnswer("");
+      setSources([]);
     } finally {
       setLoading(false);
     }
@@ -84,32 +117,28 @@ export default function AISearchBar() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (!value.trim()) {
-      setResults([]);
+      setAnswer("");
+      setSources([]);
       setIsOpen(false);
       return;
     }
 
     debounceRef.current = setTimeout(() => {
-      doSearch(value);
-    }, 500);
+      doAsk(value);
+    }, 800);
   };
 
   const handleClear = () => {
     setQuery("");
-    setResults([]);
+    setAnswer("");
+    setSources([]);
     setIsOpen(false);
     setError(null);
     inputRef.current?.focus();
   };
 
-  const handlePreview = async (key: string) => {
-    try {
-      const res = await fetch(`/api/file/preview?key=${encodeURIComponent(key)}`);
-      const data = await res.json();
-      if (data.url) {
-        window.open(data.url, "_blank");
-      }
-    } catch {}
+  const handlePreview = (url: string) => {
+    window.open(url, "_blank");
   };
 
   useEffect(() => {
@@ -128,7 +157,7 @@ export default function AISearchBar() {
     }
     if (e.key === "Enter" && query.trim()) {
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      doSearch(query);
+      doAsk(query);
     }
   };
 
@@ -149,10 +178,10 @@ export default function AISearchBar() {
           value={query}
           onChange={(e) => handleInputChange(e.target.value)}
           onFocus={() => {
-            if (results.length > 0 || error) setIsOpen(true);
+            if (answer || error) setIsOpen(true);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="AI 智能检索文件..."
+          placeholder="AI 智能问答，输入问题检索文件..."
           className="flex-1 bg-transparent text-sm text-[#1C1917] placeholder-[#78716C] outline-none"
         />
         {loading && <Loader2 className="w-4 h-4 text-[#1C1917] animate-spin flex-shrink-0" />}
@@ -166,74 +195,79 @@ export default function AISearchBar() {
         </kbd>
       </div>
 
-      {/* 搜索结果下拉 */}
+      {/* 问答结果下拉 */}
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-[#E7E5E4] shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden z-[100]">
-          {/* 结果头部 */}
+          {/* 头部 */}
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-[#F2F2F7]">
-            <Sparkles className="w-3.5 h-3.5 text-[#78716C]" />
+            <MessageSquare className="w-3.5 h-3.5 text-[#78716C]" />
             <span className="text-xs text-[#78716C]">
               {loading
-                ? "AI 正在检索..."
+                ? "AI 正在检索并回答..."
                 : error
                 ? "检索出错"
-                : results.length > 0
-                ? `找到 ${results.length} 个相关文件`
-                : "未找到相关文件"}
+                : answer
+                ? "AI 回答"
+                : "等待提问..."}
             </span>
           </div>
 
-          {/* 结果列表 */}
+          {/* 回答内容 */}
           {error ? (
             <div className="px-4 py-8 text-center">
               <p className="text-sm text-[#78716C]">{error}</p>
             </div>
-          ) : results.length > 0 ? (
-            <div className="max-h-[360px] overflow-y-auto">
-              {results.map((item) => (
-                <button
-                  key={item.key}
-                  onClick={() => handlePreview(item.key)}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#FAFAF9] transition-colors text-left"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-[#F2F2F7] flex items-center justify-center flex-shrink-0">
-                    {getFileIcon(item.name)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[#1C1917] truncate font-medium">
-                      {item.name}
-                    </p>
-                    <p className="text-[11px] text-[#78716C] mt-0.5">
-                      {formatFileSize(item.size)} · {new Date(item.lastModified).toLocaleDateString("zh-CN")}
-                    </p>
-                  </div>
-                  {item.score !== undefined && (
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <div className={`w-1.5 h-1.5 rounded-full ${getScoreColor(item.score)}`} />
-                      <span className="text-[11px] text-[#78716C]">
-                        {Math.round(item.score * 100)}%
-                      </span>
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          ) : (
-            !loading && (
-              <div className="px-4 py-8 text-center">
-                <Search className="w-8 h-8 text-[#D1D5DB] mx-auto mb-2" />
-                <p className="text-sm text-[#78716C]">输入关键词搜索文件</p>
-                <p className="text-[11px] text-[#A8A29E] mt-1">
-                  支持按文件内容语义搜索
-                </p>
+          ) : answer ? (
+            <div className="max-h-[400px] overflow-y-auto">
+              {/* AI 回答 */}
+              <div className="px-4 py-3">
+                <div className="text-sm text-[#1C1917] whitespace-pre-wrap leading-relaxed">
+                  {answer}
+                </div>
               </div>
-            )
-          )}
+
+              {/* 来源文件 */}
+              {sources.length > 0 && (
+                <div className="border-t border-[#F2F2F7]">
+                  <div className="px-4 py-2">
+                    <span className="text-[11px] text-[#A8A29E] font-medium">来源文件</span>
+                  </div>
+                  {sources.map((source) => (
+                    <button
+                      key={source.fileKey}
+                      onClick={() => handlePreview(source.previewUrl)}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#FAFAF9] transition-colors text-left"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-[#F2F2F7] flex items-center justify-center flex-shrink-0">
+                        {getFileIcon(source.fileName)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] text-[#1C1917] truncate">
+                          {source.fileName}
+                        </p>
+                      </div>
+                      <span className="text-[11px] text-[#78716C] flex-shrink-0">
+                        {Math.round(source.score * 100)}%
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : !loading ? (
+            <div className="px-4 py-8 text-center">
+              <Search className="w-8 h-8 text-[#D1D5DB] mx-auto mb-2" />
+              <p className="text-sm text-[#78716C]">输入问题，AI 将检索文件并回答</p>
+              <p className="text-[11px] text-[#A8A29E] mt-1">
+                支持 PDF、Word、Excel 等文件内容检索
+              </p>
+            </div>
+          ) : null}
 
           {/* 底部提示 */}
           <div className="flex items-center justify-between px-4 py-2 border-t border-[#F2F2F7] bg-[#FFFFFF]">
             <span className="text-[10px] text-[#A8A29E]">
-              基于 OSS 语义检索
+              基于 pgvector 向量检索 + AI 问答
             </span>
             <span className="text-[10px] text-[#A8A29E]">
               点击文件可预览

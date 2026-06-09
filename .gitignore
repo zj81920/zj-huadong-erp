@@ -62,6 +62,19 @@ prisma/dev.db-journal
 # 设计系统文档（非代码）
 design-system/
 
+# 自动生成的文件
+_gen*
+_impl*
+_write*
+
+# 设计文档和原型
+docs/
+mockups/
+
+# 开发脚本
+scripts/dev-setup.sh
+scripts/fix-oss.*
+
 # OS
 .Spotlight-V100
 .Trashes

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 import {
   Package,
   Clock,
@@ -136,7 +137,8 @@ export default function InquiryQuotePage() {
     }
   };
 
-  const handleRemoveAttachment = (index: number) => {
+  const handleRemoveAttachment = async (index: number) => {
+    await deleteUploadedFile(form.attachments[index].url);
     setForm((prev) => ({
       ...prev,
       attachments: prev.attachments.filter((_, i) => i !== index),

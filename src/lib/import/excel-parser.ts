@@ -17,12 +17,12 @@ export function parseExcel(buffer: ArrayBuffer): ParsedExcel {
   }
 
   const sheet = workbook.Sheets[sheetName];
-  // sheet_to_json with header 1 maps first row as keys
-  const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {
+  // sheet_to_json with header 1 returns an array of row arrays
+  const rows = XLSX.utils.sheet_to_json(sheet, {
     header: 1,
     defval: "",
     blankrows: false,
-  });
+  }) as unknown[][];
 
   if (rows.length === 0) {
     return { headers: [], rows: [], rowCount: 0 };

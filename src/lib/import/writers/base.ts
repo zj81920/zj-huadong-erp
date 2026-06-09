@@ -1,8 +1,6 @@
 // src/lib/import/writers/base.ts
 import type { ImportError, PreviewRow } from "../types";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 // ==================== 工具函数 ====================
 

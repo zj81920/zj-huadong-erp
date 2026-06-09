@@ -13,6 +13,7 @@ import {
   FileText,
 } from "lucide-react";
 import Modal from "@/components/Modal";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
@@ -1001,7 +1002,7 @@ export default function DeliveryReceiptsPage() {
                   </a>
                   <button
                     type="button"
-                    onClick={() => setForm(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== idx) }))}
+                    onClick={async () => { await deleteUploadedFile(url); setForm(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== idx) })) }}
                     className="ml-1 text-[#78716C] hover:text-[#78716C]/70"
                   >
                     ×
@@ -1027,7 +1028,7 @@ export default function DeliveryReceiptsPage() {
                   const formData = new FormData();
                   formData.append("file", file);
                   try {
-                    const res = await fetch("/api/upload", { method: "POST", body: formData });
+                    const res = await fetch("/api/upload?module=procurement", { method: "POST", body: formData });
                     const json = await res.json();
                     if (res.ok) {
                       setForm(prev => ({ ...prev, attachments: [...prev.attachments, json.url] }));

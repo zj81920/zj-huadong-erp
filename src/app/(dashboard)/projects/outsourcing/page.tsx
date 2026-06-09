@@ -25,6 +25,7 @@ import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
 import { getUserModulePerms } from "@/lib/types/permissions";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 import { OutsourcingDetailCard } from "@/components/detail-cards";
 
@@ -772,7 +773,8 @@ export default function OutsourcingPage() {
                 <button
                   type="button"
                   className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917] whitespace-nowrap"
-                  onClick={() => {
+                  onClick={async () => {
+                    if (supplierAttachmentUrl) await deleteUploadedFile(supplierAttachmentUrl);
                     setSupplierError("");
                     setSupplierForm(emptySupplierForm);
                     setSupplierAttachmentUrl("");

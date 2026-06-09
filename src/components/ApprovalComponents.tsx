@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { CheckCircle, XCircle, Clock, FileText, ChevronDown, ChevronUp, MessageSquare, Send, X, SkipForward, Upload, FileCheck, Archive, CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 
 interface FlowNode {
   nodeOrder: number;
@@ -770,7 +771,10 @@ export function ApprovalActionButton({
                         <button
                           type="button"
                           className="text-[#78716C] hover:text-[#78716C]"
-                          onClick={() => setArchiveFiles(prev => prev.filter((_, i) => i !== idx))}
+                          onClick={async () => {
+                            await deleteUploadedFile(url);
+                            setArchiveFiles(prev => prev.filter((_, i) => i !== idx));
+                          }}
                         >
                           <X className="w-3 h-3" />
                         </button>

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, FileText, X, Loader2 } from "lucide-react";
+import { deleteUploadedFile } from "@/lib/upload-helpers";
 
 interface FileUploadProps {
   label: string;
@@ -101,7 +102,8 @@ export default function FileUpload({
     setDragOver(false);
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
+    if (value) await deleteUploadedFile(value);
     onChange(null);
   };
 

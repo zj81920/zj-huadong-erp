@@ -15,12 +15,18 @@ interface AiSettings {
   ai_model_id: string;
   ai_api_key: string;
   ai_base_url: string;
+  ai_embedding_model: string;
+  ai_embedding_api_key: string;
+  ai_embedding_base_url: string;
 }
 
 const emptySettings: AiSettings = {
   ai_model_id: "",
   ai_api_key: "",
   ai_base_url: "",
+  ai_embedding_model: "",
+  ai_embedding_api_key: "",
+  ai_embedding_base_url: "",
 };
 
 export default function AiModelSettingsPage() {
@@ -47,6 +53,9 @@ export default function AiModelSettingsPage() {
           ai_model_id: data.ai_model_id || "",
           ai_api_key: data.ai_api_key || "",
           ai_base_url: data.ai_base_url || "",
+          ai_embedding_model: data.ai_embedding_model || "",
+          ai_embedding_api_key: data.ai_embedding_api_key || "",
+          ai_embedding_base_url: data.ai_embedding_base_url || "",
         });
       }
     } catch {
@@ -83,6 +92,9 @@ export default function AiModelSettingsPage() {
             ai_model_id: settings.ai_model_id.trim(),
             ai_api_key: settings.ai_api_key.trim(),
             ai_base_url: settings.ai_base_url.trim(),
+            ai_embedding_model: settings.ai_embedding_model.trim(),
+            ai_embedding_api_key: settings.ai_embedding_api_key.trim(),
+            ai_embedding_base_url: settings.ai_embedding_base_url.trim(),
           },
         }),
       });
@@ -115,6 +127,7 @@ export default function AiModelSettingsPage() {
   };
 
   const isConfigured = !!(settings.ai_model_id && settings.ai_api_key && settings.ai_base_url);
+  const isEmbeddingConfigured = !!(settings.ai_embedding_model && settings.ai_embedding_api_key && settings.ai_embedding_base_url);
 
   if (!authorized) {
     return (
@@ -254,6 +267,73 @@ export default function AiModelSettingsPage() {
               <p className="mt-1 text-[12px] text-[#78716C]">
                 模型服务的接口地址
               </p>
+            </div>
+
+            {/* ======== Embedding 向量模型（独立配置）======== */}
+            <div className="pt-3 border-t border-[#F5F5F4]">
+              <div className="flex items-center gap-2 mb-4">
+                <h3 className="text-[14px] font-bold text-[#1C1917]">Embedding 向量模型</h3>
+                <span
+                  className={`ios-badge text-[11px] ${isEmbeddingConfigured ? "ios-badge-green" : "ios-badge-gray"}`}
+                >
+                  {isEmbeddingConfigured ? "已配置" : "未配置"}
+                </span>
+              </div>
+              <p className="text-[12px] text-[#78716C] -mt-1 mb-4">
+                用于文件语义搜索的向量化模型，可与对话模型使用不同服务商
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                    Embedding 模型ID
+                  </label>
+                  <input
+                    type="text"
+                    className="ios-input"
+                    placeholder="例如：text-embedding-v2（通义千问）、text-embedding-3-small（OpenAI）"
+                    value={settings.ai_embedding_model}
+                    onChange={(e) => updateField("ai_embedding_model", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                    Embedding API Key
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? "text" : "password"}
+                      className="ios-input pr-12"
+                      placeholder="向量模型的API Key"
+                      value={showApiKey ? settings.ai_embedding_api_key : maskApiKey(settings.ai_embedding_api_key)}
+                      onChange={(e) => {
+                        if (showApiKey) {
+                          updateField("ai_embedding_api_key", e.target.value);
+                        } else {
+                          setShowApiKey(true);
+                          updateField("ai_embedding_api_key", "");
+                        }
+                      }}
+                      onFocus={() => {
+                        if (!showApiKey) {
+                          setShowApiKey(true);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                    Embedding API Base URL
+                  </label>
+                  <input
+                    type="text"
+                    className="ios-input"
+                    placeholder="例如：https://dashscope.aliyuncs.com/compatible-mode/v1"
+                    value={settings.ai_embedding_base_url}
+                    onChange={(e) => updateField("ai_embedding_base_url", e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4]">
