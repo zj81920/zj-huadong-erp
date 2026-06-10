@@ -104,6 +104,7 @@ const navSections: NavSection[] = [
       { label: "往来信息管理", href: "/settings/counterparty", group: "基础数据" },
       { label: "数据导入", href: "/settings/data-import", group: "系统" },
       { label: "AI 模型配置", href: "/settings/ai-model", group: "系统" },
+      { label: "专业字典", href: "/settings/disciplines", group: "基础数据" },
     ],
   },
 ];
