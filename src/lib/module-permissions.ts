@@ -37,7 +37,7 @@ export const SUB_MODULE_KEYS = [
   "business.quotations",
   "projects.list",
   "projects.plans",
-  "projects.progress",
+
   "projects.outsourcing",
   "procurement.requests",
   "procurement.inquiries",
@@ -151,7 +151,6 @@ export const SUB_MODULE_TO_HREF: Record<SubModuleKey, string> = {
   "business.quotations": "/business/quotations",
   "projects.list": "/projects",
   "projects.plans": "/projects/plans",
-  "projects.progress": "/projects/progress",
   "projects.outsourcing": "/projects/outsourcing",
   "procurement.requests": "/procurement/requests",
   "procurement.inquiries": "/procurement/inquiries",

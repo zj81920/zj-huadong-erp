@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Search,
@@ -142,6 +143,7 @@ const sourceOptions = [
 ];
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const { user: currentUser } = useAuth();
   const isAdminUser = currentUser?.username === "admin" || currentUser?.roles?.some((r: any) => r.code === "admin") || false;
   const rolePerms = getUserModulePerms(currentUser, "projects_list");
@@ -769,6 +771,13 @@ export default function ProjectsPage() {
                               编辑
                             </button>
                           )}
+                          <button
+                            className="ios-btn ios-btn-ghost ios-btn-sm"
+                            onClick={() => router.push(`/projects/plans/${project.projectSourceId}`)}
+                          >
+                            <Calendar className="w-3.5 h-3.5" />
+                            计划
+                          </button>
                           {canDeleteFrontend(hasFlow, rolePerms, "", currentUser?.id ?? "", project.createdById ?? null, isAdminUser) && (
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"

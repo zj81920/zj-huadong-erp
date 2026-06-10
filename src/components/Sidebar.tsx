@@ -47,8 +47,7 @@ const navSections: NavSection[] = [
     icon: <Briefcase className="w-4.5 h-4.5" />,
     items: [
       { label: "项目立项", href: "/projects" },
-      { label: "项目计划", href: "/projects/plans" },
-      { label: "项目进度", href: "/projects/progress" },
+      { label: "项目WBS计划", href: "/projects/plans" },
       { label: "设计外包", href: "/projects/outsourcing" },
     ],
   },

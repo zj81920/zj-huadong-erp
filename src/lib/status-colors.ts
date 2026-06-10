@@ -35,6 +35,7 @@ export const STATUS_ROW_COLORS: Record<string, string> = {
   "未开始": "row-status-draft",
   "进行中": "row-status-pending",
   "已完成": "row-status-approved",
+  "滞后": "row-status-overdue",
 
   // 借入/借出
   "未还清": "row-status-pending",
