@@ -1,0 +1,119 @@
+<h2>完整设计方案 — 项目WBS计划与进度</h2>
+
+<div class="section">
+  <h3>页面结构</h3>
+  <div class="mockup">
+    <div class="mockup-header">入口流程</div>
+    <div class="mockup-body" style="padding:16px;font-size:13px">
+      <div style="display:flex;align-items:center;gap:12px;justify-content:center;padding:12px">
+        <div style="padding:10px 18px;background:#eff6ff;border:2px solid #2563eb;border-radius:8px;text-align:center">
+          <div style="font-weight:bold">项目列表</div>
+          <div style="font-size:11px;color:#6b7280">选择项目 → 点击"计划"</div>
+        </div>
+        <div style="font-size:20px;color:#9ca3af">→</div>
+        <div style="padding:10px 18px;background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;text-align:center">
+          <div style="font-weight:bold">WBS计划页</div>
+          <div style="font-size:11px;color:#6b7280">该项目的WBS树 + 进度</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>关键变更汇总</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px">
+    <thead>
+      <tr style="border-bottom:2px solid #e5e7eb">
+        <th style="text-align:left;padding:8px;color:#6b7280;width:160px">维度</th>
+        <th style="text-align:left;padding:8px;color:#6b7280">设计</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">页面定位</td>
+        <td style="padding:8px">项目列表页每行增加"计划"按钮 → 进入该项目专属的WBS计划页面<br/>路径: <code style="background:#f3f4f6;padding:1px 6px;border-radius:3px">/projects/plans/{projectSourceId}</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">WBS层级</td>
+        <td style="padding:8px">一级(设计阶段) → 二级(子项) → 三级(专业) → 四级(任务)</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">一级节点来源</td>
+        <td style="padding:8px">项目立项时勾选的设计阶段（方案设计/初步设计/详细设计/竣工图设计 + 采购可选）</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">二级节点</td>
+        <td style="padding:8px">用户在WBS计划页手动创建子项</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">三级节点</td>
+        <td style="padding:8px">从专业字典选择（系统设置中维护）</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">四级节点</td>
+        <td style="padding:8px">手动创建任务，填报计划%/实际%/负责人/状态</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">进度汇总</td>
+        <td style="padding:8px">4级任务填报 → 自动汇总到3级专业 → 2级子项 → 1级设计阶段</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">里程碑</td>
+        <td style="padding:8px">作为节点的标记属性，可在任意层级节点上打标记</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">专业字典</td>
+        <td style="padding:8px">新建 <code style="background:#f3f4f6;padding:1px 6px;border-radius:3px">discipline_dictionary</code> 表，系统设置中维护</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">原菜单</td>
+        <td style="padding:8px">侧边栏"项目计划"和"项目进度"合并为"项目WBS计划"，去掉"项目进度"菜单</td>
+      </tr>
+      <tr style="border-bottom:1px solid #f3f4f6">
+        <td style="padding:8px;font-weight:600">删除冗余</td>
+        <td style="padding:8px">删除原 <code style="background:#f3f4f6;padding:1px 6px;border-radius:3px">project_progress</code> 表和原扁平 <code style="background:#f3f4f6;padding:1px 6px;border-radius:3px">project_plans</code> 表</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>数据库 — 新建表</h3>
+  <div style="background:#1e293b;color:#e2e8f0;padding:16px;border-radius:8px;font-family:monospace;font-size:12px;line-height:1.6;overflow-x:auto">
+    <div style="color:#93c5fd">// 1. 专业字典表</div>
+    model DisciplineDictionary {<br/>
+    <span style="color:#6b7280">  id</span>        String  @id @default(cuid())<br/>
+    <span style="color:#6b7280">  code</span>      String  @unique  // 专业编码: PROC, PIPE, ELEC...<br/>
+    <span style="color:#6b7280">  name</span>      String           // 专业名称: 工艺, 管道, 电气...<br/>
+    <span style="color:#6b7280">  sortOrder</span> Int     @default(0)<br/>
+    <span style="color:#6b7280">  isActive</span>  Boolean @default(true)<br/>
+    }<br/><br/>
+    <div style="color:#93c5fd">// 2. WBS节点表（树形结构，替代原 ProjectPlan）</div>
+    model ProjectWbsNode {<br/>
+    <span style="color:#6b7280">  id</span>              String   @id @default(cuid())<br/>
+    <span style="color:#6b7280">  projectSourceId</span> String   // 关联项目<br/>
+    <span style="color:#6b7280">  parentId</span>        String?  // 父节点ID，null=一级节点<br/>
+    <span style="color:#6b7280">  level</span>          Int      // 1=设计阶段, 2=子项, 3=专业, 4=任务<br/>
+    <span style="color:#6b7280">  name</span>           String   // 节点名称<br/>
+    <span style="color:#6b7280">  disciplineCode</span> String?  // 三级节点关联的专业编码<br/>
+    <span style="color:#6b7280">  isMilestone</span>    Boolean  @default(false)  // 里程碑标记<br/>
+    <span style="color:#6b7280">  plannedPct</span>     Int      @default(0)  // 计划进度%<br/>
+    <span style="color:#6b7280">  actualPct</span>      Int      @default(0)  // 实际进度%（汇总或手动填）<br/>
+    <span style="color:#6b7280">  delayDays</span>      Int      @default(0)  // 滞后天数<br/>
+    <span style="color:#6b7280">  alertStatus</span>    String   @default("正常")<br/>
+    <span style="color:#6b7280">  responsibleId</span>  String?  // 负责人<br/>
+    <span style="color:#6b7280">  status</span>         String   @default("未开始")  // 未开始/进行中/已完成<br/>
+    <span style="color:#6b7280">  startDate</span>      DateTime?<br/>
+    <span style="color:#6b7280">  endDate</span>        DateTime?<br/>
+    <span style="color:#6b7280">  sortOrder</span>      Int      @default(0)<br/>
+    <span style="color:#6b7280">  version</span>        Int      @default(1)<br/>
+    }
+  </div>
+</div>
+
+<div class="section" style="margin-top:12px;padding:12px;background:#f0f9ff;border-left:3px solid #3b82f6;border-radius:4px">
+  <p style="margin:0;font-size:13px">
+    <strong>以上是完整设计。</strong> 你过一遍，有没有需要调整的地方？
+  </p>
+</div>

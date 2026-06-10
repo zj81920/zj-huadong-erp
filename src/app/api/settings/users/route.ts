@@ -27,7 +27,10 @@ export async function GET(request: NextRequest) {
         include: {
           userRoles: {
             include: {
-              role: { select: { id: true, code: true, name: true } },
+              role: {
+                select: { id: true, code: true, name: true },
+                include: { department: { select: { name: true } } },
+              },
             },
           },
         },
@@ -52,6 +55,7 @@ export async function GET(request: NextRequest) {
         id: ur.role.id,
         code: ur.role.code,
         name: ur.role.name,
+        departmentName: (ur.role as any).department?.name || null,
       })),
     }));
 
@@ -83,6 +87,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "该用户名已存在" }, { status: 409 });
     }
 
+    // 自动从角色获取部门：前端传了 priority，否则取第一个角色所属部门
+    let userDepartment = department?.trim() || null;
+    if (!userDepartment && roleIds && roleIds.length > 0) {
+      const firstRole = await prisma.role.findUnique({
+        where: { id: roleIds[0] },
+        include: { department: { select: { name: true } } },
+      });
+      userDepartment = firstRole?.department?.name || null;
+    }
+
     const user = await prisma.user.create({
       data: {
         username: username.trim(),
@@ -90,7 +104,7 @@ export async function POST(request: NextRequest) {
         realName: realName.trim(),
         phone: phone?.trim() || null,
         email: email?.trim() || null,
-        department: department?.trim() || null,
+        department: userDepartment,
         signatureUrl: signatureUrl || null,
         avatarUrl: avatarUrl || null,
         role: roleIds && roleIds.length > 0 ? "custom" : "staff",

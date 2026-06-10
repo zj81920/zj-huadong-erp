@@ -63,6 +63,7 @@ model User {
   approvalActions            ApprovalAction[]
   designTasksAssigned        DesignTask[]
   projectPlansResponsible    ProjectPlan[]
+  wbsNodesResponsible        ProjectWbsNode[]
   delegatedByMe              ApprovalDelegate[]   @relation("Delegator")
   delegatedToMe              ApprovalDelegate[]   @relation("DelegateTo")
   projectsAsDesignManager    Project[]            @relation("DesignManager")
@@ -317,6 +318,7 @@ model Project {
   lastModifiedBy     String?   @map("last_modified_by")
   createdById        String?   @map("created_by")
   organizationId     String?   @map("organization_id")
+  designPhases       String?   @map("design_phases")
 
   customer            Customer             @relation(fields: [customerId], references: [id])
   projectLead         ProjectLead          @relation(fields: [projectSourceId], references: [projectSourceId])
@@ -324,7 +326,7 @@ model Project {
   supervisorLeader    User?                @relation("SupervisorLeader", fields: [supervisorLeaderId], references: [id])
   organization        Organization?        @relation(fields: [organizationId], references: [id])
   plans               ProjectPlan[]
-  progressRecords     ProjectProgress[]
+  wbsNodes            ProjectWbsNode[]
   designTasks         DesignTask[]
   outsourcingTasks    OutsourcingTask[]
   purchaseRequests    PurchaseRequest[]
@@ -364,21 +366,48 @@ model ProjectPlan {
   @@map("project_plans")
 }
 
-model ProjectProgress {
-  id                String   @id @default(cuid())
-  projectSourceId   String   @map("project_source_id")
-  taskNode          String   @map("task_node")
-  plannedPercentage Int      @default(0) @map("planned_percentage")
-  actualPercentage  Int      @default(0) @map("actual_percentage")
-  delayDays         Int      @default(0) @map("delay_days")
-  alertStatus       String   @default("正常") @map("alert_status")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-  lastModifiedBy    String?  @map("last_modified_by")
+model ProjectWbsNode {
+  id              String    @id @default(cuid())
+  projectSourceId String    @map("project_source_id")
+  parentId        String?   @map("parent_id")
+  level           Int       @map("level")
+  name            String    @map("name")
+  disciplineCode  String?   @map("discipline_code")
+  isMilestone     Boolean   @default(false) @map("is_milestone")
+  plannedPct      Int       @default(0)      @map("planned_pct")
+  actualPct       Int       @default(0)      @map("actual_pct")
+  delayDays       Int       @default(0)      @map("delay_days")
+  alertStatus     String    @default("正常")  @map("alert_status")
+  responsibleId   String?   @map("responsible_id")
+  status          String    @default("未开始") @map("status")
+  startDate       DateTime? @map("start_date")
+  endDate         DateTime? @map("end_date")
+  sortOrder       Int       @default(0)      @map("sort_order")
+  version         Int       @default(1)
+  lastModifiedBy  String?   @map("last_modified_by")
+  createdAt       DateTime  @default(now())  @map("created_at")
+  updatedAt       DateTime  @updatedAt       @map("updated_at")
 
-  project Project @relation(fields: [projectSourceId], references: [projectSourceId])
+  project           Project             @relation(fields: [projectSourceId], references: [projectSourceId])
+  parent            ProjectWbsNode?     @relation("WbsHierarchy", fields: [parentId], references: [id])
+  children          ProjectWbsNode[]    @relation("WbsHierarchy")
+  responsiblePerson User?               @relation(fields: [responsibleId], references: [id])
 
-  @@map("project_progress")
+  @@index([projectSourceId])
+  @@index([parentId])
+  @@map("project_wbs_nodes")
+}
+
+model DisciplineDictionary {
+  id        String   @id @default(cuid())
+  code      String   @unique          @map("code")
+  name      String                    @map("name")
+  sortOrder Int      @default(0)      @map("sort_order")
+  isActive  Boolean  @default(true)   @map("is_active")
+  createdAt DateTime @default(now())  @map("created_at")
+  updatedAt DateTime @updatedAt       @map("updated_at")
+
+  @@map("discipline_dictionaries")
 }
 
 model DesignTask {

@@ -212,12 +212,11 @@ export async function DELETE(
       if (existing.project) {
         const proj = await tx.project.findUnique({
           where: { id: existing.project.id },
-          include: { _count: { select: { plans: true, progressRecords: true, designTasks: true, outsourcingTasks: true, purchaseRequests: true, budgets: true, incomeContracts: true, expenseContracts: true, expenseReports: true, receivables: true, payables: true, nonContractIncomes: true, nonContractExpenses: true, invoices: true } } },
+          include: { _count: { select: { plans: true, designTasks: true, outsourcingTasks: true, purchaseRequests: true, budgets: true, incomeContracts: true, expenseContracts: true, expenseReports: true, receivables: true, payables: true, nonContractIncomes: true, nonContractExpenses: true, invoices: true } } },
         });
         if (proj) {
           const psid = proj.projectSourceId;
           if (proj._count.plans > 0) await tx.projectPlan.deleteMany({ where: { projectSourceId: psid } });
-          if (proj._count.progressRecords > 0) await tx.projectProgress.deleteMany({ where: { projectSourceId: psid } });
           if (proj._count.designTasks > 0) await tx.designTask.deleteMany({ where: { projectSourceId: psid } });
           if (proj._count.outsourcingTasks > 0) await tx.outsourcingTask.deleteMany({ where: { projectSourceId: psid } });
           if (proj._count.purchaseRequests > 0) await tx.purchaseRequest.deleteMany({ where: { projectSourceId: psid } });

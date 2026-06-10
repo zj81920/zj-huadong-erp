@@ -1,0 +1,171 @@
+<h2>WBS层级结构设计 — 确认理解</h2>
+<p class="subtitle">将扁平列表改造为4级WBS树形结构</p>
+
+<div class="section">
+  <h3>整体结构</h3>
+  <div class="mockup">
+    <div class="mockup-header">WBS 层级示意</div>
+    <div class="mockup-body" style="padding:16px">
+      <div style="font-family:monospace;font-size:13px;line-height:1.8">
+        <div style="color:#2563eb;font-weight:bold">
+          ━ 一级节点：设计阶段 <span style="color:#6b7280;font-weight:normal;font-size:11px">（立项时勾选）</span>
+        </div>
+        <div style="margin-left:24px;color:#7c3aed">
+          ━ 二级节点：子项 <span style="color:#6b7280;font-weight:normal;font-size:11px">（计划页手动创建）</span>
+        </div>
+        <div style="margin-left:48px;color:#d97706">
+          ━ 三级节点：专业 <span style="color:#6b7280;font-weight:normal;font-size:11px">（从专业字典读取）</span>
+        </div>
+        <div style="margin-left:72px;color:#059669">
+          ━ 四级节点：任务 <span style="color:#6b7280;font-weight:normal;font-size:11px">（手动创建）</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>1. 项目立项 — 选择设计阶段</h3>
+  <div class="mockup">
+    <div class="mockup-header">项目创建/编辑弹窗 · 新增"设计阶段"多选</div>
+    <div class="mockup-body" style="padding:16px">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:2px solid #2563eb;border-radius:8px;background:#eff6ff;cursor:pointer">
+          <input type="checkbox" checked style="accent-color:#2563eb" />
+          <span style="font-size:13px;font-weight:600">方案设计</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:2px solid #2563eb;border-radius:8px;background:#eff6ff;cursor:pointer">
+          <input type="checkbox" checked style="accent-color:#2563eb" />
+          <span style="font-size:13px;font-weight:600">初步设计</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:2px solid #d1d5db;border-radius:8px;background:#fff;cursor:pointer">
+          <input type="checkbox" style="accent-color:#2563eb" />
+          <span style="font-size:13px;color:#9ca3af">详细设计</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:2px solid #d1d5db;border-radius:8px;background:#fff;cursor:pointer">
+          <input type="checkbox" style="accent-color:#2563eb" />
+          <span style="font-size:13px;color:#9ca3af">竣工图设计</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:2px solid #d1d5db;border-radius:8px;background:#fff;cursor:pointer">
+          <input type="checkbox" style="accent-color:#2563eb" />
+          <span style="font-size:13px;color:#9ca3af">采购</span>
+          <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:1px 5px;border-radius:3px">EP/EPcm</span>
+        </label>
+      </div>
+      <div style="font-size:12px;color:#6b7280;background:#f9fafb;padding:8px 12px;border-radius:6px">
+        <strong>规则：</strong>项目A勾选了"方案设计"和"初步设计" → 项目计划页的一级节点只有这两个
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2. 计划页面 — WBS树形展示</h3>
+  <div class="mockup">
+    <div class="mockup-header">项目计划与进度 · 树形视图</div>
+    <div class="mockup-body" style="padding:16px">
+      <!-- 树形结构 -->
+      <div style="font-size:13px;font-family:monospace;line-height:2.2">
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:#eff6ff;border-radius:6px;margin-bottom:2px;cursor:pointer">
+          <span>▼</span>
+          <span style="color:#2563eb;font-weight:bold">方案设计</span>
+          <span style="font-size:11px;color:#6b7280;font-weight:normal">计划80% · 实际45% · 滞后35天</span>
+          <span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:1px 8px;border-radius:4px">滞后</span>
+        </div>
+        <div style="margin-left:24px">
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 10px;background:#f5f3ff;border-radius:4px;margin-bottom:2px;cursor:pointer">
+            <span>▶</span>
+            <span style="color:#7c3aed">#101 反应工段</span>
+            <span style="font-size:11px;color:#6b7280;font-weight:normal">(子项)</span>
+          </div>
+          <div style="margin-left:24px">
+            <div style="display:flex;align-items:center;gap:6px;padding:3px 10px;cursor:pointer;color:#d97706">
+              <span>·</span>
+              <span>工艺</span>
+              <span style="font-size:10px;color:#6b7280">(专业)</span>
+              <span style="margin-left:auto;font-size:11px;color:#6b7280">P:100% A:100%</span>
+            </div>
+            <div style="margin-left:24px">
+              <div style="display:flex;align-items:center;gap:6px;padding:2px 10px;font-size:12px;color:#059669;cursor:pointer">
+                <span>⁃</span>
+                <span>P&amp;ID流程图绘制</span>
+                <span style="font-size:10px;color:#6b7280">(任务)</span>
+                <span style="margin-left:auto;font-size:11px;color:#16a34a">已完成</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;padding:2px 10px;font-size:12px;color:#059669;cursor:pointer">
+                <span>⁃</span>
+                <span>物料衡算</span>
+                <span style="font-size:10px;color:#6b7280">(任务)</span>
+                <span style="margin-left:auto;font-size:11px;color:#16a34a">已完成</span>
+              </div>
+            </div>
+            <div style="margin-left:0;padding:3px 10px;cursor:pointer;color:#d97706">
+              <span>·</span>
+              <span>管道</span>
+              <span style="font-size:10px;color:#6b7280">(专业)</span>
+              <span style="margin-left:auto;font-size:11px;color:#6b7280">P:80% A:30%</span>
+            </div>
+            <div style="margin-left:24px">
+              <div style="display:flex;align-items:center;gap:6px;padding:2px 10px;font-size:12px;color:#059669;cursor:pointer">
+                <span>⁃</span>
+                <span>管道平面布置图</span>
+                <span style="margin-left:auto;font-size:11px;color:#d97706">进行中</span>
+              </div>
+            </div>
+          </div>
+          <!-- 第二个子项 -->
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 10px;background:#f5f3ff;border-radius:4px;margin-bottom:2px;cursor:pointer">
+            <span>▶</span>
+            <span style="color:#7c3aed">#102 精馏工段</span>
+            <span style="font-size:11px;color:#6b7280">(子项)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3. 专业字典（系统设置）</h3>
+  <div class="mockup">
+    <div class="mockup-header">系统设置 → 专业字典</div>
+    <div class="mockup-body" style="padding:16px">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" placeholder="专业名称" style="flex:1;padding:6px 10px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px" />
+        <button style="padding:6px 16px;background:#1C1917;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">新增</button>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="border-bottom:2px solid #e5e7eb">
+            <th style="text-align:left;padding:6px;color:#6b7280;font-size:11px">编码</th>
+            <th style="text-align:left;padding:6px;color:#6b7280;font-size:11px">专业名称</th>
+            <th style="text-align:left;padding:6px;color:#6b7280;font-size:11px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px;font-family:monospace">PROC</td><td>工艺</td><td><span style="color:#dc2626;cursor:pointer">删除</span></td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px;font-family:monospace">PIPE</td><td>管道</td><td><span style="color:#dc2626;cursor:pointer">删除</span></td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px;font-family:monospace">ELEC</td><td>电气</td><td><span style="color:#dc2626;cursor:pointer">删除</span></td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px;font-family:monospace">INSTR</td><td>仪表</td><td><span style="color:#dc2626;cursor:pointer">删除</span></td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px;font-family:monospace">CIVIL</td><td>土建</td><td><span style="color:#dc2626;cursor:pointer">删除</span></td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:6px;font-family:monospace">STRUCT</td><td>结构</td><td><span style="color:#dc2626;cursor:pointer">删除</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:12px">
+  <h3>需要确认的关键问题</h3>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="padding:10px 14px;background:#f0f9ff;border-left:3px solid #3b82f6;border-radius:4px;font-size:13px">
+      <strong>Q1：</strong> 4级节点（任务）是否也要有进度（计划%/实际%）和负责人？还是只到3级节点（专业）为止？
+    </div>
+    <div style="padding:10px 14px;background:#f0f9ff;border-left:3px solid #3b82f6;border-radius:4px;font-size:13px">
+      <strong>Q2：</strong> 二级节点（子项）是在计划页面手动创建，标准是什么？比如子项列表是从项目的"子项"信息来的吗？
+    </div>
+    <div style="padding:10px 14px;background:#f0f9ff;border-left:3px solid #3b82f6;border-radius:4px;font-size:13px">
+      <strong>Q3：</strong> 目前 Plan 的 planType（里程碑/设计/采购）是否被新的WBS结构完全替代？还是里程碑仍然保留作为一个独立的概念？
+    </div>
+  </div>
+</div>

@@ -75,8 +75,7 @@ export const SUB_MODULE_MAP: Record<SubModuleKey, { parent: string; label: strin
   "business.biddings": { parent: "business", label: "投标统计" },
   "business.quotations": { parent: "business", label: "报价统计" },
   "projects.list": { parent: "projects", label: "项目立项" },
-  "projects.plans": { parent: "projects", label: "项目计划" },
-  "projects.progress": { parent: "projects", label: "项目进度" },
+  "projects.plans": { parent: "projects", label: "项目WBS计划" },
   "projects.outsourcing": { parent: "projects", label: "设计外包" },
   "procurement.requests": { parent: "procurement", label: "采购需求" },
   "procurement.inquiries": { parent: "procurement", label: "采购单" },
@@ -115,8 +114,7 @@ export const MODULE_SUB_ITEMS: Record<ModuleKey, { key: SubModuleKey; label: str
   ],
   projects: [
     { key: "projects.list", label: "项目立项" },
-    { key: "projects.plans", label: "项目计划" },
-    { key: "projects.progress", label: "项目进度" },
+    { key: "projects.plans", label: "项目WBS计划" },
     { key: "projects.outsourcing", label: "设计外包" },
   ],
   procurement: [
@@ -291,7 +289,6 @@ export const API_TO_SUB_MODULE: Record<string, SubModuleKey> = {
   "inter_org_contract": "contracts.income",
   "supplier_change": "business.suppliers",
   "contract_change_order": "contracts.income",
-  "projects.progress": "projects.progress",
   "bank_account": "finance.bank_accounts",
   "projects.plans": "projects.plans",
   "project_lead": "business.project_leads",

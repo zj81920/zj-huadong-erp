@@ -24,6 +24,7 @@ interface Role {
   id: string;
   name: string;
   description?: string;
+  departmentName?: string;
 }
 
 interface UserItem {
@@ -48,7 +49,6 @@ interface UserFormData {
   password: string;
   phone: string;
   email: string;
-  department: string;
   roleIds: string[];
   signatureUrl: string;
   avatarUrl: string;
@@ -60,7 +60,6 @@ const emptyForm: UserFormData = {
   password: "",
   phone: "",
   email: "",
-  department: "",
   roleIds: [],
   signatureUrl: "",
   avatarUrl: "",
@@ -158,7 +157,6 @@ export default function UsersSettingsPage() {
       password: "",
       phone: item.phone || "",
       email: item.email || "",
-      department: item.department || "",
       roleIds: item.roles.map((r) => r.id),
       signatureUrl: item.signatureUrl || "",
       avatarUrl: item.avatarUrl || "",
@@ -187,12 +185,17 @@ export default function UsersSettingsPage() {
     setFormError("");
 
     try {
+      // 从所选角色的部门自动映射
+      const derivedDepartment = form.roleIds.length > 0
+        ? roles.find((r) => r.id === form.roleIds[0])?.departmentName || null
+        : null;
+
       const payload: Record<string, unknown> = {
         username: form.username.trim(),
         realName: form.realName.trim(),
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,
-        department: form.department.trim() || null,
+        department: derivedDepartment,
         roleIds: form.roleIds,
         signatureUrl: form.signatureUrl || null,
         avatarUrl: form.avatarUrl || null,
@@ -612,13 +615,11 @@ export default function UsersSettingsPage() {
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 部门
               </label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入部门"
-                value={form.department}
-                onChange={(e) => updateForm("department", e.target.value)}
-              />
+              <div className="ios-input bg-[#F5F5F7] text-[#78716C] flex items-center h-[44px] px-4 rounded-xl text-[15px]">
+                {form.roleIds.length > 0
+                  ? roles.find((r) => r.id === form.roleIds[0])?.departmentName || <span className="text-[#C0BAB4]">所选角色未设置部门</span>
+                  : <span className="text-[#C0BAB4]">请先选择角色（自动映射）</span>}
+              </div>
             </div>
           </div>
 

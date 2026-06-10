@@ -1,0 +1,155 @@
+<h2>合并后的「项目计划与进度」模块 — 页面布局设计</h2>
+<p class="subtitle">将计划编排与进度监控整合到一个页面，以下为三种设计方案的对比</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>方案A：增强列表视图</h3>
+      <p>在现有项目计划列表的基础上，每行增加进度对比条（计划% vs 实际%）、滞后天数、预警状态标签。筛选条件增加进度相关的选项。</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>优点</h4><ul><li>改动最小，当前代码结构变化少</li><li>用户对现有布局已熟悉</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>信息密度高，长列表阅读负担大</li></ul></div>
+      </div>
+      <div class="placeholder" style="margin-top:12px;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px;text-align:center;padding:16px">
+        <div style="width:100%;max-width:600px;text-align:left">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;color:#666">
+            <span>施工图设计</span>
+            <span>计划: 80% | 实际: 45% | 滞后: +35天</span>
+          </div>
+          <div style="display:flex;gap:4px;height:12px;margin-bottom:12px">
+            <div style="flex:1;background:#e5e7eb;border-radius:6px;overflow:hidden;position:relative">
+              <div style="width:80%;height:100%;background:#93c5fd;border-radius:6px"></div>
+            </div>
+            <div style="flex:1;background:#e5e7eb;border-radius:6px;overflow:hidden;position:relative">
+              <div style="width:45%;height:100%;background:#ef4444;border-radius:6px"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;font-size:11px;margin-bottom:8px">
+            <span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px">里程碑</span>
+            <span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:4px;animation:pulse 2s infinite">滞后</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#999;border-top:1px solid #f3f4f6;padding-top:6px">
+            <span>2026-01-15 ~ 2026-06-30</span>
+            <span>负责人: 张三</span>
+            <span>v2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>方案B：卡片+甘特视图</h3>
+      <p>顶部为统计卡片（待执行/进行中/已完成/滞后），中部为甘特图时间轴展示各计划项，下部为选中项的详细进度面板。</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>优点</h4><ul><li>时间维度直观，进度偏差一目了然</li><li>信息分层，视觉清晰</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>开发工作量大</li><li>需要甘特图组件</li></ul></div>
+      </div>
+      <div class="placeholder" style="margin-top:12px;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px;text-align:center;padding:16px">
+        <div style="width:100%;max-width:600px;text-align:left">
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <div style="flex:1;padding:8px;background:#f0fdf4;border-radius:6px;text-align:center;border:1px solid #bbf7d0">
+              <div style="font-size:20px;font-weight:bold;color:#16a34a">8</div>
+              <div style="font-size:10px;color:#666">进行中</div>
+            </div>
+            <div style="flex:1;padding:8px;background:#f0f9ff;border-radius:6px;text-align:center;border:1px solid #bae6fd">
+              <div style="font-size:20px;font-weight:bold;color:#2563eb">12</div>
+              <div style="font-size:10px;color:#666">已完成</div>
+            </div>
+            <div style="flex:1;padding:8px;background:#fef2f2;border-radius:6px;text-align:center;border:1px solid #fecaca">
+              <div style="font-size:20px;font-weight:bold;color:#dc2626">3</div>
+              <div style="font-size:10px;color:#666">滞后</div>
+            </div>
+          </div>
+          <div style="background:#f9fafb;border-radius:6px;padding:12px">
+            <div style="font-size:12px;font-weight:bold;margin-bottom:8px;color:#374151">2026年6月 甘特视图</div>
+            <div style="display:flex;gap:2px;margin-bottom:4px;font-size:10px;color:#9ca3af">
+              <span style="width:120px">任务</span>
+              <span style="flex:1;display:flex;justify-content:space-between">
+                <span>1月</span><span>2月</span><span>3月</span><span>4月</span><span>5月</span><span>6月</span>
+              </span>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
+              <span style="width:120px;font-size:11px">基础设计</span>
+              <div style="flex:1;height:16px;background:#e5e7eb;border-radius:3px;position:relative;overflow:hidden">
+                <div style="width:70%;height:100%;background:#3b82f6;border-radius:3px"></div>
+                <div style="width:55%;height:4px;background:#ef4444;border-radius:2px;position:absolute;top:6px"></div>
+              </div>
+              <span style="font-size:10px;color:#dc2626;width:40px;text-align:right">滞15天</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
+              <span style="width:120px;font-size:11px">详细设计</span>
+              <div style="flex:1;height:16px;background:#e5e7eb;border-radius:3px;position:relative;overflow:hidden">
+                <div style="width:40%;height:100%;background:#3b82f6;border-radius:3px"></div>
+                <div style="width:35%;height:4px;background:#f59e0b;border-radius:2px;position:absolute;top:6px"></div>
+              </div>
+              <span style="font-size:10px;color:#f59e0b;width:40px;text-align:right">滞5天</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="width:120px;font-size:11px">采购评审</span>
+              <div style="flex:1;height:16px;background:#e5e7eb;border-radius:3px;position:relative;overflow:hidden">
+                <div style="width:10%;height:100%;background:#3b82f6;border-radius:3px"></div>
+              </div>
+              <span style="font-size:10px;color:#22c55e;width:40px;text-align:right">正常</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>方案C：分栏布局</h3>
+      <p>左侧为项目计划列表/树形结构，右侧为选中计划项的详细进度面板（含双进度条、偏差趋势、操作按钮）。类似邮件客户端布局。</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>优点</h4><ul><li>浏览+详情同时展示</li><li>操作效率高</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>小屏体验差</li><li>列表区域受限</li></ul></div>
+      </div>
+      <div class="placeholder" style="margin-top:12px;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px;text-align:center;padding:16px">
+        <div style="width:100%;max-width:600px;display:flex;gap:8px;height:180px">
+          <div style="flex:1;background:#f9fafb;border-radius:6px;padding:8px;border:1px solid #e5e7eb;overflow:hidden">
+            <div style="font-size:11px;font-weight:bold;color:#374151;margin-bottom:6px">计划列表</div>
+            <div style="padding:4px 6px;background:#dbeafe;border-radius:4px;margin-bottom:2px;font-size:10px;border-left:3px solid #3b82f6">▶ 基础设计</div>
+            <div style="padding:4px 6px;margin-bottom:2px;font-size:10px;color:#6b7280"> 详细设计</div>
+            <div style="padding:4px 6px;margin-bottom:2px;font-size:10px;color:#6b7280"> 采购评审</div>
+            <div style="padding:4px 6px;margin-bottom:2px;font-size:10px;color:#6b7280"> 施工图设计</div>
+            <div style="padding:4px 6px;margin-bottom:2px;font-size:10px;color:#6b7280"> 竣工验收</div>
+          </div>
+          <div style="flex:2;background:#fff;border-radius:6px;padding:8px;border:1px solid #e5e7eb">
+            <div style="font-size:11px;font-weight:bold;color:#374151;margin-bottom:6px">详情 · 基础设计</div>
+            <div style="font-size:10px;margin-bottom:4px;color:#6b7280">类型: 设计  |  负责人: 李四  |  期限: 2026-02-01 ~ 2026-05-30</div>
+            <div style="margin-bottom:4px">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#666;margin-bottom:2px">
+                <span>计划进度</span><span>70%</span>
+              </div>
+              <div style="height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden">
+                <div style="width:70%;height:100%;background:#3b82f6;border-radius:4px"></div>
+              </div>
+            </div>
+            <div style="margin-bottom:4px">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#666;margin-bottom:2px">
+                <span>实际进度</span><span>45%</span>
+              </div>
+              <div style="height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden">
+                <div style="width:45%;height:100%;background:#ef4444;border-radius:4px"></div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px">
+              <span style="color:#dc2626">滞后: 25天</span>
+              <span style="background:#fef2f2;color:#dc2626;padding:1px 6px;border-radius:3px">预警: 滞后</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px;padding:12px;background:#f0f9ff;border-left:3px solid #3b82f6;border-radius:4px">
+  <p style="margin:0;font-size:13px"><strong>当前你用的是方案A</strong>（增强列表视图），因为现有项目计划页面已经是列表布局，方案A改动最小且符合现有UI模式。请点击选择你倾向的方案，或告诉我你的想法。</p>
+</div>

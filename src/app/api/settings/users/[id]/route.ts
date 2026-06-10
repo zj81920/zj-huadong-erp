@@ -34,6 +34,15 @@ export async function PUT(
         };
       }
       updateData.role = roleIds.length > 0 ? "custom" : "staff";
+
+      // 自动从角色获取部门映射
+      const firstRole = roleIds.length > 0
+        ? await prisma.role.findUnique({
+            where: { id: roleIds[0] },
+            include: { department: { select: { name: true } } },
+          })
+        : null;
+      updateData.department = firstRole?.department?.name || null;
     }
 
     const user = await prisma.user.update({
@@ -41,7 +50,12 @@ export async function PUT(
       data: updateData,
       include: {
         userRoles: {
-          include: { role: { select: { id: true, code: true, name: true } } },
+          include: {
+            role: {
+              select: { id: true, code: true, name: true },
+              include: { department: { select: { name: true } } },
+            },
+          },
         },
       },
     });

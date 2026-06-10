@@ -19,7 +19,6 @@ export async function GET(
         _count: {
           select: {
             plans: true,
-            progressRecords: true,
             designTasks: true,
             outsourcingTasks: true,
             purchaseRequests: true,
@@ -187,7 +186,6 @@ export async function DELETE(
         _count: {
           select: {
             plans: true,
-            progressRecords: true,
             designTasks: true,
             outsourcingTasks: true,
             purchaseRequests: true,
@@ -238,7 +236,6 @@ export async function DELETE(
       const psid = existing.projectSourceId;
 
       if (existing._count.plans > 0) await tx.projectPlan.deleteMany({ where: { projectSourceId: psid } });
-      if (existing._count.progressRecords > 0) await tx.projectProgress.deleteMany({ where: { projectSourceId: psid } });
       if (existing._count.designTasks > 0) await tx.designTask.deleteMany({ where: { projectSourceId: psid } });
       if (existing._count.outsourcingTasks > 0) await tx.outsourcingTask.deleteMany({ where: { projectSourceId: psid } });
       if (existing._count.purchaseRequests > 0) await tx.purchaseRequest.deleteMany({ where: { projectSourceId: psid } });

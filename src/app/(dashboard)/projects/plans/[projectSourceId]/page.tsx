@@ -39,6 +39,7 @@ interface WbsNodeRaw {
   sortOrder: number;
   version: number;
   responsiblePerson: { id: string; realName: string } | null;
+  [key: string]: unknown;
 }
 
 interface ProjectInfo {
