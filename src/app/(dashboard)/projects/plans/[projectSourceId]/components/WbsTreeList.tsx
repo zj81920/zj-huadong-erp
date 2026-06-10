@@ -11,6 +11,7 @@ import type { WbsTreeNode } from "@/lib/wbs-utils";
 import AIStatusBadge from "./AIStatusBadge";
 import ProgressDialog from "./ProgressDialog";
 import NodeEditDialog from "./NodeEditDialog";
+import ResponsibleSelect from "./ResponsibleSelect";
 
 /* ---------- 类型 ---------- */
 
@@ -47,11 +48,11 @@ interface Props {
 
 /* ---------- 辅助 ---------- */
 
-const LEVEL_COLORS: Record<number, { bg: string; color: string; label: string }> = {
-  1: { bg: "#1C1917", color: "#fff", label: "阶段" },
-  2: { bg: "#3B82F6", color: "#fff", label: "子项" },
-  3: { bg: "#8B5CF6", color: "#fff", label: "专业" },
-  4: { bg: "#22C55E", color: "#fff", label: "任务" },
+const LEVEL_COLORS: Record<number, { color: string; label: string }> = {
+  1: { color: "#333", label: "阶段" },
+  2: { color: "#4A6FA5", label: "子项" },
+  3: { color: "#6B5EA5", label: "专业" },
+  4: { color: "#4A8C5C", label: "任务" },
 };
 
 function fmtDate(d: string | null | undefined): string {
@@ -84,20 +85,6 @@ function collectLeafDates(
   return result;
 }
 
-/** 取聚合时间范围 min~max */
-function aggRange(dates: { planStart: string; planEnd: string; actualStart?: string; actualEnd?: string }[]) {
-  const starts = dates.map((d) => d.planStart).filter(Boolean);
-  const ends = dates.map((d) => d.planEnd).filter(Boolean);
-  const aStarts = dates.map((d) => d.actualStart).filter(Boolean) as string[];
-  const aEnds = dates.map((d) => d.actualEnd).filter(Boolean) as string[];
-  return {
-    planStart: starts.length ? starts.reduce((a, b) => (a < b ? a : b)) : "",
-    planEnd: ends.length ? ends.reduce((a, b) => (a > b ? a : b)) : "",
-    actualStart: aStarts.length ? aStarts.reduce((a, b) => (a < b ? a : b)) : "",
-    actualEnd: aEnds.length ? aEnds.reduce((a, b) => (a > b ? a : b)) : "",
-  };
-}
-
 /* ========== 主组件 ========== */
 
 export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRefresh }: Props) {
@@ -124,16 +111,11 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
   const [editingLogId, setEditingLogId] = useState<string | null>(null);
   const [editLogText, setEditLogText] = useState("");
 
-  /* 操作菜单 */
-  const [actionMenuNodeId, setActionMenuNodeId] = useState<string | null>(null);
-
-  // 点击菜单外部关闭
-  useEffect(() => {
-    if (!actionMenuNodeId) return;
-    const handler = (e: MouseEvent) => setActionMenuNodeId(null);
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
-  }, [actionMenuNodeId]);
+  const btnStyle: React.CSSProperties = {
+    padding: "3px 8px", border: "1px solid #D6D3D1",
+    background: "none", borderRadius: 4, cursor: "pointer",
+    fontSize: 11, color: "#57534E", whiteSpace: "nowrap",
+  };
 
   const toggleExpand = useCallback((id: string) => {
     setExpandedIds((prev) => {
@@ -189,31 +171,18 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
 
   /* ---------- 渲染行 ---------- */
 
-  const menuItemStyle: React.CSSProperties = {
-    display: "block", width: "100%", padding: "6px 14px",
-    border: "none", background: "none", cursor: "pointer",
-    fontSize: 13, textAlign: "left" as const, color: "#1C1917",
-  };
-
   function renderRow(node: WbsTreeNode, depth: number) {
     const hasChildren = node.children && node.children.length > 0;
     const isExpanded = expandedIds.has(node.id);
     const raw = node as unknown as WbsNode;
     const level = node.level;
-    const lvl = LEVEL_COLORS[level] || { bg: "#A8A29E", color: "#fff", label: `L${level}` };
+    const lvl = LEVEL_COLORS[level] || { color: "#A8A29E", label: `L${level}` };
 
-    // 计算时间
-    let planTime = "";
-    let actualTime = "";
     let aiStatus;
     let progressPct = raw.progress ?? raw.actualPct ?? 0;
     let plannedPct = raw.plannedPct ?? 0;
 
     if (level === 4) {
-      planTime = raw.planStartDate && raw.planEndDate
-        ? `${fmtDate(raw.planStartDate)} ~ ${fmtDate(raw.planEndDate)}` : "-";
-      actualTime = raw.actualStartDate && raw.actualEndDate
-        ? `${fmtDate(raw.actualStartDate)} ~ ${fmtDate(raw.actualEndDate)}` : "-";
       aiStatus = judgeTaskStatus({
         planStart: (raw.planStartDate as string) || "",
         planEnd: (raw.planEndDate as string) || "",
@@ -222,18 +191,10 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
         pct: progressPct,
       });
     } else {
-      // 聚合子节点
+      // 聚合子节点时间范围与进度
       const leafDates = collectLeafDates(node);
-      const range = aggRange(leafDates);
-      planTime = range.planStart && range.planEnd ? `${fmtDate(range.planStart)} ~ ${fmtDate(range.planEnd)}` : "-";
-      actualTime = range.actualStart && range.actualEnd ? `${fmtDate(range.actualStart)} ~ ${fmtDate(range.actualEnd)}` : "-";
       if (leafDates.length > 0) {
         aiStatus = judgeParentStatus(leafDates);
-      } else {
-        aiStatus = { status: "none" as const, label: "-", reason: "无任务" };
-      }
-      // 聚合进度
-      if (leafDates.length > 0) {
         const progData = leafDates.map((l) => {
           const ps = l.planStart ? calcPlanProgress(new Date(l.planStart), new Date(l.planEnd), new Date()) : 0;
           return { plannedPct: ps, actualPct: l.pct ?? 0 };
@@ -241,6 +202,8 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
         const agg = summarizeProgress(progData);
         plannedPct = agg.plannedPct;
         progressPct = agg.actualPct;
+      } else {
+        aiStatus = { status: "none" as const, label: "-", reason: "无任务" };
       }
     }
 
@@ -251,115 +214,114 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
         {/* 主行 */}
         <div
           style={{
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "8px 12px", borderBottom: "1px solid #F5F5F4",
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "6px 12px", borderBottom: "1px solid #E7E5E4",
             background: depth === 0 ? "#FAFAF9" : "#fff",
             paddingLeft: depth * 28 + 12,
-            minHeight: 42,
+            minHeight: 38,
+            transition: "background 0.15s",
           }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = depth === 0 ? "#F5F5F4" : "#FAFAF9"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = depth === 0 ? "#FAFAF9" : "#fff"; }}
         >
           {/* 展开/折叠 */}
           <button
             onClick={() => hasChildren && toggleExpand(node.id)}
             style={{
-              width: 20, height: 20, display: "flex", alignItems: "center",
+              width: 18, height: 18, display: "flex", alignItems: "center",
               justifyContent: "center", border: "none", background: "none",
-              cursor: hasChildren ? "pointer" : "default", color: "#78716C",
-              fontSize: 12, flexShrink: 0,
+              cursor: hasChildren ? "pointer" : "default", color: "#A8A29E",
+              fontSize: 10, flexShrink: 0,
             }}
           >
             {hasChildren ? (isExpanded ? "▼" : "▶") : "·"}
           </button>
 
-          {/* 层级徽章 */}
+          {/* 层级文字标签 */}
           <span style={{
-            display: "inline-block", padding: "2px 8px", borderRadius: 4,
-            fontSize: 11, fontWeight: 600, background: lvl.bg, color: lvl.color,
-            flexShrink: 0,
+            fontSize: 12, fontWeight: 600, color: lvl.color, flexShrink: 0, minWidth: 32,
           }}>
             {lvl.label}
           </span>
 
           {/* 名称 */}
-          <span style={{ fontSize: 13, fontWeight: 500, color: "#1C1917", minWidth: 80, flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ flex: 1, fontSize: 13, fontWeight: depth === 0 ? 600 : 400, color: depth === 0 ? "#1C1917" : "#44403C", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {node.name}
           </span>
 
-          {/* 负责人 */}
-          {raw.responsiblePerson && (
-            <span style={{ fontSize: 12, color: "#78716C", flexShrink: 0 }}>
-              {raw.responsiblePerson.realName}
-            </span>
-          )}
+          {/* 负责人 - L3/L4 支持搜索下拉 */}
+          <div style={{ flexShrink: 0, minWidth: 70 }}>
+            {(level === 3 || level === 4) ? (
+              <ResponsibleSelect
+                nodeId={node.id}
+                projectSourceId={projectSourceId}
+                currentResponsible={raw.responsiblePerson || null}
+                onChanged={onRefresh}
+              />
+            ) : (
+              raw.responsiblePerson && (
+                <span style={{ fontSize: 12, color: "#78716C" }}>
+                  {raw.responsiblePerson.realName}
+                </span>
+              )
+            )}
+          </div>
 
-          {/* 计划时间 */}
-          <span style={{ fontSize: 11, color: "#78716C", flexShrink: 0, minWidth: 150 }}>
-            📅 {planTime}
-          </span>
-
-          {/* 实际时间 */}
-          <span style={{ fontSize: 11, color: "#78716C", flexShrink: 0, minWidth: 150 }}>
-            🏁 {actualTime}
-          </span>
-
-          {/* 进度条 */}
-          <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, width: 90 }}>
-            <div style={{ flex: 1, height: 6, borderRadius: 3, background: "#F5F5F4", position: "relative", overflow: "hidden" }}>
-              {/* 计划进度底 */}
-              <div style={{ position: "absolute", inset: 0, background: "#BFDBFE", borderRadius: 3, width: `${Math.min(100, Math.max(0, plannedPct))}%` }} />
-              {/* 实际进度 */}
-              <div style={{
-                position: "absolute", top: 0, bottom: 0, left: 0, borderRadius: 3,
-                background: aiStatus?.status === "delayed" ? "#DC2626" : "#22C55E",
-                width: `${Math.min(100, Math.max(0, progressPct))}%`,
-              }} />
+          {/* 进度对比条 */}
+          <div style={{ flexShrink: 0, width: 100 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ flex: 1, height: 5, borderRadius: 2, background: "#E7E5E4", position: "relative", overflow: "hidden" }}>
+                {/* 计划进度底 */}
+                <div style={{ position: "absolute", inset: 0, background: "#BFDBFE", width: `${Math.min(100, Math.max(0, plannedPct))}%` }} />
+                {/* 实际进度 */}
+                <div style={{
+                  position: "absolute", top: 0, bottom: 0, left: 0,
+                  background: aiStatus?.status === "delayed" ? "#B85C5C" : "#557766",
+                  width: `${Math.min(100, Math.max(0, progressPct))}%`,
+                }} />
+              </div>
+              <span style={{ fontSize: 11, color: "#78716C", width: 24, textAlign: "right" }}>
+                {progressPct}%
+              </span>
             </div>
-            <span style={{ fontSize: 11, color: "#78716C", width: 28, textAlign: "right" }}>
-              {progressPct}%
-            </span>
           </div>
 
           {/* AI 状态 */}
-          <div style={{ flexShrink: 0, width: 20, textAlign: "center" }}>
+          <div style={{ flexShrink: 0, width: 18, textAlign: "center" }}>
             <AIStatusBadge status={aiStatus?.status ?? "none"} reason={aiStatus?.reason ?? ""} />
           </div>
 
-          {/* 操作菜单 (⋮ 下拉) */}
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <button
-              onClick={() => setActionMenuNodeId(actionMenuNodeId === node.id ? null : node.id)}
-              style={{ border: "none", background: "none", cursor: "pointer", fontSize: 16, padding: "2px 6px", color: "#78716C" }}
-            >⋮</button>
-            {actionMenuNodeId === node.id && (
-              <div style={{
-                position: "absolute", right: 0, top: "100%", zIndex: 50,
-                background: "#fff", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: "1px solid #E7E5E4",
-                minWidth: 120, padding: "4px 0",
-              }}>
-                {level < 4 && (
-                  <button onClick={() => { setActionMenuNodeId(null); setCreateParent({ id: node.id, level: node.level, disciplineId: raw.disciplineId }); }}
-                    style={menuItemStyle}>＋ 添加子节点</button>
-                )}
-                {level >= 2 && level <= 4 && (
-                  <button onClick={() => { setActionMenuNodeId(null); setEditNode({
-                    id: node.id, name: node.name, level: node.level, isMilestone: !!raw.isMilestone,
-                    planStartDate: raw.planStartDate, planEndDate: raw.planEndDate,
-                  }); }} style={menuItemStyle}>✏️ 编辑</button>
-                )}
-                {level === 4 && (
-                  <button onClick={() => { setActionMenuNodeId(null); setProgressNode(raw); }}
-                    style={menuItemStyle}>📊 填报进度</button>
-                )}
-                {level === 4 && (
-                  <button onClick={() => { setActionMenuNodeId(null);
-                    if (isLogOpen) { setLogPanelNodeId(null); } else { setLogPanelNodeId(node.id); loadLogs(node.id); }
-                  }} style={menuItemStyle}>{isLogOpen ? "🔼 收起日志" : "🔽 展开日志"}</button>
-                )}
-                {level >= 2 && level <= 4 && (
-                  <button onClick={() => { setActionMenuNodeId(null); handleDelete(node.id); }}
-                    style={{ ...menuItemStyle, color: "#DC2626" }}>🗑 删除</button>
-                )}
-              </div>
+          {/* 操作按钮 — 完全展开 */}
+          <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
+            {level < 4 && (
+              <button
+                onClick={() => setCreateParent({ id: node.id, level: node.level, disciplineId: raw.disciplineId })}
+                style={btnStyle}>+ 添加</button>
+            )}
+            {level >= 2 && level <= 4 && (
+              <button
+                onClick={() => setEditNode({
+                  id: node.id, name: node.name, level: node.level, isMilestone: !!raw.isMilestone,
+                  planStartDate: raw.planStartDate, planEndDate: raw.planEndDate,
+                })}
+                style={btnStyle}>编辑</button>
+            )}
+            {level === 4 && (
+              <button
+                onClick={() => setProgressNode(raw)}
+                style={{ ...btnStyle, color: "#557766" }}>进度</button>
+            )}
+            {level === 4 && (
+              <button
+                onClick={() => {
+                  if (isLogOpen) { setLogPanelNodeId(null); } else { setLogPanelNodeId(node.id); loadLogs(node.id); }
+                }}
+                style={btnStyle}>{isLogOpen ? "收起" : "日志"}</button>
+            )}
+            {level >= 2 && level <= 4 && (
+              <button
+                onClick={() => handleDelete(node.id)}
+                style={{ ...btnStyle, color: "#B85C5C" }}>删除</button>
             )}
           </div>
         </div>
@@ -449,19 +411,17 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
     <div>
       {/* 表头 */}
       <div style={{
-        display: "flex", alignItems: "center", gap: 8, padding: "10px 12px",
-        borderBottom: "2px solid #E7E5E4", background: "#FAFAF9",
+        display: "flex", alignItems: "center", gap: 6, padding: "8px 12px",
+        borderBottom: "2px solid #D6D3D1", background: "#FAFAF9",
         fontSize: 12, fontWeight: 600, color: "#78716C",
       }}>
-        <span style={{ width: 20 }} />
-        <span style={{ width: 42 }}>层级</span>
-        <span style={{ minWidth: 80 }}>名称</span>
-        <span style={{ minWidth: 60 }}>负责人</span>
-        <span style={{ minWidth: 150 }}>计划时间</span>
-        <span style={{ minWidth: 150 }}>实际时间</span>
-        <span style={{ width: 90 }}>进度</span>
-        <span style={{ width: 20, textAlign: "center" }}>AI</span>
-        <span style={{ width: 36 }}>操作</span>
+        <span style={{ width: 18, flexShrink: 0 }} />
+        <span style={{ width: 32, flexShrink: 0 }}>层级</span>
+        <span style={{ flex: 1, minWidth: 0 }}>名称</span>
+        <span style={{ minWidth: 70, flexShrink: 0 }}>负责人</span>
+        <span style={{ width: 100, flexShrink: 0 }}>进度</span>
+        <span style={{ width: 18, flexShrink: 0, textAlign: "center" }}>AI</span>
+        <span style={{ flexShrink: 0 }}>操作</span>
       </div>
 
       {/* 树 */}

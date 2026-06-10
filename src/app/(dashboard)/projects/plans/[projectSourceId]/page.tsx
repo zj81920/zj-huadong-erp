@@ -33,6 +33,7 @@ export default function WbsDetailPage() {
   const [nodes, setNodes] = useState<WbsNode[]>([]);
   const [disciplines, setDisciplines] = useState<{ id: string; name: string; code: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ganttOpen, setGanttOpen] = useState(false);
 
   async function loadData() {
     try {
@@ -57,24 +58,42 @@ export default function WbsDetailPage() {
 
   return (
     <div style={{
-      display: "flex",
-      height: "calc(100vh - 60px)",
-      border: "1px solid #E7E5E4",
-      borderRadius: 14,
-      overflow: "hidden",
-      background: "#fff",
       margin: 16,
+      background: "#fff",
+      border: "1px solid #E7E5E4",
+      borderRadius: 8,
+      overflow: "hidden",
     }}>
-      <div style={{ width: "58%", borderRight: "1px solid #E7E5E4", overflow: "auto" }}>
-        <WbsTreeList
-          nodes={nodes}
-          disciplines={disciplines}
-          projectSourceId={projectSourceId}
-          onRefresh={loadData}
-        />
-      </div>
-      <div style={{ flex: 1, overflow: "auto" }}>
-        <GanttChart nodes={nodes} disciplines={disciplines} />
+      {/* 全宽列表 */}
+      <WbsTreeList
+        nodes={nodes}
+        disciplines={disciplines}
+        projectSourceId={projectSourceId}
+        onRefresh={loadData}
+      />
+
+      {/* 甘特图折叠面板 */}
+      <div style={{ borderTop: "1px solid #E7E5E4" }}>
+        <button
+          onClick={() => setGanttOpen(!ganttOpen)}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            width: "100%", padding: "10px 16px",
+            border: "none", background: "#FAFAF9",
+            fontSize: 13, fontWeight: 600, color: "#57534E",
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 14, transition: "transform 0.2s", transform: ganttOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
+            ▶
+          </span>
+          {ganttOpen ? "收起甘特图" : "展开甘特图"}
+        </button>
+        {ganttOpen && (
+          <div style={{ height: 400, overflow: "auto", borderTop: "1px solid #E7E5E4" }}>
+            <GanttChart nodes={nodes} disciplines={disciplines} />
+          </div>
+        )}
       </div>
     </div>
   );

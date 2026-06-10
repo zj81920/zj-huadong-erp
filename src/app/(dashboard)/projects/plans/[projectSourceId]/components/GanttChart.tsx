@@ -31,6 +31,13 @@ interface Props {
 
 /* ---------- 辅助 ---------- */
 
+function fmtDate(d: string | null | undefined): string {
+  if (!d) return "-";
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return "-";
+  return `${dt.getMonth() + 1}/${dt.getDate()}`;
+}
+
 interface FlatRow {
   id: string;
   name: string;
@@ -44,7 +51,6 @@ interface FlatRow {
   status: "ontrack" | "delayed" | "none";
 }
 
-/** 递归展平树为可视行 */
 function flattenVisible(
   nodes: WbsTreeNode[],
   depth: number,
@@ -76,7 +82,6 @@ function flattenVisible(
       });
       status = s.status;
     } else {
-      // 聚合
       const leaves = collectLeaves(node);
       const ps = leaves.map((l) => l.planStart).filter(Boolean);
       const pe = leaves.map((l) => l.planEnd).filter(Boolean);
@@ -123,7 +128,6 @@ function collectLeaves(
   return result;
 }
 
-/** 生成月份标签 */
 function getMonths(start: Date, end: Date): { label: string; offset: number; width: number }[] {
   const months: { label: string; offset: number; width: number }[] = [];
   const totalMs = end.getTime() - start.getTime();
@@ -153,7 +157,6 @@ export default function GanttChart({ nodes }: Props) {
     [nodes]
   );
 
-  // 默认展开所有节点来生成行
   const allIds = useMemo(() => {
     const ids = new Set<string>();
     function walk(ns: WbsTreeNode[]) {
@@ -165,7 +168,6 @@ export default function GanttChart({ nodes }: Props) {
 
   const rows = useMemo(() => flattenVisible(tree, 0, allIds), [tree, allIds]);
 
-  // 时间范围
   const { timeStart, timeEnd } = useMemo(() => {
     let minTs = Infinity;
     let maxTs = -Infinity;
@@ -180,7 +182,6 @@ export default function GanttChart({ nodes }: Props) {
       minTs = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
       maxTs = new Date(now.getFullYear(), now.getMonth() + 3, 0).getTime();
     }
-    // 加 padding
     const range = maxTs - minTs;
     return {
       timeStart: new Date(minTs - range * 0.05),
@@ -191,17 +192,9 @@ export default function GanttChart({ nodes }: Props) {
   const totalMs = timeEnd.getTime() - timeStart.getTime();
   const months = useMemo(() => getMonths(timeStart, timeEnd), [timeStart, timeEnd]);
 
-  // Today 位置
   const todayPct = totalMs > 0
     ? ((Date.now() - timeStart.getTime()) / totalMs) * 100
     : -1;
-
-  function toPct(dateStr: string) {
-    if (!dateStr) return { left: 0, width: 0 };
-    const ts = new Date(dateStr).getTime();
-    const left = ((ts - timeStart.getTime()) / totalMs) * 100;
-    return { left, width: 1 };
-  }
 
   function barPosition(start: string, end: string) {
     if (!start || !end) return null;
@@ -214,85 +207,159 @@ export default function GanttChart({ nodes }: Props) {
     };
   }
 
-  const ROW_HEIGHT = 42;
+  const ROW_H = 50; // 两行合一
+  const LABEL_W = 80; // 日期标签宽度(pct)
 
   return (
-    <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column" }}>
-      {/* 甘特标题 */}
-      <div style={{
-        padding: "10px 12px", borderBottom: "2px solid #E7E5E4",
-        background: "#FAFAF9", fontSize: 14, fontWeight: 600, color: "#1C1917",
-        flexShrink: 0,
-      }}>
-        甘特图
-      </div>
-
+    <div style={{ position: "relative", minWidth: 600 }}>
       {/* 月份时间轴 */}
       <div style={{
-        position: "relative", height: 28, background: "#FAFAF9",
-        borderBottom: "1px solid #E7E5E4", flexShrink: 0,
+        position: "relative", height: 26, background: "#FAFAF9",
+        borderBottom: "1px solid #D6D3D1",
+        marginLeft: LABEL_W * 0 + 0,
       }}>
         {months.map((m, i) => (
           <div key={i} style={{
             position: "absolute", left: `${m.offset}%`, width: `${m.width}%`,
             top: 0, bottom: 0, display: "flex", alignItems: "center",
             justifyContent: "center", fontSize: 11, color: "#78716C",
-            borderRight: "1px solid #F5F5F4",
+            borderRight: "1px solid #E7E5E4",
           }}>
             {m.label}
           </div>
         ))}
-        {/* Today 线 */}
         {todayPct >= 0 && todayPct <= 100 && (
           <div style={{
             position: "absolute", left: `${todayPct}%`, top: 0, bottom: 0,
-            width: 2, background: "#DC2626", zIndex: 5,
+            width: 1, background: "#B85C5C", zIndex: 5,
           }} />
         )}
       </div>
 
       {/* 行区域 */}
-      <div style={{ flex: 1, overflow: "auto" }}>
+      <div>
         {rows.map((row) => {
           const planBar = barPosition(row.planStart, row.planEnd);
           const actualBar = barPosition(row.actualStart, row.actualEnd);
 
+          const isLevel4 = row.level === 4;
+          const barColor = row.status === "delayed" ? "#C47676" : "#7DA88E";
+
           return (
             <div key={row.id} style={{
-              position: "relative", height: ROW_HEIGHT,
-              borderBottom: "1px solid #F5F5F4",
+              position: "relative", height: ROW_H,
+              borderBottom: "1px solid #E7E5E4",
+              background: row.depth === 0 ? "#FAFAF9" : "#fff",
             }}>
-              {/* 计划条（蓝色虚线边框+浅蓝填充） */}
-              {planBar && (
-                <div style={{
-                  position: "absolute", top: 8, height: 12,
-                  left: `${planBar.left}%`, width: `${Math.max(0.3, planBar.width)}%`,
-                  background: "rgba(59,130,246,0.15)",
-                  border: "1.5px dashed #3B82F6", borderRadius: 4,
-                  zIndex: 2,
-                }} />
-              )}
-              {/* 实际条 */}
-              {actualBar && (
-                <div style={{
-                  position: "absolute", bottom: 8, height: 10,
-                  left: `${actualBar.left}%`, width: `${Math.max(0.3, actualBar.width)}%`,
-                  background: row.status === "delayed" ? "#DC2626" : "#22C55E",
-                  borderRadius: 4, zIndex: 3,
-                }} />
-              )}
+              {/* === P 行 (计划) === */}
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 24, display: "flex", alignItems: "center" }}>
+                {/* 左侧日期标签 */}
+                <span style={{
+                  position: "absolute", left: 4, fontSize: 10, color: "#90A4C4",
+                  fontWeight: 500, zIndex: 2,
+                }}>
+                  P {planBar ? fmtDate(row.planStart) : ""}
+                </span>
+                {/* 计划虚线横道 */}
+                {planBar && (
+                  <div style={{
+                    position: "absolute", left: `${planBar.left}%`,
+                    width: `${Math.max(0.2, planBar.width)}%`,
+                    top: "50%", transform: "translateY(-50%)",
+                    height: 10,
+                    background: "rgba(144,164,196,0.2)",
+                    border: "1.5px dashed #90A4C4",
+                    borderRadius: 3,
+                    zIndex: 1,
+                  }} />
+                )}
+                {/* 右侧日期标签 */}
+                <span style={{
+                  position: "absolute", right: 4, fontSize: 10, color: "#90A4C4",
+                  fontWeight: 500, zIndex: 2,
+                }}>
+                  {planBar ? fmtDate(row.planEnd) : ""}
+                </span>
+              </div>
+
+              {/* === A 行 (实际) === */}
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 26, display: "flex", alignItems: "center" }}>
+                {/* 左侧日期标签 */}
+                {actualBar && (
+                  <span style={{
+                    position: "absolute", left: 4, fontSize: 9, color: "#78716C",
+                    zIndex: 2,
+                  }}>
+                    A
+                  </span>
+                )}
+                {actualBar && (
+                  <span style={{
+                    position: "absolute", left: 18, fontSize: 10, color: barColor,
+                    fontWeight: 500, zIndex: 2,
+                  }}>
+                    {fmtDate(row.actualStart)}
+                  </span>
+                )}
+                {/* 实际实心横道 */}
+                {actualBar && (
+                  <div style={{
+                    position: "absolute", left: `${actualBar.left}%`,
+                    width: `${Math.max(0.2, actualBar.width)}%`,
+                    top: "50%", transform: "translateY(-50%)",
+                    height: 10,
+                    background: barColor,
+                    borderRadius: 3,
+                    opacity: 0.85,
+                    zIndex: 1,
+                  }} />
+                )}
+                {/* 右侧日期标签 */}
+                {actualBar && (
+                  <span style={{
+                    position: "absolute", right: 4, fontSize: 10, color: barColor,
+                    fontWeight: 500, zIndex: 2,
+                  }}>
+                    {row.actualEnd ? fmtDate(row.actualEnd) : row.actualStart ? "进行中" : ""}
+                  </span>
+                )}
+                {!actualBar && (
+                  <span style={{ position: "absolute", left: 4, fontSize: 10, color: "#A8A29E" }}>
+                    未开始
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}
 
-        {/* Today 线贯穿行区域 */}
+        {/* Today 线贯穿 */}
         {todayPct >= 0 && todayPct <= 100 && (
           <div style={{
-            position: "absolute", left: `${todayPct}%`, top: 28, bottom: 0,
-            width: 2, background: "#DC2626", opacity: 0.5, zIndex: 4,
+            position: "absolute", left: `${todayPct}%`, top: 26, bottom: 0,
+            width: 1, background: "#B85C5C", opacity: 0.4, zIndex: 4,
             pointerEvents: "none",
           }} />
         )}
+      </div>
+
+      {/* 图例 */}
+      <div style={{
+        display: "flex", gap: 16, padding: "8px 12px",
+        borderTop: "1px solid #E7E5E4", fontSize: 11, color: "#78716C",
+      }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 12, height: 1, borderTop: "1.5px dashed #90A4C4" }} /> 计划
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 12, height: 8, background: "#7DA88E", borderRadius: 2 }} /> 按期
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 12, height: 8, background: "#C47676", borderRadius: 2 }} /> 延误
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ width: 12, height: 0, borderLeft: "1px solid #B85C5C" }} /> 今天
+        </span>
       </div>
     </div>
   );
