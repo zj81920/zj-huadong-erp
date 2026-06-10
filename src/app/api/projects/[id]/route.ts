@@ -72,6 +72,7 @@ export async function PUT(
       startDate,
       plannedEndDate,
       actualCloseDate,
+      designPhases,
     } = body;
 
     if (projectCode !== undefined && !projectCode.trim()) {
@@ -119,6 +120,7 @@ export async function PUT(
     if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
     if (plannedEndDate !== undefined) updateData.plannedEndDate = plannedEndDate ? new Date(plannedEndDate) : null;
     if (actualCloseDate !== undefined) updateData.actualCloseDate = actualCloseDate ? new Date(actualCloseDate) : null;
+    if (designPhases !== undefined) updateData.designPhases = designPhases;
 
     const currentUser = await getCurrentUser();
     updateData.lastModifiedBy = currentUser?.realName || null;
@@ -133,6 +135,35 @@ export async function PUT(
         supervisorLeader: { select: { id: true, realName: true } },
       },
     });
+
+    // 如果 designPhases 有变化，同步一级WBS节点
+    if (designPhases !== undefined) {
+      try {
+        const projectSourceId = project.projectSourceId;
+        // 递归删除所有WBS节点（从最深层开始）
+        const allNodes = await prisma.projectWbsNode.findMany({
+          where: { projectSourceId },
+          orderBy: { level: 'desc' },
+        });
+        for (const node of allNodes) {
+          await prisma.projectWbsNode.delete({ where: { id: node.id } });
+        }
+        // 重新创建一级节点
+        const phases: string[] = JSON.parse(designPhases);
+        if (phases.length > 0) {
+          await prisma.projectWbsNode.createMany({
+            data: phases.map((phaseName, index) => ({
+              projectSourceId,
+              level: 1,
+              name: phaseName,
+              sortOrder: index,
+            })),
+          });
+        }
+      } catch {
+        // WBS同步失败不影响项目更新
+      }
+    }
 
     return NextResponse.json({ data: project });
   } catch (error) {

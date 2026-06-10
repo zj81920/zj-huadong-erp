@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
       startDate,
       plannedEndDate,
       actualCloseDate,
+      designPhases,
     } = body;
 
     if (!projectCode || !projectCode.trim()) {
@@ -228,6 +229,7 @@ export async function POST(request: NextRequest) {
         projectCategory: projectCategory?.trim() || null,
         source: projectSource,
         sourceRefId: sourceRefId || null,
+        designPhases: designPhases || null,
         status: status || "执行",
         designManagerId: designManagerId || null,
         supervisorLeaderId: supervisorLeaderId || null,
@@ -244,6 +246,25 @@ export async function POST(request: NextRequest) {
         supervisorLeader: { select: { id: true, realName: true } },
       },
     });
+
+    // 如果勾选了设计阶段，自动创建一级WBS节点
+    if (designPhases) {
+      try {
+        const phases: string[] = JSON.parse(designPhases);
+        if (phases.length > 0) {
+          await prisma.projectWbsNode.createMany({
+            data: phases.map((phaseName, index) => ({
+              projectSourceId: project.projectSourceId,
+              level: 1,
+              name: phaseName,
+              sortOrder: index,
+            })),
+          });
+        }
+      } catch {
+        // designPhases 解析失败不影响项目创建
+      }
+    }
 
     return NextResponse.json({ data: project }, { status: 201 });
   } catch (error) {
