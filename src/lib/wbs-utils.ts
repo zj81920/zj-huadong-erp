@@ -91,6 +91,35 @@ export function computeTaskStatus(
   return { status: "normal", emoji: "✅", label: "正常", planPct };
 }
 
+/**
+ * 上级节点状态汇总
+ * 优先级: delayed > ahead > normal > done > none
+ */
+export function computeParentStatus(
+  children: TaskStatusResult[]
+): TaskStatusResult {
+  if (children.length === 0) return { status: "none", emoji: "—", label: "无任务", planPct: 0 };
+
+  const hasDelayed = children.some(c => c.status === "delayed");
+  const hasAhead = children.some(c => c.status === "ahead");
+  const hasNormal = children.some(c => c.status === "normal");
+  const allDone = children.every(c =>
+    c.status === "aheadComplete" || c.status === "onTimeComplete" || c.status === "overdueComplete"
+  );
+
+  if (hasDelayed) return { status: "delayed", emoji: "⚠️", label: "含延误", planPct: 0 };
+  if (hasAhead) return { status: "ahead", emoji: "🚀", label: "进行中(提前)", planPct: 0 };
+  if (hasNormal) return { status: "normal", emoji: "✅", label: "进行中", planPct: 0 };
+  if (allDone) return { status: "onTimeComplete", emoji: "🏁", label: "已完成", planPct: 0 };
+  return { status: "none", emoji: "—", label: "无进行中任务", planPct: 0 };
+}
+
+/** 进度聚合：取子任务 progress 平均值（向下取整） */
+export function aggregateProgress(progressValues: number[]): number {
+  if (progressValues.length === 0) return 0;
+  return Math.floor(progressValues.reduce((s, v) => s + v, 0) / progressValues.length);
+}
+
 // ========== 工具函数 ==========
 
 /** 计算计划应完成%：根据天数均匀分布 */

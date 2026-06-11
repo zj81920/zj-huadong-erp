@@ -221,3 +221,55 @@ describe("computeTaskStatus", () => {
     expect(r.emoji).toBe("—");
   });
 });
+
+describe("computeParentStatus", () => {
+  it("全部子任务为 normal → normal", () => {
+    const children = [
+      computeTaskStatus(0, new Date("2026-07-01"), new Date("2026-09-15"), T),
+    ];
+    expect(computeParentStatus(children).status).toBe("normal");
+  });
+
+  it("任一子任务 delayed → delayed", () => {
+    const children = [
+      computeTaskStatus(100, new Date("2026-05-01"), new Date("2026-08-15"), T), // aheadComplete
+      computeTaskStatus(8, new Date("2026-05-15"), new Date("2026-07-15"), T),    // delayed
+    ];
+    expect(computeParentStatus(children).status).toBe("delayed");
+  });
+
+  it("全部完成 → done (onTimeComplete)", () => {
+    const children = [
+      computeTaskStatus(100, new Date("2026-04-01"), new Date("2026-05-31"), T),  // overdueComplete
+      computeTaskStatus(100, new Date("2026-05-01"), new Date("2026-08-15"), T),  // aheadComplete
+    ];
+    expect(computeParentStatus(children).status).toBe("onTimeComplete");
+  });
+
+  it("无子任务 → none", () => {
+    expect(computeParentStatus([]).status).toBe("none");
+  });
+
+  it("混合: ahead + onTimeComplete → ahead", () => {
+    const children = [
+      computeTaskStatus(100, new Date("2026-04-01"), new Date("2026-06-10"), T),  // onTimeComplete
+      computeTaskStatus(40, new Date("2026-05-01"), new Date("2026-08-15"), T),   // ahead
+    ];
+    const r = computeParentStatus(children);
+    expect(r.status).toBe("ahead");
+  });
+});
+
+describe("aggregateProgress", () => {
+  it("空数组返回 0", () => {
+    expect(aggregateProgress([])).toBe(0);
+  });
+
+  it("多个 progress 取平均值（向下取整）", () => {
+    expect(aggregateProgress([100, 50, 33])).toBe(61);
+  });
+
+  it("单个任务直接返回", () => {
+    expect(aggregateProgress([75])).toBe(75);
+  });
+});
