@@ -111,6 +111,7 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
     responsibleIds?: string[];
   } | null>(null);
   const [progressNode, setProgressNode] = useState<WbsNode | null>(null);
+  const [generatingNodeId, setGeneratingNodeId] = useState<string | null>(null);
 
   /* 任务日志 */
   const [logPanelNodeId, setLogPanelNodeId] = useState<string | null>(null);
@@ -180,6 +181,33 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
     await fetch(`/api/wbs/tasks/${nodeId}/logs/${logId}`, { method: "DELETE" });
     loadLogs(nodeId);
   }
+
+  /* ---------- AI 生成任务 ---------- */
+
+  const handleGenerateTasks = async (nodeId: string) => {
+    setGeneratingNodeId(nodeId);
+    try {
+      const res = await fetch(
+        `/api/projects/plans/${projectSourceId}/nodes/generate-tasks`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ parentNodeId: nodeId }),
+        }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        alert(`已生成 ${data.data.generatedCount} 个任务`);
+        onRefresh();
+      } else {
+        alert(data.error || "生成失败");
+      }
+    } catch {
+      alert("AI 服务调用失败");
+    } finally {
+      setGeneratingNodeId(null);
+    }
+  };
 
   /* ---------- 删除节点 ---------- */
 
@@ -374,6 +402,20 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
                 onClick={() => setProgressNode(raw)}
                 style={defaultBtnStyle}
               >进度</button>
+            )}
+            {level === 3 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleGenerateTasks(node.id); }}
+                disabled={!!generatingNodeId}
+                style={{
+                  padding: "3px 8px", fontSize: 12, borderRadius: 0,
+                  border: "1px solid #4A6FA5", background: "#fff",
+                  color: "#4A6FA5", cursor: generatingNodeId ? "wait" : "pointer",
+                  opacity: generatingNodeId === node.id ? 0.6 : 1,
+                }}
+              >
+                {generatingNodeId === node.id ? "生成中..." : "🤖 生成任务"}
+              </button>
             )}
             {level === 4 && (
               <button
