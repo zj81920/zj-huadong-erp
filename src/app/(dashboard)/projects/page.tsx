@@ -89,7 +89,7 @@ interface ProjectFormData {
   projectCode: string;
   name: string;
   customerId: string;
-  type: string;
+  projectContent: string;
   address: string;
   projectCategory: string;
   source: string;
@@ -110,7 +110,7 @@ const emptyForm: ProjectFormData = {
   projectCode: "",
   name: "",
   customerId: "",
-  type: "",
+  projectContent: "",
   address: "",
   projectCategory: "",
   source: "项目线索",
@@ -155,7 +155,6 @@ export default function ProjectsPage() {
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterType, setFilterType] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
   const [filterSource, setFilterSource] = useState("");
 
@@ -227,9 +226,8 @@ export default function ProjectsPage() {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      if (filterStatus) params.set("status", filterStatus);
-      if (filterType) params.set("type", filterType);
-      if (filterCategory) params.set("projectCategory", filterCategory);
+    if (filterStatus) params.set("status", filterStatus);
+    if (filterCategory) params.set("projectCategory", filterCategory);
       if (filterSource) params.set("source", filterSource);
       params.set("page", page.toString());
       params.set("pageSize", pageSize.toString());
@@ -244,7 +242,7 @@ export default function ProjectsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterStatus, filterType, filterCategory, filterSource, page, pageSize]);
+  }, [search, filterStatus, filterCategory, filterSource, page, pageSize]);
 
   useEffect(() => {
     fetchCustomers();
@@ -271,7 +269,7 @@ export default function ProjectsPage() {
       projectCode: project.projectCode,
       name: project.name,
       customerId: project.customerId,
-      type: project.type || "",
+      projectContent: "",
       address: project.address || "",
       projectCategory: project.projectCategory || "",
       source: project.source,
@@ -324,7 +322,7 @@ export default function ProjectsPage() {
         projectCode: form.projectCode,
         name: form.name,
         customerId: form.customerId,
-        type: form.type || null,
+        projectContent: form.projectContent?.trim() || null,
         address: form.address || null,
         projectCategory: form.projectCategory || null,
         source: form.source,
@@ -514,12 +512,6 @@ export default function ProjectsPage() {
     paused: projects.filter((p) => p.status === "暂停").length,
   };
 
-  const typeBadgeColor = (type: string | null) => {
-    if (type === "石化") return "ios-badge-orange";
-    if (type === "医药") return "ios-badge-green";
-    return "ios-badge-gray";
-  };
-
   const categoryBadgeColor = (cat: string | null) => {
     if (cat === "设计") return "ios-badge-blue";
     if (cat === "EP") return "ios-badge-orange";
@@ -604,19 +596,6 @@ export default function ProjectsPage() {
 
           <select
             className="ios-select w-[120px]"
-            value={filterType}
-            onChange={(e) => {
-              setFilterType(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">全部类型</option>
-            <option value="石化">石化</option>
-            <option value="医药">医药</option>
-          </select>
-
-          <select
-            className="ios-select w-[120px]"
             value={filterCategory}
             onChange={(e) => {
               setFilterCategory(e.target.value);
@@ -657,7 +636,7 @@ export default function ProjectsPage() {
             <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
               <Briefcase className="w-8 h-8 text-[#78716C]" />
             </div>
-            <p>{search || filterStatus || filterType || filterCategory || filterSource ? "没有匹配的项目" : "暂无项目，点击右上角新建"}</p>
+            <p>{search || filterStatus || filterCategory || filterSource ? "没有匹配的项目" : "暂无项目，点击右上角新建"}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -693,7 +672,6 @@ export default function ProjectsPage() {
                   <th>项目编号</th>
                   <th>项目名称</th>
                   <th>客户</th>
-                  <th>类型</th>
                   <th>类别</th>
                   <th>来源</th>
                   <th>设计经理</th>
@@ -731,13 +709,6 @@ export default function ProjectsPage() {
                         <span className="font-semibold">{project.name}</span>
                       </td>
                       <td className="whitespace-nowrap">{project.customer.name}</td>
-                      <td className="whitespace-nowrap">
-                        {project.type ? (
-                          <span className={`ios-badge text-[11px] ${typeBadgeColor(project.type)}`}>{project.type}</span>
-                        ) : (
-                          <span className="text-[#78716C]">-</span>
-                        )}
-                      </td>
                       <td className="whitespace-nowrap">
                         {project.projectCategory ? (
                           <span className={`ios-badge text-[11px] ${categoryBadgeColor(project.projectCategory)}`}>{project.projectCategory}</span>
@@ -963,17 +934,18 @@ export default function ProjectsPage() {
               </button>
             </div>
 
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">类型</label>
-              <select
-                className="ios-select"
-                value={form.type}
-                onChange={(e) => updateForm("type", e.target.value)}
-              >
-                <option value="">请选择类型</option>
-                <option value="石化">石化</option>
-                <option value="医药">医药</option>
-              </select>
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                项目内容描述
+              </label>
+              <textarea
+                className="ios-input"
+                rows={3}
+                placeholder="请输入项目概况、范围、技术要求等"
+                value={form.projectContent}
+                onChange={(e) => updateForm("projectContent", e.target.value)}
+                style={{ resize: "vertical", minHeight: 80 }}
+              />
             </div>
 
             <div>
@@ -1211,10 +1183,14 @@ export default function ProjectsPage() {
                 <p className="text-[12px] text-[#78716C] mb-1">客户</p>
                 <p className="text-[14px] font-semibold text-[#1C1917]">{detailProject.customer.name}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">类型</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{detailProject.type || "-"}</p>
-              </div>
+              {detailProject.projectContent && (
+                <div className="col-span-2 p-3 rounded-xl bg-[#FAFAF9]">
+                  <p className="text-[12px] text-[#78716C] mb-1">项目内容描述</p>
+                  <p className="text-[14px] font-semibold text-[#1C1917] whitespace-pre-wrap">
+                    {detailProject.projectContent}
+                  </p>
+                </div>
+              )}
               <div className="p-3 rounded-xl bg-[#FAFAF9]">
                 <p className="text-[12px] text-[#78716C] mb-1">类别</p>
                 <p className="text-[14px] font-semibold text-[#1C1917]">{detailProject.projectCategory || "-"}</p>
