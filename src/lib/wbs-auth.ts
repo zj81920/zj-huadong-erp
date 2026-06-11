@@ -8,6 +8,7 @@ import prisma from "@/lib/prisma";
  * 2. 用户有 projects.plans 角色权限
  * 3. 用户是该项目的设计经理（designManagerId）
  * 4. 用户是该项目的主管领导（supervisorLeaderId）
+ * 5. 用户是该项目的 WBS 节点负责人（responsibleIds）
  */
 export async function canAccessProjectWbs(
   projectSourceId: string
@@ -36,6 +37,15 @@ export async function canAccessProjectWbs(
   if (project.designManagerId === user.id || project.supervisorLeaderId === user.id) {
     return true;
   }
+
+  // 检查当前用户是否为该项目的任一 WBS 节点的负责人
+  const isResponsible = await prisma.projectWbsNode.findFirst({
+    where: {
+      projectSourceId,
+      responsibleIds: { has: user.id },
+    },
+  });
+  if (isResponsible) return true;
 
   return false;
 }
