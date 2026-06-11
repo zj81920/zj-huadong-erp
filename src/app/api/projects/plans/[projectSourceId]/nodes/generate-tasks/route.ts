@@ -4,21 +4,38 @@ import { getAIConfig, callAIModel } from "@/lib/ai";
 
 const SYSTEM_PROMPT = `你是一个石油化工设计项目的高级工程师，精通各专业的设计流程和交付物。
 
-用户会提供：项目类型、当前阶段、子项名称、专业名称。
+用户会提供：项目类型、项目内容描述、当前阶段、子项名称、专业名称。
+
 你需要根据石油化工行业的设计规范和惯例，列出该专业在该子项下应完成的设计任务清单。
+
+重要原则：
+1. 子项名称代表了具体的设计对象（如 "600#厂房" 是工业厂房、"500#水池" 是水池/罐区），不同子项类型的设计任务差异很大
+2. 同一专业在不同子项下，设计任务应完全不同。例如：
+   - 厂房子项：侧重结构、建筑、暖通等厂房相关设计
+   - 水池子项：侧重防渗、防腐、给排水等构筑物相关设计
+   - 装置区子项：侧重设备布置、管道应力等装置相关设计
+3. 项目内容描述包含了项目的整体概况和技术要求，应作为任务设计的参考背景
+4. 避免生成与子项类型无关的通用任务，每个任务都应针对该子项的具体特点
 
 输出要求：
 1. 严格以 JSON 数组格式输出，不要有任何其他文字
 2. 每个任务是一个对象，包含：name（任务名称）
 3. 任务应覆盖该专业的主要设计文件和交付物
-4. 任务粒度适中，通常 5-15 个任务
+4. 任务粒度适中，通常 5-12 个任务
 5. 按设计流程的自然顺序排列
 
-示例输出：
+示例输出（装置区子项-工艺专业）：
 [
   {"name": "工艺流程图(PFD)绘制"},
   {"name": "管道仪表流程图(P&ID)绘制"},
   {"name": "工艺数据表编制"}
+]
+
+示例输出（厂房子项-结构专业）：
+[
+  {"name": "厂房结构布置图设计"},
+  {"name": "厂房基础设计"},
+  {"name": "厂房钢结构计算"}
 ]`;
 
 export async function POST(
@@ -50,15 +67,6 @@ export async function POST(
       return NextResponse.json({ error: "专业节点不存在" }, { status: 404 });
     }
 
-    // 获取专业名称
-    let disciplineName = parentNode.name;
-    if (parentNode.disciplineId) {
-      const discipline = await prisma.disciplineDictionary.findUnique({
-        where: { id: parentNode.disciplineId },
-      });
-      if (discipline) disciplineName = discipline.name;
-    }
-
     // 获取L2子项名称和L1阶段名称
     const l2Node = parentNode.parentId
       ? await prisma.projectWbsNode.findFirst({
@@ -70,6 +78,23 @@ export async function POST(
           where: { id: l2Node.parentId },
         })
       : null;
+
+    // 采购阶段不支持 AI 生成任务
+    if (l1Node?.name?.includes("采购")) {
+      return NextResponse.json(
+        { error: "采购阶段不支持 AI 生成任务，请手动添加" },
+        { status: 400 }
+      );
+    }
+
+    // 获取专业名称
+    let disciplineName = parentNode.name;
+    if (parentNode.disciplineId) {
+      const discipline = await prisma.disciplineDictionary.findUnique({
+        where: { id: parentNode.disciplineId },
+      });
+      if (discipline) disciplineName = discipline.name;
+    }
 
     // 获取项目信息
     const project = await prisma.project.findFirst({

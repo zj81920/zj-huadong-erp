@@ -443,7 +443,7 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
                 style={defaultBtnStyle}
               >进度</button>
             )}
-            {level === 3 && (
+            {level === 3 && !rootL1Name?.includes("采购") && (
               <button
                 onClick={(e) => { e.stopPropagation(); handleGenerateTasks(node.id); }}
                 disabled={!!generatingNodeId}
