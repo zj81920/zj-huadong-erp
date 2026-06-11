@@ -56,7 +56,7 @@ interface Project {
   projectCode: string;
   name: string;
   customerId: string;
-  type: string | null;
+  projectContent: string | null;
   address: string | null;
   projectCategory: string | null;
   source: string;

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         projectCode: true,
         sourceRefId: true,
         name: true,
-        type: true,
+        projectContent: true,
         projectCategory: true,
         designPhases: true,
         customer: { select: { name: true } },
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
         sourceRefId: p.sourceRefId,
         name: p.name,
         customerName: p.customer?.name ?? "",
-        type: p.type,
+        projectContent: p.projectContent,
         projectCategory: p.projectCategory,
         designPhases: p.designPhases,
         designPhasesList: (() => {

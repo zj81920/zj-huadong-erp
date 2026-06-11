@@ -76,7 +76,7 @@ export async function writeProjects(
             customerId,
             source: "直接委托",
             sourceRefId: row.projectCode,
-            type: row.type || "",
+            projectContent: row.type || "",
             address: row.address || "",
             projectCategory: row.projectCategory || "",
             status: row.status || "执行",

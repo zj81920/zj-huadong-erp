@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
-    const type = searchParams.get("type") || "";
     const projectCategory = searchParams.get("projectCategory") || "";
     const source = searchParams.get("source") || "";
     const page = parseInt(searchParams.get("page") || "1");
@@ -49,10 +48,6 @@ export async function GET(request: NextRequest) {
 
     if (status) {
       where.status = status;
-    }
-
-    if (type) {
-      where.type = type;
     }
 
     if (projectCategory) {
@@ -103,7 +98,7 @@ export async function POST(request: NextRequest) {
       projectCode,
       name,
       customerId,
-      type,
+      projectContent,
       address,
       projectCategory,
       source,
