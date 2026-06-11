@@ -41,6 +41,24 @@ export async function POST(
       return NextResponse.json({ error: "三级节点必须选择专业" }, { status: 400 });
     }
 
+    // 校验同一子项下不允许重复专业
+    if (level === 3 && disciplineId) {
+      const existing = await prisma.projectWbsNode.findFirst({
+        where: {
+          projectSourceId,
+          parentId: parentId || null,
+          level: 3,
+          disciplineId,
+        },
+      });
+      if (existing) {
+        return NextResponse.json(
+          { error: "该子项下已存在相同专业，不允许重复创建" },
+          { status: 409 }
+        );
+      }
+    }
+
     // 四级节点计划时间校验：必须在项目计划时间范围内
     if (level === 4 && planStartDate && planEndDate) {
       const project = await prisma.project.findUnique({

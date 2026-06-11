@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1440">
+<title>WBS 方案 A — 庄重企业风格</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif; background: #F0F1F3; padding: 24px; color: #333; }
+h1 { font-size: 18px; color: #1a1a1a; margin-bottom: 2px; font-weight: 500; }
+.sub { color: #888; font-size: 12px; margin-bottom: 16px; }
+.panel { background: #fff; border: 1px solid #ddd; border-radius: 0; margin-bottom: 16px; }
+
+/* top bar */
+.topbar { display: flex; align-items: center; padding: 10px 20px; background: #fafafa; border-bottom: 1px solid #e0e0e0; gap: 16px; }
+.topbar .title { font-size: 14px; font-weight: 500; color: #222; }
+.topbar .meta { font-size: 12px; color: #777; margin-left: auto; }
+.topbar .btn-toggle { padding: 5px 16px; border: 1px solid #ccc; background: #fff; color: #555; cursor: pointer; font-size: 12px; border-radius: 2px; }
+.topbar .btn-toggle:hover { background: #f5f5f5; border-color: #aaa; }
+
+/* tree table */
+.tbl-header { display: flex; align-items: center; padding: 7px 20px; background: #f7f7f7; border-bottom: 1px solid #e0e0e0; font-size: 11px; font-weight: 600; color: #777; }
+.tbl-row { display: flex; align-items: center; padding: 5px 20px; border-bottom: 1px solid #f0f0f0; font-size: 12px; min-height: 36px; }
+.tbl-row:hover { background: #fafbfc; }
+.tbl-row.last { border-bottom: none; }
+
+.expand { width: 20px; font-size: 10px; color: #aaa; text-align: center; flex-shrink: 0; }
+.col-lvl { width: 42px; flex-shrink: 0; font-size: 10px; color: #888; }
+.col-name { flex: 1; min-width: 100px; }
+.col-person { width: 64px; flex-shrink: 0; }
+.col-progress { width: 72px; flex-shrink: 0; text-align: center; }
+.col-status { width: 28px; flex-shrink: 0; text-align: center; }
+.col-actions { width: 178px; flex-shrink: 0; display: flex; gap: 3px; }
+
+.lvl-tag { font-size: 10px; color: #888; }
+.lvl-l1 { color: #333; font-weight: 600; }
+.lvl-l2 { color: #4a6fa5; }
+.lvl-l3 { color: #6b5ea5; }
+.lvl-l4 { color: #4a8c5c; }
+
+.name-l1 { font-weight: 600; color: #222; }
+.name-l2 { font-weight: 500; color: #4a6fa5; }
+.name-l3 { font-weight: 500; color: #6b5ea5; }
+.name-l4 { color: #333; }
+
+/* progress */
+.pbar { display: inline-block; width: 56px; height: 5px; background: #e8e8e8; border-radius: 2px; position: relative; overflow: hidden; vertical-align: middle; }
+.pbar-plan { position: absolute; top: 0; bottom: 0; left: 0; background: #b0c4de; border-radius: 2px; }
+.pbar-actual { position: absolute; top: 0; bottom: 0; left: 0; background: #6ba07a; border-radius: 2px; }
+.pbar-actual.delay { background: #c47676; }
+.pct { font-size: 10px; margin-left: 4px; }
+.pct-ok { color: #557766; }
+.pct-delay { color: #b85c5c; }
+
+/* status */
+.st-ok { color: #557766; font-size: 13px; }
+.st-delay { color: #b85c5c; font-size: 13px; font-weight: 600; }
+
+/* buttons */
+.btn { padding: 2px 8px; border: 1px solid #ddd; border-radius: 2px; background: #fff; cursor: pointer; font-size: 11px; color: #666; white-space: nowrap; }
+.btn:hover { background: #f5f5f5; border-color: #bbb; }
+.btn-primary { border-color: #b0c4de; color: #4a6fa5; }
+.btn-primary:hover { background: #eef3f8; }
+.btn-danger { border-color: #e0c0c0; color: #b85c5c; }
+.btn-danger:hover { background: #faf5f5; }
+
+.sel-person { font-size: 10px; padding: 1px 3px; border: 1px solid #ddd; border-radius: 2px; width: 60px; background: #fff; color: #555; }
+
+.discipline-chip { font-size: 9px; color: #6b5ea5; background: #f5f3ff; padding: 1px 4px; border-radius: 2px; margin-left: 4px; }
+
+/* gantt */
+.legend { display: flex; align-items: center; gap: 24px; padding: 8px 20px; background: #fafafa; border-bottom: 1px solid #e0e0e0; font-size: 11px; color: #777; }
+.legend .sep { width: 1px; height: 14px; background: #ddd; }
+.legend-swatch { display: inline-block; width: 16px; height: 6px; border-radius: 1px; vertical-align: middle; margin-right: 3px; }
+.legend-p { border: 1.5px dashed #90a4c4; background: rgba(176,196,222,0.2); }
+.legend-a { background: #7da88e; }
+.legend-ad { background: #c47676; }
+
+.gantt-wrap { border-bottom: 1px solid #eee; }
+.gantt-wrap:last-child { border-bottom: none; }
+.gantt-row { display: flex; align-items: center; min-height: 26px; padding: 1px 20px; position: relative; }
+.gantt-label { width: 136px; flex-shrink: 0; font-size: 11px; text-align: right; padding-right: 10px; color: #555; }
+.gantt-label-l1 { font-weight: 600; color: #333; }
+.gantt-type { width: 20px; flex-shrink: 0; font-size: 9px; font-weight: 600; }
+.gantt-type.p { color: #7a90b0; }
+.gantt-type.a { color: #7da88e; }
+.gantt-type.ad { color: #c47676; }
+.gantt-date { font-size: 9px; padding: 1px 4px; flex-shrink: 0; }
+.gantt-date.p { background: #edf1f7; color: #5a7699; }
+.gantt-date.a { background: #edf6f0; color: #55755e; }
+.gantt-date.ad { background: #faf0f0; color: #b85c5c; }
+.gantt-section { position: relative; flex: 1; margin: 0 6px; }
+.gantt-bar { height: 12px; position: absolute; top: 7px; border-radius: 1px; }
+.gantt-bar.p { border: 1.5px dashed #90a4c4; background: rgba(176,196,222,0.15); }
+.gantt-bar.a { background: #7da88e; }
+.gantt-bar.ad { background: #c47676; }
+.gantt-today { position: absolute; top: 0; bottom: 0; width: 1px; background: #c44; z-index: 3; }
+
+.month-scale { display: flex; font-size: 10px; color: #aaa; padding: 3px 0 3px 166px; border-top: 1px solid #eee; }
+.month-scale span { flex: 0 0 130px; border-left: 1px solid #f0f0f0; padding-left: 4px; }
+</style>
+</head>
+<body>
+
+<h1>项目WBS计划与进度</h1>
+<p class="sub">XX化工项目 · 方案 A 全宽单栏设计</p>
+
+<!-- 列表 -->
+<div class="panel">
+  <div class="topbar">
+    <span class="title">XX化工项目</span>
+    <span class="meta">总进度 35%</span>
+    <span class="meta" style="color:#557766;">按期</span>
+    <span class="meta">4阶段 · 15任务</span>
+    <button class="btn-toggle" style="margin-left:auto;" onclick="var g=document.getElementById('gantt-panel');g.style.display=g.style.display==='none'?'block':'none'">甘特图</button>
+  </div>
+  <div class="tbl-header">
+    <span class="expand"></span><span class="col-lvl">层级</span>
+    <span class="col-name">名称</span><span class="col-person">责任人</span>
+    <span class="col-progress">进度</span><span class="col-status">状态</span>
+    <span class="col-actions">操作</span>
+  </div>
+
+  <!-- 方案设计 -->
+  <div class="tbl-row" style="background:#fafbfc;">
+    <span class="expand">▶</span><span class="col-lvl lvl-l1">阶段</span>
+    <span class="col-name name-l1">方案设计</span>
+    <span class="col-person" style="color:#aaa;">-</span>
+    <span class="col-progress"><span class="pbar"><span class="pbar-plan" style="width:40%"></span><span class="pbar-actual" style="width:28%"></span></span><span class="pct">28%</span></span>
+    <span class="col-status"><span class="st-delay">!</span></span>
+    <span class="col-actions"><button class="btn btn-primary">＋ 子项</button></span>
+  </div>
+
+  <!-- 工艺 -->
+  <div class="tbl-row" style="padding-left:44px;">
+    <span class="expand">▶</span><span class="col-lvl lvl-l3">专业</span>
+    <span class="col-name name-l3">工艺<span class="discipline-chip">PROC</span></span>
+    <span class="col-person" style="color:#aaa;">-</span>
+    <span class="col-progress"><span class="pbar"><span class="pbar-plan" style="width:40%"></span><span class="pbar-actual delay" style="width:22%"></span></span><span class="pct pct-delay">22%</span></span>
+    <span class="col-status"><span class="st-delay">!</span></span>
+    <span class="col-actions"><button class="btn btn-primary">＋ 任务</button><button class="btn">✏</button><button class="btn btn-danger">✕</button></span>
+  </div>
+
+  <!-- PID绘制 -->
+  <div class="tbl-row" style="padding-left:72px;">
+    <span class="expand"></span><span class="col-lvl lvl-l4">任务</span>
+    <span class="col-name name-l4">P&amp;ID绘制</span>
+    <span class="col-person"><select class="sel-person"><option>张三</option></select></span>
+    <span class="col-progress"><span class="pbar"><span class="pbar-plan" style="width:38%"></span><span class="pbar-actual" style="width:35%"></span></span><span class="pct pct-ok">35%</span></span>
+    <span class="col-status"><span class="st-ok">&#10003;</span></span>
+    <span class="col-actions"><button class="btn btn-primary">进度</button><button class="btn">✏</button><button class="btn">日志</button><button class="btn btn-danger">✕</button></span>
+  </div>
+
+  <!-- 设备布置 -->
+  <div class="tbl-row" style="padding-left:72px;">
+    <span class="expand"></span><span class="col-lvl lvl-l4">任务</span>
+    <span class="col-name name-l4">设备布置</span>
+    <span class="col-person"><select class="sel-person"><option>李四</option></select></span>
+    <span class="col-progress"><span class="pbar"><span class="pbar-plan" style="width:42%"></span><span class="pbar-actual delay" style="width:8%"></span></span><span class="pct pct-delay">8%</span></span>
+    <span class="col-status"><span class="st-delay">!</span></span>
+    <span class="col-actions"><button class="btn btn-primary">进度</button><button class="btn">✏</button><button class="btn">日志</button><button class="btn btn-danger">✕</button></span>
+  </div>
+
+  <!-- 工艺流程图 -->
+  <div class="tbl-row" style="padding-left:72px;">
+    <span class="expand"></span><span class="col-lvl lvl-l4">任务</span>
+    <span class="col-name name-l4">工艺流程图</span>
+    <span class="col-person"><select class="sel-person"><option>王五</option></select></span>
+    <span class="col-progress"><span class="pbar"><span class="pbar-plan" style="width:100%"></span><span class="pbar-actual" style="width:100%"></span></span><span class="pct pct-ok">100%</span></span>
+    <span class="col-status"><span class="st-ok">&#10003;</span></span>
+    <span class="col-actions"><button class="btn">✏</button><button class="btn">日志</button></span>
+  </div>
+
+  <!-- 管道系统图 -->
+  <div class="tbl-row" style="padding-left:72px;">
+    <span class="expand"></span><span class="col-lvl lvl-l4">任务</span>
+    <span class="col-name name-l4">管道系统图</span>
+    <span class="col-person"><select class="sel-person"><option>张三</option></select></span>
+    <span class="col-progress"><span class="pbar"><span class="pbar-plan" style="width:100%"></span><span class="pbar-actual delay" style="width:100%"></span></span><span class="pct pct-delay">100%</span></span>
+    <span class="col-status"><span class="st-delay">!</span></span>
+    <span class="col-actions"><button class="btn">✏</button><button class="btn">日志</button></span>
+  </div>
+
+  <!-- 采购 -->
+  <div class="tbl-row" style="background:#fafbfc; border-top:1px solid #e0e0e0;">
+    <span class="expand">▶</span><span class="col-lvl lvl-l1">阶段</span>
+    <span class="col-name name-l1">采购</span>
+    <span class="col-person" style="color:#aaa;">-</span>
+    <span class="col-progress"><span class="pbar"><span class="pbar-plan" style="width:15%"></span><span class="pbar-actual" style="width:10%"></span></span><span class="pct">10%</span></span>
+    <span class="col-status"><span class="st-ok">&#10003;</span></span>
+    <span class="col-actions"><button class="btn btn-primary">＋ 物资采购</button></span>
+  </div>
+  <div class="tbl-row" style="padding-left:44px;">
+    <span class="expand">▶</span><span class="col-lvl lvl-l2">子项</span>
+    <span class="col-name name-l2">泵类采购</span>
+    <span class="col-person" style="color:#aaa;">-</span>
+    <span class="col-progress"><span class="pbar"><span class="pbar-plan" style="width:15%"></span><span class="pbar-actual" style="width:10%"></span></span><span class="pct">10%</span></span>
+    <span class="col-status"><span class="st-ok">&#10003;</span></span>
+    <span class="col-actions"><button class="btn btn-primary">＋ 任务</button><button class="btn">✏</button><button class="btn btn-danger">✕</button></span>
+  </div>
+  <div class="tbl-row last" style="padding-left:72px;">
+    <span class="expand"></span><span class="col-lvl lvl-l3">任务</span>
+    <span class="col-name name-l4">离心泵询价</span>
+    <span class="col-person"><select class="sel-person"><option>赵六</option></select></span>
+    <span class="col-progress"><span class="pbar"><span class="pbar-plan" style="width:15%"></span><span class="pbar-actual" style="width:10%"></span></span><span class="pct pct-ok">10%</span></span>
+    <span class="col-status"><span class="st-ok">&#10003;</span></span>
+    <span class="col-actions"><button class="btn btn-primary">进度</button><button class="btn">✏</button><button class="btn">日志</button><button class="btn btn-danger">✕</button></span>
+  </div>
+</div>
+
+<!-- 甘特图 -->
+<div class="panel" id="gantt-panel">
+  <div class="legend">
+    <span style="font-weight:500;color:#444;">甘特图</span>
+    <span class="sep"></span>
+    <span><span class="legend-swatch legend-p"></span>计划(P)</span>
+    <span><span class="legend-swatch legend-a"></span>实际(A)</span>
+    <span><span class="legend-swatch legend-ad"></span>实际·延误</span>
+  </div>
+
+  <!-- 方案设计 汇总 -->
+  <div class="gantt-wrap">
+    <div class="gantt-row">
+      <span class="gantt-label gantt-label-l1">方案设计</span>
+      <span class="gantt-type p">P</span>
+      <span class="gantt-date p">6/1</span>
+      <div class="gantt-section" style="height:28px;">
+        <div class="gantt-today" style="left:175px;"></div>
+        <div class="gantt-bar p" style="left:0px;width:240px;top:8px;"></div>
+      </div>
+      <span class="gantt-date p">8/15</span>
+    </div>
+    <div class="gantt-row" style="border-bottom:1px dotted #eee;">
+      <span style="width:156px;flex-shrink:0;"></span>
+      <span class="gantt-type a">A</span>
+      <span class="gantt-date a">6/2</span>
+      <div class="gantt-section" style="height:28px;">
+        <div class="gantt-bar a" style="left:2px;width:105px;top:8px;"></div>
+      </div>
+      <span class="gantt-date a" style="color:#999;">-</span>
+    </div>
+  </div>
+
+  <!-- P&ID -->
+  <div class="gantt-wrap">
+    <div class="gantt-row">
+      <span class="gantt-label" style="padding-left:24px;">P&amp;ID绘制</span>
+      <span class="gantt-type p">P</span>
+      <span class="gantt-date p">6/1</span>
+      <div class="gantt-section" style="height:28px;">
+        <div class="gantt-bar p" style="left:0px;width:180px;top:8px;"></div>
+      </div>
+      <span class="gantt-date p">7/15</span>
+    </div>
+    <div class="gantt-row" style="border-bottom:1px dotted #eee;">
+      <span style="width:156px;flex-shrink:0;"></span>
+      <span class="gantt-type a">A</span>
+      <span class="gantt-date a">6/2</span>
+      <div class="gantt-section" style="height:28px;">
+        <div class="gantt-bar a" style="left:2px;width:135px;top:8px;"></div>
+      </div>
+      <span class="gantt-date a" style="color:#999;">进行中</span>
+    </div>
+  </div>
+
+  <!-- 设备布置 -->
+  <div class="gantt-wrap">
+    <div class="gantt-row">
+      <span class="gantt-label" style="padding-left:24px;">设备布置</span>
+      <span class="gantt-type p">P</span>
+      <span class="gantt-date p">6/1</span>
+      <div class="gantt-section" style="height:28px;">
+        <div class="gantt-bar p" style="left:0px;width:120px;top:8px;"></div>
+      </div>
+      <span class="gantt-date p">6/30</span>
+    </div>
+    <div class="gantt-row" style="border-bottom:1px dotted #f0d8d8;">
+      <span style="width:156px;flex-shrink:0;"></span>
+      <span class="gantt-type ad">A</span>
+      <span class="gantt-date ad">6/15</span>
+      <div class="gantt-section" style="height:28px;">
+        <div class="gantt-bar ad" style="left:55px;width:18px;top:8px;"></div>
+      </div>
+      <span class="gantt-date ad">进行中</span>
+    </div>
+  </div>
+
+  <!-- 工艺流程图 -->
+  <div class="gantt-wrap">
+    <div class="gantt-row">
+      <span class="gantt-label" style="padding-left:24px;">工艺流程图</span>
+      <span class="gantt-type p">P</span>
+      <span class="gantt-date p">4/1</span>
+      <div class="gantt-section" style="height:28px;">
+        <div class="gantt-bar p" style="left:0px;width:260px;top:8px;"></div>
+      </div>
+      <span class="gantt-date p">6/5</span>
+    </div>
+    <div class="gantt-row" style="border-bottom:1px dotted #e0e8e2;">
+      <span style="width:156px;flex-shrink:0;"></span>
+      <span class="gantt-type a">A</span>
+      <span class="gantt-date a">4/1</span>
+      <div class="gantt-section" style="height:28px;">
+        <div class="gantt-bar a" style="left:2px;width:252px;top:8px;"></div>
+      </div>
+      <span class="gantt-date a">6/3</span>
+    </div>
+  </div>
+
+  <!-- 管道系统图 -->
+  <div class="gantt-wrap">
+    <div class="gantt-row">
+      <span class="gantt-label" style="padding-left:24px;">管道系统图</span>
+      <span class="gantt-type p">P</span>
+      <span class="gantt-date p">4/1</span>
+      <div class="gantt-section" style="height:28px;">
+        <div class="gantt-bar p" style="left:0px;width:240px;top:8px;"></div>
+      </div>
+      <span class="gantt-date p">5/31</span>
+    </div>
+    <div class="gantt-row" style="border-bottom:1px dotted #f0d8d8;">
+      <span style="width:156px;flex-shrink:0;"></span>
+      <span class="gantt-type ad">A</span>
+      <span class="gantt-date ad">4/1</span>
+      <div class="gantt-section" style="height:28px;">
+        <div class="gantt-bar ad" style="left:2px;width:270px;top:8px;"></div>
+      </div>
+      <span class="gantt-date ad">6/8</span>
+    </div>
+  </div>
+
+  <div class="month-scale">
+    <span>4月</span><span>5月</span><span>6月</span><span>7月</span><span>8月</span>
+  </div>
+</div>
+
+</body>
+</html>

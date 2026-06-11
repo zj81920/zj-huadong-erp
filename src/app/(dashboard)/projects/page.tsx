@@ -69,6 +69,7 @@ interface Project {
   actualCloseDate: string | null;
   createdAt: string;
   updatedAt: string;
+  designPhases: string | null;
   lastModifiedBy: string | null;
   createdById: string | null;
   customer: Customer;
@@ -76,7 +77,7 @@ interface Project {
   designManager: { id: string; realName: string } | null;
   supervisorLeader: { id: string; realName: string } | null;
   _count: {
-    plans: number;
+    wbsNodes: number;
     designTasks: number;
     outsourcingTasks: number;
     purchaseRequests: number;
@@ -168,6 +169,7 @@ export default function ProjectsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
 
+  const [designPhases, setDesignPhases] = useState<string[]>([]);
   const [detailProject, setDetailProject] = useState<Project | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -257,6 +259,7 @@ export default function ProjectsPage() {
   const handleOpenCreate = () => {
     setEditingProject(null);
     setForm(emptyForm);
+    setDesignPhases([]);
     setFormError("");
     setShowModal(true);
   };
@@ -284,6 +287,13 @@ export default function ProjectsPage() {
       infoSource: "",
     });
     setFormError("");
+    // 初始化设计阶段
+    try {
+      const phases = project.designPhases ? JSON.parse(project.designPhases) : [];
+      setDesignPhases(Array.isArray(phases) ? phases : []);
+    } catch {
+      setDesignPhases([]);
+    }
     setShowModal(true);
   };
 
@@ -324,6 +334,7 @@ export default function ProjectsPage() {
         startDate: form.startDate || null,
         plannedEndDate: form.plannedEndDate || null,
         actualCloseDate: form.actualCloseDate || null,
+        designPhases: designPhases.length > 0 ? JSON.stringify(designPhases) : null,
       };
 
       if (form.source === "项目线索") {
@@ -471,6 +482,10 @@ export default function ProjectsPage() {
       }
       return next;
     });
+    if (field === "projectCategory" && value !== "EP" && value !== "EPcm") {
+      // 切换到非 EP/EPcm 类别时，移除"采购"
+      setDesignPhases((prev) => prev.filter((p) => p !== "采购"));
+    }
     if (formError) setFormError("");
   };
 
@@ -771,13 +786,7 @@ export default function ProjectsPage() {
                               编辑
                             </button>
                           )}
-                          <button
-                            className="ios-btn ios-btn-ghost ios-btn-sm"
-                            onClick={() => router.push(`/projects/plans/${project.projectSourceId}`)}
-                          >
-                            <Calendar className="w-3.5 h-3.5" />
-                            计划
-                          </button>
+
                           {canDeleteFrontend(hasFlow, rolePerms, "", currentUser?.id ?? "", project.createdById ?? null, isAdminUser) && (
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
@@ -1033,6 +1042,53 @@ export default function ProjectsPage() {
               </select>
             </div>
 
+            {/* 设计阶段多选 */}
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                设计阶段（可多选）
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {(["方案设计", "初步设计", "详细设计", "竣工图设计"] as string[])
+                  .concat(
+                    form.projectCategory === "EP" || form.projectCategory === "EPcm"
+                      ? ["采购"]
+                      : []
+                  )
+                  .map((phase) => {
+                    const selected = designPhases.includes(phase);
+                    return (
+                      <label
+                        key={phase}
+                        className="flex items-center gap-1.5 cursor-pointer select-none"
+                        style={{
+                          padding: "6px 14px",
+                          border: `1px solid ${selected ? "#3B82F6" : "#D6D3D1"}`,
+                          borderRadius: 8,
+                          fontSize: 13,
+                          background: selected ? "#DBEAFE" : "#fff",
+                          color: selected ? "#1D4ED8" : "#1C1917",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => {
+                            setDesignPhases((prev) =>
+                              prev.includes(phase)
+                                ? prev.filter((p) => p !== phase)
+                                : [...prev, phase]
+                            );
+                          }}
+                          className="hidden"
+                        />
+                        {phase}
+                      </label>
+                    );
+                  })}
+              </div>
+            </div>
+
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">状态</label>
               <select
@@ -1216,7 +1272,7 @@ export default function ProjectsPage() {
               <p className="text-[13px] font-semibold text-[#1C1917] mb-2">关联统计</p>
               <div className="grid grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-[#FAFAF9] text-center">
-                  <p className="text-[20px] font-bold text-[#1C1917]">{detailProject._count.plans}</p>
+                  <p className="text-[20px] font-bold text-[#1C1917]">{detailProject._count.wbsNodes}</p>
                   <p className="text-[11px] text-[#78716C]">计划</p>
                 </div>
                 <div className="p-3 rounded-xl bg-[#FAFAF9] text-center">

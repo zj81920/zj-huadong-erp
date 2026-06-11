@@ -1,0 +1,58 @@
+<h2>三种简化方案对比</h2>
+<p class="subtitle">基于你的需求：AI 全流程 + 日期简化 + 保留手动进度%</p>
+
+<div class="options">
+  <div class="option" data-choice="approach-a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>渐进增强：保留框架，AI 外挂</h3>
+      <p><strong>数据模型不动</strong>，只在现有 4 级 WBS 上加 AI 能力层：AI 生成 WBS 模板、AI 状态判断简化、AI 报表。actualStart/End 字段保留但不强制填。改动最小。</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>优点</h4><ul><li>改动小，风险低</li><li>现有功能不受影响</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>计算逻辑仍有两套</li><li>旧字段成为技术债</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="approach-b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>AI 原生：重建数据模型和逻辑</h3>
+      <p><strong>彻底简化</strong>：去掉 actualStartDate/actualEndDate/delayDays/status(枚举)，只保留 planStartDate/planEndDate/progress。所有状态和延误由前端纯函数实时计算，AI 只负责 WBS 生成和报表。</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>优点</h4><ul><li>模型极简，理解容易</li><li>无冗余字段</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>需要数据迁移</li><li>改动范围大</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="approach-c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>（推荐）务实简化：精简模型 + AI 能力</h3>
+      <p>数据模型精简掉冗余字段，但<strong>不废弃现有 API</strong>。新逻辑用前端纯函数计算状态（不再有 judgeTaskStatus 和后端 cascadeSummarize 两套）。AI 聚焦在 WBS 自动生成 + 智能预警 + 报表。</p>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>优点</h4><ul><li>模型干净，逻辑单一</li><li>改动可控，测试覆盖</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>需要数据迁移脚本</li><li>API 签名需适配</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>核心简化对比（一图胜千言）</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead>
+      <tr style="background:#f5f5f5">
+        <th style="padding:8px;text-align:left;border:1px solid #ddd">维度</th>
+        <th style="padding:8px;text-align:center;border:1px solid #ddd">现状</th>
+        <th style="padding:8px;text-align:center;border:1px solid #ddd;background:#e8f5e9">方案C</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding:8px;border:1px solid #ddd">日期字段</td><td style="padding:8px;border:1px solid #ddd;text-align:center">planStart/End + actualStart/End (4个)</td><td style="padding:8px;border:1px solid #ddd;text-align:center;background:#e8f5e9">planStart/End (2个)</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">状态判断</td><td style="padding:8px;border:1px solid #ddd;text-align:center">judgeTaskStatus 5态 + cascadeSummarize</td><td style="padding:8px;border:1px solid #ddd;text-align:center;background:#e8f5e9">纯前端 3态 (未开始/进行中/已完成) + 延误标记</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">进度输入</td><td style="padding:8px;border:1px solid #ddd;text-align:center">手动填% + 手动填日期</td><td style="padding:8px;border:1px solid #ddd;text-align:center;background:#e8f5e9">手动填% (日期自动)</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">WBS创建</td><td style="padding:8px;border:1px solid #ddd;text-align:center">逐层手动添加</td><td style="padding:8px;border:1px solid #ddd;text-align:center;background:#e8f5e9">AI 一键生成模板</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">预警报表</td><td style="padding:8px;border:1px solid #ddd;text-align:center">无</td><td style="padding:8px;border:1px solid #ddd;text-align:center;background:#e8f5e9">AI 自动延误预警 + 周报月报</td></tr>
+    </tbody>
+  </table>
+</div>

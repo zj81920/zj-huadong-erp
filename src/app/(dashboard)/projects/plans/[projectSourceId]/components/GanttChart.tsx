@@ -103,12 +103,12 @@ function flattenGanttRows(nodes: WbsTreeNode[], depth: number): GanttRow[] {
         isGroupHeader: true,
         groupPlanStart: planStart, groupPlanEnd: planEnd,
       });
+    } else {
+      rows.push({
+        id: node.id, name: node.name, level: node.level, depth,
+        planStart, planEnd, status, progress,
+      });
     }
-
-    rows.push({
-      id: node.id, name: node.name, level: node.level, depth,
-      planStart, planEnd, status, progress,
-    });
 
     if (node.children.length > 0) {
       rows.push(...flattenGanttRows(node.children, depth + 1));

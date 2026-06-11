@@ -35,9 +35,15 @@ export default function ResponsibleSelect({
     setLoading(true);
     try {
       const res = await fetch("/api/users?pageSize=500");
+      if (!res.ok) {
+        console.error("加载用户列表失败:", res.status, res.statusText);
+        setUsers([]);
+        return;
+      }
       const data = await res.json();
       setUsers(data.data || []);
-    } catch {
+    } catch (err) {
+      console.error("加载用户列表异常:", err);
       setUsers([]);
     } finally {
       setLoading(false);

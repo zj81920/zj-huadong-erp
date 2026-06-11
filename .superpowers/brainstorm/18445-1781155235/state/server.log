@@ -1,0 +1,7 @@
+{"type":"server-started","port":62745,"host":"0.0.0.0","url_host":"localhost","url":"http://localhost:62745","screen_dir":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/18445-1781155235/content","state_dir":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/18445-1781155235/state"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/18445-1781155235/content/20-phase-sync.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/18445-1781155235/content/21-summary.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/18445-1781155235/content/22-dashboard.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/18445-1781155235/content/23-dashboard-v2.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/18445-1781155235/content/24-fill-options.html"}
+{"type":"server-stopped","reason":"idle timeout"}

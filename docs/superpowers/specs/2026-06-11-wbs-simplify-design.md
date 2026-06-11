@@ -243,6 +243,7 @@ UI: 更新预警摘要条 + 树形列表状态列 + 甘特图横道
 
 ### 8.3 前端
 - [ ] `wbs-utils.ts` 重构：`computeTaskStatus()` 替代 `judgeTaskStatus`/`judgeParentStatus`
+- [ ] 仪表盘列表页：新统计卡片(4张)、阶段标签列、风险等级、新状态 badge
 - [ ] 预警摘要条组件
 - [ ] 树形列表：单进度条、新状态列、多选责任人、AI 按钮
 - [ ] 甘特图：progress% 横道

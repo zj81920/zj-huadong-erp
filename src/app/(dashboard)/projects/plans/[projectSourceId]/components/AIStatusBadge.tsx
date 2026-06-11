@@ -1,22 +1,23 @@
 interface Props {
-  status: "ontrack" | "delayed" | "none";
+  status: "ontrack" | "delayed" | "none" | "done";
   reason: string;
 }
 
 export default function AIStatusBadge({ status, reason }: Props) {
   if (status === "ontrack") {
     return (
-      <span title={reason} style={{ color: "#22C55E", fontSize: 16, fontWeight: 700 }}>✓</span>
+      <span title={reason} style={{ fontSize: 14, color: "#7DA88E" }}>✅</span>
     );
   }
   if (status === "delayed") {
     return (
-      <span title={reason} style={{
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        width: 18, height: 18, borderRadius: "50%",
-        background: "#DC2626", color: "#fff", fontSize: 12, fontWeight: 700,
-      }}>!</span>
+      <span title={reason} style={{ fontSize: 14, color: "#C47676" }}>⚠️</span>
     );
   }
-  return <span style={{ color: "#D6D3D1", fontSize: 12 }}>-</span>;
+  if (status === "done") {
+    return (
+      <span title={reason} style={{ fontSize: 14, color: "#5A7A9A" }}>✅</span>
+    );
+  }
+  return <span style={{ color: "#D6D3D1", fontSize: 14 }}>—</span>;
 }

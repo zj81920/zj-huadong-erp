@@ -1,0 +1,94 @@
+<h2>横道图：时间跨度 vs 工作量比例</h2>
+<p class="subtitle">同一个任务：计划 5/1→6/30(61天)，实际 5/15 开工，进度 25%</p>
+
+<div class="section">
+  <h3>当前行为 — 实际横道 = 时间跨度</h3>
+  <div class="mockup">
+    <div class="mockup-header">当前 GanttChart：实际横道从 actualStart 画到 today（或 actualEnd）</div>
+    <div class="mockup-body" style="padding:16px;font-family:monospace;font-size:12px">
+      <div style="position:relative;height:50px;background:#F5F5F4;border-radius:4px;margin-bottom:8px">
+        <div style="position:absolute;top:8px;left:0;right:0;height:12px;display:flex;align-items:center">
+          <span style="font-size:10px;color:#90A4C4;width:30px">P</span>
+          <div style="position:relative;flex:1;height:1px;background:#E0E0E0">
+            <div style="position:absolute;left:0;width:100%;height:10px;top:-5px;border:1.5px dashed #90A4C4;background:rgba(144,164,196,0.08)"></div>
+          </div>
+          <span style="font-size:10px;color:#90A4C4;width:50px">5/1 → 6/30</span>
+        </div>
+        <div style="position:absolute;bottom:8px;left:0;right:0;height:12px;display:flex;align-items:center">
+          <span style="font-size:10px;color:#7DA88E;width:30px">A</span>
+          <div style="position:relative;flex:1;height:1px;background:#E0E0E0">
+            <div style="position:absolute;left:23%;width:77%;height:10px;top:-5px;background:#7DA88E;opacity:0.85"></div>
+          </div>
+          <span style="font-size:10px;color:#7DA88E;width:50px">5/15 → 至今</span>
+        </div>
+      </div>
+      <p style="margin:4px 0 0;color:#C47676;font-size:11px">⚠ 问题：实际横道占满了从 5/15 到今天的所有时间，看起来像"已经干了77%的时间"，但实际进度才25%</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>方案 A — 实际横道长度 = progress% × 计划总天数（推荐）</h3>
+  <p>实际 bar 的宽度按工作量比例计算：<code>25% × 61天 ≈ 15天</code>，从 actualStart 开始延伸 15 天到 5/30。</p>
+  
+  <div class="mockup">
+    <div class="mockup-header">方案 A：实际横道反映完成的工作量</div>
+    <div class="mockup-body" style="padding:16px;font-family:monospace;font-size:12px">
+      <div style="position:relative;height:50px;background:#F5F5F4;border-radius:4px;margin-bottom:8px">
+        <div style="position:absolute;top:8px;left:0;right:0;height:12px;display:flex;align-items:center">
+          <span style="font-size:10px;color:#90A4C4;width:30px">P</span>
+          <div style="position:relative;flex:1;height:1px;background:#E0E0E0">
+            <div style="position:absolute;left:0;width:100%;height:10px;top:-5px;border:1.5px dashed #90A4C4;background:rgba(144,164,196,0.08)"></div>
+          </div>
+          <span style="font-size:10px;color:#90A4C4;width:50px">计划 66%</span>
+        </div>
+        <div style="position:absolute;bottom:8px;left:0;right:0;height:12px;display:flex;align-items:center">
+          <span style="font-size:10px;color:#C47676;width:30px">A</span>
+          <div style="position:relative;flex:1;height:1px;background:#E0E0E0">
+            <div style="position:absolute;left:23%;width:25%;height:10px;top:-5px;background:#C47676;opacity:0.85"></div>
+          </div>
+          <span style="font-size:10px;color:#C47676;width:50px">实际 25%</span>
+        </div>
+      </div>
+      <p style="margin:4px 0 0;color:#7DA88E;font-size:11px">✅ 一目了然：计划横道 100% 宽度 = 预期完成量；实际横道 25% 宽度 = 已完成量。谁长谁短一眼看出。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>方案 B — 实际横道 = 已完成工作量，超出计划的用不同颜色</h3>
+  <p>和方案 A 一样用进度比例，但当实际进度 ≥ 计划进度时用绿色，< 时用红色。</p>
+
+  <div style="display:flex;gap:16px;margin-top:8px">
+    <div class="mockup" style="flex:1">
+      <div class="mockup-header">延误场景（25% &lt; 66%）</div>
+      <div class="mockup-body" style="padding:12px;font-size:12px">
+        <div style="height:6px;background:#E0E4EA;border-radius:2px;margin-bottom:4px">
+          <div style="width:100%;height:6px;background:#B0B8C4;border-radius:2px"></div>
+        </div>
+        <span style="color:#90A4C4">计划 66%</span>
+        <div style="height:6px;background:#E0E4EA;border-radius:2px;margin:4px 0">
+          <div style="width:25%;height:6px;background:#C47676;border-radius:2px"></div>
+        </div>
+        <span style="color:#C47676">实际 25%</span>
+      </div>
+    </div>
+    <div class="mockup" style="flex:1">
+      <div class="mockup-header">按期场景（55% ≥ 50%）</div>
+      <div class="mockup-body" style="padding:12px;font-size:12px">
+        <div style="height:6px;background:#E0E4EA;border-radius:2px;margin-bottom:4px">
+          <div style="width:50%;height:6px;background:#B0B8C4;border-radius:2px"></div>
+        </div>
+        <span style="color:#90A4C4">计划 50%</span>
+        <div style="height:6px;background:#E0E4EA;border-radius:2px;margin:4px 0">
+          <div style="width:55%;height:6px;background:#7DA88E;border-radius:2px"></div>
+        </div>
+        <span style="color:#7DA88E">实际 55%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px;padding:12px;background:#F0F7FF;border:1px solid #BFDBFE;border-radius:8px">
+  <p style="margin:0;font-size:13px"><strong>我的推荐：方案 A</strong>。横道图显示实际进度比例（而非时间跨度），配合状态判断修正，让计划/实际对比一目了然。</p>
+</div>

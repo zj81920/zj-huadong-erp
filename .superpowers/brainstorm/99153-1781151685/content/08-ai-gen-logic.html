@@ -1,0 +1,83 @@
+<h2>AI 自动生成 L2-L4 的逻辑</h2>
+<p class="subtitle">基于项目上下文 + 专业字典的智能展开</p>
+
+<div class="section">
+  <h3>生成流程</h3>
+  <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-size:14px;line-height:2">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="background:#1565c0;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px">输入</span>
+      <span>项目类型(设计/EPC/咨询) + 阶段名称(如"初步设计") + 专业字典(DisciplineDictionary)</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="background:#6a1b9a;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px">处理</span>
+      <span>调用 LLM，携带系统提示词（行业知识），返回结构化 JSON</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px">输出</span>
+      <span>完整的 L2→L3→L4 树，包含名称 + 建议工期 + 责任人建议</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>举个例子：阶段「初步设计」→ AI 生成结果</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:13px;line-height:1.8;padding:12px">
+      <div style="color:#1565c0;font-weight:bold">📁 初步设计 <span style="color:#888;font-weight:normal">(L1 - 来自项目阶段)</span></div>
+      <div style="margin-left:16px;border-left:2px solid #e0e0e0;padding-left:12px">
+        <div style="color:#2e7d32;font-weight:bold">├─ 📂 建筑专业 <span style="color:#888;font-weight:normal">(L2)</span></div>
+        <div style="margin-left:16px;border-left:2px solid #e0e0e0;padding-left:12px">
+          <div style="color:#ef6c00">├─ 🏷 建筑设计 <span style="color:#888;font-weight:normal">(L3 - 关联专业字典)</span></div>
+          <div style="margin-left:16px;padding-left:8px">
+            <div>├─ 📝 建筑平面图绘制 <span style="color:#888">7天</span></div>
+            <div>├─ 📝 建筑立面图绘制 <span style="color:#888">5天</span></div>
+            <div>└─ 📝 建筑剖面图绘制 <span style="color:#888">5天</span></div>
+          </div>
+        </div>
+        <div style="margin-left:16px;border-left:2px solid #e0e0e0;padding-left:12px;margin-top:4px">
+          <div style="color:#ef6c00">🏷 结构设计 <span style="color:#888;font-weight:normal">(L3)</span></div>
+          <div style="margin-left:16px;padding-left:8px">
+            <div>├─ 📝 结构计算书编制 <span style="color:#888">10天</span></div>
+            <div>├─ 📝 基础平面图绘制 <span style="color:#888">7天</span></div>
+            <div>└─ 📝 结构详图绘制 <span style="color:#888">7天</span></div>
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#888;font-style:italic">... 给排水、电气、暖通等专业类似展开</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>关键设计决策：需要你确认</h3>
+  <p class="subtitle">这影响 AI 提示词和生成结构</p>
+
+  <div style="background:#fff3e0;padding:16px;border-radius:8px;margin-bottom:12px">
+    <h4 style="margin:0 0 6px">L2 和 L3 的关系是什么？</h4>
+    <p style="margin:0;font-size:14px">我的理解是 <strong>L2 = 专业大类(建筑/结构/给排水...)，L3 = 该专业下的细分</strong>。但需要你确认实际的层级划分惯例。</p>
+  </div>
+
+  <div class="options">
+    <div class="option" data-choice="l23-a" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>L2=专业大类 L3=子专业</h3>
+        <p>如 L2「建筑专业」→ L3「建筑设计」「建筑详图」；L3 关联 DisciplineDictionary</p>
+      </div>
+    </div>
+    <div class="option" data-choice="l23-b" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>L2=交付物/区域 L3=专业</h3>
+        <p>如 L2「A区图纸」→ L3「建筑」「结构」「给排水」；L3 关联 DisciplineDictionary</p>
+      </div>
+    </div>
+    <div class="option" data-choice="l23-c" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>你们实际有其他划分方式</h3>
+        <p>请在聊天中告诉我你们实际的 L2/L3 划分惯例</p>
+      </div>
+    </div>
+  </div>
+</div>

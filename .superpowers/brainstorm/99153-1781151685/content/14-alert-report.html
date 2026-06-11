@@ -1,0 +1,94 @@
+<h2>设计 Section 3：AI 预警与报表</h2>
+<p class="subtitle">AI 主动发现问题，自动生成汇报</p>
+
+<div class="section">
+  <h3>1. 智能延误预警</h3>
+  <p style="font-size:14px;color:#666">不依赖人工检查，系统自动标记并醒目展示</p>
+  <div class="mockup">
+    <div class="mockup-header">📋 项目 WBS 页面顶部 — 预警卡片</div>
+    <div class="mockup-body" style="padding:12px">
+      <div style="display:flex;gap:12px">
+        <div style="background:#fff3e0;padding:10px 16px;border-radius:6px;border-left:3px solid #ef6c00;flex:1">
+          <div style="font-size:20px;font-weight:bold;color:#ef6c00">3</div>
+          <div style="font-size:12px;color:#666">延误任务</div>
+        </div>
+        <div style="background:#e8f5e9;padding:10px 16px;border-radius:6px;border-left:3px solid #2e7d32;flex:1">
+          <div style="font-size:20px;font-weight:bold;color:#2e7d32">12</div>
+          <div style="font-size:12px;color:#666">正常任务</div>
+        </div>
+        <div style="background:#e3f2fd;padding:10px 16px;border-radius:6px;border-left:3px solid #1565c0;flex:1">
+          <div style="font-size:20px;font-weight:bold;color:#1565c0">45%</div>
+          <div style="font-size:12px;color:#666">整体进度</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding:8px 12px;background:#fff3e0;border-radius:4px;font-size:13px">
+        ⚠️ <strong>PID图绘制</strong> 计划应达 50%，实际仅 30%，延误约 <strong>30天</strong> — 工艺装置区·工艺专业
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2. AI 周报/月报生成</h3>
+  <p style="font-size:14px;color:#666">一键生成项目进展报告，无需人工整理</p>
+  <div class="mockup">
+    <div class="mockup-header">🤖 AI 生成 — 施工图设计阶段周报</div>
+    <div class="mockup-body" style="padding:12px;font-size:13px;line-height:1.8">
+      <div style="display:flex;justify-content:space-between;color:#888;margin-bottom:8px">
+        <span>报告周期: 2026.06.04 - 2026.06.10</span>
+        <span style="color:#1565c0;cursor:pointer">📋 复制 / 📥 导出</span>
+      </div>
+      <div style="border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:8px">
+        <strong>一、整体进展</strong>
+        <p style="margin:4px 0;color:#666">施工图设计阶段整体进度 45%，较上周提升 8%。其中工艺专业推进最快(65%)，电气专业推进偏慢(28%)。</p>
+      </div>
+      <div style="border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:8px">
+        <strong>二、延误预警</strong>
+        <p style="margin:4px 0;color:#c62828">⚠️ PID图绘制(工艺装置区·工艺)：计划50%实际30%，建议增加人力。</p>
+        <p style="margin:4px 0;color:#c62828">⚠️ 电缆敷设图(公用工程·电气)：已超计划完成日5天未完成。</p>
+      </div>
+      <div style="border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:8px">
+        <strong>三、本周完成</strong>
+        <p style="margin:4px 0;color:#666">✅ 设备布置图(工艺) 完成 | ✅ 基础平面图(结构) 完成 | ✅ 建筑立面图(建筑) 完成</p>
+      </div>
+      <div>
+        <strong>四、下周计划</strong>
+        <p style="margin:4px 0;color:#666">📋 PID图继续推进 | 📋 结构详图开始 | 📋 给排水系统图启动</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3. 仪表盘增强</h3>
+  <p style="font-size:14px;color:#666">已有仪表盘页面，增加 AI 智能预警标记</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div style="background:#f8f9fa;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px">项目列表增强</h4>
+      <p style="margin:0;font-size:13px">每个项目卡片显示延误任务数 + 整体进度% + 风险等级标记（红/黄/绿），一眼识别问题项目。</p>
+    </div>
+    <div style="background:#f8f9fa;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px">AI 风险评级</h4>
+      <p style="margin:0;font-size:13px">根据延误任务比例+关键路径影响，自动给出项目风险等级。高风险项目置顶显示。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>技术实现</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div style="background:#e3f2fd;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px">预警 — 纯前端计算</h4>
+      <p style="margin:0;font-size:13px">加载 WBS 数据后，前端对所有 L4 节点跑状态函数，筛选延误项，在页面顶部汇总展示。无需额外 API。</p>
+    </div>
+    <div style="background:#e3f2fd;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px">报表 — 调用 LLM</h4>
+      <p style="margin:0;font-size:13px">聚合所有任务的进度数据 + 状态标签作为上下文，发送给 LLM 生成结构化报告。前端展示 + 一键复制导出。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>三个 AI 能力的设计都确认完了</h3>
+  <p class="subtitle">① AI生成L4任务 ② 简化状态计算 ③ 预警与报表 — 可以进入整体设计了？</p>
+</div>

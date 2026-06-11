@@ -1,0 +1,93 @@
+<h2>设计 Section 2：简化状态计算</h2>
+<p class="subtitle">告别 judgeTaskStatus 五态判断，用纯函数一目了然</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header" style="background:#ffebee">❌ 现状：复杂判断链</div>
+    <div class="mockup-body" style="font-size:12px;line-height:1.7">
+      <pre style="margin:0;color:#c62828">judgeTaskStatus(task)
+  ├─ 已完成(100%) → 还要判断是否超期
+  ├─ 未按时开始 → 对比 actualStart vs planStart
+  ├─ 等待开始 → planStart 在未来
+  ├─ 进行中 → planPct vs progress (5%容忍度)
+  └─ delayDays → 反推公式
+
+cascadeSummarize()
+  └─ 后端递归汇总写入 status 字段
+
+结果：前后端两套逻辑，5种状态名</pre>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header" style="background:#e8f5e9">✅ 新方案：纯函数计算</div>
+    <div class="mockup-body" style="font-size:12px;line-height:1.7">
+      <pre style="margin:0;color:#2e7d32">只存 progress%，其他实时算
+
+L4 任务状态：
+  未开始: progress = 0
+  进行中: 0 < progress < 100
+  已完成: progress = 100
+
+延误判断（仅进行中任务）：
+  planPct = today在计划区间的位置%
+  if progress < planPct → 延误
+
+上级节点汇总：
+  从子节点(L4)聚合
+  → 状态 + 是否延误</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>核心公式（一个函数搞定所有）</h3>
+  <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-size:13px;line-height:1.8">
+    <div style="margin-bottom:8px"><strong style="color:#1565c0">planPct</strong> = (today - planStart) / (planEnd - planStart) × 100</div>
+    <div style="margin-bottom:8px"><strong style="color:#1565c0">状态</strong> = progress=0 ? 未开始 : progress=100 ? 已完成 : 进行中</div>
+    <div><strong style="color:#c62828">延误</strong> = 状态=进行中 AND progress < planPct</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>三个典型场景</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+    <div style="background:#e8f5e9;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">✅</div>
+      <strong>按期</strong>
+      <p style="font-size:12px;margin:4px 0;color:#666">计划 1月~10月(300天)<br>今天 6月(第150天)<br>planPct = 50%<br>实际进度 = 55%<br><strong style="color:#2e7d32">55% ≥ 50% → 正常</strong></p>
+    </div>
+    <div style="background:#fff3e0;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">⚠️</div>
+      <strong>延误</strong>
+      <p style="font-size:12px;margin:4px 0;color:#666">计划 1月~10月(300天)<br>今天 6月(第150天)<br>planPct = 50%<br>实际进度 = 30%<br><strong style="color:#c62828">30% < 50% → 延误</strong></p>
+    </div>
+    <div style="background:#e3f2fd;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">⏳</div>
+      <strong>等待开始</strong>
+      <p style="font-size:12px;margin:4px 0;color:#666">计划 8月~12月<br>今天 6月<br>progress = 0<br><strong style="color:#1565c0">未到计划开始日期</strong></p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>横道图显示也简化了</h3>
+  <p style="font-size:14px;color:#666">只有计划横道（蓝色虚线框），实际横道用 progress% × 计划条长度（绿色实心）。一行就能看出计划进度 vs 实际进度的偏差。</p>
+  <div class="mockup">
+    <div class="mockup-body" style="padding:12px;font-size:13px">
+      <div style="margin-bottom:8px">📝 工艺流程图绘制 &nbsp; 计划 1月~10月(300天) &nbsp; 进度 55% &nbsp; <span style="color:#2e7d32">✅ 按期</span></div>
+      <div style="background:#eee;height:24px;border-radius:4px;position:relative;margin-bottom:4px">
+        <div style="position:absolute;left:0%;width:100%;height:100%;border:2px dashed #90caf9;border-radius:4px;box-sizing:border-box"></div>
+        <div style="position:absolute;left:0%;width:55%;height:100%;background:#7da88e;border-radius:4px"></div>
+        <div style="position:absolute;left:50%;top:-2px;width:2px;height:28px;background:#c62828" title="today"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;color:#888;font-size:11px">
+        <span>1月</span><span style="color:#c62828">今天 planPct=50%</span><span>10月</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>状态计算方向可以吗？</h3>
+  <p class="subtitle">确认后进入 AI 预警与报表设计</p>
+</div>

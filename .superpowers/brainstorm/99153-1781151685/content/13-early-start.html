@@ -1,0 +1,68 @@
+<h2>补充：提前开始的判断</h2>
+<p class="subtitle">延误 / 正常 / 提前 — 三档一目了然</p>
+
+<div class="section">
+  <h3>完整状态判断逻辑</h3>
+  <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-size:13px;line-height:1.8">
+    <div><strong style="color:#1565c0">planPct</strong> = clamp((today - planStart) / (planEnd - planStart) × 100, 0, 100)</div>
+    <div style="margin-top:8px"><strong>对比 progress 和 planPct：</strong></div>
+  </div>
+</div>
+
+<div class="section">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
+    <div style="background:#e8f5e9;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">🚀</div>
+      <strong>提前</strong>
+      <p style="font-size:12px;margin:4px 0;color:#666">已开始但还未到计划开始日<br>或 progress > planPct<br><strong style="color:#2e7d32">进度领先于计划</strong></p>
+    </div>
+    <div style="background:#e8f5e9;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">✅</div>
+      <strong>正常</strong>
+      <p style="font-size:12px;margin:4px 0;color:#666">progress ≈ planPct<br>或 progress = 0 且未到开始日<br><strong style="color:#2e7d32">一切按计划进行</strong></p>
+    </div>
+    <div style="background:#fff3e0;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">⚠️</div>
+      <strong>延误</strong>
+      <p style="font-size:12px;margin:4px 0;color:#666">progress < planPct<br>或已过计划结束日但未完成<br><strong style="color:#c62828">需要关注</strong></p>
+    </div>
+    <div style="background:#f3e5f5;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">🏁</div>
+      <strong>已完成</strong>
+      <p style="font-size:12px;margin:4px 0;color:#666">progress = 100<br>无论是否超期<br><strong style="color:#6a1b9a">任务结束</strong></p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>具体场景举例</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:#f5f5f5"><th style="padding:8px;text-align:left;border:1px solid #ddd">场景</th><th style="padding:8px;text-align:left;border:1px solid #ddd">条件</th><th style="padding:8px;text-align:center;border:1px solid #ddd">状态</th></tr></thead>
+    <tbody>
+      <tr style="background:#e8f5e9"><td style="padding:8px;border:1px solid #ddd">提前开工</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">计划8月开始，今天6月，progress=20%</td><td style="padding:8px;border:1px solid #ddd;text-align:center">🚀 提前</td></tr>
+      <tr style="background:#e8f5e9"><td style="padding:8px;border:1px solid #ddd">进度领先</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">计划1~10月，今天6月(planPct=50%)，progress=70%</td><td style="padding:8px;border:1px solid #ddd;text-align:center">🚀 提前</td></tr>
+      <tr style="background:#e8f5e9"><td style="padding:8px;border:1px solid #ddd">按计划推进</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">计划1~10月，今天6月(planPct=50%)，progress=50%</td><td style="padding:8px;border:1px solid #ddd;text-align:center">✅ 正常</td></tr>
+      <tr style="background:#e8f5e9"><td style="padding:8px;border:1px solid #ddd">等待开始</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">计划8月开始，今天6月，progress=0</td><td style="padding:8px;border:1px solid #ddd;text-align:center">✅ 正常</td></tr>
+      <tr style="background:#fff3e0"><td style="padding:8px;border:1px solid #ddd">进度滞后</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">计划1~10月，今天6月(planPct=50%)，progress=30%</td><td style="padding:8px;border:1px solid #ddd;text-align:center">⚠️ 延误</td></tr>
+      <tr style="background:#fff3e0"><td style="padding:8px;border:1px solid #ddd">超期未完成</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">计划1~5月，今天7月，progress=80%</td><td style="padding:8px;border:1px solid #ddd;text-align:center">⚠️ 延误</td></tr>
+      <tr style="background:#f3e5f5"><td style="padding:8px;border:1px solid #ddd">已完成</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">progress=100（无论是否超期）</td><td style="padding:8px;border:1px solid #ddd;text-align:center">🏁 已完成</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>一个纯函数，四种状态</h3>
+  <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-size:13px;font-family:monospace;line-height:1.8">
+    <div><span style="color:#888">// 输入: progress, planStart, planEnd, today</span></div>
+    <div><span style="color:#888">// 输出: { status, label }</span></div>
+    <div style="margin-top:4px"><span style="color:#1565c0">if</span> (progress === 100) → <span style="color:#6a1b9a">🏁 已完成</span></div>
+    <div><span style="color:#1565c0">if</span> (progress === 0 && today < planStart) → <span style="color:#2e7d32">✅ 正常</span></div>
+    <div><span style="color:#1565c0">if</span> (progress > 0 && today < planStart) → <span style="color:#2e7d32">🚀 提前</span></div>
+    <div><span style="color:#1565c0">if</span> (progress >= planPct) → <span style="color:#2e7d32">🚀 提前</span></div>
+    <div><span style="color:#1565c0">else</span> → <span style="color:#c62828">⚠️ 延误</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>这样覆盖提前开始的情况了吗？</h3>
+</div>

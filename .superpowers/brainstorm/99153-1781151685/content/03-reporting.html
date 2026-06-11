@@ -1,0 +1,64 @@
+<h2>进度汇报：现状 vs 期望</h2>
+<p class="subtitle">全流程 AI 管理的关键在于进度如何被追踪</p>
+
+<div class="section">
+  <h3>当前进度汇报方式是什么？</h3>
+  <div class="options">
+    <div class="option" data-choice="report-now-a" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>定期手动填报</h3>
+        <p>每周/每月各专业负责人打开系统，逐任务填写进度百分比和日期</p>
+      </div>
+    </div>
+    <div class="option" data-choice="report-now-b" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>以日志为主</h3>
+        <p>执行人在任务日志里记录做了什么，项目经理根据日志判断进度后手动更新百分比</p>
+      </div>
+    </div>
+    <div class="option" data-choice="report-now-c" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>口头/线下沟通</h3>
+        <p>系统外沟通（开会、微信），然后有人统一录入系统，系统更多是记录而非驱动</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>你最希望 AI 帮你解决什么？</h3>
+  <p class="subtitle">选出最核心的 1-2 个期望（可多选）</p>
+  <div class="options" data-multiselect>
+    <div class="option" data-choice="want-auto-progress" onclick="toggleSelect(this)">
+      <div class="letter">1</div>
+      <div class="content">
+        <h3>自动推断进度</h3>
+        <p>执行人只需写一句"今天干了什么"，AI 自动判断这个任务完成了百分之多少，不再需要手动填数字</p>
+      </div>
+    </div>
+    <div class="option" data-choice="want-auto-status" onclick="toggleSelect(this)">
+      <div class="letter">2</div>
+      <div class="content">
+        <h3>自动状态预警</h3>
+        <p>AI 对比实际进展和计划，自动判断是否延误、延误几天，主动推送预警给相关人</p>
+      </div>
+    </div>
+    <div class="option" data-choice="want-auto-wbs" onclick="toggleSelect(this)">
+      <div class="letter">3</div>
+      <div class="content">
+        <h3>自动生成 WBS</h3>
+        <p>新建项目时，只需告诉 AI 项目类型和关键参数，AI 自动生成完整的四级 WBS 结构和工期建议</p>
+      </div>
+    </div>
+    <div class="option" data-choice="want-auto-summary" onclick="toggleSelect(this)">
+      <div class="letter">4</div>
+      <div class="content">
+        <h3>自动汇总报告</h3>
+        <p>AI 定期自动输出项目周报/月报，包含整体进度、风险项、延误分析，无需人工整理</p>
+      </div>
+    </div>
+  </div>
+</div>

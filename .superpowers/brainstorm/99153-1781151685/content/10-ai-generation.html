@@ -1,0 +1,61 @@
+<h2>AI 生成 WBS 设计</h2>
+<p class="subtitle">石油化工设计项目 · 阶段 → 子项 → 专业 → 任务</p>
+
+<div class="section">
+  <h3>用户操作流程</h3>
+  <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-size:14px;line-height:2.2">
+    <div>1️⃣ 用户选择一个阶段（如「施工图设计」），点击「🤖 AI 生成计划」</div>
+    <div>2️⃣ 弹窗选择子项组织方式：<strong>按区域</strong> 或 <strong>按交付物类型</strong></div>
+    <div>3️⃣ AI 调用 LLM，携带项目类型(石油化工) + 阶段名 + 组织方式 + 专业字典</div>
+    <div>4️⃣ 返回完整的 L2→L3→L4 树，用户预览后可调整、确认、一键创建</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>生成示例（按区域）</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-size:13px;line-height:1.8;padding:12px">
+      <div style="color:#1565c0;font-weight:bold">📁 施工图设计 <span style="color:#888;font-weight:normal">(L1-来自项目阶段)</span></div>
+      <div style="margin-left:16px;border-left:2px solid #e0e0e0;padding-left:12px">
+        <div style="color:#2e7d32">├─ 📂 工艺装置区 <span style="color:#888">(L2-子项·区域)</span></div>
+        <div style="margin-left:16px;border-left:2px solid #e0e0e0;padding-left:12px">
+          <div style="color:#ef6c00">├─ 🏷 工艺 <span style="color:#888">(L3-专业)</span></div>
+          <div style="margin-left:16px;padding-left:8px"><span style="color:#888">├─ PFD图绘制 5天 │ ├─ PID图绘制 10天 │ └─ 设备布置图 7天</span></div>
+          <div style="color:#ef6c00">├─ 🏷 配管 <span style="color:#888">(L3)</span></div>
+          <div style="margin-left:16px;padding-left:8px"><span style="color:#888">├─ 管道平面图 7天 │ └─ 管段图绘制 5天</span></div>
+        </div>
+        <div style="color:#2e7d32;margin-top:4px">├─ 📂 储运罐区 <span style="color:#888">(L2-子项·区域)</span></div>
+        <div style="margin-left:16px;padding-left:12px">
+          <div style="color:#ef6c00">├─ 🏷 工艺 │ 🏷 结构 │ 🏷 仪表 <span style="color:#888">...各专业展开任务</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>技术实现要点</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div style="background:#e3f2fd;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px">🧠 LLM 提示词设计</h4>
+      <p style="margin:0;font-size:13px">系统提示词嵌入石油化工设计行业知识：典型子项划分、各专业常规任务清单、工期经验值。用户选择+项目类型作为参数注入。</p>
+    </div>
+    <div style="background:#e3f2fd;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px">🔗 专业关联</h4>
+      <p style="margin:0;font-size:13px">L3 生成的专业名需匹配现有的 DisciplineDictionary，无法匹配的提示用户先维护字典。确保数据一致性。</p>
+    </div>
+    <div style="background:#e3f2fd;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px">📐 工期建议</h4>
+      <p style="margin:0;font-size:13px">AI 根据任务类型给出建议工期（天），用户可调整。L4 的 planStart/End 由前端根据工期自动推算。</p>
+    </div>
+    <div style="background:#e3f2fd;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px">📋 预览确认</h4>
+      <p style="margin:0;font-size:13px">AI 返回后先展示预览树，用户可增删改节点、调整工期，确认后批量创建入库。所有节点标记 aiGenerated=true。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>AI 生成部分的设计，这样可以吗？</h3>
+  <p class="subtitle">确认后进入下一节：状态计算逻辑</p>
+</div>

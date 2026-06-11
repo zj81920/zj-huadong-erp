@@ -1,0 +1,54 @@
+<h2>WBS UI 设计 — 整体布局</h2>
+<p class="subtitle">基于简化方案重新设计页面结构</p>
+
+<div class="section">
+  <h3>页面整体布局变化</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header" style="background:#ffebee">❌ 现状</div>
+      <div class="mockup-body" style="font-size:12px;line-height:2;padding:8px">
+        <div style="background:#eee;padding:4px 8px;margin-bottom:4px">项目标题栏</div>
+        <div style="background:#eee;padding:4px 8px;margin-bottom:4px">[树形列表] [甘特图] Tab</div>
+        <div style="background:#eee;padding:4px 8px;margin-bottom:4px">表格：名称 | 状态 | 进度条 | 责任人 | 操作(编辑/进度/日志/删除)</div>
+        <div style="background:#eee;padding:4px 8px">甘特图：时间轴 + 横道</div>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header" style="background:#e8f5e9">✅ 新设计</div>
+      <div class="mockup-body" style="font-size:12px;line-height:2;padding:8px">
+        <div style="background:#fff3e0;padding:4px 8px;margin-bottom:4px;border-left:3px solid #ef6c00">⚠️ 预警摘要条：延误3项 | 整体45% | 风险等级</div>
+        <div style="background:#eee;padding:4px 8px;margin-bottom:4px">项目标题栏 + [AI 生成报告] 按钮</div>
+        <div style="background:#eee;padding:4px 8px;margin-bottom:4px">[树形列表] [甘特图] Tab</div>
+        <div style="background:#eee;padding:4px 8px;margin-bottom:4px">表格：名称 | 状态 | 进度 | 责任人 | 操作(进度/日志/删除)</div>
+        <div style="background:#eee;padding:4px 8px">甘特图：时间轴 + 计划横道 + 进度横道</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>关键 UI 变化</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div style="background:#e8f5e9;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px;color:#2e7d32">➕ 新增：预警摘要条</h4>
+      <p style="margin:0;font-size:13px">页面顶部固定显示：延误/正常任务数、整体进度%、风险等级。醒目但不占空间。</p>
+    </div>
+    <div style="background:#e8f5e9;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px;color:#2e7d32">➕ 新增：AI 生成报告按钮</h4>
+      <p style="margin:0;font-size:13px">项目标题栏右侧增加「🤖 AI 报告」按钮，点击生成周报/月报弹窗。</p>
+    </div>
+    <div style="background:#e8f5e9;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px;color:#2e7d32">➕ 新增：L3 节点的 AI 按钮</h4>
+      <p style="margin:0;font-size:13px">L3（专业）行操作区增加「🤖 生成任务」按钮，点击后 AI 生成该专业下的 L4 任务清单。</p>
+    </div>
+    <div style="background:#ffebee;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px;color:#c62828">➖ 移除：编辑按钮（L4）</h4>
+      <p style="margin:0;font-size:13px">L4 任务编辑合并到进度弹窗中，不再单独「编辑」按钮。减少操作入口。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>这个整体布局方向可以吗？</h3>
+  <p class="subtitle">确认后进入树形列表细节</p>
+</div>

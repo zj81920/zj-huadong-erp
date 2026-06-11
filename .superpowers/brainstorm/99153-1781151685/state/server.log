@@ -1,0 +1,60 @@
+{"type":"server-started","port":49839,"host":"0.0.0.0","url_host":"localhost","url":"http://localhost:49839","screen_dir":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content","state_dir":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/state"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/01-pain-points.html"}
+{"source":"user-event","type":"click","text":"🔧 人为操作过多\n        每个 L4 任务需要手动填写进度%、实际开始/结束日期。进度条、状态全依赖人工逐条更新，项目经理想知道整体状况得一个个点开看。","choice":"pain-manual","id":null,"timestamp":1781151727169}
+{"source":"user-event","type":"click","text":"🧮 判断逻辑复杂\n        judgeTaskStatus 有 5 种状态 + 5% 容忍度 + delayDays 反推公式 + 级联汇总。前端算一遍、后端算一遍，数据流绕来绕去不容易理解。","choice":"pain-logic","id":null,"timestamp":1781151727596}
+{"source":"user-event","type":"click","text":"🧮 判断逻辑复杂\n        judgeTaskStatus 有 5 种状态 + 5% 容忍度 + delayDays 反推公式 + 级联汇总。前端算一遍、后端算一遍，数据流绕来绕去不容易理解。","choice":"pain-logic","id":null,"timestamp":1781151733041}
+{"source":"user-event","type":"click","text":"C\n      \n        AI 全流程管理\n        从任务拆解→排期→进度追踪→预警→报告，全链路 AI 驱动。创建项目时 AI 自动生成 WBS 结构，执行中自动追踪，完成后自动汇总。","choice":"ai-level-c","id":null,"timestamp":1781151758984}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"type":"screen-updated","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/02-workflow.html"}
+{"source":"user-event","type":"click","text":"LD\n      \n        专业负责人\n        负责某个专业下的任务执行、进度汇报","choice":"role-leader","id":null,"timestamp":1781151816238}
+{"source":"user-event","type":"click","text":"PM\n      \n        项目经理\n        创建项目、拆分 WBS、查看整体进度、关注延误预警","choice":"role-pm","id":null,"timestamp":1781151816741}
+{"source":"user-event","type":"click","text":"EX\n      \n        执行人\n        具体任务执行者，汇报工作进展","choice":"role-worker","id":null,"timestamp":1781151818076}
+{"source":"user-event","type":"click","text":"LD\n      \n        领导/管理层\n        只看仪表盘汇总，关注整体健康度和延误项目","choice":"role-leader-view","id":null,"timestamp":1781151819283}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/03-reporting.html"}
+{"source":"user-event","type":"click","text":"A\n      \n        定期手动填报\n        每周/每月各专业负责人打开系统，逐任务填写进度百分比和日期","choice":"report-now-a","id":null,"timestamp":1781151984300}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/04-progress-input.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/05-approaches.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/06-data-model.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/07-level1-source.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/08-ai-gen-logic.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/09-l2-definition.html"}
+{"source":"user-event","type":"click","text":"A\n      \n        建筑物/区域划分\n        如「1号楼」「2号楼」「地下车库」「室外工程」等","choice":"sub-a","id":null,"timestamp":1781152595427}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/10-ai-generation.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/11-ai-l4-only.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/12-status-logic.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/13-early-start.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/14-alert-report.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/15-completion-types.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/16-ui-layout.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/17-tree-list.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/18-responsible.html"}
+{"type":"screen-added","file":"/Users/zj81920/应用开发/zj-huadong-erp/.superpowers/brainstorm/99153-1781151685/content/19-responsible-detail.html"}
+{"type":"server-stopped","reason":"owner process exited"}

@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
           projectLead: { select: { projectSourceId: true, projectName: true, currentStatus: true } },
           designManager: { select: { id: true, realName: true } },
           supervisorLeader: { select: { id: true, realName: true } },
-          _count: { select: { plans: true, designTasks: true, outsourcingTasks: true, purchaseRequests: true } },
+          _count: { select: { wbsNodes: true, designTasks: true, outsourcingTasks: true, purchaseRequests: true } },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
