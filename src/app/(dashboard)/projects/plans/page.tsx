@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
+import PaginationBar from "@/components/PaginationBar";
+import { usePagination } from "@/hooks/usePagination";
 
 interface ProjectSummary {
   projectSourceId: string;
@@ -31,22 +33,28 @@ interface SummaryData {
   totalPages: number;
 }
 
-const PAGE_SIZE = 20;
-
 export default function WbsDashboardPage() {
   const [summary, setSummary] = useState<SummaryData | null>(null);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({ defaultPageSize: 20 });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchData = useCallback((q: string, p: number) => {
-    const params = new URLSearchParams({ page: String(p), pageSize: String(PAGE_SIZE) });
+    const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
     if (q) params.set("search", q);
     fetch(`/api/projects/plans/summary?${params}`)
       .then((r) => r.json())
-      .then((d) => setSummary(d.data))
+      .then((d) => {
+        setSummary(d.data);
+        setPagination({
+          page: d.data.page,
+          pageSize: d.data.pageSize,
+          total: d.data.total,
+          totalPages: d.data.totalPages,
+        });
+      })
       .catch(() => {});
-  }, []);
+  }, [pageSize, setPagination]);
 
   useEffect(() => { fetchData(search, page); }, [page]); // eslint-disable-line
 
@@ -107,9 +115,9 @@ export default function WbsDashboardPage() {
         }}>
           <span style={{ width: 100 }}>项目编号</span>
           <span style={{ width: 200 }}>项目名称</span>
+          <span style={{ width: 120 }}>甲方</span>
           <span style={{ flex: 1 }}>设计阶段</span>
-          <span style={{ width: 100 }}>甲方</span>
-          <span style={{ width: 110, textAlign: "center" }}>进度</span>
+          <span style={{ width: 150, textAlign: "center" }}>进度</span>
           <span style={{ width: 80, textAlign: "center" }}>状态</span>
           <span style={{ width: 40, textAlign: "center" }}>风险</span>
         </div>
@@ -134,6 +142,9 @@ export default function WbsDashboardPage() {
             }}>
               {p.name}
             </span>
+            <span style={{ width: 120, fontSize: 13, color: "#57534E" }}>
+              {p.customerName || "-"}
+            </span>
             <span style={{ flex: 1, display: "flex", gap: 4, flexWrap: "wrap" }}>
               {(p.designPhasesList || []).map((phase) => (
                 <span key={phase} style={{
@@ -144,13 +155,10 @@ export default function WbsDashboardPage() {
                 </span>
               ))}
             </span>
-            <span style={{ width: 100, fontSize: 13, color: "#57534E" }}>
-              {p.customerName || "-"}
-            </span>
-            <span style={{ width: 110, textAlign: "center", fontSize: 13 }}>
+            <span style={{ width: 150, textAlign: "center", fontSize: 13 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <span style={{
-                  width: 60, height: 6, background: "#E8ECF1", borderRadius: 3,
+                  width: 80, height: 6, background: "#E8ECF1", borderRadius: 3,
                   display: "inline-block", overflow: "hidden",
                 }}>
                   <span style={{
@@ -208,21 +216,13 @@ export default function WbsDashboardPage() {
       </div>
 
       {/* 分页 */}
-      {summary.totalPages > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 20 }}>
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={summary.page <= 1}
-            style={paginationBtnStyle(summary.page <= 1)}
-          >上一页</button>
-          <span style={{ fontSize: 13, color: "#57534E" }}>
-            第 {summary.page}/{summary.totalPages} 页
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(summary.totalPages, p + 1))}
-            disabled={summary.page >= summary.totalPages}
-            style={paginationBtnStyle(summary.page >= summary.totalPages)}
-          >下一页</button>
+      {summary.total > 0 && (
+        <div style={{ padding: "12px 16px", borderTop: "1px solid #DFE3E8" }}>
+          <PaginationBar
+            pagination={pagination}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
     </div>
@@ -238,11 +238,3 @@ function StatCard({ label, value, color }: { label: string; value: number; color
   );
 }
 
-function paginationBtnStyle(disabled: boolean): React.CSSProperties {
-  return {
-    padding: "6px 16px", fontSize: 13, border: "1px solid #D0D5DD", borderRadius: 0,
-    background: disabled ? "#fff" : "#4A6FA5", color: disabled ? "#555" : "#fff",
-    borderColor: disabled ? "#D0D5DD" : "#4A6FA5",
-    cursor: disabled ? "not-allowed" : "pointer",
-  };
-}
