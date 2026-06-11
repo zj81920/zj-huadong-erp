@@ -61,7 +61,7 @@ export async function PUT(
       projectCode,
       name,
       customerId,
-      type,
+      projectContent,
       address,
       projectCategory,
       source,
@@ -109,7 +109,7 @@ export async function PUT(
     if (projectCode !== undefined) updateData.projectCode = projectCode.trim();
     if (name !== undefined) updateData.name = name.trim();
     if (customerId !== undefined) updateData.customerId = customerId;
-    if (type !== undefined) updateData.type = type?.trim() || null;
+    if (projectContent !== undefined) updateData.projectContent = projectContent?.trim() || null;
     if (address !== undefined) updateData.address = address?.trim() || null;
     if (projectCategory !== undefined) updateData.projectCategory = projectCategory?.trim() || null;
     if (source !== undefined) updateData.source = source;

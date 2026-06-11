@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
         projectCode: projectCode.trim(),
         name: name.trim(),
         customerId,
-        type: type?.trim() || null,
+        projectContent: projectContent?.trim() || null,
         address: address?.trim() || null,
         projectCategory: projectCategory?.trim() || null,
         source: projectSource,
