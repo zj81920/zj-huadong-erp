@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { judgeTaskStatus, calcPlanProgress } from "@/lib/wbs-utils";
+import { computeTaskStatus, calcPlanProgress } from "@/lib/wbs-utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
     const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "20")));
     const search = searchParams.get("search")?.trim() || "";
 
-    // 构建查询条件：搜索 + 必须有 WBS 节点
     const where: any = { wbsNodes: { some: {} } };
     if (search) {
       where.OR = [
@@ -19,7 +18,6 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // 查询所有匹配项目（需要全部计算进度以获取准确的统计数）
     const allProjects = await prisma.project.findMany({
       where,
       select: {
@@ -39,22 +37,17 @@ export async function GET(request: NextRequest) {
 
     const total = allProjects.length;
     const totalPages = Math.ceil(total / pageSize) || 1;
-
-    // 分页
     const paged = allProjects.slice((page - 1) * pageSize, page * pageSize);
 
-    // 批量获取所有项目的 WBS 节点
+    // 只查 L4 节点（只需要 progress + planStart + planEnd）
     const allSourceIds = allProjects.map((p) => p.projectSourceId);
     const allNodes = await prisma.projectWbsNode.findMany({
-      where: { projectSourceId: { in: allSourceIds } },
+      where: { projectSourceId: { in: allSourceIds }, level: 4 },
       select: {
         projectSourceId: true,
-        level: true,
         progress: true,
         planStartDate: true,
         planEndDate: true,
-        actualStartDate: true,
-        actualEndDate: true,
       },
     });
 
@@ -66,9 +59,8 @@ export async function GET(request: NextRequest) {
 
     const today = new Date();
 
-    // 计算单个项目的进度摘要
     function computeProjectSummary(p: (typeof allProjects)[0], nodes: typeof allNodes) {
-      const taskNodes = nodes.filter((n) => n.level === 4);
+      const taskNodes = nodes;
       const avgProgress =
         taskNodes.length > 0
           ? Math.round(taskNodes.reduce((s, n) => s + n.progress, 0) / taskNodes.length)
@@ -85,19 +77,14 @@ export async function GET(request: NextRequest) {
           : 0;
 
       let delayedCount = 0;
+      let aheadCount = 0;
       for (const n of taskNodes) {
-        const status = judgeTaskStatus(
-          {
-            planStart: n.planStartDate?.toISOString() || "",
-            planEnd: n.planEndDate?.toISOString() || "",
-            actualStart: n.actualStartDate?.toISOString() || undefined,
-            actualEnd: n.actualEndDate?.toISOString() || undefined,
-            pct: n.progress,
-          },
-          today
-        );
-        if (status.status === "delayed") delayedCount++;
+        const s = computeTaskStatus(n.progress, n.planStartDate as Date | null, n.planEndDate as Date | null, today);
+        if (s.status === "delayed" || s.status === "overdueComplete") delayedCount++;
+        if (s.status === "ahead" || s.status === "aheadComplete") aheadCount++;
       }
+
+      const riskLevel = delayedCount === 0 ? "low" : delayedCount <= 2 ? "medium" : "high";
 
       return {
         id: p.id,
@@ -109,28 +96,34 @@ export async function GET(request: NextRequest) {
         type: p.type,
         projectCategory: p.projectCategory,
         designPhases: p.designPhases,
+        designPhasesList: (() => {
+          try { return JSON.parse(p.designPhases || "[]") as string[]; }
+          catch { return []; }
+        })(),
         nodeCount: p._count.wbsNodes,
         taskCount: taskNodes.length,
         overallProgress: avgProgress,
         avgPlanPct,
         delayedCount,
+        aheadCount,
+        riskLevel,
         isDelayed: delayedCount > 0,
-        aiStatus: delayedCount > 0 ? "delayed" : "ontrack",
+        aiStatus: delayedCount > 0 ? "delayed" : "normal",
       };
     }
 
-    // 计算分页项目的详细摘要
     const projects = paged.map((p) =>
       computeProjectSummary(p, nodesByProject[p.projectSourceId] || [])
     );
 
-    // 统计所有匹配项目的进度（用于统计卡片）
-    let ontrackProjects = 0;
+    let normalProjects = 0;
+    let aheadProjects = 0;
     let delayedProjects = 0;
     for (const p of allProjects) {
-      const summary = computeProjectSummary(p, nodesByProject[p.projectSourceId] || []);
-      if (summary.isDelayed) delayedProjects++;
-      else ontrackProjects++;
+      const s = computeProjectSummary(p, nodesByProject[p.projectSourceId] || []);
+      if (s.delayedCount > 0) delayedProjects++;
+      else if (s.aheadCount > 0) aheadProjects++;
+      else normalProjects++;
     }
 
     return NextResponse.json({
@@ -141,7 +134,8 @@ export async function GET(request: NextRequest) {
         pageSize,
         totalPages,
         totalProjects: total,
-        ontrackProjects,
+        normalProjects,
+        aheadProjects,
         delayedProjects,
       },
     });
