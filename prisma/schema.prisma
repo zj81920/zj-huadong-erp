@@ -382,14 +382,17 @@ model ProjectWbsNode {
   responsibleIds  Json      @default("[]") @map("responsible_ids")
   aiGenerated     Boolean   @default(false) @map("ai_generated")
   version         Int       @default(1)
-  lastModifiedBy  String?   @map("last_modified_by")
-  createdAt       DateTime  @default(now()) @map("created_at")
+  lastModifiedBy    String?   @map("last_modified_by")
+  actualStartDate   DateTime? @map("actual_start_date")
+  actualEndDate     DateTime? @map("actual_end_date")
+  createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
   project           Project         @relation(fields: [projectSourceId], references: [projectSourceId])
   parent            ProjectWbsNode? @relation("WbsHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children          ProjectWbsNode[] @relation("WbsHierarchy")
   taskLogs          WbsTaskLog[]
+  outsourcingWbsItems  OutsourcingWbsItem[]
 
   @@index([projectSourceId])
   @@index([parentId])
@@ -450,8 +453,27 @@ model OutsourcingTask {
 
   project  Project   @relation(fields: [projectSourceId], references: [projectSourceId])
   supplier Supplier? @relation(fields: [supplierId], references: [id])
+  wbsItems  OutsourcingWbsItem[]
 
   @@map("outsourcing_tasks")
+}
+
+model OutsourcingWbsItem {
+  id                String           @id @default(cuid())
+  outsourcingTaskId String           @map("outsourcing_task_id")
+  wbsNodeId         String           @map("wbs_node_id")
+  workload          Decimal?         @db.Decimal(15, 2)
+  unit              String?
+  unitPrice         Decimal?         @db.Decimal(15, 2)   @map("unit_price")
+  subtotal          Decimal?         @db.Decimal(15, 2)
+
+  outsourcingTask   OutsourcingTask  @relation(fields: [outsourcingTaskId], references: [id], onDelete: Cascade)
+  wbsNode           ProjectWbsNode   @relation(fields: [wbsNodeId], references: [id], onDelete: Cascade)
+
+  @@unique([outsourcingTaskId, wbsNodeId])
+  @@index([outsourcingTaskId])
+  @@index([wbsNodeId])
+  @@map("outsourcing_wbs_items")
 }
 
 // ==================== 采购管理 ====================
