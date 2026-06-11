@@ -112,6 +112,7 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
   } | null>(null);
   const [progressNode, setProgressNode] = useState<WbsNode | null>(null);
   const [generatingNodeId, setGeneratingNodeId] = useState<string | null>(null);
+  const [clearingNodeId, setClearingNodeId] = useState<string | null>(null);
 
   /* 任务日志 */
   const [logPanelNodeId, setLogPanelNodeId] = useState<string | null>(null);
@@ -185,6 +186,24 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
   /* ---------- AI 生成任务 ---------- */
 
   const handleGenerateTasks = async (nodeId: string) => {
+    // 从已有 nodes 中查找该 L3 节点下 AI 生成的 L4 任务
+    const existingAiTasks = nodes.filter(
+      (n) => n.parentId === nodeId && n.level === 4 && n.aiGenerated === true
+    );
+
+    if (existingAiTasks.length > 0) {
+      const confirmed = window.confirm(
+        `该专业下已有 ${existingAiTasks.length} 个 AI 生成的任务。重新生成将删除原有 AI 任务并重建，确定继续？`
+      );
+      if (!confirmed) return;
+
+      // 删除已有的 AI 任务
+      await fetch(
+        `/api/projects/plans/${projectSourceId}/nodes/${nodeId}/ai-tasks`,
+        { method: "DELETE" }
+      );
+    }
+
     setGeneratingNodeId(nodeId);
     try {
       const res = await fetch(
@@ -208,6 +227,27 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
       setGeneratingNodeId(null);
     }
   };
+
+  async function handleClearTasks(nodeId: string) {
+    if (!confirm("确定清空该专业下的所有任务？此操作不可撤销")) return;
+    setClearingNodeId(nodeId);
+    try {
+      const res = await fetch(
+        `/api/projects/plans/${projectSourceId}/nodes/${nodeId}/tasks`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        onRefresh();
+      } else {
+        const data = await res.json();
+        alert(data.error || "清空失败");
+      }
+    } catch {
+      alert("清空任务失败");
+    } finally {
+      setClearingNodeId(null);
+    }
+  }
 
   /* ---------- 删除节点 ---------- */
 
@@ -415,6 +455,15 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
                 }}
               >
                 {generatingNodeId === node.id ? "生成中..." : "🤖 生成任务"}
+              </button>
+            )}
+            {level === 3 && node.children && node.children.length > 0 && (
+              <button
+                onClick={() => handleClearTasks(node.id)}
+                disabled={clearingNodeId === node.id}
+                style={deleteBtnStyle}
+              >
+                清空任务
               </button>
             )}
             {level === 4 && (
