@@ -5,6 +5,8 @@ import {
   computeTaskStatus,
   computeParentStatus,
   aggregateProgress,
+  parseResponsibleIds,
+  isOutsourcingEntry,
 } from "@/lib/wbs-utils";
 import type { WbsTreeNode, TaskStatusResult } from "@/lib/wbs-utils";
 import ProgressDialog from "./ProgressDialog";
@@ -27,6 +29,7 @@ interface WbsNode {
   sortOrder: number;
   responsibleIds: string[];
   aiGenerated: boolean;
+  actualEndDate?: string | null;
   children?: WbsNode[];
   [key: string]: unknown;
 }
@@ -87,7 +90,7 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
     for (const n of allL4) {
       const ps = n.planStartDate ? new Date(n.planStartDate) : null;
       const pe = n.planEndDate ? new Date(n.planEndDate) : null;
-      const r = computeTaskStatus(n.progress ?? 0, ps, pe, today);
+      const r = computeTaskStatus(n.progress ?? 0, ps, pe, n.actualEndDate ? new Date(n.actualEndDate) : null, today);
       if (r.status === "delayed" || r.status === "overdueComplete") delayed++;
       if (r.status === "ahead" || r.status === "aheadComplete") ahead++;
     }
@@ -273,7 +276,7 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
     if (level === 4) {
       const planStart = raw.planStartDate ? new Date(raw.planStartDate) : null;
       const planEnd = raw.planEndDate ? new Date(raw.planEndDate) : null;
-      aiStatus = computeTaskStatus(progressPct, planStart, planEnd, new Date());
+      aiStatus = computeTaskStatus(progressPct, planStart, planEnd, raw.actualEndDate ? new Date(raw.actualEndDate) : null, new Date());
     } else {
       // L1/L2/L3: collect all L4 descendants
       const leafStatuses: TaskStatusResult[] = [];
@@ -283,7 +286,7 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
           const r = n as unknown as WbsNode;
           const ps = r.planStartDate ? new Date(r.planStartDate) : null;
           const pe = r.planEndDate ? new Date(r.planEndDate) : null;
-          leafStatuses.push(computeTaskStatus(r.progress ?? 0, ps, pe, new Date()));
+          leafStatuses.push(computeTaskStatus(r.progress ?? 0, ps, pe, r.actualEndDate ? new Date(r.actualEndDate) : null, new Date()));
           leafProgress.push(r.progress ?? 0);
         }
         for (const child of n.children) collectLeaves(child);
@@ -409,13 +412,32 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
 
         {/* 责任人 */}
         <td style={{ padding: "6px 8px", width: "13%", verticalAlign: "middle" }}>
-          {showResponsibleSelect && (raw.responsibleIds || []).length > 0 ? (
-            <span style={{ fontSize: 12, color: "#57534E" }}>
-              {(raw.responsibleIds || []).map(id => userMap.get(id) || id).join(", ")}
-            </span>
-          ) : (
-            <span style={{ fontSize: 12, color: "#9CA3AF" }}>—</span>
-          )}
+          {(() => {
+            const entries = parseResponsibleIds(node.responsibleIds);
+            if (entries.length === 0) {
+              // 仅专业节点(Level 3)和任务节点(Level 4)显示"未分配"
+              return node.level >= 3 ? <span className="text-gray-400 text-xs">未分配</span> : <span></span>;
+            }
+            return (
+              <div className="flex flex-wrap gap-1">
+                {entries.map((entry, idx) => (
+                  <span
+                    key={idx}
+                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs ${
+                      isOutsourcingEntry(entry)
+                        ? "bg-green-50 text-green-700 border border-green-200"
+                        : "bg-blue-50 text-blue-700"
+                    }`}
+                  >
+                    {entry.name || userMap.get(entry.id) || entry.id}
+                    {isOutsourcingEntry(entry) && (
+                      <span className="text-[10px] text-green-500">外包</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            );
+          })()}
         </td>
 
         {/* 操作 30% */}

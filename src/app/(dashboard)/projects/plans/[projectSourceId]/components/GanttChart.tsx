@@ -46,6 +46,8 @@ interface GanttRow {
   isGroupHeader?: boolean;
   groupPlanStart?: string;
   groupPlanEnd?: string;
+  actualStart?: string;
+  actualEnd?: string;
 }
 
 function flattenGanttRows(nodes: WbsTreeNode[], depth: number): GanttRow[] {
@@ -56,6 +58,9 @@ function flattenGanttRows(nodes: WbsTreeNode[], depth: number): GanttRow[] {
     let planEnd = "";
     let status = "none";
     let progress = 0;
+
+    const rowActualStart = node.level === 4 ? ((raw as any).actualStartDate || undefined) : undefined;
+    const rowActualEnd = node.level === 4 ? ((raw as any).actualEndDate || undefined) : undefined;
 
     if (node.level === 4) {
       planStart = raw.planStartDate || "";
@@ -102,11 +107,13 @@ function flattenGanttRows(nodes: WbsTreeNode[], depth: number): GanttRow[] {
         planStart: "", planEnd: "", status: "none", progress: 0,
         isGroupHeader: true,
         groupPlanStart: planStart, groupPlanEnd: planEnd,
+        actualStart: undefined, actualEnd: undefined,
       });
     } else {
       rows.push({
         id: node.id, name: node.name, level: node.level, depth,
         planStart, planEnd, status, progress,
+        actualStart: rowActualStart, actualEnd: rowActualEnd,
       });
     }
 
@@ -178,8 +185,8 @@ export default function GanttChart({ nodes }: Props) {
     if (!start) return null;
     const s = new Date(start).getTime();
     if (isNaN(s)) return null;
-    // 如果没有结束日期，用今天作为结束（用于进行中任务的实际横道）
-    const e = end ? new Date(end).getTime() : Date.now();
+    // 如果没有结束日期，用开始日期作为结束（宽度为 0，只用来定位）
+    const e = end ? new Date(end).getTime() : s;
     if (isNaN(e) || e < s) return null;
     return {
       left: ((s - timeStart.getTime()) / totalMs) * 100,
@@ -332,6 +339,40 @@ export default function GanttChart({ nodes }: Props) {
                   </div>
                 )}
 
+                {/* 实际开始标记 ◆ */}
+                {row.level === 4 && row.actualStart && row.progress > 0 && (() => {
+                  const s = new Date(row.actualStart).getTime();
+                  if (isNaN(s)) return null;
+                  const left = ((s - timeStart.getTime()) / totalMs) * 100;
+                  return (
+                    <div style={{
+                      position: "absolute", left: `${left}%`,
+                      top: "50%", transform: "translate(-50%, -50%)",
+                      zIndex: 5, fontSize: 10, color: "#4A6FA5",
+                      whiteSpace: "nowrap", pointerEvents: "none",
+                    }}>
+                      ◆{fmtDate(row.actualStart)}
+                    </div>
+                  );
+                })()}
+
+                {/* 实际完成标记 ◆ */}
+                {row.level === 4 && row.actualEnd && row.progress >= 100 && (() => {
+                  const s = new Date(row.actualEnd).getTime();
+                  if (isNaN(s)) return null;
+                  const left = ((s - timeStart.getTime()) / totalMs) * 100;
+                  return (
+                    <div style={{
+                      position: "absolute", left: `${left}%`,
+                      top: "50%", transform: "translate(-50%, -50%)",
+                      zIndex: 5, fontSize: 10, color: barColor,
+                      whiteSpace: "nowrap", pointerEvents: "none",
+                    }}>
+                      ◆{fmtDate(row.actualEnd)}
+                    </div>
+                  );
+                })()}
+
                 {!planBar && (
                   <span style={{ position: "absolute", left: 4, fontSize: 10, color: "#A8A29E", top: "50%", transform: "translateY(-50%)" }}>
                     无计划
@@ -370,6 +411,9 @@ export default function GanttChart({ nodes }: Props) {
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 12, height: 0, borderLeft: "1px solid #E05050" }} /> 今天
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ fontSize: 10, color: "#4A6FA5" }}>◆</span> 实际时间
           </span>
         </div>
       </div>
