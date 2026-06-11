@@ -301,8 +301,8 @@ model Project {
   projectCode        String    @unique @map("project_code")
   name               String    @unique
   customerId         String    @map("customer_id")
-  type               String?
   address            String?
+  projectContent     String?   @map("project_content") @db.Text
   projectCategory    String?   @map("project_category")
   source             String    @default("投标中标")
   sourceRefId        String?   @map("source_ref_id")
