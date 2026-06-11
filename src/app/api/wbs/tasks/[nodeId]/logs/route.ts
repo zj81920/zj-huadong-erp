@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { canAccessProjectWbs } from "@/lib/wbs-auth";
+import { canAccessProjectWbs, canEditProjectWbs } from "@/lib/wbs-auth";
 
 export async function GET(
   _request: NextRequest,
@@ -42,7 +42,7 @@ export async function POST(
     });
     if (!node) return NextResponse.json({ error: "节点不存在" }, { status: 404 });
 
-    const authorized = await canAccessProjectWbs(node.projectSourceId);
+    const authorized = await canEditProjectWbs(node.projectSourceId);
     if (!authorized) return NextResponse.json({ error: "无权操作" }, { status: 403 });
 
     const body = await request.json();

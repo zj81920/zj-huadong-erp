@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAIConfig, callAIModel } from "@/lib/ai";
-import { canAccessProjectWbs } from "@/lib/wbs-auth";
+import { canEditProjectWbs } from "@/lib/wbs-auth";
 
 const SYSTEM_PROMPT = `你是一个石油化工设计项目的高级工程师，精通各专业的设计流程和交付物。
 
@@ -45,7 +45,7 @@ export async function POST(
 ) {
   try {
     const { projectSourceId } = await params;
-    const authorized = await canAccessProjectWbs(projectSourceId);
+    const authorized = await canEditProjectWbs(projectSourceId);
     if (!authorized) return NextResponse.json({ error: "无权操作" }, { status: 403 });
 
     const config = await getAIConfig();

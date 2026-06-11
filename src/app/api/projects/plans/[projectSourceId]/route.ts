@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { canAccessProjectWbs } from "@/lib/wbs-auth";
+import { canAccessProjectWbs, canEditProjectWbs } from "@/lib/wbs-auth";
 
 export async function GET(
   _request: NextRequest,
@@ -28,7 +28,7 @@ export async function POST(
 ) {
   try {
     const { projectSourceId } = await params;
-    const authorized = await canAccessProjectWbs(projectSourceId);
+    const authorized = await canEditProjectWbs(projectSourceId);
     if (!authorized) return NextResponse.json({ error: "无权操作" }, { status: 403 });
 
     const body = await request.json();
