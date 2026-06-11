@@ -26,10 +26,24 @@ export async function PUT(
       return NextResponse.json({ error: "仅4级节点(任务)支持进度填报" }, { status: 400 });
     }
 
-    // 只更新 progress，不再推 actualStart/End、status、delayDays
+    const existingProgress = existing.progress ?? 0;
+    const updateData: Record<string, unknown> = { progress };
+
+    // actualStartDate: 首次 >0% 即锁定
+    if (existingProgress === 0 && progress > 0 && !existing.actualStartDate) {
+      updateData.actualStartDate = new Date();
+    }
+
+    // actualEndDate: 达到 100% 记录，退回清空
+    if (existingProgress !== 100 && progress === 100) {
+      updateData.actualEndDate = new Date();
+    } else if (existingProgress === 100 && progress !== 100) {
+      updateData.actualEndDate = null;
+    }
+
     const node = await prisma.projectWbsNode.update({
       where: { id },
-      data: { progress },
+      data: updateData,
     });
 
     // 返回整棵树（前端自行计算状态）

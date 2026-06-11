@@ -40,11 +40,13 @@ export interface TaskStatusResult {
 /**
  * 纯函数：计算任务六态
  * 优先级 P1-P6，命中即返回
+ * actualEndDate: 实际完成时间，优先用于判断完成类状态（修复"隔天查看变超期"bug）
  */
 export function computeTaskStatus(
   progress: number,
   planStart: Date | null,
   planEnd: Date | null,
+  actualEndDate?: Date | null,
   today: Date = new Date()
 ): TaskStatusResult {
   if (!planStart || !planEnd) {
@@ -55,13 +57,17 @@ export function computeTaskStatus(
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const planEndStart = new Date(planEnd.getFullYear(), planEnd.getMonth(), planEnd.getDate());
 
+  // 用实际完成时间代替 today 判断完成类状态
+  const completeDate = actualEndDate || today;
+  const completeDateStart = new Date(completeDate.getFullYear(), completeDate.getMonth(), completeDate.getDate());
+
   // P1: 提前完成
-  if (progress >= 100 && todayStart < planEndStart) {
+  if (progress >= 100 && completeDateStart < planEndStart) {
     return { status: "aheadComplete", emoji: "🎉", label: "提前完成", planPct };
   }
 
   // P2: 按期完成
-  if (progress >= 100 && todayStart.getTime() === planEndStart.getTime()) {
+  if (progress >= 100 && completeDateStart.getTime() === planEndStart.getTime()) {
     return { status: "onTimeComplete", emoji: "🏁", label: "按期完成", planPct };
   }
 
@@ -262,4 +268,50 @@ export function buildWbsTree<T extends WbsNodeInput>(nodes: T[]): WbsTreeNode[] 
   };
   sortChildren(roots);
   return roots;
+}
+
+// ========== responsibleIds 兼容工具 ==========
+
+export interface ResponsibleEntry {
+  type: "person" | "outsourcing";
+  id: string;
+  name: string;
+}
+
+/**
+ * 解析 responsibleIds，兼容新旧格式
+ * 旧格式: string[] → 转换为 {type:"person", id, name:""}
+ * 新格式: {type, id, name}[]
+ */
+export function parseResponsibleIds(ids: unknown): ResponsibleEntry[] {
+  if (!Array.isArray(ids)) return [];
+  return ids.map((item: unknown) => {
+    if (typeof item === "string") {
+      return { type: "person" as const, id: item, name: "" };
+    }
+    const obj = item as Record<string, unknown>;
+    return {
+      type: (obj.type as "person" | "outsourcing") || "person",
+      id: (obj.id as string) || "",
+      name: (obj.name as string) || "",
+    };
+  });
+}
+
+/** 判断条目是否为外包 */
+export function isOutsourcingEntry(entry: ResponsibleEntry): boolean {
+  return entry.type === "outsourcing";
+}
+
+/** 获取所有责任人名称（兼容旧格式无 name 时显示 id） */
+export function getResponsibleNames(entries: ResponsibleEntry[]): string[] {
+  return entries.map((e) => e.name || e.id);
+}
+
+/** 判断是否有外包条目，可选过滤特定外包 ID */
+export function hasOutsourcingEntry(entries: ResponsibleEntry[], outsourcingId?: string): boolean {
+  if (outsourcingId) {
+    return entries.some((e) => e.type === "outsourcing" && e.id === outsourcingId);
+  }
+  return entries.some((e) => e.type === "outsourcing");
 }
