@@ -24,18 +24,8 @@ export async function PUT(
     if (body.name !== undefined && existing.level !== 1) updateData.name = body.name;
     if (body.isMilestone !== undefined) updateData.isMilestone = body.isMilestone;
     if (body.responsibleIds !== undefined) updateData.responsibleIds = body.responsibleIds;
-    if (body.actualStartDate !== undefined) {
-      updateData.actualStartDate = body.actualStartDate ? new Date(body.actualStartDate) : null;
-    }
-    if (body.actualEndDate !== undefined) {
-      updateData.actualEndDate = body.actualEndDate ? new Date(body.actualEndDate) : null;
-    }
-
-    // 四级节点可编辑计划时间和实际时间
-    if (existing.level === 4) {
-      if (body.planStartDate !== undefined) updateData.planStartDate = body.planStartDate ? new Date(body.planStartDate) : null;
-      if (body.planEndDate !== undefined) updateData.planEndDate = body.planEndDate ? new Date(body.planEndDate) : null;
-    }
+    if (body.planStartDate !== undefined) updateData.planStartDate = body.planStartDate ? new Date(body.planStartDate) : null;
+    if (body.planEndDate !== undefined) updateData.planEndDate = body.planEndDate ? new Date(body.planEndDate) : null;
 
     const node = await prisma.projectWbsNode.update({
       where: { id },
