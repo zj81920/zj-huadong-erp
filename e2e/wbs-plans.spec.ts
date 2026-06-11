@@ -119,7 +119,7 @@ test.describe("WBS 计划模块全链路测试", () => {
   test("Step 2: 项目创建后自动同步WBS L1阶段节点", async ({ request }) => {
     await login(request);
 
-    const nodes = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}/nodes`);
+    const nodes = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}`);
     expect(Array.isArray(nodes)).toBeTruthy();
     console.log(`✅ WBS节点数: ${nodes.length}`);
 
@@ -146,8 +146,9 @@ test.describe("WBS 计划模块全链路测试", () => {
   test("Step 3: 在详细设计阶段下创建L2子项", async ({ request }) => {
     await login(request);
 
-    const sub1 = await wbsPost(request, "/api/projects/plans", {
-      projectSourceId: ids.projectSourceId,
+    const plansUrl = `/api/projects/plans/${ids.projectSourceId}`;
+
+    const sub1 = await wbsPost(request, plansUrl, {
       parentId: ids.detailDesignId,
       level: 2,
       name: "主装置区",
@@ -156,8 +157,7 @@ test.describe("WBS 计划模块全链路测试", () => {
     ids.subItem1Id = sub1.id;
     console.log(`✅ L2子项已创建: ${sub1.name}`);
 
-    const sub2 = await wbsPost(request, "/api/projects/plans", {
-      projectSourceId: ids.projectSourceId,
+    const sub2 = await wbsPost(request, plansUrl, {
       parentId: ids.detailDesignId,
       level: 2,
       name: "公用工程区",
@@ -166,7 +166,7 @@ test.describe("WBS 计划模块全链路测试", () => {
     ids.subItem2Id = sub2.id;
     console.log(`✅ L2子项已创建: ${sub2.name}`);
 
-    const nodes = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}/nodes`);
+    const nodes = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}`);
     const l2Nodes = nodes.filter((n: any) => n.level === 2 && n.parentId === ids.detailDesignId);
     expect(l2Nodes.length).toBe(2);
     console.log("✅ L2子项验证通过");
@@ -176,6 +176,8 @@ test.describe("WBS 计划模块全链路测试", () => {
 
   test("Step 4: 创建专业节点并验证重复校验", async ({ request }) => {
     await login(request);
+
+    const plansUrl = `/api/projects/plans/${ids.projectSourceId}`;
 
     // 获取专业字典
     let disciplines: any[];
@@ -210,8 +212,7 @@ test.describe("WBS 计划模块全链路测试", () => {
     console.log("✅ 专业字典已就绪");
 
     // 在主装置区下创建工艺专业
-    const processNode = await wbsPost(request, "/api/projects/plans", {
-      projectSourceId: ids.projectSourceId,
+    const processNode = await wbsPost(request, plansUrl, {
       parentId: ids.subItem1Id,
       level: 3,
       name: "工艺",
@@ -222,8 +223,7 @@ test.describe("WBS 计划模块全链路测试", () => {
     console.log(`✅ L3专业已创建: ${processNode.name}`);
 
     // 在主装置区下创建管道专业
-    const pipingNode = await wbsPost(request, "/api/projects/plans", {
-      projectSourceId: ids.projectSourceId,
+    const pipingNode = await wbsPost(request, plansUrl, {
       parentId: ids.subItem1Id,
       level: 3,
       name: "管道",
@@ -235,22 +235,20 @@ test.describe("WBS 计划模块全链路测试", () => {
 
     // 测试重复专业校验 → 应返回 409
     try {
-      await wbsPost(request, "/api/projects/plans", {
-        projectSourceId: ids.projectSourceId,
+      await wbsPost(request, plansUrl, {
         parentId: ids.subItem1Id,
         level: 3,
         name: "工艺",
         disciplineId: ids.processDisciplineId,
         sortOrder: 3,
       });
-      // 不应到达这里
       expect(true).toBeFalsy();
     } catch (err: any) {
       expect(err.message).toContain("409");
       console.log("✅ 重复专业校验通过：返回409");
     }
 
-    const nodes = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}/nodes`);
+    const nodes = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}`);
     const l3Nodes = nodes.filter((n: any) => n.level === 3 && n.parentId === ids.subItem1Id);
     expect(l3Nodes.length).toBe(2);
     console.log("✅ L3专业创建验证通过");
@@ -261,14 +259,16 @@ test.describe("WBS 计划模块全链路测试", () => {
   test("Step 5: AI生成L4任务", async ({ request }) => {
     await login(request);
 
-    await wbsPut(request, `/api/projects/plans/${ids.projectSourceId}/nodes/${ids.detailDesignId}`, {
+    const plansUrl = `/api/projects/plans/${ids.projectSourceId}`;
+
+    await wbsPut(request, `${plansUrl}/nodes/${ids.detailDesignId}`, {
       planStartDate: today,
       planEndDate: twoMonthsLaterStr,
     });
     console.log("✅ L1阶段计划日期已设置");
 
     const rawRes = await request.post(
-      `${BASE_URL}/api/projects/plans/${ids.projectSourceId}/nodes/generate-tasks`,
+      `${BASE_URL}${plansUrl}/nodes/generate-tasks`,
       { data: { parentNodeId: ids.processL3Id }, headers: { "Content-Type": "application/json" } }
     );
     const resJson = await rawRes.json();
@@ -281,8 +281,7 @@ test.describe("WBS 计划模块全链路测试", () => {
         "工艺数据表编制",
       ];
       for (const name of tasks) {
-        const node = await wbsPost(request, "/api/projects/plans", {
-          projectSourceId: ids.projectSourceId,
+        const node = await wbsPost(request, plansUrl, {
           parentId: ids.processL3Id,
           level: 4,
           name,
@@ -295,8 +294,7 @@ test.describe("WBS 计划模块全链路测试", () => {
       }
     } else if (!rawRes.ok()) {
       console.log(`⚠️ AI生成任务失败: ${resJson.error}，手动创建`);
-      const node = await wbsPost(request, "/api/projects/plans", {
-        projectSourceId: ids.projectSourceId,
+      const node = await wbsPost(request, plansUrl, {
         parentId: ids.processL3Id,
         level: 4,
         name: "手动创建的测试任务",
@@ -322,7 +320,9 @@ test.describe("WBS 计划模块全链路测试", () => {
   test("Step 6: 更新L4任务进度并验证", async ({ request }) => {
     await login(request);
 
-    const nodes = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}/nodes`);
+    const plansUrl = `/api/projects/plans/${ids.projectSourceId}`;
+
+    const nodes = await wbsGet(request, plansUrl);
     const l4Nodes = nodes.filter((n: any) => n.level === 4 && n.parentId === ids.processL3Id);
     expect(l4Nodes.length).toBeGreaterThanOrEqual(1);
     console.log(`✅ L4任务数: ${l4Nodes.length}`);
@@ -330,7 +330,7 @@ test.describe("WBS 计划模块全链路测试", () => {
     const targetNode = l4Nodes[0];
 
     const progressRes = await apiPut(request,
-      `/api/projects/plans/${ids.projectSourceId}/nodes/${targetNode.id}/progress`,
+      `${plansUrl}/nodes/${targetNode.id}/progress`,
       { progress: 50 }
     );
     expect(progressRes.data.progress).toBe(50);
@@ -344,7 +344,7 @@ test.describe("WBS 计划模块全链路测试", () => {
 
     // 校验：进度负数
     const r1 = await request.put(
-      `${BASE_URL}/api/projects/plans/${ids.projectSourceId}/nodes/${targetNode.id}/progress`,
+      `${BASE_URL}${plansUrl}/nodes/${targetNode.id}/progress`,
       { data: { progress: -1 }, headers: { "Content-Type": "application/json" } }
     );
     expect(r1.ok()).toBeFalsy();
@@ -352,7 +352,7 @@ test.describe("WBS 计划模块全链路测试", () => {
 
     // 校验：进度>100
     const r2 = await request.put(
-      `${BASE_URL}/api/projects/plans/${ids.projectSourceId}/nodes/${targetNode.id}/progress`,
+      `${BASE_URL}${plansUrl}/nodes/${targetNode.id}/progress`,
       { data: { progress: 101 }, headers: { "Content-Type": "application/json" } }
     );
     expect(r2.ok()).toBeFalsy();
@@ -364,8 +364,9 @@ test.describe("WBS 计划模块全链路测试", () => {
   test("Step 7: 非L4节点更新进度应被拒绝", async ({ request }) => {
     await login(request);
 
+    const plansUrl = `/api/projects/plans/${ids.projectSourceId}`;
     const r = await request.put(
-      `${BASE_URL}/api/projects/plans/${ids.projectSourceId}/nodes/${ids.processL3Id}/progress`,
+      `${BASE_URL}${plansUrl}/nodes/${ids.processL3Id}/progress`,
       { data: { progress: 50 }, headers: { "Content-Type": "application/json" } }
     );
     expect(r.ok()).toBeFalsy();
@@ -379,7 +380,7 @@ test.describe("WBS 计划模块全链路测试", () => {
   test("Step 8: WBS树形列表API完整验证", async ({ request }) => {
     await login(request);
 
-    const nodes = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}/nodes`);
+    const nodes = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}`);
     expect(Array.isArray(nodes)).toBeTruthy();
     console.log(`✅ WBS总节点数: ${nodes.length}`);
 
@@ -459,8 +460,9 @@ test.describe("WBS 计划模块全链路测试", () => {
   test("Step 10: 创建已完成/已延误任务验证状态聚合", async ({ request }) => {
     await login(request);
 
-    const completeTask = await wbsPost(request, "/api/projects/plans", {
-      projectSourceId: ids.projectSourceId,
+    const plansUrl = `/api/projects/plans/${ids.projectSourceId}`;
+
+    await wbsPost(request, plansUrl, {
       parentId: ids.pipingL3Id,
       level: 4,
       name: "已完成任务",
@@ -472,8 +474,7 @@ test.describe("WBS 计划模块全链路测试", () => {
 
     const pastStartDate = new Date();
     pastStartDate.setDate(pastStartDate.getDate() - 10);
-    const delayedTask = await wbsPost(request, "/api/projects/plans", {
-      projectSourceId: ids.projectSourceId,
+    await wbsPost(request, plansUrl, {
       parentId: ids.pipingL3Id,
       level: 4,
       name: "已延误任务",
@@ -494,9 +495,11 @@ test.describe("WBS 计划模块全链路测试", () => {
   test("Step 11: WBS节点编辑与删除", async ({ request }) => {
     await login(request);
 
+    const plansUrl = `/api/projects/plans/${ids.projectSourceId}`;
+
     // 编辑节点名称
     const updated = await apiPut(request,
-      `/api/projects/plans/${ids.projectSourceId}/nodes/${ids.processL3Id}`,
+      `${plansUrl}/nodes/${ids.processL3Id}`,
       { name: "工艺（已更新）" }
     );
     expect(updated.data.name).toBe("工艺（已更新）");
@@ -504,23 +507,23 @@ test.describe("WBS 计划模块全链路测试", () => {
 
     // 改回原名
     await apiPut(request,
-      `/api/projects/plans/${ids.projectSourceId}/nodes/${ids.processL3Id}`,
+      `${plansUrl}/nodes/${ids.processL3Id}`,
       { name: "工艺" }
     );
     console.log("✅ WBS节点名称已还原");
 
     // 删除L4任务
-    const nodes = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}/nodes`);
+    const nodes = await wbsGet(request, plansUrl);
     const l4Nodes = nodes.filter((n: any) => n.level === 4 && n.parentId === ids.processL3Id);
     expect(l4Nodes.length).toBeGreaterThan(0);
     const toDelete = l4Nodes[l4Nodes.length - 1];
     const delRes = await request.delete(
-      `${BASE_URL}/api/projects/plans/${ids.projectSourceId}/nodes/${toDelete.id}`
+      `${BASE_URL}${plansUrl}/nodes/${toDelete.id}`
     );
     expect(delRes.ok()).toBeTruthy();
     console.log(`✅ WBS节点已删除: ${toDelete.name}`);
 
-    const nodesAfter = await wbsGet(request, `/api/projects/plans/${ids.projectSourceId}/nodes`);
+    const nodesAfter = await wbsGet(request, plansUrl);
     const deletedCheck = nodesAfter.find((n: any) => n.id === toDelete.id);
     expect(deletedCheck).toBeUndefined();
     console.log("✅ 节点删除验证通过");
