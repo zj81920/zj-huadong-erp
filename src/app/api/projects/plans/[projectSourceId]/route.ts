@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { canAccessProjectWbs } from "@/lib/wbs-auth";
 
 export async function GET(
   _request: NextRequest,
@@ -9,15 +10,12 @@ export async function GET(
     const { projectSourceId } = await params;
     const nodes = await prisma.projectWbsNode.findMany({
       where: { projectSourceId },
-      include: {
-        responsiblePerson: { select: { id: true, realName: true } },
-      },
       orderBy: [{ level: "asc" }, { sortOrder: "asc" }],
     });
     return NextResponse.json({ data: nodes });
   } catch (error) {
-    console.error("获取WBS节点失败:", error);
-    return NextResponse.json({ error: "获取WBS节点失败" }, { status: 500 });
+    console.error("获取 WBS 节点失败:", error);
+    return NextResponse.json({ error: "获取 WBS 节点失败" }, { status: 500 });
   }
 }
 
@@ -27,48 +25,61 @@ export async function POST(
 ) {
   try {
     const { projectSourceId } = await params;
+    const authorized = await canAccessProjectWbs(projectSourceId);
+    if (!authorized) return NextResponse.json({ error: "无权操作" }, { status: 403 });
+
     const body = await request.json();
-    const { parentId, level, name, disciplineCode,
-            plannedPct, actualPct, responsibleId,
-            status, startDate, endDate, sortOrder, isMilestone } = body;
+    const { parentId, name, level, disciplineId, isMilestone, planStartDate, planEndDate, responsibleId } = body;
 
-    if (!name || typeof level !== "number") {
-      return NextResponse.json({ error: "缺少必填字段: name, level" }, { status: 400 });
+    // 一级节点保护：不允许通过 API 手动创建
+    if (level === 1) {
+      return NextResponse.json({ error: "一级节点由项目创建时自动生成，不可手动添加" }, { status: 400 });
     }
 
-    // 自动计算 sortOrder
-    let finalSortOrder = sortOrder ?? 0;
-    if (finalSortOrder === 0 && parentId) {
-      const siblingCount = await prisma.projectWbsNode.count({
-        where: { projectSourceId, parentId },
+    // 三级节点必选专业
+    if (level === 3 && !disciplineId) {
+      return NextResponse.json({ error: "三级节点必须选择专业" }, { status: 400 });
+    }
+
+    // 四级节点计划时间校验：必须在项目计划时间范围内
+    if (level === 4 && planStartDate && planEndDate) {
+      const project = await prisma.project.findUnique({
+        where: { projectSourceId },
+        select: { startDate: true, plannedEndDate: true },
       });
-      finalSortOrder = siblingCount;
+      if (project?.startDate && new Date(planStartDate) < project.startDate) {
+        return NextResponse.json({ error: "计划开始时间不能早于项目启动时间" }, { status: 400 });
+      }
+      if (project?.plannedEndDate && new Date(planEndDate) > project.plannedEndDate) {
+        return NextResponse.json({ error: "计划结束时间不能晚于项目计划完成时间" }, { status: 400 });
+      }
     }
+
+    // 计算 sortOrder
+    const maxSort = await prisma.projectWbsNode.findFirst({
+      where: { projectSourceId, parentId: parentId || null, level },
+      orderBy: { sortOrder: "desc" },
+      select: { sortOrder: true },
+    });
 
     const node = await prisma.projectWbsNode.create({
       data: {
         projectSourceId,
         parentId: parentId || null,
-        level,
         name,
-        disciplineCode: disciplineCode || null,
-        plannedPct: plannedPct ?? 0,
-        actualPct: actualPct ?? 0,
-        responsibleId: responsibleId || null,
-        status: status || "未开始",
-        startDate: startDate ? new Date(startDate) : null,
-        endDate: endDate ? new Date(endDate) : null,
-        sortOrder: finalSortOrder,
-        isMilestone: isMilestone ?? false,
-      },
-      include: {
-        responsiblePerson: { select: { id: true, realName: true } },
+        level,
+        disciplineId: level === 3 ? disciplineId : null,
+        isMilestone: isMilestone || false,
+        planStartDate: level === 4 && planStartDate ? new Date(planStartDate) : null,
+        planEndDate: level === 4 && planEndDate ? new Date(planEndDate) : null,
+        responsibleIds: [],
+        sortOrder: (maxSort?.sortOrder ?? -1) + 1,
       },
     });
 
     return NextResponse.json({ data: node }, { status: 201 });
   } catch (error) {
-    console.error("创建WBS节点失败:", error);
-    return NextResponse.json({ error: "创建WBS节点失败" }, { status: 500 });
+    console.error("创建 WBS 节点失败:", error);
+    return NextResponse.json({ error: "创建 WBS 节点失败" }, { status: 500 });
   }
 }
