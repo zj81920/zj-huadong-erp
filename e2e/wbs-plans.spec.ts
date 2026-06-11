@@ -261,12 +261,6 @@ test.describe("WBS 计划模块全链路测试", () => {
 
     const plansUrl = `/api/projects/plans/${ids.projectSourceId}`;
 
-    await wbsPut(request, `${plansUrl}/nodes/${ids.detailDesignId}`, {
-      planStartDate: today,
-      planEndDate: twoMonthsLaterStr,
-    });
-    console.log("✅ L1阶段计划日期已设置");
-
     const rawRes = await request.post(
       `${BASE_URL}${plansUrl}/nodes/generate-tasks`,
       { data: { parentNodeId: ids.processL3Id }, headers: { "Content-Type": "application/json" } }
