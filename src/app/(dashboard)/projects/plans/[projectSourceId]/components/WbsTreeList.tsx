@@ -304,7 +304,7 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
       aiStatus.status === "aheadComplete" || aiStatus.status === "ahead" ? "#5A8A6A" :
       "#7DA88E";
 
-    const showResponsibleSelect = level === 4 || (level === 3 && rootL1Name?.includes("采购"));
+    const showResponsibleSelect = level === 4 || level === 3;
 
     // 节点名称样式按 level
     const NAME_STYLES: Record<number, { fontWeight: number; fontSize: number; color: string }> = {
