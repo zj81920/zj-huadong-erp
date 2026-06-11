@@ -63,7 +63,6 @@ model User {
   approvalActions            ApprovalAction[]
   designTasksAssigned        DesignTask[]
   projectPlansResponsible    ProjectPlan[]
-  wbsNodesResponsible        ProjectWbsNode[]
   delegatedByMe              ApprovalDelegate[]   @relation("Delegator")
   delegatedToMe              ApprovalDelegate[]   @relation("DelegateTo")
   projectsAsDesignManager    Project[]            @relation("DesignManager")
@@ -312,6 +311,8 @@ model Project {
   supervisorLeaderId String?   @map("supervisor_leader_id")
   startDate          DateTime? @map("start_date")
   plannedEndDate     DateTime? @map("planned_end_date")
+  actualStartDate    DateTime? @map("actual_start_date")
+  actualEndDate      DateTime? @map("actual_end_date")
   actualCloseDate    DateTime? @map("actual_close_date")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
@@ -372,26 +373,23 @@ model ProjectWbsNode {
   parentId        String?   @map("parent_id")
   level           Int       @map("level")
   name            String    @map("name")
-  disciplineCode  String?   @map("discipline_code")
+  disciplineId    String?   @map("discipline_id")
   isMilestone     Boolean   @default(false) @map("is_milestone")
-  plannedPct      Int       @default(0)      @map("planned_pct")
-  actualPct       Int       @default(0)      @map("actual_pct")
-  delayDays       Int       @default(0)      @map("delay_days")
-  alertStatus     String    @default("正常")  @map("alert_status")
-  responsibleId   String?   @map("responsible_id")
-  status          String    @default("未开始") @map("status")
-  startDate       DateTime? @map("start_date")
-  endDate         DateTime? @map("end_date")
-  sortOrder       Int       @default(0)      @map("sort_order")
+  planStartDate   DateTime? @map("plan_start_date")
+  planEndDate     DateTime? @map("plan_end_date")
+  progress        Int       @default(0) @map("progress")
+  sortOrder       Int       @default(0) @map("sort_order")
+  responsibleIds  Json      @default("[]") @map("responsible_ids")
+  aiGenerated     Boolean   @default(false) @map("ai_generated")
   version         Int       @default(1)
   lastModifiedBy  String?   @map("last_modified_by")
-  createdAt       DateTime  @default(now())  @map("created_at")
-  updatedAt       DateTime  @updatedAt       @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  project           Project             @relation(fields: [projectSourceId], references: [projectSourceId])
-  parent            ProjectWbsNode?     @relation("WbsHierarchy", fields: [parentId], references: [id])
-  children          ProjectWbsNode[]    @relation("WbsHierarchy")
-  responsiblePerson User?               @relation(fields: [responsibleId], references: [id])
+  project           Project         @relation(fields: [projectSourceId], references: [projectSourceId])
+  parent            ProjectWbsNode? @relation("WbsHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children          ProjectWbsNode[] @relation("WbsHierarchy")
+  taskLogs          WbsTaskLog[]
 
   @@index([projectSourceId])
   @@index([parentId])
@@ -1608,4 +1606,18 @@ model FileChunk {
 
   @@index([recordId])
   @@map("file_chunks")
+}
+
+model WbsTaskLog {
+  id        String   @id @default(cuid())
+  nodeId    String   @map("node_id")
+  content   String
+  createdBy String   @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  node ProjectWbsNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId])
+  @@map("wbs_task_logs")
 }
