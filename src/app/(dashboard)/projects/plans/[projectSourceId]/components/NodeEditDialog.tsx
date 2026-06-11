@@ -66,13 +66,13 @@ export default function NodeEditDialog({
       setName(editNode.name);
       setPlanStart(editNode.planStartDate?.slice(0, 10) || "");
       setPlanEnd(editNode.planEndDate?.slice(0, 10) || "");
-      setResponsibleId(editNode.responsibleId || null);
+      setResponsibleIds(editNode.responsibleIds || []);
     } else {
       setName("");
       setDisciplineId("");
       setPlanStart("");
       setPlanEnd("");
-      setResponsibleId(null);
+      setResponsibleIds([]);
     }
     setRespOpen(false);
     setRespSearch("");
@@ -114,7 +114,9 @@ export default function NodeEditDialog({
     }
   }, []);
 
-  const currentResponsible = responsibleId ? users.find((u) => u.id === responsibleId) || editNode?.responsiblePerson : null;
+  const currentResponsible = responsibleIds.length > 0
+    ? users.find((u) => responsibleIds.includes(u.id))
+    : null;
 
   if (!open) return null;
 
@@ -138,8 +140,8 @@ export default function NodeEditDialog({
           body.planStartDate = planStart || null;
           body.planEndDate = planEnd || null;
         }
-        if (showResponsible && responsibleId) {
-          body.responsibleId = responsibleId;
+        if (showResponsible) {
+          body.responsibleIds = responsibleIds;
         }
         await fetch(`/api/projects/plans/${projectSourceId}`, {
           method: "POST",
@@ -152,8 +154,8 @@ export default function NodeEditDialog({
           body.planStartDate = planStart || null;
           body.planEndDate = planEnd || null;
         }
-        if (showResponsible && responsibleId !== undefined) {
-          body.responsibleId = responsibleId;
+        if (showResponsible) {
+          body.responsibleIds = responsibleIds;
         }
         await fetch(`/api/projects/plans/${projectSourceId}/nodes/${editNode.id}`, {
           method: "PUT",
@@ -288,10 +290,10 @@ export default function NodeEditDialog({
                     <button
                       key={u.id}
                       type="button"
-                      onClick={() => { setResponsibleId(u.id); setRespOpen(false); setRespSearch(""); }}
+                      onClick={() => { setResponsibleIds([u.id]); setRespOpen(false); setRespSearch(""); }}
                       style={{
                         display: "block", width: "100%", padding: "8px 12px",
-                        border: "none", background: responsibleId === u.id ? "#F5F5F4" : "transparent",
+                        border: "none", background: responsibleIds.includes(u.id) ? "#F5F5F4" : "transparent",
                         cursor: "pointer", fontSize: 13, textAlign: "left",
                         color: "#1C1917",
                       }}
@@ -299,11 +301,11 @@ export default function NodeEditDialog({
                       {u.realName}
                     </button>
                   ))}
-                  {responsibleId && (
+                  {responsibleIds.length > 0 && (
                     <div style={{ borderTop: "1px solid #EBEEF2", padding: "8px 12px" }}>
                       <button
                         type="button"
-                        onClick={() => { setResponsibleId(null); setRespOpen(false); }}
+                        onClick={() => { setResponsibleIds([]); setRespOpen(false); }}
                         style={{ border: "none", background: "transparent", cursor: "pointer", fontSize: 12, color: "#DC2626" }}
                       >
                         清除责任人

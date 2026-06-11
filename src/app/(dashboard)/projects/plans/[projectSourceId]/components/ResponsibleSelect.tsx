@@ -88,7 +88,7 @@ export default function ResponsibleSelect({
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ responsibleId: userId }),
+          body: JSON.stringify({ responsibleIds: [userId] }),
         }
       );
       onChanged();
@@ -110,7 +110,7 @@ export default function ResponsibleSelect({
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ responsibleId: null }),
+          body: JSON.stringify({ responsibleIds: [] }),
         }
       );
       onChanged();

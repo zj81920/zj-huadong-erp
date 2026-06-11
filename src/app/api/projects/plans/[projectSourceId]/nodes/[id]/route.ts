@@ -23,7 +23,7 @@ export async function PUT(
     const updateData: Record<string, unknown> = {};
     if (body.name !== undefined && existing.level !== 1) updateData.name = body.name;
     if (body.isMilestone !== undefined) updateData.isMilestone = body.isMilestone;
-    if (body.responsibleId !== undefined) updateData.responsibleId = body.responsibleId;
+    if (body.responsibleIds !== undefined) updateData.responsibleIds = body.responsibleIds;
     if (body.actualStartDate !== undefined) {
       updateData.actualStartDate = body.actualStartDate ? new Date(body.actualStartDate) : null;
     }

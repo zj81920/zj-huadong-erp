@@ -29,7 +29,7 @@ export async function POST(
     if (!authorized) return NextResponse.json({ error: "无权操作" }, { status: 403 });
 
     const body = await request.json();
-    const { parentId, name, level, disciplineId, isMilestone, planStartDate, planEndDate, responsibleId } = body;
+    const { parentId, name, level, disciplineId, isMilestone, planStartDate, planEndDate, responsibleIds } = body;
 
     // 一级节点保护：不允许通过 API 手动创建
     if (level === 1) {
@@ -90,7 +90,7 @@ export async function POST(
         isMilestone: isMilestone || false,
         planStartDate: level === 4 && planStartDate ? new Date(planStartDate) : null,
         planEndDate: level === 4 && planEndDate ? new Date(planEndDate) : null,
-        responsibleIds: [],
+        responsibleIds: responsibleIds || [],
         sortOrder: (maxSort?.sortOrder ?? -1) + 1,
       },
     });

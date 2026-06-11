@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   buildWbsTree,
   computeTaskStatus,
@@ -59,6 +59,25 @@ function fmtDate(d: string | null | undefined): string {
 export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRefresh }: Props) {
   const tree = buildWbsTree(nodes as unknown as Parameters<typeof buildWbsTree>[0]);
 
+  // 用户 ID → 姓名映射
+  const [userMap, setUserMap] = useState<Map<string, string>>(new Map());
+  useEffect(() => {
+    const ids = [...new Set(nodes.flatMap(n => n.responsibleIds || []))];
+    if (ids.length === 0) return;
+    // 如果已有缓存则跳过
+    if (ids.every(id => userMap.has(id))) return;
+    fetch("/api/users?pageSize=500")
+      .then(r => r.json())
+      .then(data => {
+        const map = new Map(userMap);
+        for (const u of (data.data || [])) {
+          map.set(u.id, u.realName);
+        }
+        setUserMap(map);
+      })
+      .catch(() => {});
+  }, [nodes]);
+
   // 预警统计
   const alertStats = useMemo(() => {
     const allL4 = nodes.filter(n => n.level === 4);
@@ -89,6 +108,7 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
   const [editNode, setEditNode] = useState<{
     id: string; name: string; level: number; isMilestone: boolean;
     planStartDate?: string | null; planEndDate?: string | null;
+    responsibleIds?: string[];
   } | null>(null);
   const [progressNode, setProgressNode] = useState<WbsNode | null>(null);
 
@@ -323,7 +343,7 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
         <td style={{ padding: "6px 8px", width: "13%", verticalAlign: "middle" }}>
           {showResponsibleSelect && (raw.responsibleIds || []).length > 0 ? (
             <span style={{ fontSize: 12, color: "#57534E" }}>
-              {(raw.responsibleIds || []).join(", ")}
+              {(raw.responsibleIds || []).map(id => userMap.get(id) || id).join(", ")}
             </span>
           ) : (
             <span style={{ fontSize: 12, color: "#9CA3AF" }}>—</span>
@@ -344,6 +364,7 @@ export default function WbsTreeList({ nodes, disciplines, projectSourceId, onRef
                 onClick={() => setEditNode({
                   id: node.id, name: node.name, level: node.level, isMilestone: !!raw.isMilestone,
                   planStartDate: raw.planStartDate, planEndDate: raw.planEndDate,
+                  responsibleIds: raw.responsibleIds || [],
                 })}
                 style={defaultBtnStyle}
               >编辑</button>
