@@ -8,6 +8,9 @@ export async function GET(
 ) {
   try {
     const { projectSourceId } = await params;
+    const authorized = await canAccessProjectWbs(projectSourceId);
+    if (!authorized) return NextResponse.json({ error: "无权查看" }, { status: 403 });
+
     const nodes = await prisma.projectWbsNode.findMany({
       where: { projectSourceId },
       orderBy: [{ level: "asc" }, { sortOrder: "asc" }],

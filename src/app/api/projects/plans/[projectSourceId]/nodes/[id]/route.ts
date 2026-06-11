@@ -8,6 +8,9 @@ export async function PUT(
 ) {
   try {
     const { projectSourceId, id } = await params;
+    const authorized = await canAccessProjectWbs(projectSourceId);
+    if (!authorized) return NextResponse.json({ error: "无权操作" }, { status: 403 });
+
     const body = await request.json();
 
     const existing = await prisma.projectWbsNode.findFirst({
