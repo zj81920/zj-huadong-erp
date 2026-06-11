@@ -135,27 +135,38 @@ export async function PUT(
       },
     });
 
-    // 如果 designPhases 有变化，同步一级WBS节点
+    // 如果 designPhases 有变化，同步一级WBS节点（只增删差异，保留已有子树）
     if (designPhases !== undefined) {
       try {
         const projectSourceId = project.projectSourceId;
-        // 递归删除所有WBS节点（从最深层开始）
-        const allNodes = await prisma.projectWbsNode.findMany({
-          where: { projectSourceId },
-          orderBy: { level: 'desc' },
+        const newPhases: string[] = JSON.parse(designPhases);
+
+        // 获取现有的一级节点
+        const existingL1Nodes = await prisma.projectWbsNode.findMany({
+          where: { projectSourceId, level: 1 },
+          orderBy: { sortOrder: "asc" },
         });
-        for (const node of allNodes) {
+        const existingNames = existingL1Nodes.map((n) => n.name);
+
+        // 1. 删除旧数组中有但新数组中没有的阶段（级联删除所有子节点）
+        const toDelete = existingL1Nodes.filter((n) => !newPhases.includes(n.name));
+        for (const node of toDelete) {
+          // Schema 已加 onDelete: Cascade，直接删除父节点即可级联
           await prisma.projectWbsNode.delete({ where: { id: node.id } });
         }
-        // 重新创建一级节点
-        const phases: string[] = JSON.parse(designPhases);
-        if (phases.length > 0) {
+
+        // 2. 新增新数组中有但旧数组中没有的阶段
+        const toAdd = newPhases.filter((name) => !existingNames.includes(name));
+        const maxSort = existingL1Nodes.length > 0
+          ? Math.max(...existingL1Nodes.map((n) => n.sortOrder))
+          : -1;
+        if (toAdd.length > 0) {
           await prisma.projectWbsNode.createMany({
-            data: phases.map((phaseName, index) => ({
+            data: toAdd.map((phaseName, index) => ({
               projectSourceId,
               level: 1,
               name: phaseName,
-              sortOrder: index,
+              sortOrder: maxSort + 1 + index,
             })),
           });
         }
@@ -186,6 +197,7 @@ export async function DELETE(
         _count: {
           select: {
             plans: true,
+            wbsNodes: true,
             designTasks: true,
             outsourcingTasks: true,
             purchaseRequests: true,
@@ -248,6 +260,7 @@ export async function DELETE(
       if (existing._count.invoices > 0) await tx.invoice.deleteMany({ where: { projectSourceId: psid } });
       if (existing._count.incomeContracts > 0) await tx.incomeContract.deleteMany({ where: { projectSourceId: psid } });
       if (existing._count.expenseContracts > 0) await tx.expenseContract.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.wbsNodes > 0) await tx.projectWbsNode.deleteMany({ where: { projectSourceId: psid } });
 
       if (psid) {
         const linkedLead = await tx.projectLead.findUnique({
