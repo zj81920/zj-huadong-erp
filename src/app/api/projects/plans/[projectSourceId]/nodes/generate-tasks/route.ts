@@ -74,22 +74,24 @@ export async function POST(
     // 获取项目信息
     const project = await prisma.project.findFirst({
       where: { projectSourceId },
-      select: { name: true, type: true, projectCategory: true },
+      select: { name: true, projectCategory: true, projectContent: true },
     });
 
     const projectName = project?.name || "未知项目";
-    const projectType = project?.projectCategory || project?.type || "石油化工设计";
+    const projectContent = project?.projectContent || "";
+    const projectType = project?.projectCategory || "石油化工设计";
     const phaseName = l1Node?.name || "未知阶段";
     const subItemName = l2Node?.name || "未知子项";
 
     // 构造 AI 提示
     const userMessage = `项目类型：${projectType}
 项目名称：${projectName}
+项目内容描述：${projectContent || "无"}
 当前阶段：${phaseName}
 子项名称：${subItemName}
 专业名称：${disciplineName}
 
-请列出该专业在此子项下需要完成的设计任务清单。`;
+请结合项目内容描述和项目阶段，列出该专业在此子项下需要完成的设计任务清单。`;
 
     const messages = [
       { role: "system" as const, content: SYSTEM_PROMPT },
