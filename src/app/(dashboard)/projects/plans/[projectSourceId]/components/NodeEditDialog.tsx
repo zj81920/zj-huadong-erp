@@ -124,7 +124,7 @@ export default function NodeEditDialog({
   const isLevel4 = level === 4;
   const isProcurementTask = isProcurement;
   // 需要显示责任人字段：L4 / 采购L3 / 编辑模式下的L4或采购L3
-  const showResponsible = isLevel4 || (level === 3 && isProcurementTask);
+  const showResponsible = isLevel4 || level === 3;
 
   async function handleSave() {
     setSaving(true);
