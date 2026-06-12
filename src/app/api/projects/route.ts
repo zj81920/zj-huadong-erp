@@ -120,6 +120,12 @@ export async function POST(request: NextRequest) {
     if (!customerId) {
       return NextResponse.json({ error: "请选择客户" }, { status: 400 });
     }
+    if (!startDate) {
+      return NextResponse.json({ error: "计划开始时间不能为空" }, { status: 400 });
+    }
+    if (!plannedEndDate) {
+      return NextResponse.json({ error: "计划完成时间不能为空" }, { status: 400 });
+    }
 
     const existingCode = await prisma.project.findUnique({
       where: { projectCode: projectCode.trim() },
@@ -230,7 +236,6 @@ export async function POST(request: NextRequest) {
         supervisorLeaderId: supervisorLeaderId || null,
         startDate: startDate ? new Date(startDate) : null,
         plannedEndDate: plannedEndDate ? new Date(plannedEndDate) : null,
-        actualCloseDate: actualCloseDate ? new Date(actualCloseDate) : null,
         lastModifiedBy: currentUser?.realName || null,
         createdById: currentUser?.id || null,
       },

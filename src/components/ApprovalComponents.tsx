@@ -422,6 +422,7 @@ interface ApprovalActionButtonProps {
   onStatusChange: (newStatus: string, instanceId: string | null) => void;
   onArchiveComplete?: () => void;
   isAdmin?: boolean;
+  wbsItems?: { wbsNodeId: string; workload?: number | null; unit?: string | null; unitPrice?: number | null }[];
 }
 
 export function ApprovalActionButton({
@@ -435,6 +436,7 @@ export function ApprovalActionButton({
   onStatusChange,
   onArchiveComplete,
   isAdmin,
+  wbsItems,
 }: ApprovalActionButtonProps) {
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -522,6 +524,7 @@ export function ApprovalActionButton({
           businessId,
           flowLevel,
           projectSourceId,
+          ...(wbsItems && wbsItems.length > 0 ? { wbsItems } : {}),
         }),
       });
 

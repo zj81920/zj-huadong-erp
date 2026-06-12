@@ -70,6 +70,7 @@ export async function writeProjects(
         // 2. 创建项目
         await tx.project.create({
           data: {
+            useWbs: false,
             projectCode: row.projectCode,
             projectSourceId: row.projectCode,
             name: row.name,

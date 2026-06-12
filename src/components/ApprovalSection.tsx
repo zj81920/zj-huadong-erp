@@ -12,12 +12,14 @@ interface ApprovalSectionProps {
   instanceId: string | null | undefined
   businessType: string
   businessId: string
+  wbsItems?: { wbsNodeId: string; workload?: number | null; unit?: string | null; unitPrice?: number | null }[]
 }
 
 export function ApprovalSection({
   instanceId,
   businessType,
   businessId,
+  wbsItems,
 }: ApprovalSectionProps) {
   const { instance, loading, error, refresh } = useApprovalInstance(instanceId)
 
@@ -61,6 +63,7 @@ export function ApprovalSection({
         currentStatus={instance.status}
         approvalInstance={instance}
         onStatusChange={() => { refresh(); }}
+        wbsItems={wbsItems}
       />
     </div>
   )

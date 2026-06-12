@@ -70,8 +70,12 @@ export async function PUT(
       supervisorLeaderId,
       startDate,
       plannedEndDate,
-      actualCloseDate,
       designPhases,
+      useWbs,
+      overallProgress,
+      riskLevel,
+      actualStartDate,
+      actualEndDate,
     } = body;
 
     if (projectCode !== undefined && !projectCode.trim()) {

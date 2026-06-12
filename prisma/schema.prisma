@@ -320,6 +320,9 @@ model Project {
   createdById        String?   @map("created_by")
   organizationId     String?   @map("organization_id")
   designPhases       String?   @map("design_phases")
+  useWbs             Boolean   @default(true) @map("use_wbs")
+  overallProgress    Int       @default(0) @map("overall_progress")
+  riskLevel          String    @default("low") @map("risk_level")
 
   customer            Customer             @relation(fields: [customerId], references: [id])
   projectLead         ProjectLead          @relation(fields: [projectSourceId], references: [projectSourceId])

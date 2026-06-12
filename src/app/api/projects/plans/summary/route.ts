@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "20")));
     const search = searchParams.get("search")?.trim() || "";
 
-    const where: any = { wbsNodes: { some: {} } };
+    const where: any = {};
     if (search) {
       where.OR = [
         { sourceRefId: { contains: search, mode: "insensitive" } },
@@ -29,6 +29,14 @@ export async function GET(request: NextRequest) {
         projectContent: true,
         projectCategory: true,
         designPhases: true,
+        startDate: true,
+        plannedEndDate: true,
+        status: true,
+        useWbs: true,
+        overallProgress: true,
+        riskLevel: true,
+        actualStartDate: true,
+        actualEndDate: true,
         customer: { select: { name: true } },
         _count: { select: { wbsNodes: true } },
       },
@@ -60,6 +68,41 @@ export async function GET(request: NextRequest) {
     const today = new Date();
 
     function computeProjectSummary(p: (typeof allProjects)[0], nodes: typeof allNodes) {
+      // 非 WBS 模式：直接读 Project 字段
+      if (!p.useWbs) {
+        return {
+          id: p.id,
+          projectSourceId: p.projectSourceId,
+          projectCode: p.projectCode,
+          sourceRefId: p.sourceRefId,
+          name: p.name,
+          customerName: p.customer?.name ?? "",
+          projectContent: p.projectContent,
+          projectCategory: p.projectCategory,
+          designPhases: p.designPhases,
+          startDate: p.startDate?.toISOString() || null,
+          plannedEndDate: p.plannedEndDate?.toISOString() || null,
+          designPhasesList: (() => {
+            try { return JSON.parse(p.designPhases || "[]") as string[]; }
+            catch { return []; }
+          })(),
+          nodeCount: p._count.wbsNodes,
+          taskCount: 0,
+          overallProgress: p.overallProgress,
+          avgPlanPct: 0,
+          delayedCount: 0,
+          aheadCount: 0,
+          riskLevel: (p.riskLevel || "low") as "low" | "medium" | "high",
+          isDelayed: false,
+          aiStatus: "normal" as const,
+          useWbs: p.useWbs,
+          status: p.status,
+          actualStartDate: p.actualStartDate?.toISOString() || null,
+          actualEndDate: p.actualEndDate?.toISOString() || null,
+        };
+      }
+
+      // WBS 模式：从节点聚合
       const taskNodes = nodes;
       const avgProgress =
         taskNodes.length > 0
@@ -96,6 +139,8 @@ export async function GET(request: NextRequest) {
         projectContent: p.projectContent,
         projectCategory: p.projectCategory,
         designPhases: p.designPhases,
+        startDate: p.startDate?.toISOString() || null,
+        plannedEndDate: p.plannedEndDate?.toISOString() || null,
         designPhasesList: (() => {
           try { return JSON.parse(p.designPhases || "[]") as string[]; }
           catch { return []; }
@@ -109,6 +154,10 @@ export async function GET(request: NextRequest) {
         riskLevel,
         isDelayed: delayedCount > 0,
         aiStatus: delayedCount > 0 ? "delayed" : "normal",
+        useWbs: p.useWbs,
+        status: p.status,
+        actualStartDate: p.actualStartDate?.toISOString() || null,
+        actualEndDate: p.actualEndDate?.toISOString() || null,
       };
     }
 

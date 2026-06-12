@@ -14,6 +14,11 @@ export async function GET(
       include: {
         project: { select: { name: true, projectSourceId: true } },
         supplier: { select: { id: true, name: true, supplierType: true } },
+        wbsItems: {
+          include: {
+            wbsNode: { select: { id: true, name: true, planEndDate: true } },
+          },
+        },
       },
     });
 
@@ -36,7 +41,10 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await prisma.outsourcingTask.findUnique({ where: { id } });
+    const existing = await prisma.outsourcingTask.findUnique({
+      where: { id },
+      include: { wbsItems: { select: { wbsNodeId: true } } },
+    });
     if (!existing) {
       return NextResponse.json({ error: "外包任务不存在" }, { status: 404 });
     }
@@ -58,6 +66,7 @@ export async function PUT(
       acceptanceStatus,
       approvalStatus,
       approvalInstanceId,
+      wbsItems: incomingWbsItems,
     } = body;
 
     const updateData: Record<string, unknown> = {};
@@ -78,6 +87,44 @@ export async function PUT(
     if (acceptanceStatus !== undefined) updateData.acceptanceStatus = acceptanceStatus;
     if (approvalStatus !== undefined) updateData.approvalStatus = approvalStatus;
     if (approvalInstanceId !== undefined) updateData.approvalInstanceId = approvalInstanceId || null;
+
+    // wbsItems 自动汇总（仅草稿/已驳回状态允许修改）
+    const canEditWbs = existing.approvalStatus === "草稿" || existing.approvalStatus === "已驳回";
+    if (incomingWbsItems !== undefined && canEditWbs && Array.isArray(incomingWbsItems) && incomingWbsItems.length > 0) {
+      const wbsNodeIds = incomingWbsItems.map((item: Record<string, unknown>) => item.wbsNodeId as string);
+      const wbsNodes = await prisma.projectWbsNode.findMany({
+        where: { id: { in: wbsNodeIds } },
+        select: { id: true, name: true, planEndDate: true },
+      });
+      const nodeMap = new Map(wbsNodes.map((n) => [n.id, n]));
+
+      // 任务描述自动拼接
+      if (taskDescription === undefined) {
+        updateData.taskDescription = incomingWbsItems
+          .map((item: Record<string, unknown>) => nodeMap.get(item.wbsNodeId as string)?.name || "")
+          .filter(Boolean)
+          .join(" / ");
+      }
+
+      // 金额自动汇总
+      if (amount === undefined) {
+        updateData.amount = incomingWbsItems.reduce((sum: number, item: Record<string, unknown>) => {
+          const wl = parseFloat(String(item.workload)) || 0;
+          const up = parseFloat(String(item.unitPrice)) || 0;
+          return sum + wl * up;
+        }, 0);
+      }
+
+      // 截止日自动取最早
+      if (deliveryDeadline === undefined && wbsNodes.length > 0) {
+        const dates = wbsNodes
+          .map((n) => n.planEndDate)
+          .filter((d): d is Date => d !== null);
+        if (dates.length > 0) {
+          updateData.deliveryDeadline = new Date(Math.min(...dates.map((d) => d.getTime())));
+        }
+      }
+    }
 
     // 分包公司：审批通过时自动生成支出合同草稿并回填 contractId
     const taskType = (updateData.type as string) || existing.type;
@@ -160,7 +207,10 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const existing = await prisma.outsourcingTask.findUnique({ where: { id } });
+    const existing = await prisma.outsourcingTask.findUnique({
+      where: { id },
+      include: { wbsItems: { select: { wbsNodeId: true } } },
+    });
     if (!existing) {
       return NextResponse.json({ error: "外包任务不存在" }, { status: 404 });
     }
@@ -169,6 +219,38 @@ export async function DELETE(
     if (!deleteCheck.allowed) {
       return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
+
+    // 如果已批准，从 WBS responsibleIds 中移除外包条目
+    if (existing.approvalStatus === "已批准" && existing.wbsItems.length > 0) {
+      const wbsNodeIds = existing.wbsItems.map((item) => item.wbsNodeId);
+      const wbsNodes = await prisma.projectWbsNode.findMany({
+        where: { id: { in: wbsNodeIds } },
+        select: { id: true, responsibleIds: true },
+      });
+
+      for (const node of wbsNodes) {
+        const rawIds = node.responsibleIds as unknown[];
+        if (!Array.isArray(rawIds)) continue;
+
+        const filtered = rawIds.filter((item: unknown) => {
+          if (typeof item === "object" && item !== null) {
+            const obj = item as Record<string, unknown>;
+            return !(obj.type === "outsourcing" && obj.id === id);
+          }
+          return true;
+        });
+
+        await prisma.projectWbsNode.update({
+          where: { id: node.id },
+          data: { responsibleIds: filtered as any },
+        });
+      }
+    }
+
+    // 删除 OutsourcingWbsItem 关联记录
+    await prisma.outsourcingWbsItem.deleteMany({
+      where: { outsourcingTaskId: id },
+    });
 
     await cleanupBusinessApprovalRecords("outsourcing", id);
     await prisma.outsourcingTask.delete({ where: { id } });

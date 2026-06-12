@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 智能财务查询 - 原型</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f7fa;color:#1e293b}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+/* Header */
+.header{background:linear-gradient(135deg,#1e40af,#3b82f6);border-radius:16px;padding:28px 32px;margin-bottom:24px;color:#fff}
+.header h1{font-size:24px;font-weight:700;margin-bottom:4px}
+.header p{font-size:14px;opacity:.85}
+/* Chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{padding:8px 16px;border-radius:20px;background:#fff;border:1px solid #e2e8f0;color:#475569;font-size:13px;cursor:pointer;transition:all .2s;user-select:none}
+.chip:hover{border-color:#3b82f6;color:#3b82f6;background:#eff6ff;transform:translateY(-1px);box-shadow:0 2px 8px rgba(59,130,246,.15)}
+.chip:active{transform:translateY(0)}
+.chip.disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
+/* Input */
+.input-row{display:flex;gap:10px;margin-bottom:20px}
+.input-row input{flex:1;padding:12px 18px;border:2px solid #e2e8f0;border-radius:12px;font-size:15px;outline:none;background:#fff}
+.input-row input:focus{border-color:#3b82f6}
+.input-row input.disabled{opacity:.6;pointer-events:none}
+.btn{padding:12px 24px;background:#3b82f6;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#2563eb}
+.btn.disabled{opacity:.6;cursor:not-allowed}
+/* Loading */
+.loading{display:flex;align-items:center;gap:12px;padding:20px;background:#fff;border-radius:12px;border:1px solid #e2e8f0;margin-bottom:20px}
+.spinner{width:20px;height:20px;border:3px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Card */
+.card{background:#fff;border-radius:16px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:20px;animation:up .4s ease-out}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.text{padding:20px 24px;font-size:14px;line-height:1.8;color:#475569}
+.text .t{font-size:15px;font-weight:600;color:#1e293b;margin-bottom:12px}
+.text p{margin-bottom:8px}
+.stitle{padding:16px 24px 12px;font-size:15px;font-weight:600;color:#1e293b;border-top:1px solid #f1f5f9}
+.chart-wrap{padding:0 24px 20px;text-align:center}
+.chart-wrap svg{max-width:100%}
+/* Cards grid */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:0 24px 20px}
+.scard{padding:16px;border-radius:12px;border:1px solid #f1f5f9;background:#fafbfc}
+.scard .l{font-size:12px;color:#94a3b8;margin-bottom:4px}
+.scard .v{font-size:22px;font-weight:700}
+.scard .ch{font-size:12px;margin-top:4px}
+.scard .ch.up{color:#10b981}
+.scard .ch.down{color:#ef4444}
+.scard.red .v{color:#ef4444}
+.scard.green .v{color:#10b981}
+.scard.blue .v{color:#3b82f6}
+.scard.amber .v{color:#f59e0b}
+.scard.purple .v{color:#8b5cf6}
+/* Table */
+.switch-row{padding:0 24px 16px}
+.switch-label{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#64748b;-webkit-user-select:none;user-select:none}
+.switch-label input{width:16px;height:16px;accent-color:#3b82f6;cursor:pointer}
+.twrap{padding:0 24px 20px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f8fafc;padding:10px 14px;text-align:left;font-weight:600;color:#475569;border-bottom:2px solid #e2e8f0}
+td{padding:10px 14px;border-bottom:1px solid #f1f5f9;color:#334155}
+tr:hover td{background:#fafbfc}
+/* Welcome */
+.welcome{background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:64px 24px;text-align:center;color:#94a3b8}
+.welcome .bi{font-size:48px;margin-bottom:16px}
+.welcome h3{font-size:18px;color:#64748b;margin-bottom:8px}
+.welcome p{font-size:14px;max-width:400px;margin:0 auto;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>AI 智能财务查询</h1>
+    <p>用自然语言查询财务数据，自动生成图表和分析报告</p>
+  </div>
+
+  <!-- Preset Chips -->
+  <div class="chips" id="chips"></div>
+
+  <!-- Input -->
+  <div class="input-row">
+    <input id="input" type="text" placeholder="输入财务查询问题，例如：上个月的支出情况…">
+    <button class="btn" id="sendBtn">发送</button>
+  </div>
+
+  <!-- Loading (hidden) -->
+  <div class="loading" id="loading" style="display:none">
+    <div class="spinner"></div>
+    <span style="color:#64748b;font-size:14px">AI 正在查询财务数据...</span>
+  </div>
+
+  <!-- Response area -->
+  <div id="response"></div>
+
+  <!-- Welcome state (shown by default) -->
+  <div class="welcome" id="welcome">
+    <div class="bi">🔍</div>
+    <h3>开始财务智能查询</h3>
+    <p>点击上方预设问题快速体验，或直接输入你的财务问题，AI 将自动查询数据库并生成图表和分析报告。</p>
+  </div>
+</div>
+
+<script>
+// --- Data ---
+const fmt = v => "¥" + Number(v).toLocaleString();
+const fmtShort = v => v >= 10000 ? "¥" + (v/10000).toFixed(1) + "万" : "¥" + v.toLocaleString();
+
+const MOCK = {
+  expense_bar: {
+    title:"过去3个月（2026年3月~5月）公司总支出为 ¥286,500",
+    paragraphs:[
+      "合同支出占比最高，达¥194,820（68%），主要集中在原材料采购和外包服务。",
+      "非合同支出为¥58,430（20%），主要是办公用品、差旅费等日常运营开支。",
+      "工资支出¥26,350（9%），报销支出¥6,900（3%）。",
+      "从趋势看，5月支出环比增长12.3%，主要是原材料价格上涨导致合同支出增加。"
+    ],
+    chart:{type:"bar",title:"近3个月支出按分类对比（2026.03-2026.05）",
+      data:[{n:"合同支出",v:194820},{n:"非合同支出",v:58430},{n:"工资支出",v:26350},{n:"报销支出",v:6900}],
+      xF:"n",yF:"v",c:"#3b82f6"},
+    cards:[
+      {l:"总支出",v:"¥286,500",c:"red"},
+      {l:"月均支出",v:"¥95,500",c:"blue"},
+      {l:"最大类别",v:"合同支出",c:"amber"},
+      {l:"环比增长",v:"+12.3%",c:"red",ch:"up"}
+    ],
+    table:{title:"月度支出明细",
+      cols:["月份","合同支出","非合同支出","工资支出","报销支出","合计"],
+      rows:[
+        ["2026-03","¥61,200","¥19,800","¥8,750","¥2,100","¥91,850"],
+        ["2026-04","¥64,130","¥20,150","¥8,800","¥2,300","¥95,380"],
+        ["2026-05","¥69,490","¥18,480","¥8,800","¥2,500","¥99,270"]
+      ]}
+  },
+  income_trend: {
+    title:"2026年Q1（1月~3月）收入趋势",
+    paragraphs:[
+      "总收入¥423,800，其中合同收入¥356,400（84.1%）为主要收入来源。",
+      "非合同收入¥67,400（15.9%），包括咨询服务和零散项目收入。",
+      "收入呈逐月上升趋势，3月环比增长8.7%，业务增长态势良好。"
+    ],
+    chart:{type:"line",title:"2026年Q1收入趋势",
+      data:[
+        {month:"1月",总收入:128000,合同收入:108200,非合同收入:19800},
+        {month:"2月",总收入:140900,合同收入:118500,非合同收入:22400},
+        {month:"3月",总收入:154900,合同收入:129700,非合同收入:25200}
+      ],
+      xF:"month",
+      lines:[{dk:"总收入",c:"#3b82f6",sw:3},{dk:"合同收入",c:"#10b981",sw:2},{dk:"非合同收入",c:"#f59e0b",sw:2}]},
+    cards:[
+      {l:"Q1总收入",v:"¥423,800",c:"green"},
+      {l:"月均收入",v:"¥141,267",c:"blue"},
+      {l:"最高月",v:"3月 ¥154,900",c:"purple"},
+      {l:"增长率",v:"+8.7%",c:"green",ch:"up"}
+    ]
+  },
+  invoice_check: {
+    title:"截至2026年5月底，各客户应收账款余额（已开票 - 已收款）",
+    paragraphs:[
+      "应收账款 = 已开票金额 − 已收入金额。",
+      "当前已开票总额 ¥820,000，已收款 ¥512,600，应收账款余额 ¥307,400。",
+      "其中华东建设集团应收账款最高（¥185,000 − ¥98,000 = ¥87,000）。",
+      "西部矿业集团收款率仅 33.2%，应收账款余额 ¥65,500，建议优先催收。"
+    ],
+    chart:{type:"bar",title:"各客户应收账款余额（已开票 − 已收款）",
+      data:[
+        {n:"华东建设集团",v:87000},
+        {n:"西部矿业集团",v:65500},
+        {n:"南方工程公司",v:21000},
+        {n:"北方路桥建设",v:18000},
+        {n:"中建三局",v:7000}
+      ],
+      xF:"n",yF:"v",c:"#ef4444"},
+    cards:[
+      {l:"已开票总额",v:"¥820,000",c:"blue"},
+      {l:"已收款总额",v:"¥512,600",c:"green"},
+      {l:"应收账款",v:"¥307,400",c:"red"},
+      {l:"应收账款率",v:"37.5%",c:"amber"}
+    ],
+    table:{title:"各客户应收账款明细",
+      cols:["客户名称","已开票金额","已收款金额","应收账款","收款率"],
+      rows:[
+        ["华东建设集团","¥185,000","¥98,000","¥87,000","53.0%"],
+        ["西部矿业集团","¥98,000","¥32,500","¥65,500","33.2%"],
+        ["南方工程公司","¥142,000","¥121,000","¥21,000","85.2%"],
+        ["北方路桥建设","¥76,000","¥58,000","¥18,000","76.3%"],
+        ["中建三局","¥65,000","¥58,000","¥7,000","89.2%"]
+      ]}
+  },
+  cashflow: {
+    title:"2026年5月现金流状况",
+    paragraphs:[
+      "本月流入：¥186,500（合同收入¥145,200+非合同收入¥28,300+股东出资¥13,000）",
+      "本月流出：¥99,270（合同支出¥69,490+非合同支出¥18,480+工资¥8,800+报销¥2,500）",
+      "净现金流：+¥87,230，现金流状况健康。",
+      "建议：当前现金流充裕，可考虑提前偿还部分高息借款（借入款余额¥350,000，月息0.8%）"
+    ],
+    chart:{type:"bar",title:"5月现金流：流入 vs 流出",
+      data:[
+        {n:"合同收入",in:145200,out:0},{n:"非合同收入",in:28300,out:0},
+        {n:"股东出资",in:13000,out:0},{n:"合同支出",in:0,out:69490},
+        {n:"非合同支出",in:0,out:18480},{n:"工资支出",in:0,out:8800},
+        {n:"报销支出",in:0,out:2500}
+      ],
+      xF:"n",
+      bars:[{dk:"in",c:"#10b981",nm:"流入"},{dk:"out",c:"#ef4444",nm:"流出"}]},
+    cards:[
+      {l:"总流入",v:"¥186,500",c:"green"},
+      {l:"总流出",v:"¥99,270",c:"red"},
+      {l:"净现金流",v:"+¥87,230",c:"green"},
+      {l:"现金流比率",v:"1.88",c:"blue"}
+    ]
+  },
+  project_cost: {
+    title:"当前在建项目成本概况",
+    paragraphs:[
+      "共有5个在建项目，累计已发生成本¥1,286,000",
+      "其中华东产业园项目占比最高（¥458,000/35.6%），预计7月底完工",
+      "项目成本超支预警：滨江商业中心项目超支8.5%，需关注"
+    ],
+    chart:{type:"pie",title:"各项目成本占比",
+      data:[
+        {n:"华东产业园",v:458000},{n:"滨江商业中心",v:286000},
+        {n:"西部物流园",v:198000},{n:"科技城项目",v:176000},
+        {n:"老旧小区改造",v:168000}
+      ],
+      nF:"n",vF:"v",
+      colors:["#3b82f6","#10b981","#f59e0b","#8b5cf6","#ef4444"]},
+    cards:[
+      {l:"项目总数",v:"5",c:"blue"},
+      {l:"总成本",v:"¥1,286,000",c:"red"},
+      {l:"最大项目",v:"华东产业园",c:"purple"},
+      {l:"超支项目",v:"1个",c:"amber"}
+    ],
+    table:{title:"项目成本明细",
+      cols:["项目名称","预算总额","已发生成本","完成度","状态"],
+      rows:[
+        ["华东产业园","¥1,200,000","¥458,000","38%","正常"],
+        ["滨江商业中心","¥500,000","¥286,000","57%","超支8.5%"],
+        ["西部物流园","¥800,000","¥198,000","25%","正常"],
+        ["科技城项目","¥600,000","¥176,000","29%","正常"],
+        ["老旧小区改造","¥350,000","¥168,000","48%","正常"]
+      ]}
+  }
+};
+
+const PRESETS = [
+  {id:"expense_bar",label:"近3个月支出按分类显示"},
+  {id:"income_trend",label:"今年Q1收入趋势分析"},
+  {id:"invoice_check",label:"应收账款"},
+  {id:"cashflow",label:"本月现金流状况"},
+  {id:"project_cost",label:"各项目成本占比"}
+];
+
+// --- SVG Chart Builders ---
+
+function polarToCartesian(cx,cy,r,deg){
+  var rad=(deg-90)*Math.PI/180;
+  return {x:cx+r*Math.cos(rad),y:cy+r*Math.sin(rad)};
+}
+
+function describeArc(cx,cy,r,sA,eA){
+  var s=polarToCartesian(cx,cy,r,eA);
+  var e=polarToCartesian(cx,cy,r,sA);
+  var la=eA-sA>180?1:0;
+  return "M"+cx+","+cy+" L"+s.x+","+s.y+" A"+r+","+r+" 0 "+la+",0 "+e.x+","+e.y+" Z";
+}
+
+function buildBarChart(chart){
+  var data=chart.data, w=600,h=260, pad={t:20,r:20,b:40,l:60};
+  var cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+  var bars=chart.bars||[{dk:chart.yF,c:chart.c||"#3b82f6",nm:""}];
+  var allVals=[];
+  data.forEach(function(d){
+    bars.forEach(function(b){allVals.push(d[b.dk]||0);});
+  });
+  var max=Math.max.apply(null,allVals);
+  var gap=cw/data.length, bw=Math.min(40,gap*0.6);
+  var yStep=max/4;
+  var parts=[];
+  parts.push('<text x="'+w/2+'" y="16" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">'+chart.title+'</text>');
+  for(var i=0;i<=4;i++){
+    var yv=Math.round(yStep*i);
+    var y=pad.t+ch-(yv/max)*ch;
+    parts.push('<line x1="'+pad.l+'" y1="'+y+'" x2="'+(w-pad.r)+'" y2="'+y+'" stroke="#f1f5f9" stroke-width="1"/>');
+    parts.push('<text x="'+(pad.l-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#94a3b8">'+fmtShort(yv)+'</text>');
+  }
+  data.forEach(function(d,i){
+    var cx=pad.l+gap*i+gap/2;
+    bars.forEach(function(b,j){
+      var val=d[b.dk]||0;
+      var barH=(val/max)*ch;
+      var bw0=bw/bars.length*0.85;
+      var x=cx-bw/2+j*(bw/bars.length);
+      var y=pad.t+ch-barH;
+      parts.push('<rect x="'+x+'" y="'+y+'" width="'+bw0+'" height="'+barH+'" fill="'+b.c+'" rx="3" ry="3"/>');
+    });
+    parts.push('<text x="'+cx+'" y="'+(h-pad.b+16)+'" text-anchor="end" font-size="11" fill="#64748b" transform="rotate(-25,'+cx+','+(h-pad.b+16)+')">'+d[chart.xF]+'</text>');
+  });
+  if(bars.length>1){
+    bars.forEach(function(b,i){
+      var lx=pad.l+i*120;
+      parts.push('<g transform="translate('+lx+','+(h-4)+')"><rect x="0" y="0" width="10" height="10" fill="'+b.c+'" rx="2"/><text x="14" y="10" font-size="11" fill="#475569">'+b.nm+'</text></g>');
+    });
+  }
+  return '<svg width="100%" viewBox="0 0 '+w+' '+h+'" style="max-width:'+w+'px">'+parts.join('')+'</svg>';
+}
+
+function buildPieChart(chart){
+  var data=chart.data, colors=chart.colors||["#10b981","#3b82f6","#f59e0b","#ef4444","#8b5cf6","#ec4899"];
+  var total=data.reduce(function(s,d){return s+d[chart.vF];},0);
+  var cx=200,cy=140,r=90,w=500,h=280;
+  var parts=[];
+  parts.push('<text x="'+w/2+'" y="16" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">'+chart.title+'</text>');
+  var cur=0;
+  data.forEach(function(d,i){
+    var pct=d[chart.vF]/total;
+    var angle=pct*360;
+    var sA=cur, eA=cur+angle;
+    if(i===data.length-1)eA=360;
+    parts.push('<path d="'+describeArc(cx,cy,r,sA,eA)+'" fill="'+colors[i%colors.length]+'" stroke="white" stroke-width="2"/>');
+    cur=eA;
+  });
+  parts.push('<text x="'+cx+'" y="'+(cy-8)+'" text-anchor="middle" font-size="20" font-weight="700" fill="#1e293b">¥'+(total/10000).toFixed(0)+'万</text>');
+  parts.push('<text x="'+cx+'" y="'+(cy+14)+'" text-anchor="middle" font-size="11" fill="#94a3b8">总计</text>');
+  var legX=330,legY=50;
+  data.forEach(function(d,i){
+    var pct=((d[chart.vF]/total)*100).toFixed(1);
+    var ly=legY+i*28;
+    parts.push('<rect x="'+legX+'" y="'+ly+'" width="12" height="12" fill="'+colors[i%colors.length]+'" rx="2"/>');
+    parts.push('<text x="'+(legX+18)+'" y="'+(ly+10)+'" font-size="11" fill="#475569">'+d[chart.nF]+'</text>');
+    parts.push('<text x="'+(legX+18)+'" y="'+(ly+22)+'" font-size="11" fill="#94a3b8">'+fmt(d[chart.vF])+' ('+pct+'%)</text>');
+  });
+  return '<svg width="100%" viewBox="0 0 '+w+' '+h+'" style="max-width:'+w+'px">'+parts.join('')+'</svg>';
+}
+
+function buildLineChart(chart){
+  var data=chart.data, lines=chart.lines;
+  var w=600,h=260,pad={t:30,r:20,b:40,l:60};
+  var cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+  var allVals=[];
+  data.forEach(function(d){lines.forEach(function(l){allVals.push(d[l.dk]);});});
+  var max=Math.max.apply(null,allVals);
+  var yStep=max/4;
+  var parts=[];
+  parts.push('<text x="'+w/2+'" y="16" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">'+chart.title+'</text>');
+  for(var i=0;i<=4;i++){
+    var yv=Math.round(yStep*i);
+    var y=pad.t+ch-(yv/max)*ch;
+    parts.push('<line x1="'+pad.l+'" y1="'+y+'" x2="'+(w-pad.r)+'" y2="'+y+'" stroke="#f1f5f9" stroke-width="1"/>');
+    parts.push('<text x="'+(pad.l-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#94a3b8">'+fmtShort(yv)+'</text>');
+  }
+  lines.forEach(function(line,li){
+    var pts=[];
+    data.forEach(function(d,i){
+      var x=pad.l+(i/(data.length-1))*cw;
+      var y=pad.t+ch-(d[line.dk]/max)*ch;
+      pts.push(x+","+y);
+    });
+    parts.push('<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+line.c+'" stroke-width="'+(line.sw||2)+'" stroke-linejoin="round"/>');
+    data.forEach(function(d,i){
+      var x=pad.l+(i/(data.length-1))*cw;
+      var y=pad.t+ch-(d[line.dk]/max)*ch;
+      parts.push('<circle cx="'+x+'" cy="'+y+'" r="4" fill="'+line.c+'" stroke="white" stroke-width="2"/>');
+      if(i===data.length-1){
+        parts.push('<text x="'+(x+6)+'" y="'+(y-6)+'" font-size="10" fill="'+line.c+'">'+fmtShort(d[line.dk])+'</text>');
+      }
+    });
+  });
+  data.forEach(function(d,i){
+    var x=pad.l+(i/(data.length-1))*cw;
+    parts.push('<text x="'+x+'" y="'+(h-pad.b+16)+'" text-anchor="middle" font-size="11" fill="#64748b">'+d[chart.xF]+'</text>');
+  });
+  var legX=pad.l;
+  lines.forEach(function(l,i){
+    parts.push('<g transform="translate('+(legX+i*130)+','+(h-4)+')">'+
+      '<line x1="0" y1="5" x2="16" y2="5" stroke="'+l.c+'" stroke-width="2"/>'+
+      '<text x="20" y="9" font-size="11" fill="#475569">'+l.dk+'</text></g>');
+  });
+  return '<svg width="100%" viewBox="0 0 '+w+' '+h+'" style="max-width:'+w+'px">'+parts.join('')+'</svg>';
+}
+
+function renderChart(chart){
+  if(!chart)return'';
+  switch(chart.type){
+    case'bar':return'<div class="chart-wrap">'+buildBarChart(chart)+'</div>';
+    case'pie':return'<div class="chart-wrap">'+buildPieChart(chart)+'</div>';
+    case'line':return'<div class="chart-wrap">'+buildLineChart(chart)+'</div>';
+    default:return'';
+  }
+}
+
+function buildCard(c){
+  var html='<div class="scard '+c.c+'"><div class="l">'+c.l+'</div><div class="v">'+c.v+'</div>';
+  if(c.ch)html+='<div class="ch '+(c.ch==='up'?'up':'down')+'">'+(c.ch==='up'?'↑ 上升':'↓ 下降')+'</div>';
+  return html+'</div>';
+}
+
+function buildTable(t){
+  if(!t)return'';
+  var html='<div class="stitle">'+t.title+'</div><div class="twrap"><table><thead><tr>';
+  t.cols.forEach(function(c){html+='<th>'+c+'</th>';});
+  html+='</tr></thead><tbody>';
+  t.rows.forEach(function(r){
+    html+='<tr>';
+    r.forEach(function(c){html+='<td>'+c+'</td>';});
+    html+='</tr>';
+  });
+  return html+'</tbody></table></div>';
+}
+
+// --- App State ---
+var loading=false, response=null, showTable=true;
+
+var chipsEl=document.getElementById('chips');
+var inputEl=document.getElementById('input');
+var sendBtn=document.getElementById('sendBtn');
+var loadingEl=document.getElementById('loading');
+var respEl=document.getElementById('response');
+var welcomeEl=document.getElementById('welcome');
+
+// Render chips
+PRESETS.forEach(function(p){
+  var chip=document.createElement('div');
+  chip.className='chip';
+  chip.textContent=p.label;
+  chip.dataset.id=p.id;
+  chip.addEventListener('click',function(){handlePreset(p.id);});
+  chipsEl.appendChild(chip);
+});
+
+function setLoading(v){
+  loading=v;
+  loadingEl.style.display=v?'flex':'none';
+  welcomeEl.style.display=(!v&&!response)?'block':'none';
+  sendBtn.textContent=v?'查询中…':'发送';
+  sendBtn.className='btn'+(v?' disabled':'');
+  inputEl.className=v?'disabled':'';
+  document.querySelectorAll('.chip').forEach(function(c){c.className='chip'+(v?' disabled':'');});
+}
+
+function renderResponse(){
+  if(!response){respEl.innerHTML='';welcomeEl.style.display=loading?'none':'block';return;}
+  welcomeEl.style.display='none';
+  var html='<div class="card">';
+  // Text
+  html+='<div class="text"><p class="t">'+response.title+'</p>';
+  response.paragraphs.forEach(function(p){html+='<p>'+p+'</p>';});
+  html+='</div>';
+  // Chart
+  if(response.chart) html+=renderChart(response.chart);
+  // Cards
+  if(response.cards){
+    html+='<div class="stitle">关键指标</div><div class="cgrid">';
+    response.cards.forEach(function(c){html+=buildCard(c);});
+    html+='</div>';
+  }
+  // Table toggle
+  if(response.table){
+    html+='<div class="switch-row"><label class="switch-label">'+
+      '<input type="checkbox" id="tableToggle"'+(showTable?' checked':'')+'>显示明细表格</label></div>';
+  }
+  // Table
+  if(response.table && showTable) html+=buildTable(response.table);
+  html+='</div>';
+  respEl.innerHTML=html;
+  // Bind toggle
+  var toggle=document.getElementById('tableToggle');
+  if(toggle) toggle.addEventListener('change',function(e){showTable=e.target.checked;renderResponse();});
+  respEl.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function simulateResponse(queryText){
+  setLoading(true);
+  response=null;
+  respEl.innerHTML='';
+  var key='expense_bar';
+  if(queryText.includes('收入')||queryText.includes('income'))key='income_trend';
+  else if(queryText.includes('开票')||queryText.includes('invoice')||queryText.includes('应收')||queryText.includes('收款对比'))key='invoice_check';
+  else if(queryText.includes('现金流')||queryText.includes('cashflow'))key='cashflow';
+  else if(queryText.includes('项目')||queryText.includes('成本')||queryText.includes('project'))key='project_cost';
+  setTimeout(function(){
+    response=MOCK[key];
+    showTable=true;
+    setLoading(false);
+    renderResponse();
+  },1500+Math.random()*1000);
+}
+
+function handleSend(){
+  var q=inputEl.value.trim();
+  if(!q||loading)return;
+  simulateResponse(q);
+}
+
+function handlePreset(id){
+  if(loading)return;
+  var p=PRESETS.find(function(p){return p.id===id;});
+  inputEl.value=p.label;
+  simulateResponse(id);
+}
+
+inputEl.addEventListener('keydown',function(e){if(e.key==='Enter')handleSend();});
+sendBtn.addEventListener('click',handleSend);
+</script>
+</body>
+</html>

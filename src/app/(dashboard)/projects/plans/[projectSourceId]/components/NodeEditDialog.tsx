@@ -115,8 +115,8 @@ export default function NodeEditDialog({
   }, []);
 
   const currentResponsible = responsibleIds.length > 0
-    ? users.find((u) => responsibleIds.includes(u.id))
-    : null;
+    ? users.filter((u) => responsibleIds.includes(u.id))
+    : [];
 
   if (!open) return null;
 
@@ -262,7 +262,11 @@ export default function NodeEditDialog({
                   color: currentResponsible ? "#1C1917" : "#A8A29E",
                 }}
               >
-                {currentResponsible?.realName || "请选择责任人"}
+                {currentResponsible.length > 0
+                  ? currentResponsible.length <= 2
+                    ? currentResponsible.map((u) => u.realName).join("、")
+                    : `已选 ${currentResponsible.length} 人`
+                  : "请选择责任人"}
               </button>
               {respOpen && (
                 <div style={{
@@ -290,7 +294,13 @@ export default function NodeEditDialog({
                     <button
                       key={u.id}
                       type="button"
-                      onClick={() => { setResponsibleIds([u.id]); setRespOpen(false); setRespSearch(""); }}
+                      onClick={() => {
+                        setResponsibleIds((prev) =>
+                          prev.includes(u.id)
+                            ? prev.filter((id) => id !== u.id)
+                            : [...prev, u.id]
+                        );
+                      }}
                       style={{
                         display: "block", width: "100%", padding: "8px 12px",
                         border: "none", background: responsibleIds.includes(u.id) ? "#F5F5F4" : "transparent",
@@ -298,6 +308,7 @@ export default function NodeEditDialog({
                         color: "#1C1917",
                       }}
                     >
+                      {responsibleIds.includes(u.id) && <span style={{ marginRight: 8, color: "#4A6FA5" }}>✓</span>}
                       {u.realName}
                     </button>
                   ))}

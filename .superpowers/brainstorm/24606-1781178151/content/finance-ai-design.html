@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 财务查询 — 设计详情</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #FAFAF8; color: #1C1917; padding: 40px; max-width: 900px; margin: 0 auto; }
+h1 { font-size: 24px; margin-bottom: 8px; }
+.subtitle { color: #78716C; font-size: 14px; margin-bottom: 32px; }
+.section { background: white; border-radius: 16px; padding: 30px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.section p, .section li { font-size: 13px; color: #78716C; line-height: 1.7; }
+.section ul { list-style: none; }
+.section ul li { padding: 4px 0; padding-left: 16px; position: relative; }
+.section ul li::before { content: "▸"; position: absolute; left: 0; color: #5856D6; }
+
+/* Mockup */
+.mockup { border: 1px solid #E5E5E0; border-radius: 12px; overflow: hidden; margin: 16px 0; }
+.mockup-body { padding: 24px; }
+.mockup-input { display: flex; gap: 8px; margin-bottom: 16px; }
+.mockup-input input { flex: 1; padding: 12px 16px; border: 1px solid #E5E5E0; border-radius: 8px; font-size: 13px; outline: none; }
+.mockup-input input:focus { border-color: #5856D6; }
+.mockup-input button { background: #5856D6; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.preset-chip { background: #F0F0EE; border: 1px solid #E5E5E0; border-radius: 20px; padding: 6px 14px; font-size: 12px; color: #78716C; cursor: pointer; }
+.preset-chip:hover { background: #E8E6FF; border-color: #5856D6; color: #5856D6; }
+
+.response { background: #FAFAF8; border-radius: 12px; padding: 20px; }
+.response h4 { font-size: 14px; margin-bottom: 12px; color: #1C1917; }
+.analysis-text { font-size: 13px; color: #78716C; line-height: 1.6; padding: 12px 16px; background: #F5F5FF; border-radius: 8px; margin: 12px 0; }
+.chart-area { background: white; border-radius: 8px; padding: 20px; margin: 12px 0; display: flex; justify-content: center; }
+.bars { display: flex; gap: 12px; align-items: flex-end; height: 120px; }
+.bar { width: 48px; border-radius: 4px 4px 0 0; position: relative; }
+.bar-label { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #78716C; white-space: nowrap; }
+.legend { display: flex; gap: 16px; margin-top: 28px; font-size: 11px; color: #78716C; justify-content: center; }
+.cards { display: flex; gap: 8px; margin: 12px 0; }
+.card { background: white; border-radius: 8px; padding: 12px 16px; flex: 1; text-align: center; border: 1px solid #E5E5E0; }
+.card .label { font-size: 11px; color: #78716C; }
+.card .value { font-size: 16px; font-weight: 700; margin-top: 4px; }
+
+/* Flow diagram */
+.flow { display: flex; align-items: center; justify-content: center; gap: 0; margin: 20px 0; }
+.flow-box { background: #FAFAF8; border: 1px solid #E5E5E0; border-radius: 8px; padding: 12px 16px; text-align: center; font-size: 12px; min-width: 100px; }
+.flow-box strong { display: block; font-size: 13px; color: #1C1917; margin-bottom: 4px; }
+.flow-arrow { color: #78716C; font-size: 18px; padding: 0 8px; }
+
+code { background: #F0F0EE; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>AI 智能财务查询 — 设计详情</h1>
+<p class="subtitle">完全移除静态报表，整个页面变为 AI 对话式查询</p>
+
+<!-- 页面布局 -->
+<div class="section">
+  <h2>📄 页面布局</h2>
+  <div class="mockup" style="border: 2px solid #5856D6;">
+    <div class="mockup-body">
+      <div style="font-size:12px;font-weight:600;color:#1C1917;margin-bottom:12px;">/finance/reports 页面</div>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:#E8E6FF;display:flex;align-items:center;justify-content:center;font-size:14px;">🔮</div>
+        <div><div style="font-size:15px;font-weight:700;">AI 财务查询</div><div style="font-size:11px;color:#78716C;">用自然语言查询公司的财务数据</div></div>
+      </div>
+
+      <!-- 预设问题 -->
+      <div class="presets">
+        <div class="preset-chip">📊 最近3个月的收支情况</div>
+        <div class="preset-chip">💰 各项目成本对比</div>
+        <div class="preset-chip">⏰ 应收账款逾期分析</div>
+        <div class="preset-chip">📈 今年收入趋势如何</div>
+        <div class="preset-chip">🧾 支出分类占比</div>
+      </div>
+
+      <!-- 输入框 -->
+      <div class="mockup-input">
+        <input type="text" placeholder="输入财务问题，例如：最近3个月的支出按分类显示..." disabled>
+        <button disabled style="opacity:0.7;">查询</button>
+      </div>
+
+      <!-- 对话示例 -->
+      <div style="margin-top:16px;">
+        <div style="font-size:12px;color:#5856D6;font-weight:600;margin-bottom:8px;text-align:right;">你 · 最近3个月的支出按分类显示</div>
+        <div class="response">
+          <h4>📊 近3个月支出分析</h4>
+          <div class="analysis-text">
+            <strong>分析结论：</strong>近3个月总支出 <strong>¥286,500</strong>，环比增长 12.3%。
+            其中 <span style="color:#FF3B30;">合同支出</span> 占 68%（¥194,820），
+            <span style="color:#FF9500;">费用报销</span> 占 22%（¥63,030），
+            工资支出占 10%（¥28,650）。建议关注合同支出中的"工艺设备采购"类目。
+          </div>
+          <div class="chart-area">
+            <div style="text-align:center">
+              <div class="bars">
+                <div class="bar" style="height:100px;background:linear-gradient(to top,#FF3B30,#FF6B6B);">
+                  <span class="bar-label">合同支出<br><strong>¥194,820</strong></span>
+                </div>
+                <div class="bar" style="height:60px;background:linear-gradient(to top,#FF9500,#FFB340);">
+                  <span class="bar-label">费用报销<br><strong>¥63,030</strong></span>
+                </div>
+                <div class="bar" style="height:30px;background:linear-gradient(to top,#5856D6,#8B5CF6);">
+                  <span class="bar-label">工资支出<br><strong>¥28,650</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="cards">
+            <div class="card"><div class="label">4月支出</div><div class="value" style="color:#FF3B30;">¥89,200</div></div>
+            <div class="card"><div class="label">5月支出</div><div class="value" style="color:#FF3B30;">¥98,500</div></div>
+            <div class="card"><div class="label">6月支出</div><div class="value" style="color:#FF3B30;">¥98,800</div></div>
+            <div class="card"><div class="label">环比增长</div><div class="value" style="color:#FF9500;">+12.3%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 后端架构 -->
+<div class="section">
+  <h2>⚙️ 后端架构 — <code>POST /api/ai/finance-query</code></h2>
+  <p>后端收到用户问题后，分 3 步完成查询和回答：</p>
+
+  <div class="flow">
+    <div class="flow-box"><strong>① 解析</strong>用户问题 → 查询计划</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box"><strong>② 执行</strong>Prisma 查询数据库</div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box"><strong>③ 分析</strong>AI 生成分析+图表配置</div>
+  </div>
+
+  <p style="margin-top:12px;"><strong>请求：</strong></p>
+  <div style="background:#F8F8F6;border-radius:8px;padding:12px;font-size:12px;font-family:monospace;margin:8px 0;">
+    POST /api/ai/finance-query<br>
+    { "query": "最近3个月的支出按分类显示" }
+  </div>
+
+  <p><strong>响应（结构化 JSON）：</strong></p>
+  <div style="background:#F8F8F6;border-radius:8px;padding:12px;font-size:12px;font-family:monospace;margin:8px 0;line-height:1.6;">
+{<br>
+&nbsp;&nbsp;"analysis": "近3个月总支出¥286,500，环比增长12.3%...",<br>
+&nbsp;&nbsp;"chart": {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"type": "bar",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"title": "近3个月支出分类对比",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"data": [...],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"xField": "name", "yField": "value"<br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;"table": {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"columns": ["月份","支出金额","主要类别"],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"rows": [...]<br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;"cards": [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{ "label": "4月支出", "value": "¥89,200", "color": "red" }<br>
+&nbsp;&nbsp;]<br>
+}
+  </div>
+
+  <p style="font-size:12px;color:#78716C;margin-top:8px;">
+    📌 前端根据返回的 JSON 结构，自动渲染文字、图表、表格、卡片。
+    没有图表的查询（如"上季度净利润多少"）只返回 analysis 字段。
+  </p>
+</div>
+
+<!-- 可用数据源 -->
+<div class="section">
+  <h2>🗄️ AI 可查询的数据表</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <div style="background:#FAFAF8;border-radius:8px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;">应收款</div>
+      <div style="font-size:11px;color:#78716C;margin-top:4px;">金额、已收、到期日、项目、来源类型</div>
+    </div>
+    <div style="background:#FAFAF8;border-radius:8px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;">应付款</div>
+      <div style="font-size:11px;color:#78716C;margin-top:4px;">金额、已付、到期日、项目、来源类型</div>
+    </div>
+    <div style="background:#FAFAF8;border-radius:8px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;">非合同收支</div>
+      <div style="font-size:11px;color:#78716C;margin-top:4px;">金额、日期、组织</div>
+    </div>
+    <div style="background:#FAFAF8;border-radius:8px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;">股东出资 / 借入借出</div>
+      <div style="font-size:11px;color:#78716C;margin-top:4px;">金额、日期、组织</div>
+    </div>
+    <div style="background:#FAFAF8;border-radius:8px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;">工资支出</div>
+      <div style="font-size:11px;color:#78716C;margin-top:4px;">实发工资、日期、组织</div>
+    </div>
+    <div style="background:#FAFAF8;border-radius:8px;padding:12px;">
+      <div style="font-size:13px;font-weight:600;">费用报销</div>
+      <div style="font-size:11px;color:#78716C;margin-top:4px;">金额、日期、项目、组织</div>
+    </div>
+  </div>
+</div>
+
+<!-- 预设问题 -->
+<div class="section">
+  <h2>💡 预设问题（5 个）</h2>
+  <p>页面加载时显示在输入框上方，点击自动填充并发送查询</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+    <div style="background:#F5F5FF;border-radius:8px;padding:10px 14px;font-size:13px;">📊 最近3个月的收支情况</div>
+    <div style="background:#F5F5FF;border-radius:8px;padding:10px 14px;font-size:13px;">💰 各项目成本对比</div>
+    <div style="background:#F5F5FF;border-radius:8px;padding:10px 14px;font-size:13px;">⏰ 应收账款逾期分析</div>
+    <div style="background:#F5F5FF;border-radius:8px;padding:10px 14px;font-size:13px;">📈 今年收入趋势如何</div>
+    <div style="background:#F5F5FF;border-radius:8px;padding:10px 14px;font-size:13px;">🧾 支出分类占比</div>
+  </div>
+</div>
+
+</body>
+</html>

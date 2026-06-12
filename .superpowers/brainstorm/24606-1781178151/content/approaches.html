@@ -1,0 +1,104 @@
+<h2>三个方案，您倾向哪个？</h2>
+<p class="subtitle">核心思路：减少 Tab + 引入图表可视化</p>
+
+<!-- 方案 A -->
+<div class="section">
+  <div class="card" data-choice="approach-a" onclick="toggleSelect(this)" style="cursor:pointer;border:2px solid transparent">
+    <div class="card-body">
+      <h3>方案 A：精简为 3 个 Tab（推荐）</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0">
+        <div style="flex:1;min-width:200px">
+          <div class="placeholder" style="padding:8px;text-align:center;font-size:13px;background:#5856D6;color:white;border-radius:8px;margin-bottom:4px">📊 经营看板</div>
+          <div style="font-size:12px;color:#78716C">
+            ← 收支汇总+现金流 合并<br>
+            ← KPI卡片 + 趋势图 + 饼图<br>
+            ← 月度明细表
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="placeholder" style="padding:8px;text-align:center;font-size:13px;background:#1C1917;color:white;border-radius:8px;margin-bottom:4px">📋 项目成本</div>
+          <div style="font-size:12px;color:#78716C">
+            ← 保留并增强<br>
+            ← 加项目成本对比柱状图
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="placeholder" style="padding:8px;text-align:center;font-size:13px;background:#78716C;color:white;border-radius:8px;margin-bottom:4px">📈 账龄分析</div>
+          <div style="font-size:12px;color:#78716C">
+            ← 应收+应付合并<br>
+            ← 内部 Tab 切换<br>
+            ← 加账龄分布图
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>从 5 个 Tab 减到 3 个，结构清晰</li><li>每个 Tab 有特定数据可视化</li><li>与原系统改动最小，实现快</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>账龄内部仍需切换应收/应付</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 方案 B -->
+<div class="section">
+  <div class="card" data-choice="approach-b" onclick="toggleSelect(this)" style="cursor:pointer;border:2px solid transparent">
+    <div class="card-body">
+      <h3>方案 B：2 个 Tab — 经营仪表盘 + 账龄分析</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0">
+        <div style="flex:1;min-width:200px">
+          <div class="placeholder" style="padding:8px;text-align:center;font-size:13px;background:#5856D6;color:white;border-radius:8px;margin-bottom:4px">📊 经营仪表盘</div>
+          <div style="font-size:12px;color:#78716C">
+            ← 合并收支汇总+现金流+项目成本<br>
+            ← 顶部KPI行 + 多图表仪表盘
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="placeholder" style="padding:8px;text-align:center;font-size:13px;background:#78716C;color:white;border-radius:8px;margin-bottom:4px">📈 账龄分析</div>
+          <div style="font-size:12px;color:#78716C">
+            ← 应收+应付合并，内部切换<br>
+            ← 账龄分布图 + 明细表
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>Tab 最少，一目了然</li><li>仪表盘风格现代、直观</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>仪表盘信息密度高，移动端可能拥挤</li><li>改动较大，实现周期稍长</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 方案 C -->
+<div class="section">
+  <div class="card" data-choice="approach-c" onclick="toggleSelect(this)" style="cursor:pointer;border:2px solid transparent">
+    <div class="card-body">
+      <h3>方案 C：保留 2 个 Tab — 收支明细 + 项目成本+账龄</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:16px;margin:12px 0">
+        <div style="flex:1;min-width:200px">
+          <div class="placeholder" style="padding:8px;text-align:center;font-size:13px;background:#5856D6;color:white;border-radius:8px;margin-bottom:4px">💰 收支明细</div>
+          <div style="font-size:12px;color:#78716C">
+            ← 聚焦流水<br>
+            ← 月度趋势图 + 流水明细表
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="placeholder" style="padding:8px;text-align:center;font-size:13px;background:#1C1917;color:white;border-radius:8px;margin-bottom:4px">📊 经营分析</div>
+          <div style="font-size:12px;color:#78716C">
+            ← 项目成本 + 应收+应付账龄<br>
+            ← 内部用标签页分组展示
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros"><h4>优点</h4><ul><li>收支分离，适合财务出纳人员</li><li>结构简单清晰</li></ul></div>
+        <div class="cons"><h4>缺点</h4><ul><li>经营分析 Tab 内部子视图多</li><li>对经营决策者不够直观</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:16px;padding:16px;background:#F5F5F0;border-radius:12px">
+  <p style="margin:0;font-size:14px;color:#78716C">
+    💡 我推荐 <strong>方案 A</strong>——改动适中、结构清晰、实现快。您倾向哪个？或者想调整？
+  </p>
+</div>

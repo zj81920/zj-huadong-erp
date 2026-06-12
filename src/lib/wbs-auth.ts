@@ -39,12 +39,19 @@ export async function canAccessProjectWbs(
   }
 
   // 检查当前用户是否为该项目的任一 WBS 节点的负责人
-  // responsibleIds 是 Json 类型（存储为 JSON 数组），使用 array_contains 过滤
-  const isResponsible = await prisma.projectWbsNode.findFirst({
-    where: {
-      projectSourceId,
-      responsibleIds: { array_contains: user.id },
-    },
+  // responsibleIds 兼容两种格式：
+  //   旧格式：["user_id_1", "user_id_2"]（纯字符串数组）
+  //   新格式：[{type: "person", id: "user_id_1", name: "张三"}, ...]
+  const wbsNodes = await prisma.projectWbsNode.findMany({
+    where: { projectSourceId },
+    select: { responsibleIds: true },
+  });
+  const isResponsible = wbsNodes.some((node) => {
+    const ids = node.responsibleIds as unknown[];
+    if (!Array.isArray(ids)) return false;
+    return ids.some((item) =>
+      typeof item === "string" ? item === user.id : (item as { id?: string })?.id === user.id
+    );
   });
   if (isResponsible) return true;
 

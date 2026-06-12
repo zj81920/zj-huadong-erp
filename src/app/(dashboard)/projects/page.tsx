@@ -1105,7 +1105,7 @@ export default function ProjectsPage() {
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 <Calendar className="w-3.5 h-3.5 inline mr-1" />
-                项目启动时间
+                计划开始时间 <span className="text-[#DC2626]">*</span>
               </label>
               <input
                 type="date"
@@ -1118,7 +1118,7 @@ export default function ProjectsPage() {
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 <Calendar className="w-3.5 h-3.5 inline mr-1" />
-                计划结束时间
+                计划完成时间 <span className="text-[#DC2626]">*</span>
               </label>
               <input
                 type="date"
@@ -1127,21 +1127,6 @@ export default function ProjectsPage() {
                 onChange={(e) => updateForm("plannedEndDate", e.target.value)}
               />
             </div>
-
-            {editingProject && (
-              <div>
-                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                  <Calendar className="w-3.5 h-3.5 inline mr-1" />
-                  实际关闭时间
-                </label>
-                <input
-                  type="date"
-                  className="ios-input"
-                  value={form.actualCloseDate}
-                  onChange={(e) => updateForm("actualCloseDate", e.target.value)}
-                />
-              </div>
-            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">

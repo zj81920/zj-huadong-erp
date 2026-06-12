@@ -46,6 +46,33 @@ export async function PUT(
       data: updateData,
     });
 
+    // 同步更新项目级别的实际开始/完成时间（取所有 L4 节点的最早开始和最晚完成）
+    const l4Nodes = await prisma.projectWbsNode.findMany({
+      where: { projectSourceId, level: 4 },
+      select: { actualStartDate: true, actualEndDate: true },
+    });
+
+    const startDates = l4Nodes
+      .map((n) => n.actualStartDate)
+      .filter((d): d is Date => d !== null);
+    const endDates = l4Nodes
+      .map((n) => n.actualEndDate)
+      .filter((d): d is Date => d !== null);
+
+    await prisma.project.update({
+      where: { projectSourceId },
+      data: {
+        actualStartDate:
+          startDates.length > 0
+            ? new Date(Math.min(...startDates.map((d) => d.getTime())))
+            : null,
+        actualEndDate:
+          endDates.length > 0
+            ? new Date(Math.max(...endDates.map((d) => d.getTime())))
+            : null,
+      },
+    });
+
     // 返回整棵树（前端自行计算状态）
     const allNodes = await prisma.projectWbsNode.findMany({
       where: { projectSourceId },

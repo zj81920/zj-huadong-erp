@@ -5,6 +5,7 @@ vi.mock("@/lib/prisma", () => ({
   default: {
     projectWbsNode: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
     project: {
       findUnique: vi.fn(),
@@ -88,6 +89,10 @@ describe("canAccessProjectWbs", () => {
       projectSourceId: "PJ-2026-0001",
       responsibleIds: ["user-3"],
     } as any);
+    vi.mocked(prisma.projectWbsNode.findMany).mockResolvedValue([{
+      id: "node-1",
+      responsibleIds: ["user-3"],
+    }] as any);
     const result = await canAccessProjectWbs("PJ-2026-0001");
     expect(result).toBe(true);
   });
@@ -103,6 +108,7 @@ describe("canAccessProjectWbs", () => {
       supervisorLeaderId: null,
     } as any);
     vi.mocked(prisma.projectWbsNode.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.projectWbsNode.findMany).mockResolvedValue([]);
     const result = await canAccessProjectWbs("PJ-2026-0001");
     expect(result).toBe(false);
   });

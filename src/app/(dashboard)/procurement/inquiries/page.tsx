@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import { DetailPageLayout } from '@/components/DetailPageLayout';
+import SupplierPicker from "@/components/SupplierPicker";
 import { deleteUploadedFile } from "@/lib/upload-helpers";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
@@ -65,6 +66,7 @@ interface PurchaseRequest {
 interface Supplier {
   id: string;
   name: string;
+  supplierType?: string | null;
   contactPerson?: string | null;
   phone?: string | null;
 }
@@ -168,7 +170,6 @@ export default function InquiriesPage() {
   const [itemPrices, setItemPrices] = useState<Record<string, string>>({});
   const [uploadingFile, setUploadingFile] = useState(false);
   const [viewingRound, setViewingRound] = useState(1);
-  const [supplierSearch, setSupplierSearch] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const toggleRowExpand = (id: string) => {
     setExpandedRows(prev => {
@@ -437,29 +438,6 @@ export default function InquiriesPage() {
         attachments: prAttachments.length > 0 ? prAttachments : prev.attachments,
       }));
     }
-    if (formError) setFormError("");
-  };
-
-  const handleToggleSupplier = (supplierId: string) => {
-    setForm((prev) => {
-      const isSelected = prev.supplierIds.includes(supplierId);
-      const newIds = isSelected
-        ? prev.supplierIds.filter((id) => id !== supplierId)
-        : [...prev.supplierIds, supplierId];
-
-      const newQuoteSummary = { ...prev.quoteSummary };
-      if (!isSelected) {
-        newQuoteSummary[supplierId] = newQuoteSummary[supplierId] || { price: 0, deliveryDays: 0, remark: "" };
-      } else {
-        delete newQuoteSummary[supplierId];
-      }
-
-      return {
-        ...prev,
-        supplierIds: newIds,
-        quoteSummary: newQuoteSummary,
-      };
-    });
     if (formError) setFormError("");
   };
 
@@ -1024,46 +1002,33 @@ export default function InquiriesPage() {
           })()}
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-              选择供应商 <span className="text-[#78716C]">*</span>
-            </label>
-            <select
-              className="ios-select"
-              value=""
-              onChange={(e) => {
-                if (e.target.value) {
-                  handleToggleSupplier(e.target.value);
-                }
+            <SupplierPicker
+              suppliers={suppliers}
+              value={form.supplierIds}
+              onChange={(ids) => {
+                setForm((prev) => {
+                  const newQuoteSummary = { ...prev.quoteSummary };
+                  // 新增的供应商初始化报价
+                  for (const id of ids) {
+                    if (!newQuoteSummary[id]) {
+                      newQuoteSummary[id] = { price: 0, deliveryDays: 0, remark: "" };
+                    }
+                  }
+                  // 移除的供应商清除报价
+                  for (const key of Object.keys(newQuoteSummary)) {
+                    if (!ids.includes(key)) {
+                      delete newQuoteSummary[key];
+                    }
+                  }
+                  return { ...prev, supplierIds: ids, quoteSummary: newQuoteSummary };
+                });
+                if (formError) setFormError("");
               }}
-            >
-              <option value="">-- 点击选择供应商 --</option>
-              {suppliers
-                .filter((s) => !supplierSearch || s.name.toLowerCase().includes(supplierSearch.toLowerCase()))
-                .map((supplier) => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.name}{supplier.contactPerson ? ` (${supplier.contactPerson})` : ""}
-                  </option>
-                ))}
-            </select>
-            {form.supplierIds.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {form.supplierIds.map((sid) => {
-                  const supplier = suppliers.find((s) => s.id === sid);
-                  return (
-                    <span key={sid} className="inline-flex items-center gap-1 px-2 py-1 bg-[#1C1917]/10 text-[#1C1917] rounded-lg text-[12px] font-medium">
-                      {supplier?.name || "未知"}
-                      <button
-                        type="button"
-                        className="w-4 h-4 rounded-full hover:bg-[#1C1917]/20 flex items-center justify-center"
-                        onClick={() => handleToggleSupplier(sid)}
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  );
-                })}
-              </div>
-            )}
+              label="选择供应商"
+              placeholder="请选择供应商"
+              required
+              multiple
+            />
           </div>
 
           {form.inquiryMode === "offline" && form.supplierIds.length > 0 && (() => {

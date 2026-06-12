@@ -100,13 +100,14 @@ export async function startApprovalFlow(params: {
   projectSourceId?: string;
   businessTitle?: string;
   parentInstanceId?: string;
+  wbsItems?: { wbsNodeId: string; workload?: number | null; unit?: string | null; unitPrice?: number | null }[];
 }): Promise<{
   instanceId: string;
   currentNode: number;
   status: string;
   approverIds: string[];
 }> {
-  const { businessType, businessId, flowLevel, initiatorId, projectSourceId, businessTitle, parentInstanceId } = params;
+  const { businessType, businessId, flowLevel, initiatorId, projectSourceId, businessTitle, parentInstanceId, wbsItems } = params;
 
   // 查询既存实例（任意状态）
   const existing = await prisma.approvalInstance.findFirst({
@@ -147,6 +148,21 @@ export async function startApprovalFlow(params: {
     });
 
     await updateBusinessStatus(businessType, businessId, "审批中", undefined, existing.id);
+
+    // 外包审批：驳回重提时锁定 WBS 任务
+    if (businessType === "outsourcing" && wbsItems && wbsItems.length > 0) {
+      await prisma.outsourcingWbsItem.deleteMany({ where: { outsourcingTaskId: businessId } });
+      await prisma.outsourcingWbsItem.createMany({
+        data: wbsItems.map((item) => ({
+          outsourcingTaskId: businessId,
+          wbsNodeId: item.wbsNodeId,
+          workload: item.workload || null,
+          unit: item.unit || null,
+          unitPrice: item.unitPrice || null,
+          subtotal: (Number(item.workload) || 0) * (Number(item.unitPrice) || 0),
+        })),
+      });
+    }
 
     // 发起人自动跳过连续的自身审批节点
     const finalNodeOrder = await skipConsecutiveSelfNodes(
@@ -225,6 +241,20 @@ export async function startApprovalFlow(params: {
   });
 
   await updateBusinessStatus(businessType, businessId, "审批中", undefined, instance.id);
+
+  // 外包审批：首次提交时锁定 WBS 任务
+  if (businessType === "outsourcing" && wbsItems && wbsItems.length > 0) {
+    await prisma.outsourcingWbsItem.createMany({
+      data: wbsItems.map((item) => ({
+        outsourcingTaskId: businessId,
+        wbsNodeId: item.wbsNodeId,
+        workload: item.workload || null,
+        unit: item.unit || null,
+        unitPrice: item.unitPrice || null,
+        subtotal: (Number(item.workload) || 0) * (Number(item.unitPrice) || 0),
+      })),
+    });
+  }
 
   // 发起人自动跳过连续的自身审批节点
   const finalNodeOrder = await skipConsecutiveSelfNodes(
@@ -941,6 +971,53 @@ async function updateBusinessStatus(
       const outsourceData: Record<string, unknown> = { approvalStatus: status };
       if (instanceId) outsourceData.approvalInstanceId = instanceId;
       await prisma.outsourcingTask.update({ where: { id: businessId }, data: outsourceData });
+
+      if (status === "已批准") {
+        // 审批通过：回写外包对象名到 WBS 责任人
+        const task = await prisma.outsourcingTask.findUnique({
+          where: { id: businessId },
+          include: { wbsItems: { select: { wbsNodeId: true } } },
+        });
+
+        if (task && task.wbsItems.length > 0) {
+          const wbsNodeIds = task.wbsItems.map((item) => item.wbsNodeId);
+          const wbsNodes = await prisma.projectWbsNode.findMany({
+            where: { id: { in: wbsNodeIds } },
+            select: { id: true, responsibleIds: true },
+          });
+
+          for (const node of wbsNodes) {
+            const rawIds = (node.responsibleIds as unknown[]) || [];
+            const entries: unknown[] = rawIds.map((item: unknown) => {
+              if (typeof item === "string") {
+                return { type: "person", id: item, name: "" };
+              }
+              return item;
+            });
+
+            const existingOutsourcing = entries.some(
+              (e: unknown) => typeof e === "object" && e !== null && (e as Record<string, unknown>).type === "outsourcing" && (e as Record<string, unknown>).id === businessId
+            );
+            if (!existingOutsourcing) {
+              entries.push({
+                type: "outsourcing",
+                id: businessId,
+                name: task.targetName,
+              });
+            }
+
+            await prisma.projectWbsNode.update({
+              where: { id: node.id },
+              data: { responsibleIds: entries as any },
+            });
+          }
+        }
+      } else if (status === "已驳回") {
+        // 审批驳回：删除 OutsourcingWbsItem 关联记录（解锁）
+        await prisma.outsourcingWbsItem.deleteMany({
+          where: { outsourcingTaskId: businessId },
+        });
+      }
       break;
     }
     case "purchase_request":

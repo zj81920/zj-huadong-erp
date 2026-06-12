@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { businessType, businessId, flowLevel, projectSourceId, businessTitle, parentInstanceId } = body;
+    const { businessType, businessId, flowLevel, projectSourceId, businessTitle, parentInstanceId, wbsItems } = body;
 
     if (!businessType || !businessId || !flowLevel) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 });
@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
       projectSourceId,
       businessTitle: resolvedTitle || undefined,
       parentInstanceId,
+      wbsItems,
     });
 
     return NextResponse.json({ data: result }, { status: 201 });

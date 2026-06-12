@@ -1,0 +1,168 @@
+<h2>外包表单 v2 - WBS 任务明细行（工作量/单价/总价）</h2>
+<p class="subtitle">每个关联的 WBS 任务独立填写工作量、单价，自动计算明细总价，外包总金额自动汇总</p>
+
+<div class="split">
+  <!-- 左侧：外包表单 -->
+  <div class="mockup">
+    <div class="mockup-header">外包任务表单</div>
+    <div class="mockup-body" style="padding:16px;font-size:13px;line-height:2;">
+      <div class="label" style="margin-bottom:4px;">所属项目</div>
+      <div class="mock-input" style="width:100%;margin-bottom:12px;">华锦项目 - 乙烯装置</div>
+      
+      <div class="label" style="margin-bottom:4px;">外包类型</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div style="flex:1;background:#e8f0fe;border:2px solid #1a73e8;border-radius:6px;padding:8px;text-align:center;font-size:12px;font-weight:600;">分包给公司</div>
+        <div style="flex:1;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;padding:8px;text-align:center;font-size:12px;">分包给个人</div>
+      </div>
+
+      <div class="label" style="margin-bottom:4px;">外包对象</div>
+      <div class="mock-input" style="width:100%;margin-bottom:12px;">华东设计院</div>
+
+      <!-- 明细表 -->
+      <div class="label" style="margin-bottom:4px;">WBS 任务明细</div>
+      <div style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;margin-bottom:12px;">
+        <!-- 表头 -->
+        <div style="display:flex;background:#f8f9fa;border-bottom:2px solid #ddd;font-size:11px;font-weight:700;color:#555;">
+          <div style="flex:2;padding:8px;text-align:center;border-right:1px solid #eee;">WBS 任务</div>
+          <div style="flex:1;padding:8px;text-align:center;border-right:1px solid #eee;">工作量</div>
+          <div style="flex:1;padding:8px;text-align:center;border-right:1px solid #eee;">单价(元)</div>
+          <div style="flex:1;padding:8px;text-align:center;">小计(元)</div>
+        </div>
+        <!-- 行1 -->
+        <div style="display:flex;align-items:center;border-bottom:1px solid #f0f0f0;font-size:11px;">
+          <div style="flex:2;padding:8px;border-right:1px solid #eee;">管道平面图设计</div>
+          <div style="flex:1;padding:4px;border-right:1px solid #eee;text-align:center;">
+            <input value="20" style="width:40px;text-align:center;border:1px solid #ddd;border-radius:4px;padding:4px;"> 张
+          </div>
+          <div style="flex:1;padding:4px;border-right:1px solid #eee;text-align:center;">
+            <input value="3,000" style="width:60px;text-align:center;border:1px solid #ddd;border-radius:4px;padding:4px;">
+          </div>
+          <div style="flex:1;padding:8px;text-align:center;font-weight:600;color:#1a73e8;">60,000</div>
+        </div>
+        <!-- 行2 -->
+        <div style="display:flex;align-items:center;border-bottom:1px solid #f0f0f0;font-size:11px;">
+          <div style="flex:2;padding:8px;border-right:1px solid #eee;">管道剖面图设计</div>
+          <div style="flex:1;padding:4px;border-right:1px solid #eee;text-align:center;">
+            <input value="15" style="width:40px;text-align:center;border:1px solid #ddd;border-radius:4px;padding:4px;"> 张
+          </div>
+          <div style="flex:1;padding:4px;border-right:1px solid #eee;text-align:center;">
+            <input value="3,500" style="width:60px;text-align:center;border:1px solid #ddd;border-radius:4px;padding:4px;">
+          </div>
+          <div style="flex:1;padding:8px;text-align:center;font-weight:600;color:#1a73e8;">52,500</div>
+        </div>
+        <!-- 行3 - 新增 -->
+        <div style="display:flex;align-items:center;font-size:11px;">
+          <div style="flex:2;padding:8px;border-right:1px solid #eee;">管道支架图设计</div>
+          <div style="flex:1;padding:4px;border-right:1px solid #eee;text-align:center;">
+            <input value="10" style="width:40px;text-align:center;border:1px solid #ddd;border-radius:4px;padding:4px;"> 张
+          </div>
+          <div style="flex:1;padding:4px;border-right:1px solid #eee;text-align:center;">
+            <input value="4,000" style="width:60px;text-align:center;border:1px solid #ddd;border-radius:4px;padding:4px;">
+          </div>
+          <div style="flex:1;padding:8px;text-align:center;font-weight:600;color:#1a73e8;">40,000</div>
+        </div>
+      </div>
+
+      <!-- 汇总 -->
+      <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:12px;padding:8px 12px;background:#e8f0fe;border-radius:6px;">
+        <span style="font-size:13px;font-weight:700;margin-right:12px;">外包总金额：</span>
+        <span style="font-size:16px;font-weight:700;color:#1a73e8;">¥152,500.00</span>
+      </div>
+
+      <div class="label" style="margin-bottom:4px;">交付截止日 <span style="color:#999;">(取最早 WBS 截止日)</span></div>
+      <div class="mock-input" style="width:100%;margin-bottom:12px;">2026-08-15</div>
+
+      <div class="label" style="margin-bottom:4px;">任务描述 <span style="color:#999;">(从 WBS 自动拼接)</span></div>
+      <div class="mock-input" style="width:100%;height:50px;margin-bottom:12px;">管道平面图设计 / 管道剖面图设计 / 管道支架图设计</div>
+    </div>
+  </div>
+
+  <!-- 右侧：WBS 任务选择面板 -->
+  <div class="mockup">
+    <div class="mockup-header">WBS 任务选择器（无责任人 + 未锁定）</div>
+    <div class="mockup-body" style="padding:12px;font-size:13px;">
+      <div style="margin-bottom:10px;">
+        <span class="label">项目：</span>
+        <strong>华锦项目 - 乙烯装置</strong>
+      </div>
+      <div style="margin-bottom:10px;color:#888;font-size:12px;">
+        仅显示 <span style="color:#e67e22;font-weight:600;">无责任人</span> 且 <span style="color:#2ecc71;font-weight:600;">未被其他外包关联</span> 的任务
+      </div>
+      
+      <div style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;max-height:360px;overflow-y:auto;">
+        <div style="padding:8px 12px;background:#f8f9fa;border-bottom:1px solid #eee;font-weight:600;font-size:12px;color:#1a73e8;">
+          &#x25BC; 阶段一：初步设计
+        </div>
+        <div style="padding:6px 12px 6px 24px;font-size:12px;color:#333;border-bottom:1px solid #f0f0f0;">&#x25B6; 工艺设计</div>
+        <div style="padding:6px 12px 6px 24px;font-size:12px;color:#333;border-bottom:1px solid #f0f0f0;">&#x25BC; 管道设计</div>
+        <div style="padding:6px 12px 6px 36px;font-size:11px;color:#666;border-bottom:1px solid #f0f0f0;">&#x25B6; 工艺管道</div>
+        
+        <!-- 可选任务行 -->
+        <div style="padding:8px 12px 8px 48px;background:#e8f0fe;border-bottom:1px solid #e0e0e0;font-size:11px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" checked style="accent-color:#1a73e8;">
+          <span style="flex:1;">管道平面图设计</span>
+          <span style="color:#999;">截止:08-15</span>
+          <span style="background:#fef3e0;color:#b45309;padding:1px 6px;border-radius:4px;font-size:10px;">无责任人</span>
+        </div>
+        <div style="padding:8px 12px 8px 48px;background:#e8f0fe;border-bottom:1px solid #e0e0e0;font-size:11px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" checked style="accent-color:#1a73e8;">
+          <span style="flex:1;">管道剖面图设计</span>
+          <span style="color:#999;">截止:08-20</span>
+          <span style="background:#fef3e0;color:#b45309;padding:1px 6px;border-radius:4px;font-size:10px;">无责任人</span>
+        </div>
+        <div style="padding:8px 12px 8px 48px;background:#e8f0fe;border-bottom:1px solid #e0e0e0;font-size:11px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" checked style="accent-color:#1a73e8;">
+          <span style="flex:1;">管道支架图设计</span>
+          <span style="color:#999;">截止:09-01</span>
+          <span style="background:#fef3e0;color:#b45309;padding:1px 6px;border-radius:4px;font-size:10px;">无责任人</span>
+        </div>
+        <div style="padding:8px 12px 8px 48px;border-bottom:1px solid #f0f0f0;font-size:11px;display:flex;align-items:center;gap:8px;opacity:0.5;">
+          <span>&#x1F512;</span>
+          <span style="flex:1;">管道应力分析</span>
+          <span style="color:#999;">截止:09-10</span>
+          <span style="background:#e0e0e0;color:#888;padding:1px 6px;border-radius:4px;font-size:10px;">已被关联</span>
+        </div>
+        <div style="padding:8px 12px;background:#f8f9fa;border-bottom:1px solid #eee;font-weight:600;font-size:12px;color:#1a73e8;">&#x25B6; 阶段二：施工图设计</div>
+      </div>
+
+      <div style="margin-top:10px;font-size:12px;color:#888;">
+        已选 <strong>3</strong> 个任务，左侧明细表自动生成行
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <h3>设计要点</h3>
+  
+  <div class="options" data-multiselect>
+    <div class="option" data-choice="confirm" onclick="toggleSelect(this)">
+      <div class="letter">&#10003;</div>
+      <div class="content">
+        <h3>每个 WBS 任务独立填写工作量 + 单价</h3>
+        <p>选中 WBS 任务后自动在左侧生成明细行，每行独立填工作量（数量+单位）和单价，自动计算小计 = 工作量 × 单价。外包总金额 = 所有明细小计之和。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="confirm" onclick="toggleSelect(this)">
+      <div class="letter">&#10003;</div>
+      <div class="content">
+        <h3>工作量单位灵活</h3>
+        <p>工作量支持自定义单位（张、个、套、米、吨 等），不同 WBS 任务可用不同单位。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="confirm" onclick="toggleSelect(this)">
+      <div class="letter">&#10003;</div>
+      <div class="content">
+        <h3>交付截止日取最早</h3>
+        <p>自动取所有选中 WBS 任务中最早的 planEndDate 作为外包整体交付截止日。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="confirm" onclick="toggleSelect(this)">
+      <div class="letter">&#10003;</div>
+      <div class="content">
+        <h3>任务描述自动拼接</h3>
+        <p>所有选中 WBS 任务名用 " / " 拼接作为外包任务描述，仍可手动修改。</p>
+      </div>
+    </div>
+  </div>
+</div>
