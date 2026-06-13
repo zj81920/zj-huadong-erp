@@ -29,13 +29,14 @@ import { useRouter } from "next/navigation";
 import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
+import { OWNERSHIP_TYPE_OPTIONS } from "@/lib/constants/customer";
 
 interface Customer {
   id: string;
   name: string;
   contactPerson: string | null;
   phone: string | null;
-  industryType: string | null;
+  ownershipType: string | null;
 }
 
 interface Project {
@@ -186,7 +187,7 @@ export default function IncomeContractsPage() {
     name: "",
     contactPerson: "",
     phone: "",
-    industryType: "",
+    ownershipType: "",
     customerGrade: "C",
   });
   const [customerSaving, setCustomerSaving] = useState(false);
@@ -718,7 +719,7 @@ export default function IncomeContractsPage() {
           name: "",
           contactPerson: "",
           phone: "",
-          industryType: "",
+          ownershipType: "",
           customerGrade: "C",
         });
       } else {
@@ -1109,7 +1110,7 @@ export default function IncomeContractsPage() {
                           name: "",
                           contactPerson: "",
                           phone: "",
-                          industryType: "",
+                          ownershipType: "",
                           customerGrade: "C",
                         });
                         setShowCustomerModal(true);
@@ -1764,15 +1765,16 @@ export default function IncomeContractsPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">行业类型</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户属性</label>
               <select
                 className="ios-select"
-                value={customerForm.industryType}
-                onChange={(e) => setCustomerForm((prev) => ({ ...prev, industryType: e.target.value }))}
+                value={customerForm.ownershipType}
+                onChange={(e) => setCustomerForm((prev) => ({ ...prev, ownershipType: e.target.value }))}
               >
                 <option value="">请选择</option>
-                <option value="石化">石化</option>
-                <option value="医药">医药</option>
+                {OWNERSHIP_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
             <div>

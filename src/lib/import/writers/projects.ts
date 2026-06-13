@@ -70,13 +70,14 @@ export async function writeProjects(
         // 2. 创建项目
         await tx.project.create({
           data: {
+            useWbs: false,
             projectCode: row.projectCode,
             projectSourceId: row.projectCode,
             name: row.name,
             customerId,
             source: "直接委托",
             sourceRefId: row.projectCode,
-            type: row.type || "",
+            projectContent: row.type || "",
             address: row.address || "",
             projectCategory: row.projectCategory || "",
             status: row.status || "执行",

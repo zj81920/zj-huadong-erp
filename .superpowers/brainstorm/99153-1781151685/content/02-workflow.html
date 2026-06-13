@@ -1,0 +1,64 @@
+<h2>了解你的实际使用场景</h2>
+<p class="subtitle">全流程 AI 管理需要贴合真实的协作方式</p>
+
+<div class="section">
+  <h3>谁在使用 WBS 计划系统？</h3>
+  <p class="subtitle">请选出所有相关角色（可多选）</p>
+  <div class="options" data-multiselect>
+    <div class="option" data-choice="role-pm" onclick="toggleSelect(this)">
+      <div class="letter">PM</div>
+      <div class="content">
+        <h3>项目经理</h3>
+        <p>创建项目、拆分 WBS、查看整体进度、关注延误预警</p>
+      </div>
+    </div>
+    <div class="option" data-choice="role-leader" onclick="toggleSelect(this)">
+      <div class="letter">LD</div>
+      <div class="content">
+        <h3>专业负责人</h3>
+        <p>负责某个专业下的任务执行、进度汇报</p>
+      </div>
+    </div>
+    <div class="option" data-choice="role-worker" onclick="toggleSelect(this)">
+      <div class="letter">EX</div>
+      <div class="content">
+        <h3>执行人</h3>
+        <p>具体任务执行者，汇报工作进展</p>
+      </div>
+    </div>
+    <div class="option" data-choice="role-leader-view" onclick="toggleSelect(this)">
+      <div class="letter">LD</div>
+      <div class="content">
+        <h3>领导/管理层</h3>
+        <p>只看仪表盘汇总，关注整体健康度和延误项目</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>第二个问题：创建 WBS 的过程是怎样的？</h3>
+  <div class="options">
+    <div class="option" data-choice="wbs-create-a" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>从模板/经验出发</h3>
+        <p>类似项目有固定的 WBS 模板（阶段→子项→专业→任务结构基本固定），在此基础上微调</p>
+      </div>
+    </div>
+    <div class="option" data-choice="wbs-create-b" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>每次从头规划</h3>
+        <p>每个项目的 WBS 结构差异较大，需要根据项目特点重新设计</p>
+      </div>
+    </div>
+    <div class="option" data-choice="wbs-create-c" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>混合模式</h3>
+        <p>大框架有模板，但具体任务细节和工期需要根据项目调整</p>
+      </div>
+    </div>
+  </div>
+</div>

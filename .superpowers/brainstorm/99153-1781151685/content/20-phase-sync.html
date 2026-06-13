@@ -1,0 +1,76 @@
+<h2>阶段变更 & 删除项目 → WBS 响应机制</h2>
+<p class="subtitle">现有逻辑 + 发现的问题 + 修复方案</p>
+
+<div class="section">
+  <h3>三种场景的现有行为</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+    <div style="background:#e8f5e9;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px;color:#2e7d32">➕ 增加阶段</h4>
+      <p style="margin:0;font-size:13px">新阶段名不在已有 L1 节点中 → 自动创建 L1 节点<br><span style="color:#888">✅ 正常运作</span></p>
+    </div>
+    <div style="background:#fff3e0;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px;color:#ef6c00">➖ 减少阶段</h4>
+      <p style="margin:0;font-size:13px">L1 节点名不在新阶段列表中 → 直接 delete<br><span style="color:#c62828">⚠️ 若该 L1 下有子节点，delete 会因 FK 约束失败！</span></p>
+    </div>
+    <div style="background:#fff3e0;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px;color:#ef6c00">🗑 删除项目</h4>
+      <p style="margin:0;font-size:13px">deleteMany 删除所有 L1 节点<br><span style="color:#c62828">⚠️ 同样问题：父节点删不掉因为有子节点引用</span></p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>问题根因</h3>
+  <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-size:13px;line-height:1.8">
+    <p style="margin:0">Prisma schema 中，<code>parentId</code> 的自引用关系没有设置 <code>onDelete: Cascade</code>。当删除 L1 节点时，如果它下面有 L2→L3→L4 子树，外键约束会阻止删除。</p>
+    <p style="margin:8px 0 0">项目中 <strong>已经有一个</strong> <code>deleteChildren()</code> 递归删除函数（在 WBS 节点 DELETE API 里），但阶段同步和项目删除这两个地方没用它。</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>修复方案（新设计中一并处理）</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div style="background:#e3f2fd;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px">方案：统一递归删除工具</h4>
+      <p style="margin:0;font-size:13px">提取公共的 <code>deleteWbsSubtree(nodeId)</code> 函数，深度优先删除所有子孙节点。减少阶段、删除项目时统一调用。</p>
+    </div>
+    <div style="background:#e3f2fd;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px">额外防御：Schema 加 Cascade</h4>
+      <p style="margin:0;font-size:13px">在 Prisma schema 的 parent 关系上加 <code>onDelete: Cascade</code>，确保即使 API 层遗漏，数据库层面也能级联删除。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>修复后的行为总览</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:#f5f5f5"><th style="padding:8px;text-align:left;border:1px solid #ddd">场景</th><th style="padding:8px;text-align:left;border:1px solid #ddd">WBS 响应</th><th style="padding:8px;text-align:center;border:1px solid #ddd">风险</th></tr></thead>
+    <tbody>
+      <tr><td style="padding:8px;border:1px solid #ddd">➕ 增加阶段</td><td style="padding:8px;border:1px solid #ddd">创建空 L1 节点，用户后续手动添加 L2-L4</td><td style="padding:8px;border:1px solid #ddd;text-align:center;color:#2e7d32">无</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">➖ 减少阶段</td><td style="padding:8px;border:1px solid #ddd"><strong>级联删除</strong>该 L1 及其下全部 L2-L4 子树</td><td style="padding:8px;border:1px solid #ddd;text-align:center;color:#ef6c00">数据不可恢复</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">🗑 删除项目</td><td style="padding:8px;border:1px solid #ddd"><strong>级联删除</strong>所有 WBS 节点 + 任务日志</td><td style="padding:8px;border:1px solid #ddd;text-align:center;color:#ef6c00">数据不可恢复</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">✏️ 重命名阶段</td><td style="padding:8px;border:1px solid #ddd">更新 L1 节点 name</td><td style="padding:8px;border:1px solid #ddd;text-align:center;color:#2e7d32">无</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>减少阶段时需要确认吗？</h3>
+  <p style="font-size:14px;color:#c62828">减少阶段会级联删除该阶段下所有子项、专业、任务及日志数据。是否需要给用户弹窗确认？</p>
+  <div class="options">
+    <div class="option" data-choice="confirm-yes" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>需要确认弹窗</h3>
+        <p>提示「将删除 X 个阶段及下属 N 个任务」，用户确认后才执行</p>
+      </div>
+    </div>
+    <div class="option" data-choice="confirm-no" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>不需要确认</h3>
+        <p>保存项目时直接同步，减少操作步骤</p>
+      </div>
+    </div>
+  </div>
+</div>

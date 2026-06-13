@@ -11,7 +11,7 @@ import { QuotationDetailCard } from "@/components/detail-cards";
 interface Customer {
   id: string;
   name: string;
-  industryType: string | null;
+  ownershipType: string | null;
 }
 
 interface Quotation {

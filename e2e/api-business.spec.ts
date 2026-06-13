@@ -37,7 +37,7 @@ test.describe("商务管理模块 API 测试", () => {
       name: `测试客户-BASE-${ts}`,
       contactPerson: "张三",
       phone: "13800138000",
-      industryType: "化工",
+      ownershipType: "民营",
       customerGrade: "B",
     });
     ids.customerId = custRes.data.id;
@@ -57,7 +57,7 @@ test.describe("商务管理模块 API 测试", () => {
       location: "安徽省合肥市",
       contactPerson: "王工",
       contactPhone: "13700137000",
-      projectNature: ["EP"],
+      projectNature: "EP",
       implementationEntity: "华东工程",
       currentStatus: "跟踪中",
     });
@@ -69,7 +69,7 @@ test.describe("商务管理模块 API 测试", () => {
       location: "安徽省合肥市",
       contactPerson: "赵工",
       contactPhone: "13600136000",
-      projectNature: ["EPC"],
+      projectNature: "EPcm",
       implementationEntity: "华东工程",
       currentStatus: "跟踪中",
     });
@@ -83,7 +83,7 @@ test.describe("商务管理模块 API 测试", () => {
       name: `测试客户-CRUD-${ts}`,
       contactPerson: "张三丰",
       phone: "13800138001",
-      industryType: "电子",
+      ownershipType: "外资",
       customerGrade: "A",
     });
     const customerId = createRes.data.id;
@@ -155,7 +155,7 @@ test.describe("商务管理模块 API 测试", () => {
       location: "江苏省南京市",
       contactPerson: "王工",
       contactPhone: "13700137001",
-      projectNature: ["EP"],
+      projectNature: "EP",
       implementationEntity: "华东工程",
       currentStatus: "跟踪中",
     });

@@ -12,6 +12,7 @@ interface DetailPageLayoutProps {
   children: React.ReactNode
   footer?: React.ReactNode
   onBack?: () => void
+  wbsItems?: { wbsNodeId: string; workload?: number | null; unit?: string | null; unitPrice?: number | null }[]
 }
 
 export function DetailPageLayout({
@@ -22,6 +23,7 @@ export function DetailPageLayout({
   children,
   footer,
   onBack,
+  wbsItems,
 }: DetailPageLayoutProps) {
   return (
     <div className="space-y-4">
@@ -48,6 +50,7 @@ export function DetailPageLayout({
           instanceId={instanceId}
           businessType={businessType}
           businessId={businessId}
+          wbsItems={wbsItems}
         />
       )}
 

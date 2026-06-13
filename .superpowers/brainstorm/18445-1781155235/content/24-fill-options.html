@@ -1,0 +1,103 @@
+<h2>空白区域填什么？</h2>
+<p class="subtitle">几个实用选项，选最适合的</p>
+
+<div class="options">
+  <div class="option" data-choice="fill-phases" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>设计阶段</h3>
+      <p>显示该项目的阶段列表，如「初步设计 / 施工图 / 后期服务」。直观了解项目当前在哪几个阶段。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="fill-diff" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>计划 vs 实际进度差</h3>
+      <p>如「实际 65% / 计划 50% → +15%」或「实际 30% / 计划 55% → -25%」，一眼看出差距。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="fill-type" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>项目类型 + 类别</h3>
+      <p>如「设计 / 石油化工」，帮助区分不同业务类型的项目。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="fill-combo" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>组合：阶段 + 进度差</h3>
+      <p>两行信息：上行显示阶段标签，下行显示进度偏差。信息密度高但不拥挤。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>图示对比</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="padding:12px;font-size:12px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse">
+        <tr style="border-bottom:1px solid #eee">
+          <td style="padding:8px;width:100px;color:#57534e">HDP-001</td>
+          <td style="padding:8px;width:180px;font-weight:500">某石化乙烯项目</td>
+          <td style="padding:8px;width:180px">
+            <!-- A: 阶段 -->
+            <span style="background:#e3f2fd;color:#1565c0;padding:1px 5px;border-radius:3px;font-size:10px;margin:0 1px">初步设计</span>
+            <span style="background:#e3f2fd;color:#1565c0;padding:1px 5px;border-radius:3px;font-size:10px;margin:0 1px">施工图</span>
+          </td>
+          <td style="padding:8px;width:100px;color:#57534e">中石化</td>
+          <td style="padding:8px;width:100px;text-align:center">65% 🚀</td>
+          <td style="padding:8px;width:40px;text-align:center">🟢</td>
+        </tr>
+        <tr style="border-bottom:1px solid #eee">
+          <td style="padding:8px;color:#57534e">HDP-005</td>
+          <td style="padding:8px;font-weight:500">某炼化一体化项目</td>
+          <td style="padding:8px">
+            <!-- B: 进度差 -->
+            <span style="color:#c62828;font-size:11px">实际 30%</span>
+            <span style="color:#888;font-size:10px;margin:0 2px">/</span>
+            <span style="color:#888;font-size:11px">计划 55%</span>
+            <span style="background:#ffebee;color:#c62828;padding:0 4px;border-radius:2px;font-size:10px;margin-left:4px">-25%</span>
+          </td>
+          <td style="padding:8px;color:#57534e">中石油</td>
+          <td style="padding:8px;text-align:center">30% ⚠️</td>
+          <td style="padding:8px;text-align:center">🔴</td>
+        </tr>
+        <tr style="border-bottom:1px solid #eee">
+          <td style="padding:8px;color:#57534e">HDP-008</td>
+          <td style="padding:8px;font-weight:500">某储运基地项目</td>
+          <td style="padding:8px">
+            <!-- C: 类型+类别 -->
+            <span style="background:#f3e5f5;color:#6a1b9a;padding:1px 5px;border-radius:3px;font-size:10px">EPC</span>
+            <span style="color:#888;font-size:11px;margin-left:4px">石油化工</span>
+          </td>
+          <td style="padding:8px;color:#57534e">中海油</td>
+          <td style="padding:8px;text-align:center">100% 🏁</td>
+          <td style="padding:8px;text-align:center">🟢</td>
+        </tr>
+        <tr style="border-bottom:1px solid #eee">
+          <td style="padding:8px;color:#57534e">HDP-012</td>
+          <td style="padding:8px;font-weight:500">某长输管线项目</td>
+          <td style="padding:8px">
+            <!-- D: 组合 -->
+            <div style="margin-bottom:2px">
+              <span style="background:#e3f2fd;color:#1565c0;padding:1px 4px;border-radius:3px;font-size:9px;margin:0 1px">初步设计</span>
+              <span style="background:#e3f2fd;color:#1565c0;padding:1px 4px;border-radius:3px;font-size:9px;margin:0 1px">施工图</span>
+            </div>
+            <div style="font-size:10px">
+              <span style="color:#c62828">实际 30% / 计划 55%</span>
+              <span style="color:#c62828;margin-left:4px">-25%</span>
+            </div>
+          </td>
+          <td style="padding:8px;color:#57534e">国家管网</td>
+          <td style="padding:8px;text-align:center">30% ⚠️</td>
+          <td style="padding:8px;text-align:center">🔴</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>你倾向哪个？</h3>
+</div>

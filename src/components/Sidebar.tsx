@@ -47,8 +47,7 @@ const navSections: NavSection[] = [
     icon: <Briefcase className="w-4.5 h-4.5" />,
     items: [
       { label: "项目立项", href: "/projects" },
-      { label: "项目计划", href: "/projects/plans" },
-      { label: "项目进度", href: "/projects/progress" },
+      { label: "项目WBS计划", href: "/projects/plans" },
       { label: "设计外包", href: "/projects/outsourcing" },
     ],
   },
@@ -103,7 +102,9 @@ const navSections: NavSection[] = [
       { label: "个人设置", href: "/settings/profile", group: "基础数据" },
       { label: "往来信息管理", href: "/settings/counterparty", group: "基础数据" },
       { label: "数据导入", href: "/settings/data-import", group: "系统" },
+      { label: "系统集成", href: "/settings/system", group: "系统" },
       { label: "AI 模型配置", href: "/settings/ai-model", group: "系统" },
+      { label: "专业字典", href: "/settings/disciplines", group: "基础数据" },
     ],
   },
 ];
@@ -192,7 +193,7 @@ export default function Sidebar() {
                     if (item.group && item.group !== prevGroup) {
                       acc.push(
                         <span
-                          key={`group-${item.group}`}
+                          key={`group-${item.group}-${idx}`}
                           className="px-3 pt-3 pb-1 text-[11px] font-semibold text-[#A8A29E] uppercase tracking-wider"
                         >
                           {item.group}

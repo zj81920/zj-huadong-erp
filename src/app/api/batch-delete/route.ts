@@ -16,7 +16,6 @@ const BUSINESS_MODELS = [
   "project",
   "outsourcing",
   "project_plan",
-  "project_progress",
   "quotation",
   "payment_application",
   "expense_report",
@@ -131,9 +130,6 @@ async function handleHardDelete(businessType: BusinessType, ids: string[]) {
         break;
       case "project_plan":
         await tx.projectPlan.deleteMany({ where: { id: { in: ids } } });
-        break;
-      case "project_progress":
-        await tx.projectProgress.deleteMany({ where: { id: { in: ids } } });
         break;
       case "quotation":
         await tx.quotation.deleteMany({ where: { id: { in: ids } } });

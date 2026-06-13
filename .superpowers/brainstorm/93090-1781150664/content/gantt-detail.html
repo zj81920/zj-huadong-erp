@@ -1,0 +1,103 @@
+<h2>方案 A 细化：横道图各场景展示</h2>
+<p class="subtitle">计划横道（虚线灰）始终 = planStart → planEnd；实际横道（实色）= actualStart → actualStart + (progress% × 计划总天数)</p>
+
+<div class="section">
+  <h3>场景 1：正常进行中 — actual% ≥ plan%</h3>
+  <div class="mockup">
+    <div class="mockup-header">计划 5/1→6/30，实际 5/2 开工，进度 50%，计划进度 40%</div>
+    <div class="mockup-body" style="padding:16px;font-family:monospace;font-size:12px">
+      <div style="position:relative;height:40px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;margin-bottom:6px">
+          <span style="width:20px;font-size:10px;color:#90A4C4">P</span>
+          <div style="flex:1;position:relative;height:12px">
+            <div style="position:absolute;top:0;bottom:0;left:0;right:0;border:1.5px dashed #90A4C4;background:rgba(144,164,196,0.08)"></div>
+          </div>
+          <span style="width:80px;font-size:10px;color:#90A4C4;text-align:right">5/1 → 6/30</span>
+        </div>
+        <div style="display:flex;align-items:center">
+          <span style="width:20px;font-size:10px;color:#7DA88E">A</span>
+          <div style="flex:1;position:relative;height:12px">
+            <div style="position:absolute;top:0;bottom:0;left:1.5%;width:50%;background:#7DA88E;opacity:0.85"></div>
+          </div>
+          <span style="width:80px;font-size:10px;color:#7DA88E;text-align:right">5/2 → 6/1 (50%)</span>
+        </div>
+      </div>
+      <p style="margin:0;color:#7DA88E;font-size:11px">✅ 实际横道(50%) 比计划横道(40%位置)长 → 按期</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>场景 2：延误 — actual% &lt; plan%，且晚开始</h3>
+  <div class="mockup">
+    <div class="mockup-header">计划 5/1→6/30，实际 5/15 开工(晚14天)，进度 25%，计划进度 66%</div>
+    <div class="mockup-body" style="padding:16px;font-family:monospace;font-size:12px">
+      <div style="position:relative;height:40px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;margin-bottom:6px">
+          <span style="width:20px;font-size:10px;color:#90A4C4">P</span>
+          <div style="flex:1;position:relative;height:12px">
+            <div style="position:absolute;top:0;bottom:0;left:0;right:0;border:1.5px dashed #90A4C4;background:rgba(144,164,196,0.08)"></div>
+          </div>
+          <span style="width:80px;font-size:10px;color:#90A4C4;text-align:right">计划 66%</span>
+        </div>
+        <div style="display:flex;align-items:center">
+          <span style="width:20px;font-size:10px;color:#C47676">A</span>
+          <div style="flex:1;position:relative;height:12px">
+            <div style="position:absolute;top:0;bottom:0;left:23%;width:25%;background:#C47676;opacity:0.85"></div>
+            <div style="position:absolute;top:8px;left:19%;font-size:9px;color:#C47676">←晚14天</div>
+          </div>
+          <span style="width:80px;font-size:10px;color:#C47676;text-align:right">实际 25%</span>
+        </div>
+      </div>
+      <p style="margin:0;color:#C47676;font-size:11px">⚠ 起点偏移(晚开始) + 横道短(进度落后) → 延误，双重可见</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>场景 3：100% 完成 — 实际横道终点 = actualEnd</h3>
+  <div class="mockup">
+    <div class="mockup-header">100% 完成时，实际横道终点取 actualEnd，而非 progress×planDuration</div>
+    <div class="mockup-body" style="padding:16px;font-family:monospace;font-size:12px">
+      <div style="display:flex;align-items:center;margin-bottom:6px">
+        <span style="width:20px;font-size:10px;color:#90A4C4">P</span>
+        <div style="flex:1;position:relative;height:12px">
+          <div style="position:absolute;top:0;bottom:0;left:0;right:0;border:1.5px dashed #90A4C4;background:rgba(144,164,196,0.08)"></div>
+        </div>
+        <span style="width:80px;font-size:10px;color:#90A4C4;text-align:right">5/1 → 6/30</span>
+      </div>
+      <div style="display:flex;align-items:center">
+        <span style="width:20px;font-size:10px;color:#5A7A9A">A</span>
+        <div style="flex:1;position:relative;height:12px">
+          <div style="position:absolute;top:0;bottom:0;left:1.5%;right:5%;background:#5A7A9A;opacity:0.85"></div>
+        </div>
+        <span style="width:80px;font-size:10px;color:#5A7A9A;text-align:right">5/2 → 6/25</span>
+      </div>
+      <p style="margin:4px 0 0;color:#5A7A9A;font-size:11px">✅ 提前 5 天完成：实际横道终点(6/25) 在计划终点(6/30) 左侧</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>需要确认的设计细节</h3>
+  
+  <div style="padding:12px;background:#FFFBEB;border:1px solid#FDE68A;border-radius:8px;margin-top:8px">
+    <p style="margin:0 0 8px;font-weight:600">进度 = 100% 时，实际横道终点用哪个？</p>
+    <div class="options">
+      <div class="option" data-choice="a" onclick="toggleSelect(this)">
+        <div class="letter">A</div>
+        <div class="content">
+          <h3>始终用 actualEnd</h3>
+          <p>有 actualEnd 就画到 actualEnd，没有就用 actualStart + 计划总天数。这样能看出实际完成日与计划完成日的偏差。</p>
+        </div>
+      </div>
+      <div class="option" data-choice="b" onclick="toggleSelect(this)">
+        <div class="letter">B</div>
+        <div class="content">
+          <h3>始终用 progress% × 计划天数（推荐）</h3>
+          <p>100% 时 bar 正好画满计划横道的长度，统一按比例。actualEnd 通过文字标签展示。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -33,7 +33,7 @@ export async function PUT(
     const { id } = await params;
     const currentUser = await getCurrentUser();
     const body = await request.json();
-    const { name, address, contactPerson, phone, email, maintainer, industryType, customerGrade } = body;
+    const { name, address, contactPerson, phone, email, maintainer, ownershipType, customerGrade } = body;
 
     const existing = await prisma.customer.findUnique({ where: { id } });
     if (!existing || !existing.isActive) {
@@ -63,7 +63,7 @@ export async function PUT(
         ...(phone !== undefined && { phone: phone?.trim() || null }),
         ...(email !== undefined && { email: email?.trim() || null }),
         ...(maintainer !== undefined && { maintainer: maintainer?.trim() || null }),
-        ...(industryType !== undefined && { industryType: industryType || null }),
+        ...(ownershipType !== undefined && { ownershipType: ownershipType || null }),
         ...(customerGrade !== undefined && { customerGrade: customerGrade || "C" }),
         lastModifiedBy: currentUser?.realName || null,
       },
@@ -94,13 +94,36 @@ export async function DELETE(
       return NextResponse.json({ error: deleteCheck.error }, { status: 403 });
     }
 
-    const projectLeadsCount = await prisma.projectLead.count({
-      where: { customerId: id },
-    });
+    // 检查所有引用该客户的关联记录
+    const [
+      projectLeadsCount,
+      projectsCount,
+      quotationsCount,
+      incomeContractsCount,
+    ] = await Promise.all([
+      prisma.projectLead.count({ where: { customerId: id } }),
+      prisma.project.count({ where: { customerId: id } }),
+      prisma.quotation.count({ where: { customerId: id } }),
+      prisma.incomeContract.count({ where: { customerId: id } }),
+    ]);
 
-    if (projectLeadsCount > 0 && !isAdmin(adminUser)) {
+    const blockers: string[] = [];
+    if (projectLeadsCount > 0) blockers.push(`${projectLeadsCount} 条项目线索`);
+    if (projectsCount > 0) blockers.push(`${projectsCount} 个项目`);
+    if (quotationsCount > 0) blockers.push(`${quotationsCount} 条报价`);
+    if (incomeContractsCount > 0) blockers.push(`${incomeContractsCount} 个收入合同`);
+
+    if (blockers.length > 0 && !isAdmin(adminUser)) {
       return NextResponse.json(
-        { error: `该客户下有 ${projectLeadsCount} 条项目线索，无法删除` },
+        { error: `该客户下存在关联数据：${blockers.join("、")}，无法删除` },
+        { status: 400 }
+      );
+    }
+
+    if (blockers.length > 0) {
+      // 管理员也需清理关联数据后才能删除
+      return NextResponse.json(
+        { error: `该客户下存在关联数据：${blockers.join("、")}，请先清理后删除` },
         { status: 400 }
       );
     }

@@ -157,7 +157,7 @@ export default function ProfileSettingsPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ signatureUrl: json.url }),
         });
-        if (saveRes.ok) { setSignaturePreview(json.url); }
+        if (saveRes.ok) { setSignaturePreview(json.signedUrl || json.url); }
         else { setSignatureError("保存签名失败"); }
       } else { setSignatureError(json.error || "上传失败"); }
     } catch { setSignatureError("上传失败"); }

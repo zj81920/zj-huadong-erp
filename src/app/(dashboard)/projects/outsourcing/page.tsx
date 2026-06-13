@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Search,
   Plus,
@@ -12,10 +12,10 @@ import {
   DollarSign,
   Building2,
   UserCircle,
-  Upload,
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import ProjectPicker, { ProjectLeadItem } from "@/components/ProjectPicker";
+import SupplierPicker from "@/components/SupplierPicker";
 import { DetailPageLayout } from "@/components/DetailPageLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
@@ -25,9 +25,9 @@ import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
 import { getUserModulePerms } from "@/lib/types/permissions";
-import { deleteUploadedFile } from "@/lib/upload-helpers";
 import { canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
 import { OutsourcingDetailCard } from "@/components/detail-cards";
+import WbsTaskSelector from "./components/WbsTaskSelector";
 
 interface Project {
   id: string;
@@ -90,18 +90,7 @@ const emptyForm: OutsourcingFormData = {
   approvalStatus: "草稿",
 };
 
-const emptySupplierForm = {
-  name: "",
-  supplierType: "企业",
-  status: "当前有效",
-  contactPerson: "",
-  phone: "",
-  email: "",
-  address: "",
-  bankName: "",
-  bankAccount: "",
-  remark: "",
-};
+
 
 const acceptanceStatusConfig: Record<string, { color: string; label: string }> = {
   "未验收": { color: "ios-badge-orange", label: "未验收" },
@@ -147,18 +136,13 @@ export default function OutsourcingPage() {
   const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
 
-  const [showSupplierModal, setShowSupplierModal] = useState(false);
-  const [supplierForm, setSupplierForm] = useState(emptySupplierForm);
-  const [supplierSaving, setSupplierSaving] = useState(false);
-  const [supplierError, setSupplierError] = useState("");
-  const supplierFileRef = useRef<HTMLInputElement>(null);
-  const [supplierUploading, setSupplierUploading] = useState(false);
-  const [supplierUploadName, setSupplierUploadName] = useState("");
-  const [supplierAttachmentUrl, setSupplierAttachmentUrl] = useState("");
-
   const [detailTask, setDetailTask] = useState<OutsourcingTask | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<OutsourcingTask | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // WBS 关联状态
+  const [selectedWbsIds, setSelectedWbsIds] = useState<string[]>([]);
+  const [wbsLineItems, setWbsLineItems] = useState<{ wbsNodeId: string; taskName: string; workload: string; unit: string; unitPrice: string; subtotal: number }[]>([]);
 
   const {
     toggleSelect,
@@ -233,10 +217,12 @@ export default function OutsourcingPage() {
     setEditingTask(null);
     setForm(emptyForm);
     setFormError("");
+    setSelectedWbsIds([]);
+    setWbsLineItems([]);
     setShowModal(true);
   };
 
-  const handleOpenEdit = (task: OutsourcingTask) => {
+  const handleOpenEdit = async (task: OutsourcingTask) => {
     setEditingTask(task);
     setForm({
       projectSourceId: task.projectSourceId,
@@ -251,66 +237,32 @@ export default function OutsourcingPage() {
       approvalStatus: task.approvalStatus,
     });
     setFormError("");
+
+    // 加载 WBS 明细
+    try {
+      const res = await fetch(`/api/projects/outsourcing/${task.id}`);
+      const json = await res.json();
+      if (res.ok && json.data?.wbsItems) {
+        const items = json.data.wbsItems;
+        setSelectedWbsIds(items.map((i: any) => i.wbsNodeId));
+        setWbsLineItems(items.map((i: any) => ({
+          wbsNodeId: i.wbsNodeId,
+          taskName: i.wbsNode?.name || "",
+          workload: i.workload ? String(i.workload) : "",
+          unit: i.unit || "",
+          unitPrice: i.unitPrice ? String(i.unitPrice) : "",
+          subtotal: i.subtotal ? Number(i.subtotal) : 0,
+        })));
+      } else {
+        setSelectedWbsIds([]);
+        setWbsLineItems([]);
+      }
+    } catch {
+      setSelectedWbsIds([]);
+      setWbsLineItems([]);
+    }
+
     setShowModal(true);
-  };
-
-  const handleSupplierFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setSupplierUploading(true);
-    setSupplierError("");
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const json = await res.json();
-      if (res.ok) {
-        setSupplierAttachmentUrl(json.url);
-        setSupplierUploadName(file.name);
-      } else {
-        setSupplierError(json.error || "上传失败");
-      }
-    } catch {
-      setSupplierError("上传失败，请重试");
-    } finally {
-      setSupplierUploading(false);
-      if (supplierFileRef.current) supplierFileRef.current.value = "";
-    }
-  };
-
-  const handleCreateSupplier = async () => {
-    if (!supplierForm.name.trim()) {
-      setSupplierError("供应商名称不能为空");
-      return;
-    }
-    setSupplierSaving(true);
-    setSupplierError("");
-    try {
-      const res = await fetch("/api/suppliers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...supplierForm, attachmentUrl: supplierAttachmentUrl || null }),
-      });
-      const json = await res.json();
-      if (res.ok) {
-        const refreshed = await fetch("/api/suppliers?pageSize=200");
-        if (refreshed.ok) {
-          const refreshedJson = await refreshed.json();
-          setSuppliers(refreshedJson.data || []);
-        }
-        setForm((prev) => ({ ...prev, supplierId: json.data.id }));
-        setShowSupplierModal(false);
-        setSupplierAttachmentUrl("");
-        setSupplierUploadName("");
-        setSupplierForm(emptySupplierForm);
-      } else {
-        setSupplierError(json.error || "创建供应商失败");
-      }
-    } catch {
-      setSupplierError("网络错误，请重试");
-    } finally {
-      setSupplierSaving(false);
-    }
   };
 
   const handleSubmit = async () => {
@@ -353,6 +305,20 @@ export default function OutsourcingPage() {
         payload.targetName = suppliers.find((s) => s.id === form.supplierId)?.name || form.targetName;
       }
 
+      // 附带 wbsItems
+      if (wbsLineItems.length > 0) {
+        payload.wbsItems = wbsLineItems.map((item) => ({
+          wbsNodeId: item.wbsNodeId,
+          workload: item.workload ? parseFloat(item.workload) : null,
+          unit: item.unit || null,
+          unitPrice: item.unitPrice ? parseFloat(item.unitPrice) : null,
+          subtotal: item.subtotal || 0,
+        }));
+        // 汇总金额
+        const totalAmount = wbsLineItems.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+        if (totalAmount > 0) payload.amount = totalAmount;
+      }
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -380,6 +346,18 @@ export default function OutsourcingPage() {
       const json = await res.json();
       if (res.ok) {
         setDetailTask(json.data);
+        // 加载 WBS 明细用于审批传递
+        if (json.data?.wbsItems) {
+          const items = json.data.wbsItems;
+          setWbsLineItems(items.map((i: any) => ({
+            wbsNodeId: i.wbsNodeId,
+            taskName: i.wbsNode?.name || "",
+            workload: i.workload ? String(i.workload) : "",
+            unit: i.unit || "",
+            unitPrice: i.unitPrice ? String(i.unitPrice) : "",
+            subtotal: i.subtotal ? Number(i.subtotal) : 0,
+          })));
+        }
       }
     } catch {
       setDetailTask(task);
@@ -750,42 +728,16 @@ export default function OutsourcingPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                外包对象 <span className="text-[#78716C]">*</span>
-              </label>
-              <div className="flex items-center gap-2">
-                <select
-                  className="ios-select flex-1"
-                  value={form.supplierId}
-                  onChange={(e) => {
-                    updateForm("supplierId", e.target.value);
-                    const s = suppliers.find((s) => s.id === e.target.value);
-                    if (s) updateForm("targetName", s.name);
-                  }}
-                >
-                  <option value="">请选择供应商</option>
-                  {suppliers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}{s.supplierType ? ` (${s.supplierType})` : ""}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917] whitespace-nowrap"
-                  onClick={async () => {
-                    if (supplierAttachmentUrl) await deleteUploadedFile(supplierAttachmentUrl);
-                    setSupplierError("");
-                    setSupplierForm(emptySupplierForm);
-                    setSupplierAttachmentUrl("");
-                    setSupplierUploadName("");
-                    setShowSupplierModal(true);
-                  }}
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  新增供应商
-                </button>
-              </div>
+              <SupplierPicker
+                suppliers={suppliers}
+                value={form.supplierId}
+                onChange={(id, s) => {
+                  updateForm("supplierId", id);
+                  if (s.name) updateForm("targetName", s.name);
+                }}
+                label="外包对象"
+                placeholder="请选择供应商"
+              />
             </div>
 
             <div className={form.type === "to_company" ? "col-span-2" : ""}>
@@ -839,6 +791,117 @@ export default function OutsourcingPage() {
               </div>
             </div>
 
+            {/* WBS 任务关联 */}
+            {form.projectSourceId && (
+              <div className="col-span-2">
+                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                  WBS 任务明细
+                </label>
+
+                {/* 明细表 */}
+                {wbsLineItems.length > 0 && (
+                  <div className="border rounded-lg overflow-hidden mb-3">
+                    <div className="flex bg-gray-50 border-b text-xs font-medium text-gray-500">
+                      <div className="flex-[2] p-2 text-center border-r">WBS 任务</div>
+                      <div className="flex-1 p-2 text-center border-r">工作量</div>
+                      <div className="flex-1 p-2 text-center border-r">单价(元)</div>
+                      <div className="flex-1 p-2 text-center">小计(元)</div>
+                    </div>
+                    {wbsLineItems.map((item, idx) => (
+                      <div key={item.wbsNodeId} className="flex border-b items-center text-xs">
+                        <div className="flex-[2] p-2 border-r">{item.taskName || item.wbsNodeId}</div>
+                        <div className="flex-1 p-1 border-r flex items-center gap-1">
+                          <input
+                            type="number"
+                            className="w-14 text-center border rounded px-1 py-0.5 text-xs"
+                            value={item.workload}
+                            placeholder="数量"
+                            onChange={(e) => {
+                              const next = [...wbsLineItems];
+                              const wl = parseFloat(e.target.value) || 0;
+                              const up = parseFloat(item.unitPrice) || 0;
+                              next[idx] = { ...item, workload: e.target.value, subtotal: wl * up };
+                              setWbsLineItems(next);
+                            }}
+                          />
+                          <input
+                            className="w-10 text-center border rounded px-1 py-0.5 text-xs"
+                            value={item.unit}
+                            placeholder="张"
+                            onChange={(e) => {
+                              const next = [...wbsLineItems];
+                              next[idx] = { ...item, unit: e.target.value };
+                              setWbsLineItems(next);
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 p-1 border-r">
+                          <input
+                            type="number"
+                            className="w-full text-center border rounded px-1 py-0.5 text-xs"
+                            value={item.unitPrice}
+                            placeholder="单价"
+                            onChange={(e) => {
+                              const next = [...wbsLineItems];
+                              const wl = parseFloat(item.workload) || 0;
+                              const up = parseFloat(e.target.value) || 0;
+                              next[idx] = { ...item, unitPrice: e.target.value, subtotal: wl * up };
+                              setWbsLineItems(next);
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 p-2 text-center font-semibold text-blue-600">
+                          ¥{item.subtotal.toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex justify-end items-center p-2 bg-blue-50 text-sm">
+                      <span className="font-semibold mr-2">外包总金额：</span>
+                      <span className="text-lg font-bold text-blue-600">
+                        ¥{wbsLineItems.reduce((sum, i) => sum + (i.subtotal || 0), 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* WBS 任务选择器 */}
+                <div className="border rounded-lg">
+                  <div className="p-2 bg-gray-50 border-b text-sm font-medium">
+                    选择 WBS 任务（设计阶段）
+                  </div>
+                  <WbsTaskSelector
+                    projectSourceId={form.projectSourceId}
+                    selectedIds={selectedWbsIds}
+                    onChange={(ids) => {
+                      setSelectedWbsIds(ids);
+                      // 同步明细表：新增的加入，移除的删掉
+                      const newItems = ids.map((id) => {
+                        const existing = wbsLineItems.find((i) => i.wbsNodeId === id);
+                        if (existing) return existing;
+                        return { wbsNodeId: id, taskName: "", workload: "", unit: "张", unitPrice: "", subtotal: 0 };
+                      });
+                      setWbsLineItems(newItems);
+                      // 异步获取任务名
+                      fetch(`/api/projects/plans/${form.projectSourceId}/available-tasks`)
+                        .then((r) => r.json())
+                        .then((data) => {
+                          const tasks = data.tasks || [];
+                          setWbsLineItems((prev) =>
+                            prev.map((item) => {
+                              const task = tasks.find((t: any) => t.id === item.wbsNodeId);
+                              return { ...item, taskName: task?.name || item.taskName };
+                            })
+                          );
+                        })
+                        .catch(() => {});
+                    }}
+                    excludeOutsourcingId={editingTask?.id}
+                    disabled={editingTask?.approvalStatus === "审批中" || editingTask?.approvalStatus === "已批准"}
+                  />
+                </div>
+              </div>
+            )}
+
             {editingTask && (
               <>
                 <div>
@@ -881,151 +944,6 @@ export default function OutsourcingPage() {
       </Modal>
 
       <Modal
-        isOpen={showSupplierModal}
-        onClose={() => setShowSupplierModal(false)}
-        title="新增供应商"
-        maxWidth="600px"
-      >
-        <div className="space-y-4">
-          {supplierError && (
-            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
-              {supplierError}
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                供应商名称 <span className="text-[#78716C]">*</span>
-              </label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入供应商名称"
-                value={supplierForm.name}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, name: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">供应商性质</label>
-              <select
-                className="ios-select"
-                value={supplierForm.supplierType}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, supplierType: e.target.value }))}
-              >
-                <option value="企业">企业</option>
-                <option value="政府">政府</option>
-                <option value="银行">银行</option>
-                <option value="税务">税务</option>
-                <option value="政务机构">政务机构</option>
-                <option value="个人">个人</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系人</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入联系人"
-                value={supplierForm.contactPerson}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, contactPerson: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">电话</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入电话"
-                value={supplierForm.phone}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, phone: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">邮箱</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入邮箱"
-                value={supplierForm.email}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, email: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">地址</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入地址"
-                value={supplierForm.address}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, address: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入开户行"
-                value={supplierForm.bankName}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, bankName: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">银行账号</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="请输入银行账号"
-                value={supplierForm.bankAccount}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, bankAccount: e.target.value }))}
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
-              <textarea
-                className="ios-input min-h-[60px] resize-y"
-                placeholder="请输入备注"
-                value={supplierForm.remark}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, remark: e.target.value }))}
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">供应商资料</label>
-              <div className="flex items-center gap-3">
-                <input
-                  ref={supplierFileRef}
-                  type="file"
-                  className="hidden"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip,.rar"
-                  onChange={handleSupplierFileUpload}
-                />
-                <button
-                  type="button"
-                  className="ios-btn ios-btn-secondary ios-btn-sm"
-                  onClick={() => supplierFileRef.current?.click()}
-                  disabled={supplierUploading}
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  {supplierUploading ? "上传中..." : "选择文件"}
-                </button>
-                {supplierUploadName && (
-                  <span className="text-[12px] text-[#78716C]">{supplierUploadName}</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
-            <button className="ios-btn ios-btn-secondary" onClick={() => setShowSupplierModal(false)}>取消</button>
-            <button className="ios-btn ios-btn-primary" onClick={handleCreateSupplier} disabled={supplierSaving}>
-              {supplierSaving ? "创建中..." : "确认创建"}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
         isOpen={!!detailTask}
         onClose={() => setDetailTask(null)}
         title="外包任务详情"
@@ -1037,6 +955,12 @@ export default function OutsourcingPage() {
             instanceId={detailTask.approvalInstanceId}
             businessType="outsourcing"
             businessId={detailTask.id}
+            wbsItems={wbsLineItems.length > 0 ? wbsLineItems.map((i) => ({
+              wbsNodeId: i.wbsNodeId,
+              workload: i.workload ? parseFloat(i.workload) : null,
+              unit: i.unit || null,
+              unitPrice: i.unitPrice ? parseFloat(i.unitPrice) : null,
+            })) : undefined}
           >
             <OutsourcingDetailCard data={detailTask} />
           </DetailPageLayout>

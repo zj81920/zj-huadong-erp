@@ -1,0 +1,129 @@
+import { getCurrentUser } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+
+/**
+ * 检查当前用户是否有权限查看指定项目的 WBS
+ * 通过条件（满足任一即可）：
+ * 1. 用户是 admin
+ * 2. 用户有 projects.plans 角色权限
+ * 3. 用户是该项目的设计经理（designManagerId）
+ * 4. 用户是该项目的主管领导（supervisorLeaderId）
+ * 5. 用户是该项目的 WBS 节点负责人（responsibleIds）
+ */
+export async function canAccessProjectWbs(
+  projectSourceId: string
+): Promise<boolean> {
+  const user = await getCurrentUser();
+  if (!user) return false;
+
+  // admin 直接通过
+  if (user.username === "admin") return true;
+
+  const roleCodes = user.roles?.map((r) => r.code) || [];
+  if (roleCodes.includes("admin")) return true;
+
+  // 检查角色权限
+  const hasRolePermission = checkRoleWbsPermission(user);
+  if (hasRolePermission) return true;
+
+  // 检查是否为该项目的设计经理或主管领导
+  const project = await prisma.project.findUnique({
+    where: { projectSourceId },
+    select: { designManagerId: true, supervisorLeaderId: true },
+  });
+
+  if (!project) return false;
+
+  if (project.designManagerId === user.id || project.supervisorLeaderId === user.id) {
+    return true;
+  }
+
+  // 检查当前用户是否为该项目的任一 WBS 节点的负责人
+  // responsibleIds 兼容两种格式：
+  //   旧格式：["user_id_1", "user_id_2"]（纯字符串数组）
+  //   新格式：[{type: "person", id: "user_id_1", name: "张三"}, ...]
+  const wbsNodes = await prisma.projectWbsNode.findMany({
+    where: { projectSourceId },
+    select: { responsibleIds: true },
+  });
+  const isResponsible = wbsNodes.some((node) => {
+    const ids = node.responsibleIds as unknown[];
+    if (!Array.isArray(ids)) return false;
+    return ids.some((item) =>
+      typeof item === "string" ? item === user.id : (item as { id?: string })?.id === user.id
+    );
+  });
+  if (isResponsible) return true;
+
+  return false;
+}
+
+/**
+ * 检查当前用户是否有权限编辑/删除指定项目的 WBS 节点
+ * 比 canAccessProjectWbs 更严格：节点负责人只有查看权限，不能编辑/删除
+ * 通过条件（满足任一即可）：
+ * 1. 用户是 admin
+ * 2. 用户有 projects.plans 角色权限（需要编辑权限）
+ * 3. 用户是该项目的设计经理（designManagerId）
+ * 4. 用户是该项目的主管领导（supervisorLeaderId）
+ */
+export async function canEditProjectWbs(
+  projectSourceId: string
+): Promise<boolean> {
+  const user = await getCurrentUser();
+  if (!user) return false;
+
+  // admin 直接通过
+  if (user.username === "admin") return true;
+
+  const roleCodes = user.roles?.map((r) => r.code) || [];
+  if (roleCodes.includes("admin")) return true;
+
+  // 检查角色权限（需要编辑权限）
+  const hasRoleEditPermission = checkRoleWbsEditPermission(user);
+  if (hasRoleEditPermission) return true;
+
+  // 检查是否为该项目的设计经理或主管领导
+  const project = await prisma.project.findUnique({
+    where: { projectSourceId },
+    select: { designManagerId: true, supervisorLeaderId: true },
+  });
+
+  if (!project) return false;
+
+  if (project.designManagerId === user.id || project.supervisorLeaderId === user.id) {
+    return true;
+  }
+
+  return false;
+}
+
+function checkRoleWbsPermission(user: { roles: { modulePermissions: string }[] }): boolean {
+  const roles = user?.roles || [];
+  for (const role of roles) {
+    try {
+      const perms = typeof role.modulePermissions === "string"
+        ? JSON.parse(role.modulePermissions)
+        : role.modulePermissions || {};
+      if (perms["projects.plans"]) return true;
+      if (perms["projects"]?.read || perms["projects"]?.create) return true;
+    } catch { /* ignore */ }
+  }
+  return false;
+}
+
+function checkRoleWbsEditPermission(user: { roles: { modulePermissions: string }[] }): boolean {
+  const roles = user?.roles || [];
+  for (const role of roles) {
+    try {
+      const perms = typeof role.modulePermissions === "string"
+        ? JSON.parse(role.modulePermissions)
+        : role.modulePermissions || {};
+      // projects.plans 直接勾选即视为有编辑权限
+      if (perms["projects.plans"]) return true;
+      // 父模块 projects 需要有 create（编辑）权限
+      if (perms["projects"]?.create) return true;
+    } catch { /* ignore */ }
+  }
+  return false;
+}

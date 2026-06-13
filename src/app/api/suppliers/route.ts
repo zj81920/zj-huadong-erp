@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const currentUser = await getCurrentUser();
-    const { name, supplierType, status, contactPerson, phone, email, address, bankName, bankAccount, remark, attachmentUrl } = body;
+    const { name, supplierType, status, contactPerson, phone, email, address, bankName, bankAccount, remark, attachmentUrls } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "供应商名称不能为空" }, { status: 400 });
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         bankName: bankName?.trim() || null,
         bankAccount: bankAccount?.trim() || null,
         remark: remark?.trim() || null,
-        attachmentUrl: attachmentUrl?.trim() || null,
+        attachmentUrls: Array.isArray(attachmentUrls) ? attachmentUrls : (typeof attachmentUrls === "string" ? [attachmentUrls] : []),
         approvalStatus: "草稿",
         lastModifiedBy: currentUser?.realName || null,
         createdById: currentUser?.id || null,

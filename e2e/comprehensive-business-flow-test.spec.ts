@@ -181,7 +181,7 @@ test.describe("全业务流自动化综合测试 - 4 大项", () => {
       const cust = await apiPost(request, "/api/customers", {
         name: `综合测试客户-${ts}`,
         shortName: "测试客户",
-        industryType: "化工",
+        ownershipType: "民营",
         customerType: "企业",
         contactPerson: "张三",
         contactPhone: "13800138000",
@@ -205,7 +205,7 @@ test.describe("全业务流自动化综合测试 - 4 大项", () => {
         location: "安徽省合肥市",
         contactPerson: "王工",
         contactPhone: "13900139000",
-        projectNature: ["EP"],
+        projectNature: "EP",
         implementationEntity: "华东工程",
         currentStatus: "已中标",
       });
@@ -938,7 +938,7 @@ test.describe("全业务流自动化综合测试 - 4 大项", () => {
         location: "安徽省合肥市",
         contactPerson: "李工",
         contactPhone: "13900139001",
-        projectNature: ["EPC"],
+        projectNature: "EPcm",
         implementationEntity: "华东工程",
         currentStatus: "跟踪中",
       });

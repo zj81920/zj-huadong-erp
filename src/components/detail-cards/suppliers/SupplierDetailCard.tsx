@@ -17,10 +17,16 @@ export function SupplierDetailCard({ data }: Props) {
     { label: "状态", value: data?.status },
     {
       label: "附件",
-      value: data?.attachmentUrl ? (
-        <a href={data.attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline text-[13px] break-all">
-          {decodeURIComponent(data.attachmentUrl.split('/').pop() || '查看附件')}
-        </a>
+      value: data?.attachmentUrls && Array.isArray(data.attachmentUrls) && data.attachmentUrls.length > 0 ? (
+        <div className="space-y-1">
+          {(data.attachmentUrls as string[]).map((url: string, idx: number) => (
+            <div key={idx}>
+              <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline text-[13px] break-all">
+                {decodeURIComponent(url.split('/').pop() || `文件${idx + 1}`)}
+              </a>
+            </div>
+          ))}
+        </div>
       ) : null,
     },
   ];

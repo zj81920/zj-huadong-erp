@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import ProjectPicker from "@/components/ProjectPicker";
+import SupplierPicker from "@/components/SupplierPicker";
 import { useAuth } from "@/contexts/AuthContext";
 import { DetailPageLayout } from '@/components/DetailPageLayout';
 import { useFlowConfigured } from "@/hooks/useFlowConfigured";
@@ -33,6 +34,7 @@ import { getRowStatusClass } from "@/lib/status-colors";
 interface Supplier {
   id: string;
   name: string;
+  supplierType?: string | null;
   contactPerson: string | null;
   phone: string | null;
 }
@@ -227,26 +229,6 @@ export default function ExpenseContractsPage() {
       purchaseRequest: { id: string; requestNo: string; spec: string | null; quantity: string | null };
     }[]
   >([]);
-
-  const [showSupplierModal, setShowSupplierModal] = useState(false);
-  const [supplierForm, setSupplierForm] = useState({
-    name: "",
-    supplierType: "企业",
-    status: "当前有效",
-    contactPerson: "",
-    phone: "",
-    email: "",
-    address: "",
-    bankName: "",
-    bankAccount: "",
-    remark: "",
-  });
-  const [supplierSaving, setSupplierSaving] = useState(false);
-  const [supplierError, setSupplierError] = useState("");
-  const supplierFileRef = useRef<HTMLInputElement>(null);
-  const [supplierUploading, setSupplierUploading] = useState(false);
-  const [supplierUploadName, setSupplierUploadName] = useState("");
-  const [supplierAttachmentUrl, setSupplierAttachmentUrl] = useState("");
 
   const [contractInvoices, setContractInvoices] = useState<any[]>([]);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
@@ -695,76 +677,6 @@ export default function ExpenseContractsPage() {
       return "ios-badge bg-[#6E6E73]/15 text-[#48484A]";
     }
     return `ios-badge ${statusBadgeMap[status] || "ios-badge-gray"}`;
-  };
-
-  const handleSupplierFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setSupplierUploading(true);
-    setSupplierError("");
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload?module=contracts", { method: "POST", body: formData });
-      const json = await res.json();
-      if (res.ok) {
-        setSupplierAttachmentUrl(json.url);
-        setSupplierUploadName(file.name);
-      } else {
-        setSupplierError(json.error || "上传失败");
-      }
-    } catch {
-      setSupplierError("上传失败，请重试");
-    } finally {
-      setSupplierUploading(false);
-      if (supplierFileRef.current) supplierFileRef.current.value = "";
-    }
-  };
-
-  const handleCreateSupplier = async () => {
-    if (!supplierForm.name.trim()) {
-      setSupplierError("供应商名称不能为空");
-      return;
-    }
-    setSupplierSaving(true);
-    setSupplierError("");
-    try {
-      const res = await fetch("/api/suppliers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...supplierForm, attachmentUrl: supplierAttachmentUrl || null }),
-      });
-      const json = await res.json();
-      if (res.ok) {
-        const refreshed = await fetch("/api/suppliers?pageSize=200");
-        if (refreshed.ok) {
-          const refreshedJson = await refreshed.json();
-          setSuppliers(refreshedJson.data || []);
-        }
-        setForm((prev) => ({ ...prev, supplierId: json.data.id }));
-        setShowSupplierModal(false);
-        setSupplierAttachmentUrl("");
-        setSupplierUploadName("");
-        setSupplierForm({
-          name: "",
-          supplierType: "企业",
-          status: "当前有效",
-          contactPerson: "",
-          phone: "",
-          email: "",
-          address: "",
-          bankName: "",
-          bankAccount: "",
-          remark: "",
-        });
-      } else {
-        setSupplierError(json.error || "创建供应商失败");
-      }
-    } catch {
-      setSupplierError("网络错误，请重试");
-    } finally {
-      setSupplierSaving(false);
-    }
   };
 
   const fetchContractInvoices = async (contractId: string) => {
@@ -1262,46 +1174,13 @@ export default function ExpenseContractsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                供应商
-              </label>
-              <div className="flex items-center gap-2">
-                <select
-                  className="ios-select flex-1"
-                  value={form.supplierId}
-                  onChange={(e) => updateForm("supplierId", e.target.value)}
-                >
-                  <option value="">请选择供应商</option>
-                  {suppliers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917] whitespace-nowrap"
-                  onClick={() => {
-                    setSupplierError("");
-                    setSupplierForm({
-                      name: "",
-                      supplierType: "企业",
-                      status: "当前有效",
-                      contactPerson: "",
-                      phone: "",
-                      email: "",
-                      address: "",
-                      bankName: "",
-                      bankAccount: "",
-                      remark: "",
-                    });
-                    setShowSupplierModal(true);
-                  }}
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  新增供应商
-                </button>
-              </div>
+              <SupplierPicker
+                suppliers={suppliers}
+                value={form.supplierId}
+                onChange={(id) => updateForm("supplierId", id)}
+                label="供应商"
+                placeholder="请选择供应商"
+              />
             </div>
 
             {form.contractType === "项目采购" && (
@@ -1920,177 +1799,6 @@ export default function ExpenseContractsPage() {
               disabled={deleting}
             >
               {deleting ? "删除中..." : "确认删除"}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={showSupplierModal}
-        onClose={() => setShowSupplierModal(false)}
-        title="新增供应商"
-        maxWidth="520px"
-      >
-        <div className="space-y-4">
-          {supplierError && (
-            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
-              {supplierError}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-              供应商名称 <span className="text-[#78716C]">*</span>
-            </label>
-            <input
-              type="text"
-              className="ios-input"
-              placeholder="请输入供应商名称"
-              value={supplierForm.name}
-              onChange={(e) => {
-                setSupplierForm((prev) => ({ ...prev, name: e.target.value }));
-                if (supplierError) setSupplierError("");
-              }}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">供应商性质</label>
-              <select
-                className="ios-select"
-                value={supplierForm.supplierType}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, supplierType: e.target.value }))}
-              >
-                <option value="企业">企业</option>
-                <option value="政府">政府</option>
-                <option value="银行">银行</option>
-                <option value="税务">税务</option>
-                <option value="政务机构">政务机构</option>
-                <option value="个人">个人</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系人</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="联系人姓名"
-                value={supplierForm.contactPerson}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, contactPerson: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">电话</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="联系电话"
-                value={supplierForm.phone}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, phone: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">邮箱</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="邮箱地址"
-                value={supplierForm.email}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, email: e.target.value }))}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">地址</label>
-            <input
-              type="text"
-              className="ios-input"
-              placeholder="供应商地址"
-              value={supplierForm.address}
-              onChange={(e) => setSupplierForm((prev) => ({ ...prev, address: e.target.value }))}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行信息</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="开户行名称"
-                value={supplierForm.bankName}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, bankName: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行账号</label>
-              <input
-                type="text"
-                className="ios-input"
-                placeholder="银行账号"
-                value={supplierForm.bankAccount}
-                onChange={(e) => setSupplierForm((prev) => ({ ...prev, bankAccount: e.target.value }))}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">备注</label>
-            <textarea
-              className="ios-input min-h-[60px] resize-none"
-              placeholder="备注信息"
-              value={supplierForm.remark}
-              onChange={(e) => setSupplierForm((prev) => ({ ...prev, remark: e.target.value }))}
-            />
-          </div>
-
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">供应商资料</label>
-            <input
-              ref={supplierFileRef}
-              type="file"
-              className="hidden"
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip,.rar"
-              onChange={handleSupplierFileUpload}
-            />
-            {supplierAttachmentUrl ? (
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] mb-2">
-                <FileCheck className="w-4 h-4 text-[#22C55E] flex-shrink-0" />
-                <span className="flex-1 text-[13px] text-[#1C1917] truncate">
-                  {supplierUploadName || "已上传文件"}
-                </span>
-                <button
-                  type="button"
-                  className="text-[#78716C] hover:text-[#78716C]"
-                  onClick={() => {
-                    setSupplierAttachmentUrl("");
-                    setSupplierUploadName("");
-                  }}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ) : null}
-            <button
-              type="button"
-              className="ios-btn ios-btn-secondary w-full"
-              disabled={supplierUploading}
-              onClick={() => supplierFileRef.current?.click()}
-            >
-              <Upload className="w-4 h-4" />
-              {supplierUploading ? "上传中..." : supplierAttachmentUrl ? "重新上传" : "选择文件上传"}
-            </button>
-            <p className="text-[12px] text-[#78716C] mt-1">
-              支持 PDF、Word、Excel、图片、压缩包，最大 10MB
-            </p>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
-            <button className="ios-btn ios-btn-secondary" onClick={() => setShowSupplierModal(false)}>取消</button>
-            <button className="ios-btn ios-btn-primary" onClick={handleCreateSupplier} disabled={supplierSaving}>
-              {supplierSaving ? "保存中..." : "确认创建"}
             </button>
           </div>
         </div>

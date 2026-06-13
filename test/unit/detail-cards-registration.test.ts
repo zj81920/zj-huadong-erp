@@ -49,7 +49,7 @@ describe('DetailCard 附件字段展示', () => {
         name: '测试供应商', supplierType: '企业', contactPerson: '张三',
         phone: '13800138000', email: 'test@example.com', address: '测试地址',
         bankName: '测试银行', bankAccount: '1234567890', status: '正常',
-        attachmentUrl: 'https://example.com/files/supplier.pdf',
+        attachmentUrls: ['https://example.com/files/supplier.pdf'],
       },
     },
     {

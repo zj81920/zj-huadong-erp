@@ -1,0 +1,91 @@
+<h2>📊 当前财务报表页面结构</h2>
+<p class="subtitle">先了解一下您觉得「乱」在哪</p>
+
+<div class="section">
+  <h3>Tab 1: 收支汇总</h3>
+  <div class="mockup" style="margin-bottom:12px">
+    <div class="mockup-header">12 张数字卡片（4行×3列）+ 月度明细表</div>
+    <div class="mockup-body" style="padding:12px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
+        <div class="placeholder" style="padding:12px;font-size:12px">总收入 ¥xxx</div>
+        <div class="placeholder" style="padding:12px;font-size:12px">总支出 ¥xxx</div>
+        <div class="placeholder" style="padding:12px;font-size:12px">净利润 ¥xxx</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
+        <div class="placeholder" style="padding:12px;font-size:12px">合同收入(已收)</div>
+        <div class="placeholder" style="padding:12px;font-size:12px">其他收入</div>
+        <div class="placeholder" style="padding:12px;font-size:12px">股东出资</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
+        <div class="placeholder" style="padding:12px;font-size:12px">借入款</div>
+        <div class="placeholder" style="padding:12px;font-size:12px">合同支出(已付)</div>
+        <div class="placeholder" style="padding:12px;font-size:12px">其他支出</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div class="placeholder" style="padding:12px;font-size:12px">借出款</div>
+        <div class="placeholder" style="padding:12px;font-size:12px">工资发放</div>
+        <div class="placeholder" style="padding:12px;font-size:12px">费用报销</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Tab 2~5: 项目成本 / 应收账龄 / 应付账龄 / 现金流</h3>
+  <p>项目成本 = 表格展示各项目应付/已付/报销<br>
+  账龄 = 4 段式卡片 + 明细表<br>
+  现金流 = 流入/流出 汇总 + 明细表</p>
+</div>
+
+<p class="subtitle">请告诉我您觉得具体哪里乱？</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="too-many-cards" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>收支汇总卡片太多</h3>
+      <p>12张卡片密密麻麻，数字平铺没有重点，看着眼花</p>
+    </div>
+  </div>
+  <div class="option" data-choice="summary-vs-cashflow" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>收支汇总和现金流重复</h3>
+      <p>两个 Tab 数据几乎一样，搞不清区别</p>
+    </div>
+  </div>
+  <div class="option" data-choice="no-charts" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>没有图表可视化</h3>
+      <p>全是表格和数字，看不出趋势和对比</p>
+    </div>
+  </div>
+  <div class="option" data-choice="data-source" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>数据维度/类别不对</h3>
+      <p>分项口径或数据范围需要调整</p>
+    </div>
+  </div>
+  <div class="option" data-choice="tab-too-many" onclick="toggleSelect(this)">
+    <div class="letter">E</div>
+    <div class="content">
+      <h3>Tab 太多，想精简</h3>
+      <p>5个Tab切换累，应该合并或减少</p>
+    </div>
+  </div>
+  <div class="option" data-choice="other" onclick="toggleSelect(this)">
+    <div class="letter">F</div>
+    <div class="content">
+      <h3>其他问题</h3>
+      <p>上面的选项没提到，我来补充</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;padding:16px;background:#F5F5F0;border-radius:12px">
+  <p style="margin:0;font-size:14px;color:#78716C">
+    💡 可以多选，也可以直接在终端里告诉我您的想法
+  </p>
+</div>

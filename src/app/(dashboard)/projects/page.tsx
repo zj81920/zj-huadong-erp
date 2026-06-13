@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Search,
@@ -16,6 +17,10 @@ import {
   Users as UsersIcon,
   Calendar,
   UserCircle,
+  User,
+  Mail,
+  Phone,
+  Settings,
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
@@ -24,11 +29,13 @@ import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
 import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { OWNERSHIP_TYPE_OPTIONS } from "@/lib/constants/customer";
+import { PROJECT_CATEGORY_OPTIONS } from "@/lib/constants/project";
 
 interface Customer {
   id: string;
   name: string;
-  industryType: string | null;
+  ownershipType: string | null;
 }
 
 interface User {
@@ -55,7 +62,7 @@ interface Project {
   projectCode: string;
   name: string;
   customerId: string;
-  type: string | null;
+  projectContent: string | null;
   address: string | null;
   projectCategory: string | null;
   source: string;
@@ -68,6 +75,7 @@ interface Project {
   actualCloseDate: string | null;
   createdAt: string;
   updatedAt: string;
+  designPhases: string | null;
   lastModifiedBy: string | null;
   createdById: string | null;
   customer: Customer;
@@ -75,7 +83,7 @@ interface Project {
   designManager: { id: string; realName: string } | null;
   supervisorLeader: { id: string; realName: string } | null;
   _count: {
-    plans: number;
+    wbsNodes: number;
     designTasks: number;
     outsourcingTasks: number;
     purchaseRequests: number;
@@ -87,7 +95,7 @@ interface ProjectFormData {
   projectCode: string;
   name: string;
   customerId: string;
-  type: string;
+  projectContent: string;
   address: string;
   projectCategory: string;
   source: string;
@@ -98,9 +106,10 @@ interface ProjectFormData {
   plannedEndDate: string;
   actualCloseDate: string;
   projectLeadId: string;
-  location: string;
-  estimatedInvestment: string;
-  infoSource: string;
+  contactPerson: string;
+  contactPhone: string;
+  contactEmail: string;
+  implementationEntity: string;
 }
 
 const emptyForm: ProjectFormData = {
@@ -108,7 +117,7 @@ const emptyForm: ProjectFormData = {
   projectCode: "",
   name: "",
   customerId: "",
-  type: "",
+  projectContent: "",
   address: "",
   projectCategory: "",
   source: "项目线索",
@@ -119,9 +128,10 @@ const emptyForm: ProjectFormData = {
   plannedEndDate: "",
   actualCloseDate: "",
   projectLeadId: "",
-  location: "",
-  estimatedInvestment: "",
-  infoSource: "",
+  contactPerson: "",
+  contactPhone: "",
+  contactEmail: "",
+  implementationEntity: "",
 };
 
 const statusConfig: Record<string, { color: string; label: string }> = {
@@ -142,6 +152,7 @@ const sourceOptions = [
 ];
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const { user: currentUser } = useAuth();
   const isAdminUser = currentUser?.username === "admin" || currentUser?.roles?.some((r: any) => r.code === "admin") || false;
   const rolePerms = getUserModulePerms(currentUser, "projects_list");
@@ -152,7 +163,6 @@ export default function ProjectsPage() {
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterType, setFilterType] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
   const [filterSource, setFilterSource] = useState("");
 
@@ -165,7 +175,9 @@ export default function ProjectsPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<{ id: string; accountName: string }[]>([]);
 
+  const [designPhases, setDesignPhases] = useState<string[]>([]);
   const [detailProject, setDetailProject] = useState<Project | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -185,11 +197,40 @@ export default function ProjectsPage() {
     name: "",
     contactPerson: "",
     phone: "",
-    industryType: "",
+    ownershipType: "",
     customerGrade: "C",
   });
   const [customerSaving, setCustomerSaving] = useState(false);
   const [customerError, setCustomerError] = useState("");
+
+  // 可自定义显示列
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const allColumns = [
+    { key: "projectCode", label: "项目编号" },
+    { key: "name", label: "项目名称" },
+    { key: "customer", label: "客户" },
+    { key: "categorySource", label: "类别/来源" },
+    { key: "designManager", label: "设计经理" },
+    { key: "supervisorLeader", label: "主管领导" },
+    { key: "status", label: "状态" },
+    { key: "startDate", label: "启动时间" },
+    { key: "plannedEndDate", label: "计划结束" },
+  ] as const;
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("project-list-columns");
+      if (saved) { try { return JSON.parse(saved); } catch {} }
+    }
+    return allColumns.map((c) => c.key);
+  });
+  const isColVisible = (key: string) => visibleColumns.includes(key);
+  const toggleColumn = (col: string) => {
+    const next = visibleColumns.includes(col)
+      ? visibleColumns.filter((c) => c !== col)
+      : [...visibleColumns, col];
+    setVisibleColumns(next);
+    localStorage.setItem("project-list-columns", JSON.stringify(next));
+  };
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -218,14 +259,26 @@ export default function ProjectsPage() {
     } catch {}
   }, []);
 
+  const fetchBankAccounts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/bank-accounts?isActive=true&pageSize=200");
+      const json = await res.json();
+      if (res.ok) {
+        const companyAccounts = (json.data || []).filter(
+          (a: { accountType: string }) => a.accountType === "公司账户"
+        );
+        setBankAccounts(companyAccounts.map((a: { id: string; accountName: string }) => ({ id: a.id, accountName: a.accountName })));
+      }
+    } catch {}
+  }, []);
+
   const fetchProjects = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      if (filterStatus) params.set("status", filterStatus);
-      if (filterType) params.set("type", filterType);
-      if (filterCategory) params.set("projectCategory", filterCategory);
+    if (filterStatus) params.set("status", filterStatus);
+    if (filterCategory) params.set("projectCategory", filterCategory);
       if (filterSource) params.set("source", filterSource);
       params.set("page", page.toString());
       params.set("pageSize", pageSize.toString());
@@ -240,13 +293,14 @@ export default function ProjectsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterStatus, filterType, filterCategory, filterSource, page, pageSize]);
+  }, [search, filterStatus, filterCategory, filterSource, page, pageSize]);
 
   useEffect(() => {
     fetchCustomers();
     fetchUsers();
     fetchProjectLeads();
-  }, [fetchCustomers, fetchUsers, fetchProjectLeads]);
+    fetchBankAccounts();
+  }, [fetchCustomers, fetchUsers, fetchProjectLeads, fetchBankAccounts]);
 
   useEffect(() => {
     fetchProjects();
@@ -255,6 +309,7 @@ export default function ProjectsPage() {
   const handleOpenCreate = () => {
     setEditingProject(null);
     setForm(emptyForm);
+    setDesignPhases([]);
     setFormError("");
     setShowModal(true);
   };
@@ -266,7 +321,7 @@ export default function ProjectsPage() {
       projectCode: project.projectCode,
       name: project.name,
       customerId: project.customerId,
-      type: project.type || "",
+      projectContent: project.projectContent || "",
       address: project.address || "",
       projectCategory: project.projectCategory || "",
       source: project.source,
@@ -277,11 +332,19 @@ export default function ProjectsPage() {
       plannedEndDate: project.plannedEndDate ? project.plannedEndDate.split("T")[0] : "",
       actualCloseDate: project.actualCloseDate ? project.actualCloseDate.split("T")[0] : "",
       projectLeadId: "",
-      location: "",
-      estimatedInvestment: "",
-      infoSource: "",
+      contactPerson: "",
+      contactPhone: "",
+      contactEmail: "",
+      implementationEntity: "",
     });
     setFormError("");
+    // 初始化设计阶段
+    try {
+      const phases = project.designPhases ? JSON.parse(project.designPhases) : [];
+      setDesignPhases(Array.isArray(phases) ? phases : []);
+    } catch {
+      setDesignPhases([]);
+    }
     setShowModal(true);
   };
 
@@ -298,6 +361,34 @@ export default function ProjectsPage() {
       setFormError("请选择客户");
       return;
     }
+    if (!form.projectContent.trim()) {
+      setFormError("项目内容描述不能为空");
+      return;
+    }
+    if (!form.address.trim()) {
+      setFormError("地址不能为空");
+      return;
+    }
+    if (!form.projectCategory) {
+      setFormError("请选择类别");
+      return;
+    }
+    if (designPhases.length === 0) {
+      setFormError("请选择设计阶段");
+      return;
+    }
+    if (!form.status) {
+      setFormError("请选择状态");
+      return;
+    }
+    if (!form.designManagerId) {
+      setFormError("请选择设计经理");
+      return;
+    }
+    if (!form.supervisorLeaderId) {
+      setFormError("请选择主管领导");
+      return;
+    }
 
     setSaving(true);
     setFormError("");
@@ -312,7 +403,7 @@ export default function ProjectsPage() {
         projectCode: form.projectCode,
         name: form.name,
         customerId: form.customerId,
-        type: form.type || null,
+        projectContent: form.projectContent?.trim() || null,
         address: form.address || null,
         projectCategory: form.projectCategory || null,
         source: form.source,
@@ -322,14 +413,16 @@ export default function ProjectsPage() {
         startDate: form.startDate || null,
         plannedEndDate: form.plannedEndDate || null,
         actualCloseDate: form.actualCloseDate || null,
+        designPhases: designPhases.length > 0 ? JSON.stringify(designPhases) : null,
       };
 
       if (form.source === "项目线索") {
         body.projectSourceId = form.projectSourceId;
       } else if (form.source === "直接委托") {
-        body.location = form.location || null;
-        body.estimatedInvestment = form.estimatedInvestment || null;
-        body.infoSource = form.infoSource || null;
+        body.contactPerson = form.contactPerson || null;
+        body.contactPhone = form.contactPhone || null;
+        body.contactEmail = form.contactEmail || null;
+        body.implementationEntity = form.implementationEntity || null;
       }
 
       const res = await fetch(url, {
@@ -379,7 +472,7 @@ export default function ProjectsPage() {
           name: "",
           contactPerson: "",
           phone: "",
-          industryType: "",
+          ownershipType: "",
           customerGrade: "C",
         });
       } else {
@@ -463,12 +556,17 @@ export default function ProjectsPage() {
         next.name = "";
         next.customerId = "";
         next.projectLeadId = "";
-        next.location = "";
-        next.estimatedInvestment = "";
-        next.infoSource = "";
+        next.contactPerson = "";
+        next.contactPhone = "";
+        next.contactEmail = "";
+        next.implementationEntity = "";
       }
       return next;
     });
+    if (field === "projectCategory" && value !== "EP" && value !== "EPcm") {
+      // 切换到非 EP/EPcm 类别时，移除"采购"
+      setDesignPhases((prev) => prev.filter((p) => p !== "采购"));
+    }
     if (formError) setFormError("");
   };
 
@@ -495,12 +593,6 @@ export default function ProjectsPage() {
     total: pagination?.total ?? 0,
     executing: projects.filter((p) => p.status === "执行").length,
     paused: projects.filter((p) => p.status === "暂停").length,
-  };
-
-  const typeBadgeColor = (type: string | null) => {
-    if (type === "石化") return "ios-badge-orange";
-    if (type === "医药") return "ios-badge-green";
-    return "ios-badge-gray";
   };
 
   const categoryBadgeColor = (cat: string | null) => {
@@ -587,19 +679,6 @@ export default function ProjectsPage() {
 
           <select
             className="ios-select w-[120px]"
-            value={filterType}
-            onChange={(e) => {
-              setFilterType(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">全部类型</option>
-            <option value="石化">石化</option>
-            <option value="医药">医药</option>
-          </select>
-
-          <select
-            className="ios-select w-[120px]"
             value={filterCategory}
             onChange={(e) => {
               setFilterCategory(e.target.value);
@@ -607,9 +686,9 @@ export default function ProjectsPage() {
             }}
           >
             <option value="">全部类别</option>
-            <option value="设计">设计</option>
-            <option value="EP">EP</option>
-            <option value="EPcm">EPcm</option>
+            {PROJECT_CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
 
           <select
@@ -625,8 +704,36 @@ export default function ProjectsPage() {
             <option value="直接委托">直接委托</option>
           </select>
 
-          <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 个项目
+          <div className="ml-auto flex items-center gap-3">
+            {/* 列设置按钮 */}
+            <div className="relative">
+              <button
+                className="flex items-center gap-1 rounded-lg border border-[#E7E5E4] px-3 py-1.5 text-[13px] text-[#57534E] hover:bg-[#F5F5F4]"
+                onClick={() => setShowColumnSettings(!showColumnSettings)}
+              >
+                <Settings className="w-3.5 h-3.5" />
+                列设置
+              </button>
+              {showColumnSettings && (
+                <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-[#E7E5E4] bg-white p-2 shadow-lg">
+                  <div className="mb-1 px-2 py-1 text-[11px] font-semibold uppercase text-[#A8A29E]">显示列</div>
+                  {allColumns.map((col) => (
+                    <label key={col.key} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] hover:bg-[#F5F5F4]">
+                      <input
+                        type="checkbox"
+                        checked={visibleColumns.includes(col.key)}
+                        onChange={() => toggleColumn(col.key)}
+                        className="h-3.5 w-3.5 accent-[#292524]"
+                      />
+                      {col.label}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="text-[13px] text-[#78716C]">
+              共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 个项目
+            </div>
           </div>
         </div>
 
@@ -640,24 +747,22 @@ export default function ProjectsPage() {
             <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
               <Briefcase className="w-8 h-8 text-[#78716C]" />
             </div>
-            <p>{search || filterStatus || filterType || filterCategory || filterSource ? "没有匹配的项目" : "暂无项目，点击右上角新建"}</p>
+            <p>{search || filterStatus || filterCategory || filterSource ? "没有匹配的项目" : "暂无项目，点击右上角新建"}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="ios-table" style={{ minWidth: 1400, width: '100%' }}>
               <colgroup>
-                <col style={{ width: 110 }} />
-                <col style={{ width: 100 }} />
-                <col style={{ width: 'auto' }} />
-                <col style={{ width: 120 }} />
-                <col style={{ width: 70 }} />
-                <col style={{ width: 70 }} />
-                <col style={{ width: 80 }} />
-                <col style={{ width: 80 }} />
-                <col style={{ width: 80 }} />
-                <col style={{ width: 120 }} />
-                <col style={{ width: 100 }} />
-                <col style={{ width: 100 }} />
+                {isAdminUser && <col style={{ width: 50 }} />}
+                {isColVisible("projectCode") && <col style={{ width: 110 }} />}
+                {isColVisible("name") && <col style={{ width: 'auto' }} />}
+                {isColVisible("customer") && <col style={{ width: 120 }} />}
+                {isColVisible("categorySource") && <col style={{ width: 100 }} />}
+                {isColVisible("designManager") && <col style={{ width: 80 }} />}
+                {isColVisible("supervisorLeader") && <col style={{ width: 80 }} />}
+                {isColVisible("status") && <col style={{ width: 120 }} />}
+                {isColVisible("startDate") && <col style={{ width: 70 }} />}
+                {isColVisible("plannedEndDate") && <col style={{ width: 70 }} />}
                 <col style={{ width: 170 }} />
               </colgroup>
               <thead>
@@ -672,20 +777,16 @@ export default function ProjectsPage() {
                       />
                     </th>
                   )}
-                  <th>项目源ID</th>
-                  <th>项目编号</th>
-                  <th>项目名称</th>
-                  <th>客户</th>
-                  <th>类型</th>
-                  <th>类别</th>
-                  <th>来源</th>
-                  <th>设计经理</th>
-                  <th>主管领导</th>
-                  <th>状态</th>
-                  <th>项目启动时间</th>
-                  <th>计划结束时间</th>
+                  {isColVisible("projectCode") && <th>项目编号</th>}
+                  {isColVisible("name") && <th>项目名称</th>}
+                  {isColVisible("customer") && <th>客户</th>}
+                  {isColVisible("categorySource") && <th>类别/来源</th>}
+                  {isColVisible("designManager") && <th>设计经理</th>}
+                  {isColVisible("supervisorLeader") && <th>主管领导</th>}
+                  {isColVisible("status") && <th>状态</th>}
+                  {isColVisible("startDate") && <th>项目启动时间</th>}
+                  {isColVisible("plannedEndDate") && <th>计划结束时间</th>}
                   <th>操作</th>
-                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
@@ -702,33 +803,26 @@ export default function ProjectsPage() {
                           />
                         </td>
                       )}
-                      <td className="whitespace-nowrap">
-                        <span className="font-mono text-[13px] font-semibold text-[#1C1917]">
-                          {project.projectSourceId}
-                        </span>
-                      </td>
+                      {isColVisible("projectCode") && (
                       <td className="whitespace-nowrap">
                         <span className="font-mono text-[13px]">{project.projectCode}</span>
                       </td>
+                      )}
+                      {isColVisible("name") && (
                       <td className="whitespace-nowrap">
                         <span className="font-semibold">{project.name}</span>
                       </td>
+                      )}
+                      {isColVisible("customer") && (
                       <td className="whitespace-nowrap">{project.customer.name}</td>
-                      <td className="whitespace-nowrap">
-                        {project.type ? (
-                          <span className={`ios-badge text-[11px] ${typeBadgeColor(project.type)}`}>{project.type}</span>
-                        ) : (
-                          <span className="text-[#78716C]">-</span>
-                        )}
+                      )}
+                      {/* 合并 类别/来源 */}
+                      {isColVisible("categorySource") && (
+                      <td className="whitespace-nowrap px-3 py-2 text-[13px] text-[#57534E]">
+                        {[project.projectCategory, project.source].filter(Boolean).join(" / ") || "-"}
                       </td>
-                      <td className="whitespace-nowrap">
-                        {project.projectCategory ? (
-                          <span className={`ios-badge text-[11px] ${categoryBadgeColor(project.projectCategory)}`}>{project.projectCategory}</span>
-                        ) : (
-                          <span className="text-[#78716C]">-</span>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap text-[13px] text-[#78716C]">{project.source}</td>
+                      )}
+                      {isColVisible("designManager") && (
                       <td className="whitespace-nowrap">
                         {project.designManager ? (
                           <span className="text-[13px]">{project.designManager.realName}</span>
@@ -736,6 +830,8 @@ export default function ProjectsPage() {
                           <span className="text-[#78716C]">-</span>
                         )}
                       </td>
+                      )}
+                      {isColVisible("supervisorLeader") && (
                       <td className="whitespace-nowrap">
                         {project.supervisorLeader ? (
                           <span className="text-[13px]">{project.supervisorLeader.realName}</span>
@@ -743,6 +839,8 @@ export default function ProjectsPage() {
                           <span className="text-[#78716C]">-</span>
                         )}
                       </td>
+                      )}
+                      {isColVisible("status") && (
                       <td className="whitespace-nowrap">
                         <select
                           className="ios-select text-[12px] py-1 px-2 w-auto min-w-[80px]"
@@ -755,8 +853,23 @@ export default function ProjectsPage() {
                           <option value="关闭">关闭</option>
                         </select>
                       </td>
-                      <td className="whitespace-nowrap text-[#78716C]">{formatDate(project.startDate)}</td>
-                      <td className="whitespace-nowrap text-[#78716C]">{formatDate(project.plannedEndDate)}</td>
+                      )}
+                      {/* 项目启动时间 */}
+                      {isColVisible("startDate") && (
+                      <td className="whitespace-nowrap px-3 py-2 text-[13px] text-[#57534E]">
+                        {project.startDate
+                          ? new Date(project.startDate).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })
+                          : "-"}
+                      </td>
+                      )}
+                      {/* 计划结束时间 */}
+                      {isColVisible("plannedEndDate") && (
+                      <td className="whitespace-nowrap px-3 py-2 text-[13px] text-[#57534E]">
+                        {project.plannedEndDate
+                          ? new Date(project.plannedEndDate).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })
+                          : "-"}
+                      </td>
+                      )}
                       <td className="whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(project)}>
@@ -769,6 +882,7 @@ export default function ProjectsPage() {
                               编辑
                             </button>
                           )}
+
                           {canDeleteFrontend(hasFlow, rolePerms, "", currentUser?.id ?? "", project.createdById ?? null, isAdminUser) && (
                             <button
                               className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
@@ -777,13 +891,16 @@ export default function ProjectsPage() {
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           )}
+                          {/* 最后修改信息 tooltip */}
+                          <span
+                            className="ml-1 cursor-help text-[#A8A29E]"
+                            title={project.lastModifiedBy
+                              ? `${project.lastModifiedBy} / ${formatDate(project.updatedAt)}`
+                              : "无修改记录"}
+                          >
+                            &#9432;
+                          </span>
                         </div>
-                      </td>
-                      <td className="text-[#78716C] text-[12px] whitespace-nowrap">
-                        {project.lastModifiedBy && (
-                          <span>{project.lastModifiedBy}</span>
-                        )}
-                        <span className="block text-[11px]">{formatDate(project.updatedAt)}</span>
                       </td>
                     </tr>
                   );
@@ -929,7 +1046,7 @@ export default function ProjectsPage() {
               >
                 <option value="">请选择客户</option>
                 {customers.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}{c.industryType ? ` (${c.industryType})` : ""}</option>
+                  <option key={c.id} value={c.id}>{c.name}{c.ownershipType ? ` (${c.ownershipType})` : ""}</option>
                 ))}
               </select>
               <button
@@ -945,21 +1062,22 @@ export default function ProjectsPage() {
               </button>
             </div>
 
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">类型</label>
-              <select
-                className="ios-select"
-                value={form.type}
-                onChange={(e) => updateForm("type", e.target.value)}
-              >
-                <option value="">请选择类型</option>
-                <option value="石化">石化</option>
-                <option value="医药">医药</option>
-              </select>
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                项目内容描述 <span className="text-[#DC2626]">*</span>
+              </label>
+              <textarea
+                className="ios-input"
+                rows={3}
+                placeholder="请输入项目概况、范围、技术要求等"
+                value={form.projectContent}
+                onChange={(e) => updateForm("projectContent", e.target.value)}
+                style={{ resize: "vertical", minHeight: 80 }}
+              />
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">地址</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">地址 <span className="text-[#DC2626]">*</span></label>
               <div className="relative">
                 <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                 <input
@@ -975,57 +1093,123 @@ export default function ProjectsPage() {
             {!editingProject && form.source === "直接委托" && (
               <>
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">项目地点</label>
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">项目联系人</label>
                   <div className="relative">
-                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                     <input
                       type="text"
                       className="ios-input pl-10"
-                      placeholder="项目所在地点（同步到线索）"
-                      value={form.location}
-                      onChange={(e) => updateForm("location", e.target.value)}
+                      placeholder="请输入项目联系人"
+                      value={form.contactPerson}
+                      onChange={(e) => updateForm("contactPerson", e.target.value)}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">预计投资额（元）</label>
-                  <input
-                    type="number"
-                    className="ios-input"
-                    placeholder="预计投资金额（同步到线索）"
-                    value={form.estimatedInvestment}
-                    onChange={(e) => updateForm("estimatedInvestment", e.target.value)}
-                  />
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系电话</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                    <input
+                      type="text"
+                      className="ios-input pl-10"
+                      placeholder="请输入联系电话"
+                      value={form.contactPhone}
+                      onChange={(e) => updateForm("contactPhone", e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">信息来源</label>
-                  <input
-                    type="text"
-                    className="ios-input"
-                    placeholder="如：客户直接委托（同步到线索）"
-                    value={form.infoSource}
-                    onChange={(e) => updateForm("infoSource", e.target.value)}
-                  />
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系邮箱</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                    <input
+                      type="email"
+                      className="ios-input pl-10"
+                      placeholder="请输入联系邮箱"
+                      value={form.contactEmail}
+                      onChange={(e) => updateForm("contactEmail", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">实施主体</label>
+                  <select
+                    className="ios-select"
+                    value={form.implementationEntity}
+                    onChange={(e) => updateForm("implementationEntity", e.target.value)}
+                  >
+                    <option value="">请选择实施主体</option>
+                    {bankAccounts.map((a) => (
+                      <option key={a.id} value={a.accountName}>{a.accountName}</option>
+                    ))}
+                  </select>
                 </div>
               </>
             )}
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">类别</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">类别 <span className="text-[#DC2626]">*</span></label>
               <select
                 className="ios-select"
                 value={form.projectCategory}
                 onChange={(e) => updateForm("projectCategory", e.target.value)}
               >
                 <option value="">请选择类别</option>
-                <option value="设计">设计</option>
-                <option value="EP">EP</option>
-                <option value="EPcm">EPcm</option>
+                {PROJECT_CATEGORY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
 
+            {/* 设计阶段多选 */}
+            <div className="col-span-2">
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
+                设计阶段（可多选） <span className="text-[#DC2626]">*</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {(["方案设计", "初步设计", "详细设计", "竣工图设计"] as string[])
+                  .concat(
+                    form.projectCategory === "EP" || form.projectCategory === "EPcm"
+                      ? ["采购"]
+                      : []
+                  )
+                  .map((phase) => {
+                    const selected = designPhases.includes(phase);
+                    return (
+                      <label
+                        key={phase}
+                        className="flex items-center gap-1.5 cursor-pointer select-none"
+                        style={{
+                          padding: "6px 14px",
+                          border: `1px solid ${selected ? "#3B82F6" : "#D6D3D1"}`,
+                          borderRadius: 8,
+                          fontSize: 13,
+                          background: selected ? "#DBEAFE" : "#fff",
+                          color: selected ? "#1D4ED8" : "#1C1917",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => {
+                            setDesignPhases((prev) =>
+                              prev.includes(phase)
+                                ? prev.filter((p) => p !== phase)
+                                : [...prev, phase]
+                            );
+                          }}
+                          className="hidden"
+                        />
+                        {phase}
+                      </label>
+                    );
+                  })}
+              </div>
+            </div>
+
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">状态</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">状态 <span className="text-[#DC2626]">*</span></label>
               <select
                 className="ios-select"
                 value={form.status}
@@ -1038,7 +1222,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">设计经理</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">设计经理 <span className="text-[#DC2626]">*</span></label>
               <select
                 className="ios-select"
                 value={form.designManagerId}
@@ -1052,7 +1236,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">主管领导</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">主管领导 <span className="text-[#DC2626]">*</span></label>
               <select
                 className="ios-select"
                 value={form.supervisorLeaderId}
@@ -1068,7 +1252,7 @@ export default function ProjectsPage() {
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 <Calendar className="w-3.5 h-3.5 inline mr-1" />
-                项目启动时间
+                计划开始时间 <span className="text-[#DC2626]">*</span>
               </label>
               <input
                 type="date"
@@ -1081,7 +1265,7 @@ export default function ProjectsPage() {
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 <Calendar className="w-3.5 h-3.5 inline mr-1" />
-                计划结束时间
+                计划完成时间 <span className="text-[#DC2626]">*</span>
               </label>
               <input
                 type="date"
@@ -1090,21 +1274,6 @@ export default function ProjectsPage() {
                 onChange={(e) => updateForm("plannedEndDate", e.target.value)}
               />
             </div>
-
-            {editingProject && (
-              <div>
-                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                  <Calendar className="w-3.5 h-3.5 inline mr-1" />
-                  实际关闭时间
-                </label>
-                <input
-                  type="date"
-                  className="ios-input"
-                  value={form.actualCloseDate}
-                  onChange={(e) => updateForm("actualCloseDate", e.target.value)}
-                />
-              </div>
-            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
@@ -1146,10 +1315,14 @@ export default function ProjectsPage() {
                 <p className="text-[12px] text-[#78716C] mb-1">客户</p>
                 <p className="text-[14px] font-semibold text-[#1C1917]">{detailProject.customer.name}</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">类型</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{detailProject.type || "-"}</p>
-              </div>
+              {detailProject.projectContent && (
+                <div className="col-span-2 p-3 rounded-xl bg-[#FAFAF9]">
+                  <p className="text-[12px] text-[#78716C] mb-1">项目内容描述</p>
+                  <p className="text-[14px] font-semibold text-[#1C1917] whitespace-pre-wrap">
+                    {detailProject.projectContent}
+                  </p>
+                </div>
+              )}
               <div className="p-3 rounded-xl bg-[#FAFAF9]">
                 <p className="text-[12px] text-[#78716C] mb-1">类别</p>
                 <p className="text-[14px] font-semibold text-[#1C1917]">{detailProject.projectCategory || "-"}</p>
@@ -1207,7 +1380,7 @@ export default function ProjectsPage() {
               <p className="text-[13px] font-semibold text-[#1C1917] mb-2">关联统计</p>
               <div className="grid grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-[#FAFAF9] text-center">
-                  <p className="text-[20px] font-bold text-[#1C1917]">{detailProject._count.plans}</p>
+                  <p className="text-[20px] font-bold text-[#1C1917]">{detailProject._count.wbsNodes}</p>
                   <p className="text-[11px] text-[#78716C]">计划</p>
                 </div>
                 <div className="p-3 rounded-xl bg-[#FAFAF9] text-center">
@@ -1309,15 +1482,16 @@ export default function ProjectsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">行业类型</label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户属性</label>
             <select
               className="ios-select"
-              value={customerForm.industryType}
-              onChange={(e) => setCustomerForm((prev) => ({ ...prev, industryType: e.target.value }))}
+              value={customerForm.ownershipType}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, ownershipType: e.target.value }))}
             >
-              <option value="">请选择行业类型</option>
-              <option value="石化">石化</option>
-              <option value="医药">医药</option>
+              <option value="">请选择</option>
+              {OWNERSHIP_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
 

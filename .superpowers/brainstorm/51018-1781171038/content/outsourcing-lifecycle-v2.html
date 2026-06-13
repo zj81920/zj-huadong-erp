@@ -1,0 +1,141 @@
+<h2>外包-WBS 联动生命周期（修正版）</h2>
+<p class="subtitle">审批发起时锁定 WBS，驳回即解锁恢复原状</p>
+
+<div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;">
+
+  <!-- 阶段1：草稿 -->
+  <div class="mockup" style="flex:1;min-width:200px;">
+    <div class="mockup-header" style="background:#f0f0f0;color:#888;">阶段 1：草稿</div>
+    <div class="mockup-body" style="padding:12px;font-size:12px;line-height:1.8;">
+      <div style="margin-bottom:6px;font-weight:600;">WBS 锁定状态</div>
+      <div style="border:1px solid #e0e0e0;border-radius:6px;padding:8px;margin-bottom:8px;text-align:center;">
+        <span style="font-size:20px;">&#x1F513;</span>
+        <div style="color:#137333;font-weight:600;">未锁定</div>
+        <div style="color:#999;font-size:11px;">可被其他外包选择</div>
+      </div>
+      <div style="margin-bottom:6px;font-weight:600;">WBS 责任人</div>
+      <div style="border:1px solid #f5c842;border-radius:6px;padding:8px;background:#fef9e7;">
+        <div style="color:#e67e22;"><em>无</em></div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#999;">未发起审批，WBS 不受影响</div>
+    </div>
+  </div>
+
+  <!-- 箭头 -->
+  <div style="display:flex;align-items:center;font-size:20px;color:#1a73e8;min-width:20px;">→</div>
+
+  <!-- 阶段2：审批中 -->
+  <div class="mockup" style="flex:1;min-width:200px;">
+    <div class="mockup-header" style="background:#e8f0fe;color:#1a73e8;">阶段 2：审批中</div>
+    <div class="mockup-body" style="padding:12px;font-size:12px;line-height:1.8;">
+      <div style="margin-bottom:6px;font-weight:600;">WBS 锁定状态</div>
+      <div style="border:1px solid #1a73e8;border-radius:6px;padding:8px;margin-bottom:8px;text-align:center;background:#e8f0fe;">
+        <span style="font-size:20px;">&#x1F512;</span>
+        <div style="color:#1a73e8;font-weight:600;">已锁定</div>
+        <div style="color:#555;font-size:11px;">不可被其他外包选择</div>
+      </div>
+      <div style="margin-bottom:6px;font-weight:600;">WBS 责任人</div>
+      <div style="border:1px solid #f5c842;border-radius:6px;padding:8px;background:#fef9e7;">
+        <div style="color:#e67e22;"><em>无</em></div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#555;">发起审批后立即锁定，但责任人尚未写入</div>
+    </div>
+  </div>
+
+  <!-- 分支：通过 / 驳回 -->
+  <div style="width:100%;display:flex;gap:16px;margin-top:16px;">
+    <!-- 通过 -->
+    <div style="display:flex;align-items:center;font-size:20px;color:#137333;min-width:20px;">↘</div>
+    <div class="mockup" style="flex:1;min-width:200px;">
+      <div class="mockup-header" style="background:#e6f4ea;color:#137333;">阶段 3a：审批通过 ✓</div>
+      <div class="mockup-body" style="padding:12px;font-size:12px;line-height:1.8;">
+        <div style="margin-bottom:6px;font-weight:600;">WBS 锁定状态</div>
+        <div style="border:1px solid #137333;border-radius:6px;padding:8px;margin-bottom:8px;text-align:center;background:#e6f4ea;">
+          <span style="font-size:20px;">&#x1F512;</span>
+          <div style="color:#137333;font-weight:600;">已锁定（永久）</div>
+          <div style="color:#555;font-size:11px;">外包生效中</div>
+        </div>
+        <div style="margin-bottom:6px;font-weight:600;">WBS 责任人</div>
+        <div style="border:1px solid #ceead6;border-radius:6px;padding:8px;background:#f6fef6;">
+          <div><strong>华东设计院</strong> <span style="background:#ceead6;color:#137333;padding:1px 6px;border-radius:4px;font-size:10px;">外包</span></div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:#137333;">外包对象名写入 WBS 责任人，带外包标识</div>
+      </div>
+    </div>
+
+    <!-- 驳回 -->
+    <div style="display:flex;align-items:center;font-size:20px;color:#d93025;min-width:20px;">↘</div>
+    <div class="mockup" style="flex:1;min-width:200px;">
+      <div class="mockup-header" style="background:#fce8e6;color:#c5221f;">阶段 3b：审批驳回 ✗</div>
+      <div class="mockup-body" style="padding:12px;font-size:12px;line-height:1.8;">
+        <div style="margin-bottom:6px;font-weight:600;">WBS 锁定状态</div>
+        <div style="border:1px solid #e0e0e0;border-radius:6px;padding:8px;margin-bottom:8px;text-align:center;">
+          <span style="font-size:20px;">&#x1F513;</span>
+          <div style="color:#137333;font-weight:600;">解除锁定</div>
+          <div style="color:#555;font-size:11px;">恢复可被选择</div>
+        </div>
+        <div style="margin-bottom:6px;font-weight:600;">WBS 责任人</div>
+        <div style="border:1px solid #f5c842;border-radius:6px;padding:8px;background:#fef9e7;">
+          <div style="color:#e67e22;"><em>无（恢复原状）</em></div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:#c5221f;">驳回后解锁，与删除行为一致</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>修正后的状态流转规则</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="background:#f8f9fa;">
+        <th style="padding:10px;border:1px solid #e0e0e0;text-align:left;">阶段</th>
+        <th style="padding:10px;border:1px solid #e0e0e0;text-align:center;">WBS 锁定</th>
+        <th style="padding:10px;border:1px solid #e0e0e0;text-align:center;">WBS 责任人</th>
+        <th style="padding:10px;border:1px solid #e0e0e0;text-align:left;">说明</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:10px;border:1px solid #e0e0e0;">草稿</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;text-align:center;background:#f6fef6;">❌ 不锁定</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;text-align:center;">保持原状</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;">WBS 任务仍可被其他外包选择</td>
+      </tr>
+      <tr>
+        <td style="padding:10px;border:1px solid #e0e0e0;">审批中</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;text-align:center;background:#e8f0fe;">&#x1F512; 锁定</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;text-align:center;">保持原状</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;">发起审批即锁定，防止冲突</td>
+      </tr>
+      <tr style="background:#f6fef6;">
+        <td style="padding:10px;border:1px solid #e0e0e0;">已批准</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;text-align:center;">&#x1F512; 锁定（永久）</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;text-align:center;">写入外包对象</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;">外包生效，责任人带外包标识</td>
+      </tr>
+      <tr style="background:#fff5f5;">
+        <td style="padding:10px;border:1px solid #e0e0e0;">已驳回</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;text-align:center;">&#x1F513; 解锁</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;text-align:center;">恢复原状</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;">解除锁定 + 清理关联明细</td>
+      </tr>
+      <tr style="background:#fff5f5;">
+        <td style="padding:10px;border:1px solid #e0e0e0;">已删除</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;text-align:center;">&#x1F513; 解锁</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;text-align:center;">恢复原状</td>
+        <td style="padding:10px;border:1px solid #e0e0e0;">清理关联 + 清理责任人中外包条目</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section" style="margin-top:16px;">
+  <h3>关键变更点</h3>
+  <ul style="font-size:14px;color:#555;line-height:2;">
+    <li><strong>草稿阶段不锁定</strong>：用户可以随便选 WBS 任务，不影响其他外包</li>
+    <li><strong>发起审批时锁定</strong>：在 <code>POST /approval-flows/apply</code> 或发起审批动作时，创建 OutsourcingWbsItem 关联记录，标记 WBS 为已占用</li>
+    <li><strong>驳回时解锁</strong>：删除 OutsourcingWbsItem 关联记录（不写入责任人，因为还没通过）</li>
+    <li><strong>删除时解锁+清理</strong>：如果已批准的外包被删除，除了删除关联记录，还要从 WBS responsibleIds 中移除对应外包条目</li>
+  </ul>
+</div>

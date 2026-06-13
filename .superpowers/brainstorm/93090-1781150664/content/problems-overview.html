@@ -1,0 +1,41 @@
+<h2>WBS 系统代码审查 — 发现的 3 个问题</h2>
+<p class="subtitle">代码分析基于 <code>wbs-utils.ts</code>、<code>GanttChart.tsx</code>、<code>progress/route.ts</code></p>
+
+<div class="section">
+  <h3>问题 ①：状态判断不考虑"实际开始晚于计划"</h3>
+  <p><code>judgeTaskStatus</code> 的"进行中"状态对比逻辑：用 <strong>计划日期</strong> 算 planPct，和 actualPct 对比。但如果任务晚启动了 10 天，即使团队全速赶工，planPct 也会远超 actualPct，导致误判为"延误"。</p>
+  
+  <div class="mockup">
+    <div class="mockup-header">举例：计划 5/1→6/30，实际 5/15 才开工，进度 25%</div>
+    <div class="mockup-body" style="font-family:monospace;font-size:13px;padding:12px;line-height:1.8">
+      计划进度 = 40天/61天 = <b>66%</b>（按计划日期算）<br>
+      实际进度 = <b>25%</b><br>
+      25% &lt; 66%-5%=61% → 状态 = <span style="color:#C47676;font-weight:bold">❌ 延误</span><br><br>
+      但实际：已工作 26天/总61天，赶上了 <b>41% 的时间利用率</b>，应该算 <span style="color:#7DA88E;font-weight:bold">接近按期</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>问题 ②：横道图中实际横道缺少"晚开始"视觉区分</h3>
+  <p>当 <code>actualStart &gt; planStart</code> 时，实际横道起点在计划横道右侧。但目前没有醒目的视觉标记来提示"这个任务开始晚了"。</p>
+  <p>另外 <code>barPosition</code> 中，无 actualEnd 时用 today 作为结束点 — 对于已完成(100%)但无 actualEnd 的任务，横道会延伸到今天，看起来像还在进行中。</p>
+  
+  <div class="mockup">
+    <div class="mockup-header">当前横道图示意（简化）</div>
+    <div class="mockup-body" style="padding:16px">
+      <div style="margin-bottom:4px;font-size:12px">计划：<span style="display:inline-block;width:120px;height:10px;border:1.5px dashed #90A4C4;vertical-align:middle"></span> 5/1 ─────── 6/30</div>
+      <div style="font-size:12px">实际：<span style="display:inline-block;width:90px;height:10px;background:#7DA88E;vertical-align:middle"></span> 5/15 ──── 至今 → 缺视觉标记</div>
+      <div style="margin-top:8px;color:#A8A29E;font-size:11px">↑ 实际横道起点偏移了，但没有任何箭头/颜色/文字提示"开始晚了14天"</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>问题 ③：delayDays 计算同样不考虑实际开始日期</h3>
+  <p><code>progress/route.ts</code> 中 delayDays 用 planPct（基于计划日期）对比 progress，与实际开始日期无关。晚开始的任务会被算成"延误 N 天"，但这个 N 没有反映真实追赶情况。</p>
+</div>
+
+<div style="margin-top:24px;padding:16px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px">
+  <p style="margin:0;font-size:13px">核心矛盾：<strong>当前所有进度判断都以计划开始日期为基准，没有考虑实际开始日期的偏移</strong>。这导致：(1) 晚开始但正常推进的任务被误判延误；(2) 横道图无法直观看到开始偏移；(3) 延误天数不准确。</p>
+</div>

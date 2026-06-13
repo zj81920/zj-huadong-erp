@@ -1,0 +1,293 @@
+<h2>方案 A — UI 效果示意</h2>
+<p class="subtitle">3 个 Tab：经营看板 | 项目成本 | 账龄分析</p>
+
+<!-- ==================== Tab 导航条示意 ==================== -->
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">顶部 Tab 导航 & 经营主体筛选</div>
+    <div class="mockup-body" style="padding:12px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="mock-button" style="background:#5856D6;color:white;border:none">📊 经营看板</div>
+        <div class="mock-button" style="background:#F5F5F0;color:#78716C">📋 项目成本</div>
+        <div class="mock-button" style="background:#F5F5F0;color:#78716C">📈 账龄分析</div>
+        <div style="margin-left:auto">
+          <span class="label" style="margin-right:4px">经营主体</span>
+          <input class="mock-input" value="全部（合并报表）" style="width:160px" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Tab 1: 经营看板 ==================== -->
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header" style="background:#5856D6">Tab 1 — 经营看板（原收支汇总+现金流合并）</div>
+    <div class="mockup-body" style="padding:16px">
+
+      <!-- KPI 行 -->
+      <div class="section">
+        <p style="font-size:12px;color:#78716C;margin:0 0 8px 0;font-weight:600">▸ 核心指标卡片（3张）</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div class="placeholder" style="padding:14px;border-left:4px solid #34C759">
+            <div style="font-size:11px;color:#78716C">总收入</div>
+            <div style="font-size:22px;font-weight:bold;margin:4px 0">¥1,234,567</div>
+            <div style="font-size:11px;color:#78716C">较上月 ↑12.3%</div>
+          </div>
+          <div class="placeholder" style="padding:14px;border-left:4px solid #FF3B30">
+            <div style="font-size:11px;color:#78716C">总支出</div>
+            <div style="font-size:22px;font-weight:bold;margin:4px 0">¥987,654</div>
+            <div style="font-size:11px;color:#78716C">较上月 ↑5.1%</div>
+          </div>
+          <div class="placeholder" style="padding:14px;border-left:4px solid #5856D6">
+            <div style="font-size:11px;color:#78716C">净利润</div>
+            <div style="font-size:22px;font-weight:bold;margin:4px 0">¥246,913</div>
+            <div style="font-size:11px;color:#78716C">较上月 ↑8.7%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 图表行 -->
+      <div class="section">
+        <p style="font-size:12px;color:#78716C;margin:0 0 8px 0;font-weight:600">▸ 图表区（双图并排）</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="placeholder" style="padding:16px;min-height:180px">
+            <div style="font-weight:600;margin-bottom:8px">月度收支趋势</div>
+            <div style="display:flex;align-items:flex-end;gap:4px;height:120px">
+              <div style="flex:1;background:linear-gradient(to top,#34C759,#34C75980);height:40%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#34C759,#34C75980);height:55%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#34C759,#34C75980);height:70%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#34C759,#34C75980);height:50%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#34C759,#34C75980);height:85%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#34C759,#34C75980);height:65%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#FF3B30,#FF3B3080);height:35%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#FF3B30,#FF3B3080);height:60%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#FF3B30,#FF3B3080);height:45%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#FF3B30,#FF3B3080);height:75%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#FF3B30,#FF3B3080);height:55%;border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;background:linear-gradient(to top,#FF3B30,#FF3B3080);height:80%;border-radius:4px 4px 0 0"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#78716C;margin-top:4px">
+              <span>1月</span><span>3月</span><span>5月</span><span>7月</span><span>9月</span><span>11月</span>
+            </div>
+            <div style="display:flex;gap:16px;margin-top:8px;font-size:11px">
+              <span><span style="display:inline-block;width:10px;height:10px;background:#34C759;border-radius:2px;margin-right:4px"></span>收入</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:#FF3B30;border-radius:2px;margin-right:4px"></span>支出</span>
+            </div>
+          </div>
+          <div class="placeholder" style="padding:16px;min-height:180px">
+            <div style="font-weight:600;margin-bottom:8px">收入/支出分类占比</div>
+            <div style="display:flex;align-items:center;justify-content:center;height:100px;gap:20px">
+              <div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(#5856D6 0% 35%, #34C759 35% 55%, #FF9500 55% 75%, #FF3B30 75% 100%);position:relative">
+                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:#F5F5F0;border-radius:50%"></div>
+              </div>
+              <div style="font-size:11px">
+                <div><span style="display:inline-block;width:8px;height:8px;background:#5856D6;border-radius:2px;margin-right:4px"></span>合同收入 35%</div>
+                <div><span style="display:inline-block;width:8px;height:8px;background:#34C759;border-radius:2px;margin-right:4px"></span>合同支出 20%</div>
+                <div><span style="display:inline-block;width:8px;height:8px;background:#FF9500;border-radius:2px;margin-right:4px"></span>其他收支 20%</div>
+                <div><span style="display:inline-block;width:8px;height:8px;background:#FF3B30;border-radius:2px;margin-right:4px"></span>出资/借入等 25%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 收入/支出分类卡片行（精简为 6 张） -->
+      <div class="section">
+        <p style="font-size:12px;color:#78716C;margin:0 0 8px 0;font-weight:600">▸ 收入/支出构成分类</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div class="placeholder" style="padding:10px;font-size:12px;border-left:3px solid #34C759"><strong>合同收入</strong> ¥500,000</div>
+          <div class="placeholder" style="padding:10px;font-size:12px;border-left:3px solid #34C759"><strong>其他收入</strong> ¥200,000</div>
+          <div class="placeholder" style="padding:10px;font-size:12px;border-left:3px solid #34C759"><strong>股东出资</strong> ¥300,000</div>
+          <div class="placeholder" style="padding:10px;font-size:12px;border-left:3px solid #FF3B30"><strong>合同支出</strong> ¥400,000</div>
+          <div class="placeholder" style="padding:10px;font-size:12px;border-left:3px solid #FF3B30"><strong>其他支出</strong> ¥150,000</div>
+          <div class="placeholder" style="padding:10px;font-size:12px;border-left:3px solid #FF3B30"><strong>工资+报销+借出</strong> ¥350,000</div>
+        </div>
+      </div>
+
+      <!-- 月度明细表（可折叠） -->
+      <div class="placeholder" style="padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:600">月度收支明细</span>
+          <span style="font-size:11px;color:#5856D6">▼ 展开</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;font-size:11px;color:#78716C">
+          <span>月份</span><span>收入</span><span>支出</span><span>净利润</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px;font-size:12px;border-top:1px solid #E5E5E0;padding-top:8px">
+          <span>2026-06</span><span>¥120,000</span><span>¥85,000</span><span style="color:#34C759">¥35,000</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Tab 2: 项目成本 ==================== -->
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header" style="background:#1C1917">Tab 2 — 项目成本（保留并增强）</div>
+    <div class="mockup-body" style="padding:16px">
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+        <div class="placeholder" style="padding:12px;text-align:center">
+          <div style="font-size:11px;color:#78716C">项目总数</div>
+          <div style="font-size:20px;font-weight:bold">12</div>
+        </div>
+        <div class="placeholder" style="padding:12px;text-align:center">
+          <div style="font-size:11px;color:#78716C">应付总额</div>
+          <div style="font-size:20px;font-weight:bold">¥780,000</div>
+        </div>
+        <div class="placeholder" style="padding:12px;text-align:center">
+          <div style="font-size:11px;color:#78716C">已付总额</div>
+          <div style="font-size:20px;font-weight:bold">¥520,000</div>
+        </div>
+      </div>
+
+      <!-- 项目成本柱状图 -->
+      <div class="placeholder" style="padding:16px;margin-bottom:16px">
+        <div style="font-weight:600;margin-bottom:12px">各项目成本对比</div>
+        <div style="display:flex;align-items:flex-end;gap:8px;height:100px">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+            <div style="width:100%;background:linear-gradient(to top,#5856D6,#5856D680);height:80%;border-radius:4px 4px 0 0"></div>
+            <span style="font-size:9px;color:#78716C;margin-top:4px">项目A</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+            <div style="width:100%;background:linear-gradient(to top,#5856D6,#5856D680);height:60%;border-radius:4px 4px 0 0"></div>
+            <span style="font-size:9px;color:#78716C;margin-top:4px">项目B</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+            <div style="width:100%;background:linear-gradient(to top,#5856D6,#5856D680);height:100%;border-radius:4px 4px 0 0"></div>
+            <span style="font-size:9px;color:#78716C;margin-top:4px">项目C</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+            <div style="width:100%;background:linear-gradient(to top,#5856D6,#5856D680);height:45%;border-radius:4px 4px 0 0"></div>
+            <span style="font-size:9px;color:#78716C;margin-top:4px">项目D</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+            <div style="width:100%;background:linear-gradient(to top,#5856D6,#5856D680);height:70%;border-radius:4px 4px 0 0"></div>
+            <span style="font-size:9px;color:#78716C;margin-top:4px">项目E</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:8px;font-size:11px">
+          <span><span style="display:inline-block;width:10px;height:10px;background:#5856D6;border-radius:2px;margin-right:4px"></span>应付总额</span>
+        </div>
+      </div>
+
+      <!-- 项目成本明细表 -->
+      <div class="placeholder" style="padding:12px;font-size:12px">
+        <div style="font-weight:600;margin-bottom:8px">项目成本明细</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:6px 0;border-bottom:1px solid #E5E5E0;font-weight:600;color:#78716C">
+          <span>项目</span><span>应付</span><span>已付</span><span>未付</span><span>报销</span><span>总成本</span><span>进度</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:6px 0;border-bottom:1px solid #F0EFEB">
+          <span>项目A</span><span>¥200K</span><span>¥180K</span><span>¥20K</span><span>¥10K</span><span>¥210K</span><span style="color:#34C759">90%</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:6px 0">
+          <span>项目B</span><span>¥150K</span><span>¥100K</span><span>¥50K</span><span>¥5K</span><span>¥155K</span><span style="color:#FF9500">67%</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Tab 3: 账龄分析 ==================== -->
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header" style="background:#78716C">Tab 3 — 账龄分析（应收+应付合并）</div>
+    <div class="mockup-body" style="padding:16px">
+
+      <!-- 应收/应付切换 -->
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <div class="mock-button" style="background:#5856D6;color:white;border:none">应收账款</div>
+        <div class="mock-button" style="background:#F5F5F0;color:#78716C">应付账款</div>
+      </div>
+
+      <!-- 账龄分布图 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="placeholder" style="padding:16px">
+          <div style="font-weight:600;margin-bottom:12px">账龄分布（横向条形图）</div>
+          <div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#78716C;margin-bottom:4px">
+              <span>30天内</span><span>¥120,000</span>
+            </div>
+            <div style="height:16px;background:#F0EFEB;border-radius:8px;overflow:hidden">
+              <div style="height:100%;width:40%;background:#34C759;border-radius:8px"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#78716C;margin-bottom:4px">
+              <span>30-60天</span><span>¥80,000</span>
+            </div>
+            <div style="height:16px;background:#F0EFEB;border-radius:8px;overflow:hidden">
+              <div style="height:100%;width:27%;background:#FF9500;border-radius:8px"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#78716C;margin-bottom:4px">
+              <span>60-90天</span><span>¥50,000</span>
+            </div>
+            <div style="height:16px;background:#F0EFEB;border-radius:8px;overflow:hidden">
+              <div style="height:100%;width:17%;background:#FF3B30;border-radius:8px"></div>
+            </div>
+          </div>
+          <div style="margin-bottom:4px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#78716C;margin-bottom:4px">
+              <span>90天以上</span><span>¥50,000</span>
+            </div>
+            <div style="height:16px;background:#F0EFEB;border-radius:8px;overflow:hidden">
+              <div style="height:100%;width:17%;background:#8E8E93;border-radius:8px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4段卡片 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="placeholder" style="padding:10px;text-align:center">
+            <span style="font-size:11px;display:block;color:#34C759;font-weight:600">30天内</span>
+            <span style="font-size:18px;font-weight:bold">¥120K</span>
+            <span style="font-size:10px;color:#78716C;display:block">8笔</span>
+          </div>
+          <div class="placeholder" style="padding:10px;text-align:center">
+            <span style="font-size:11px;display:block;color:#FF9500;font-weight:600">30-60天</span>
+            <span style="font-size:18px;font-weight:bold">¥80K</span>
+            <span style="font-size:10px;color:#78716C;display:block">5笔</span>
+          </div>
+          <div class="placeholder" style="padding:10px;text-align:center">
+            <span style="font-size:11px;display:block;color:#FF3B30;font-weight:600">60-90天</span>
+            <span style="font-size:18px;font-weight:bold">¥50K</span>
+            <span style="font-size:10px;color:#78716C;display:block">3笔</span>
+          </div>
+          <div class="placeholder" style="padding:10px;text-align:center">
+            <span style="font-size:11px;display:block;color:#8E8E93;font-weight:600">90天以上</span>
+            <span style="font-size:18px;font-weight:bold">¥50K</span>
+            <span style="font-size:10px;color:#78716C;display:block">2笔</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 应收账款明细表 -->
+      <div class="placeholder" style="padding:12px;font-size:12px">
+        <div style="font-weight:600;margin-bottom:8px">应收账款明细</div>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:6px 0;border-bottom:1px solid #E5E5E0;font-weight:600;color:#78716C">
+          <span>来源</span><span>项目</span><span>应收</span><span>已收</span><span>未收</span><span>逾期</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:6px 0;border-bottom:1px solid #F0EFEB">
+          <span>合同收入</span><span>项目A</span><span>¥100K</span><span>¥60K</span><span>¥40K</span><span style="color:#FF3B30">45天</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:6px 0">
+          <span>合同收入</span><span>项目B</span><span>¥80K</span><span>¥80K</span><span>¥0</span><span style="color:#34C759">已清</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:16px;padding:16px;background:#F5F5F0;border-radius:12px">
+  <p style="margin:0;font-size:14px;color:#78716C">
+    💡 风格说明：使用 <strong>Recharts</strong> 图表库（柱状图/饼图/横向条形图），保持现有 iOS 风格卡片和表格，后端数据聚合逻辑不变，仅前端重构。<br><br>
+    您觉得这个视觉效果可以吗？有什么需要调整的地方？比如图表的样式、卡片的布局、或者某个 Tab 的内容增减？
+  </p>
+</div>

@@ -74,6 +74,22 @@ mockups/
 # 开发脚本
 scripts/dev-setup.sh
 scripts/fix-oss.*
+scripts/clean-test-data.ts
+scripts/fix-ds-wbs.ts
+scripts/migrate-ds-disciplines.ts
+scripts/test-put.ts
+scripts/test-sync.ts
+
+# Prisma 迁移脚本
+prisma/scripts/
+
+# 原型和 mockup
+public/project-assignment-mockup.html
+public/project-assignment-prototype.html
+
+# AI 辅助文件
+.planning/
+.superpowers/
 
 # OS
 .Spotlight-V100

@@ -12,7 +12,7 @@ export async function GET(
     const lead = await prisma.projectLead.findUnique({
       where: { id },
       include: {
-        customer: { select: { id: true, name: true, industryType: true, contactPerson: true, phone: true } },
+        customer: { select: { id: true, name: true, ownershipType: true, contactPerson: true, phone: true } },
         biddings: true,
         quotations: true,
       },
@@ -93,7 +93,7 @@ export async function PUT(
     if (projectName !== undefined && !projectName.trim()) {
       return NextResponse.json({ error: "项目名称不能为空" }, { status: 400 });
     }
-    if (projectNature !== undefined && (!Array.isArray(projectNature) || projectNature.length === 0)) {
+    if (projectNature !== undefined && (typeof projectNature !== "string" || !projectNature.trim())) {
       return NextResponse.json({ error: "请选择项目性质" }, { status: 400 });
     }
     if (implementationEntity !== undefined && !implementationEntity.trim()) {
@@ -102,15 +102,25 @@ export async function PUT(
 
     const updateData: Record<string, unknown> = {};
     const currentUser = await getCurrentUser();
+
+    // 已立项线索的编辑保护
+    const isEstablished = existing.currentStatus === "已立项";
+    if (isEstablished) {
+      if (!isAdmin(currentUser)) {
+        return NextResponse.json({ error: "已立项的线索不可编辑" }, { status: 403 });
+      }
+      // 管理员可编辑其他字段，但状态和项目名称由系统管理，不允许修改
+    }
+
     updateData.lastModifiedBy = currentUser?.realName || null;
-    if (projectName !== undefined) updateData.projectName = projectName.trim();
+    if (projectName !== undefined && !isEstablished) updateData.projectName = projectName.trim();
     if (location !== undefined) updateData.location = location?.trim() || null;
     if (contactPerson !== undefined) updateData.contactPerson = contactPerson?.trim() || null;
     if (contactPhone !== undefined) updateData.contactPhone = contactPhone?.trim() || null;
     if (contactEmail !== undefined) updateData.contactEmail = contactEmail?.trim() || null;
-    if (projectNature !== undefined) updateData.projectNature = projectNature;
+    if (projectNature !== undefined) updateData.projectNature = projectNature?.trim() || null;
     if (implementationEntity !== undefined) updateData.implementationEntity = implementationEntity.trim();
-    if (currentStatus !== undefined) updateData.currentStatus = currentStatus;
+    if (currentStatus !== undefined && !isEstablished) updateData.currentStatus = currentStatus;
     if (followUpRecords !== undefined) updateData.followUpRecords = followUpRecords;
     if (competitorInfo !== undefined) updateData.competitorInfo = competitorInfo;
     if (tenderFiles !== undefined) updateData.tenderFiles = tenderFiles;
@@ -153,7 +163,7 @@ export async function PUT(
       where: { id },
       data: updateData,
       include: {
-        customer: { select: { id: true, name: true, industryType: true } },
+        customer: { select: { id: true, name: true, ownershipType: true } },
       },
     });
 
@@ -212,12 +222,11 @@ export async function DELETE(
       if (existing.project) {
         const proj = await tx.project.findUnique({
           where: { id: existing.project.id },
-          include: { _count: { select: { plans: true, progressRecords: true, designTasks: true, outsourcingTasks: true, purchaseRequests: true, budgets: true, incomeContracts: true, expenseContracts: true, expenseReports: true, receivables: true, payables: true, nonContractIncomes: true, nonContractExpenses: true, invoices: true } } },
+          include: { _count: { select: { plans: true, designTasks: true, outsourcingTasks: true, purchaseRequests: true, budgets: true, incomeContracts: true, expenseContracts: true, expenseReports: true, receivables: true, payables: true, nonContractIncomes: true, nonContractExpenses: true, invoices: true } } },
         });
         if (proj) {
           const psid = proj.projectSourceId;
           if (proj._count.plans > 0) await tx.projectPlan.deleteMany({ where: { projectSourceId: psid } });
-          if (proj._count.progressRecords > 0) await tx.projectProgress.deleteMany({ where: { projectSourceId: psid } });
           if (proj._count.designTasks > 0) await tx.designTask.deleteMany({ where: { projectSourceId: psid } });
           if (proj._count.outsourcingTasks > 0) await tx.outsourcingTask.deleteMany({ where: { projectSourceId: psid } });
           if (proj._count.purchaseRequests > 0) await tx.purchaseRequest.deleteMany({ where: { projectSourceId: psid } });

@@ -57,7 +57,7 @@ test.describe("合同变更流程", () => {
     // 创建客户
     const cust = await apiPost(request, "/api/customers", {
       name: `测试客户-BG-${ts}`,
-      industryType: "化工",
+      ownershipType: "民营",
       contactPerson: "张三",
       phone: "13800138000",
       address: "测试路100号",
@@ -82,7 +82,7 @@ test.describe("合同变更流程", () => {
       location: "安徽省合肥市",
       contactPerson: "王工",
       contactPhone: "13700137000",
-      projectNature: ["EPC"],
+      projectNature: "EPcm",
       implementationEntity: "华东工程",
       currentStatus: "已中标",
     });

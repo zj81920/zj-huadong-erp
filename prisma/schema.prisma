@@ -137,7 +137,7 @@ model Supplier {
   bankName           String?  @map("bank_name")
   bankAccount        String?  @map("bank_account")
   remark             String?
-  attachmentUrl      String?  @map("attachment_url")
+  attachmentUrls     Json     @default("[]") @map("attachment_urls")
   approvalStatus     String   @default("草稿") @map("approval_status")
   approvalInstanceId String?  @map("approval_instance_id")
   isActive           Boolean  @default(true) @map("is_active")
@@ -187,7 +187,7 @@ model Customer {
   phone          String?
   email          String?
   maintainer     String?
-  industryType   String?  @map("industry_type")
+  ownershipType  String?  @map("ownership_type")
   customerGrade  String?  @default("C") @map("customer_grade")
   isActive       Boolean  @default(true) @map("is_active")
   createdAt      DateTime @default(now()) @map("created_at")
@@ -214,7 +214,7 @@ model ProjectLead {
   contactPerson        String?   @map("contact_person")
   contactPhone         String?   @map("contact_phone")
   contactEmail         String?   @map("contact_email")
-  projectNature        Json      @default("[]") @map("project_nature")
+  projectNature        String?   @map("project_nature")
   implementationEntity String    @map("implementation_entity")
   currentStatus        String    @default("跟踪中") @map("current_status")
   leadMode             String    @default("投标") @map("lead_mode")
@@ -301,8 +301,8 @@ model Project {
   projectCode        String    @unique @map("project_code")
   name               String    @unique
   customerId         String    @map("customer_id")
-  type               String?
   address            String?
+  projectContent     String?   @map("project_content") @db.Text
   projectCategory    String?   @map("project_category")
   source             String    @default("投标中标")
   sourceRefId        String?   @map("source_ref_id")
@@ -311,12 +311,19 @@ model Project {
   supervisorLeaderId String?   @map("supervisor_leader_id")
   startDate          DateTime? @map("start_date")
   plannedEndDate     DateTime? @map("planned_end_date")
+  actualStartDate    DateTime? @map("actual_start_date")
+  actualEndDate      DateTime? @map("actual_end_date")
   actualCloseDate    DateTime? @map("actual_close_date")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   lastModifiedBy     String?   @map("last_modified_by")
   createdById        String?   @map("created_by")
   organizationId     String?   @map("organization_id")
+  designPhases       String?   @map("design_phases")
+  useWbs             Boolean   @default(true) @map("use_wbs")
+  overallProgress    Int       @default(0) @map("overall_progress")
+  riskLevel          String    @default("low") @map("risk_level")
+  dsProjectCode      String?   @unique @map("ds_project_code")
 
   customer            Customer             @relation(fields: [customerId], references: [id])
   projectLead         ProjectLead          @relation(fields: [projectSourceId], references: [projectSourceId])
@@ -324,7 +331,7 @@ model Project {
   supervisorLeader    User?                @relation("SupervisorLeader", fields: [supervisorLeaderId], references: [id])
   organization        Organization?        @relation(fields: [organizationId], references: [id])
   plans               ProjectPlan[]
-  progressRecords     ProjectProgress[]
+  wbsNodes            ProjectWbsNode[]
   designTasks         DesignTask[]
   outsourcingTasks    OutsourcingTask[]
   purchaseRequests    PurchaseRequest[]
@@ -364,21 +371,48 @@ model ProjectPlan {
   @@map("project_plans")
 }
 
-model ProjectProgress {
-  id                String   @id @default(cuid())
-  projectSourceId   String   @map("project_source_id")
-  taskNode          String   @map("task_node")
-  plannedPercentage Int      @default(0) @map("planned_percentage")
-  actualPercentage  Int      @default(0) @map("actual_percentage")
-  delayDays         Int      @default(0) @map("delay_days")
-  alertStatus       String   @default("正常") @map("alert_status")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-  lastModifiedBy    String?  @map("last_modified_by")
+model ProjectWbsNode {
+  id              String    @id @default(cuid())
+  projectSourceId String    @map("project_source_id")
+  parentId        String?   @map("parent_id")
+  level           Int       @map("level")
+  name            String    @map("name")
+  disciplineId    String?   @map("discipline_id")
+  isMilestone     Boolean   @default(false) @map("is_milestone")
+  planStartDate   DateTime? @map("plan_start_date")
+  planEndDate     DateTime? @map("plan_end_date")
+  progress        Int       @default(0) @map("progress")
+  sortOrder       Int       @default(0) @map("sort_order")
+  responsibleIds  Json      @default("[]") @map("responsible_ids")
+  aiGenerated     Boolean   @default(false) @map("ai_generated")
+  version         Int       @default(1)
+  lastModifiedBy    String?   @map("last_modified_by")
+  actualStartDate   DateTime? @map("actual_start_date")
+  actualEndDate     DateTime? @map("actual_end_date")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  project Project @relation(fields: [projectSourceId], references: [projectSourceId])
+  project           Project         @relation(fields: [projectSourceId], references: [projectSourceId])
+  parent            ProjectWbsNode? @relation("WbsHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children          ProjectWbsNode[] @relation("WbsHierarchy")
+  taskLogs          WbsTaskLog[]
+  outsourcingWbsItems  OutsourcingWbsItem[]
 
-  @@map("project_progress")
+  @@index([projectSourceId])
+  @@index([parentId])
+  @@map("project_wbs_nodes")
+}
+
+model DisciplineDictionary {
+  id        String   @id @default(cuid())
+  code      String   @unique          @map("code")
+  name      String                    @map("name")
+  sortOrder Int      @default(0)      @map("sort_order")
+  isActive  Boolean  @default(true)   @map("is_active")
+  createdAt DateTime @default(now())  @map("created_at")
+  updatedAt DateTime @updatedAt       @map("updated_at")
+
+  @@map("discipline_dictionaries")
 }
 
 model DesignTask {
@@ -423,8 +457,27 @@ model OutsourcingTask {
 
   project  Project   @relation(fields: [projectSourceId], references: [projectSourceId])
   supplier Supplier? @relation(fields: [supplierId], references: [id])
+  wbsItems  OutsourcingWbsItem[]
 
   @@map("outsourcing_tasks")
+}
+
+model OutsourcingWbsItem {
+  id                String           @id @default(cuid())
+  outsourcingTaskId String           @map("outsourcing_task_id")
+  wbsNodeId         String           @map("wbs_node_id")
+  workload          Decimal?         @db.Decimal(15, 2)
+  unit              String?
+  unitPrice         Decimal?         @db.Decimal(15, 2)   @map("unit_price")
+  subtotal          Decimal?         @db.Decimal(15, 2)
+
+  outsourcingTask   OutsourcingTask  @relation(fields: [outsourcingTaskId], references: [id], onDelete: Cascade)
+  wbsNode           ProjectWbsNode   @relation(fields: [wbsNodeId], references: [id], onDelete: Cascade)
+
+  @@unique([outsourcingTaskId, wbsNodeId])
+  @@index([outsourcingTaskId])
+  @@index([wbsNodeId])
+  @@map("outsourcing_wbs_items")
 }
 
 // ==================== 采购管理 ====================
@@ -1579,4 +1632,18 @@ model FileChunk {
 
   @@index([recordId])
   @@map("file_chunks")
+}
+
+model WbsTaskLog {
+  id        String   @id @default(cuid())
+  nodeId    String   @map("node_id")
+  content   String
+  createdBy String   @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  node ProjectWbsNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId])
+  @@map("wbs_task_logs")
 }

@@ -1,0 +1,62 @@
+<h2>修正：AI 只负责 L4 任务生成</h2>
+<p class="subtitle">用户掌控结构，AI 填充任务细节</p>
+
+<div class="section">
+  <h3>各层职责划分</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:#f5f5f5"><th style="padding:8px;text-align:left;border:1px solid #ddd">层级</th><th style="padding:8px;text-align:left;border:1px solid #ddd">谁来定</th><th style="padding:8px;text-align:left;border:1px solid #ddd">方式</th></tr></thead>
+    <tbody>
+      <tr><td style="padding:8px;border:1px solid #ddd">L1 阶段</td><td style="padding:8px;border:1px solid #ddd;color:#c62828">用户</td><td style="padding:8px;border:1px solid #ddd">项目立项时指定 designPhases</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">L2 子项</td><td style="padding:8px;border:1px solid #ddd;color:#c62828">用户</td><td style="padding:8px;border:1px solid #ddd">用户手动添加，不同项目不同</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">L3 专业</td><td style="padding:8px;border:1px solid #ddd;color:#c62828">用户</td><td style="padding:8px;border:1px solid #ddd">从 DisciplineDictionary 选择</td></tr>
+      <tr style="background:#e8f5e9"><td style="padding:8px;border:1px solid #ddd">L4 任务</td><td style="padding:8px;border:1px solid #ddd;color:#2e7d32">🤖 AI</td><td style="padding:8px;border:1px solid #ddd">LLM 根据专业+项目类型生成任务清单，用户可选可编辑</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>用户操作流程</h3>
+  <div style="background:#f8f9fa;padding:16px;border-radius:8px;font-size:14px;line-height:2.2">
+    <div>1️⃣ 用户手动创建 L1(阶段) → L2(子项) → L3(专业)，搭建好骨架</div>
+    <div>2️⃣ 在某个 L3 节点上，点击「🤖 AI 生成任务」</div>
+    <div>3️⃣ AI 调用 LLM：<strong>"石油化工设计项目，【施工图设计→工艺装置区→工艺专业】下，有哪些常规设计任务？给出任务名+建议工期"</strong></div>
+    <div>4️⃣ 返回任务清单预览，用户勾选需要的、修改名称/工期、增删任务</div>
+    <div>5️⃣ 确认后批量创建 L4 任务节点</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>示例：工艺专业 → AI 生成结果</h3>
+  <div class="mockup">
+    <div class="mockup-header">🤖 AI 建议任务清单（可勾选、可编辑）</div>
+    <div class="mockup-body" style="font-size:13px;padding:12px">
+      <div style="margin-bottom:4px;color:#888">施工图设计 → 工艺装置区 → <strong>工艺专业</strong></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #eee">
+        <input type="checkbox" checked style="accent-color:#2e7d32"> <span>工艺流程图(PFD)绘制</span> <span style="color:#888;margin-left:auto">7天</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #eee">
+        <input type="checkbox" checked style="accent-color:#2e7d32"> <span>管道仪表流程图(PID)绘制</span> <span style="color:#888;margin-left:auto">14天</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #eee">
+        <input type="checkbox" checked style="accent-color:#2e7d32"> <span>设备布置图绘制</span> <span style="color:#888;margin-left:auto">7天</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #eee">
+        <input type="checkbox" checked style="accent-color:#2e7d32"> <span>设备一览表编制</span> <span style="color:#888;margin-left:auto">5天</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #eee">
+        <input type="checkbox"> <span>工艺设计说明编制</span> <span style="color:#888;margin-left:auto">5天</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 0">
+        <input type="checkbox"> <span>危险区域划分图</span> <span style="color:#888;margin-left:auto">3天</span>
+      </div>
+      <div style="margin-top:8px">
+        <span style="color:#1565c0;cursor:pointer">+ 添加自定义任务</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>这样可以吗？</h3>
+  <p class="subtitle">确认后进入状态计算逻辑</p>
+</div>

@@ -1,0 +1,119 @@
+<h2>外包表单 - 关联 WBS 任务</h2>
+<p class="subtitle">在新增/编辑外包弹窗中嵌入 WBS 任务选择面板，选择无责任人的任务作为外包依据</p>
+
+<div class="split">
+  <!-- 左侧：外包表单 -->
+  <div class="mockup">
+    <div class="mockup-header">外包任务表单</div>
+    <div class="mockup-body" style="padding:16px;font-size:13px;line-height:2;">
+      <div class="label" style="margin-bottom:4px;">所属项目</div>
+      <div class="mock-input" style="width:100%;margin-bottom:12px;">华锦项目 - 乙烯装置</div>
+      
+      <div class="label" style="margin-bottom:4px;">外包类型</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div style="flex:1;background:#e8f0fe;border:2px solid #1a73e8;border-radius:6px;padding:8px;text-align:center;font-size:12px;font-weight:600;">分包给公司</div>
+        <div style="flex:1;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;padding:8px;text-align:center;font-size:12px;">分包给个人</div>
+      </div>
+
+      <div class="label" style="margin-bottom:4px;">外包对象</div>
+      <div class="mock-input" style="width:100%;margin-bottom:12px;">选择供应商...</div>
+
+      <div style="background:#fef3e0;border:1px solid #f5c842;border-radius:8px;padding:12px;margin-bottom:12px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:#b45309;">&#x1F4CB; 已选 WBS 任务（2个）</div>
+        <div style="font-size:12px;color:#555;">
+          <div style="padding:4px 0;border-bottom:1px solid #fde68a;">WK01-03-01 管道平面图设计</div>
+          <div style="padding:4px 0;">WK01-03-02 管道剖面图设计</div>
+        </div>
+      </div>
+
+      <div class="label" style="margin-bottom:4px;">任务描述 <span style="color:#999;">(从 WBS 自动拼接)</span></div>
+      <div class="mock-input" style="width:100%;height:60px;margin-bottom:12px;">管道平面图设计 / 管道剖面图设计</div>
+
+      <div class="label" style="margin-bottom:4px;">工作量</div>
+      <div class="mock-input" style="width:100%;margin-bottom:12px;">50 张图纸</div>
+
+      <div class="label" style="margin-bottom:4px;">交付截止日 <span style="color:#999;">(取最早 WBS 截止日)</span></div>
+      <div class="mock-input" style="width:100%;margin-bottom:12px;">2026-08-15</div>
+
+      <div class="label" style="margin-bottom:4px;">金额</div>
+      <div class="mock-input" style="width:100%;margin-bottom:12px;">150,000.00</div>
+    </div>
+  </div>
+
+  <!-- 右侧：WBS 任务选择面板 -->
+  <div class="mockup">
+    <div class="mockup-header">WBS 任务选择器（无责任人的 Level 4 任务）</div>
+    <div class="mockup-body" style="padding:12px;font-size:13px;">
+      <div style="margin-bottom:10px;">
+        <span class="label">项目：</span>
+        <strong>华锦项目 - 乙烯装置</strong>
+      </div>
+      <div style="margin-bottom:10px;color:#888;font-size:12px;">
+        仅显示 <span style="color:#e67e22;font-weight:600;">无责任人</span> 且 <span style="color:#2ecc71;font-weight:600;">未被其他外包关联</span> 的任务
+      </div>
+      
+      <!-- WBS 树 -->
+      <div style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;max-height:400px;overflow-y:auto;">
+        <!-- Level 1 -->
+        <div style="padding:8px 12px;background:#f8f9fa;border-bottom:1px solid #eee;font-weight:600;font-size:13px;color:#1a73e8;">
+          &#x25BC; 阶段一：初步设计
+        </div>
+        <!-- Level 2 -->
+        <div style="padding:6px 12px 6px 24px;background:#fff;border-bottom:1px solid #f0f0f0;font-size:13px;color:#333;">
+          &#x25B6; 工艺设计
+        </div>
+        <div style="padding:6px 12px 6px 24px;background:#fff;border-bottom:1px solid #f0f0f0;font-size:13px;color:#333;">
+          &#x25BC; 管道设计
+        </div>
+        <!-- Level 3 -->
+        <div style="padding:6px 12px 6px 36px;background:#fafafa;border-bottom:1px solid #f0f0f0;font-size:12px;color:#666;">
+          &#x25B6; 工艺管道
+        </div>
+        <!-- Level 4 - selectable tasks -->
+        <div style="padding:6px 12px 6px 48px;background:#fff;border-bottom:1px solid #f0f0f0;font-size:12px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" checked style="accent-color:#1a73e8;">
+          <span style="flex:1;">WK01-03-01 管道平面图设计</span>
+          <span style="font-size:11px;color:#999;">截止: 08-15</span>
+          <span style="background:#fef3e0;color:#b45309;padding:2px 6px;border-radius:4px;font-size:10px;">无责任人</span>
+        </div>
+        <div style="padding:6px 12px 6px 48px;background:#e8f0fe;border-bottom:1px solid #e0e0e0;font-size:12px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" checked style="accent-color:#1a73e8;">
+          <span style="flex:1;">WK01-03-02 管道剖面图设计</span>
+          <span style="font-size:11px;color:#999;">截止: 08-20</span>
+          <span style="background:#fef3e0;color:#b45309;padding:2px 6px;border-radius:4px;font-size:10px;">无责任人</span>
+        </div>
+        <div style="padding:6px 12px 6px 48px;background:#fff;border-bottom:1px solid #f0f0f0;font-size:12px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" style="accent-color:#1a73e8;">
+          <span style="flex:1;">WK01-03-03 管道支架图设计</span>
+          <span style="font-size:11px;color:#999;">截止: 09-01</span>
+          <span style="background:#fef3e0;color:#b45309;padding:2px 6px;border-radius:4px;font-size:10px;">无责任人</span>
+        </div>
+        <div style="padding:6px 12px 6px 48px;background:#fff;border-bottom:1px solid #f0f0f0;font-size:12px;display:flex;align-items:center;gap:8px;opacity:0.5;">
+          <span style="width:16px;text-align:center;">&#x1F512;</span>
+          <span style="flex:1;">WK01-03-04 管道应力分析</span>
+          <span style="font-size:11px;color:#999;">截止: 09-10</span>
+          <span style="background:#e0e0e0;color:#888;padding:2px 6px;border-radius:4px;font-size:10px;">已被关联</span>
+        </div>
+        <!-- Level 1 -->
+        <div style="padding:8px 12px;background:#f8f9fa;border-bottom:1px solid #eee;font-weight:600;font-size:13px;color:#1a73e8;">
+          &#x25B6; 阶段二：施工图设计
+        </div>
+      </div>
+
+      <div style="margin-top:10px;font-size:12px;color:#888;">
+        已选 <strong>2</strong> 个任务，点击表单区域查看自动填充结果
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>交互说明</h3>
+  <ul style="font-size:14px;color:#555;line-height:2;">
+    <li><strong>选择项目后</strong>，右侧自动加载该项目下 <span style="color:#e67e22;">无责任人 + 未被锁定</span> 的 Level 4 WBS 任务</li>
+    <li><strong>多选</strong>：勾选多个 WBS 任务，左侧表单自动填充</li>
+    <li><strong>锁定机制</strong>：已被其他外包关联的任务显示为灰色锁定状态，不可选</li>
+    <li><strong>自动填充</strong>：任务描述 = WBS 任务名拼接，交付截止日 = 取最早日期</li>
+    <li><strong>工作量 & 金额</strong>：需要手动填写（WBS 中无此字段）</li>
+  </ul>
+</div>

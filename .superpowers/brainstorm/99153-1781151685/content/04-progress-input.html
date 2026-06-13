@@ -1,0 +1,47 @@
+<h2>进度更新环节：你的设想是？</h2>
+<p class="subtitle">你选了 AI 全流程管理，但没有选「自动推断进度」，想确认下这个环节</p>
+
+<div class="options">
+  <div class="option" data-choice="progress-a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>保留手动填报进度%</h3>
+      <p>进度%还是人填（目前就有），但 AI 接管其他环节：WBS 生成、状态判断、延误预警、汇总报告。人负责输入核心数据，AI 负责分析判断。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="progress-b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>AI 从日志推断进度</h3>
+      <p>执行人只需写任务日志（自然语言描述做了什么），AI 自动推断完成百分比。人不再需要纠结"到底完成了 65% 还是 70%"。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="progress-c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>AI 建议 + 人确认</h3>
+      <p>AI 从日志推断进度并给出建议值，人看一眼确认或微调即可。既减少人工判断负担，又保留最终控制权。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>补充：关于「实际开始/结束日期」</h3>
+  <p style="color: #888; font-size: 14px;">目前任务有 planStartDate/planEndDate 和 actualStartDate/actualEndDate 两套日期</p>
+  <div class="options">
+    <div class="option" data-choice="date-a" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>保留两套日期</h3>
+        <p>计划日期和实际日期分开，方便对比偏差。实际日期由 AI 根据日志时间自动填入。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="date-b" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>简化为只有计划日期</h3>
+        <p>只要计划日期 + 进度%，偏差通过对比计划日期和 today 来判断。不需要单独维护实际日期。</p>
+      </div>
+    </div>
+  </div>
+</div>

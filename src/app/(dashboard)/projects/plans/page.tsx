@@ -1,781 +1,473 @@
 "use client";
-
-import { useState, useEffect, useCallback } from "react";
-import {
-  Search,
-  Plus,
-  Pencil,
-  Trash2,
-  Eye,
-  Briefcase,
-  Play,
-  CheckCircle,
-  Calendar,
-  ChevronRight,
-} from "lucide-react";
-import Modal from "@/components/Modal";
-import { useAuth } from "@/contexts/AuthContext";
-import { useBatchSelection } from "@/hooks/useBatchSelection";
-import { BatchDeleteBar } from "@/components/BatchDeleteBar";
-import ProjectPicker, { ProjectLeadItem } from "@/components/ProjectPicker";
-import { usePagination } from "@/hooks/usePagination";
+import { useEffect, useState, useRef, useCallback } from "react";
+import Link from "next/link";
 import PaginationBar from "@/components/PaginationBar";
-import { getRowStatusClass } from "@/lib/status-colors";
-import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { usePagination } from "@/hooks/usePagination";
 
-interface Project {
+interface ProjectSummary {
   id: string;
   projectSourceId: string;
+  projectCode: string;
+  sourceRefId: string | null;
   name: string;
-}
-
-interface ProjectPlan {
-  id: string;
-  projectSourceId: string;
-  planType: string;
-  planContent: string;
-  startDate: string;
-  endDate: string;
-  responsibleId: string | null;
-  actualProgress: number;
+  customerName: string;
+  overallProgress: number;
+  isDelayed: boolean;
+  aiStatus: string;
+  taskCount: number;
+  nodeCount: number;
+  delayedCount: number;
+  aheadCount: number;
+  riskLevel: "low" | "medium" | "high";
+  designPhasesList: string[];
+  startDate: string | null;
+  plannedEndDate: string | null;
+  useWbs: boolean;
   status: string;
-  version: number;
-  createdAt: string;
-  updatedAt: string;
-  project: Project;
-  responsiblePerson: { id: string; realName: string } | null;
+  actualStartDate: string | null;
+  actualEndDate: string | null;
 }
 
-interface PlanFormData {
-  projectSourceId: string;
-  planType: string;
-  planContent: string;
-  startDate: string;
-  endDate: string;
-  responsibleId: string;
-  actualProgress: string;
-  status: string;
+interface SummaryData {
+  totalProjects: number;
+  normalProjects: number;
+  aheadProjects: number;
+  delayedProjects: number;
+  projects: ProjectSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
-const emptyForm: PlanFormData = {
-  projectSourceId: "",
-  planType: "",
-  planContent: "",
-  startDate: "",
-  endDate: "",
-  responsibleId: "",
-  actualProgress: "0",
-  status: "未开始",
-};
-
-const statusConfig: Record<string, { color: string; label: string }> = {
-  "未开始": { color: "ios-badge-gray", label: "未开始" },
-  "进行中": { color: "ios-badge-blue", label: "进行中" },
-  "已完成": { color: "ios-badge-green", label: "已完成" },
-  "已取消": { color: "ios-badge-red", label: "已取消" },
-};
-
-const planTypeConfig: Record<string, string> = {
-  "里程碑": "ios-badge-blue",
-  "设计": "ios-badge-green",
-  "采购": "ios-badge-orange",
-};
-
-const progressColor = (value: number) => {
-  if (value >= 80) return "bg-[#78716C]";
-  if (value >= 50) return "bg-[#1C1917]";
-  if (value >= 20) return "bg-[#78716C]";
-  return "bg-[#78716C]";
-};
-
-export default function ProjectPlansPage() {
-  const { user } = useAuth();
-  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
-  const rolePerms = getUserModulePerms(user, "projects.plans");
-  const hasFlow = false;
-  const [plans, setPlans] = useState<ProjectPlan[]>([]);
-  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({});
-  const [loading, setLoading] = useState(true);
-
+export default function WbsDashboardPage() {
+  const [summary, setSummary] = useState<SummaryData | null>(null);
   const [search, setSearch] = useState("");
-  const [filterProject, setFilterProject] = useState("");
-  const [filterPlanType, setFilterPlanType] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const { page, pageSize, setPage, setPageSize, pagination, setPagination } = usePagination({ defaultPageSize: 20 });
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [showModal, setShowModal] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<ProjectPlan | null>(null);
-  const [form, setForm] = useState<PlanFormData>(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState("");
+  // WBS 开关切换
+  const [toggleProject, setToggleProject] = useState<string | null>(null);
+  const [toggling, setToggling] = useState(false);
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
-  const [users, setUsers] = useState<{id: string; username: string; realName: string}[]>([]);
+  // 行内编辑暂存
+  const [editValues, setEditValues] = useState<Record<string, Partial<ProjectSummary>>>({});
 
-  const [detailPlan, setDetailPlan] = useState<ProjectPlan | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<ProjectPlan | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const fetchData = useCallback((q: string, p: number) => {
+    const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
+    if (q) params.set("search", q);
+    fetch(`/api/projects/plans/summary?${params}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setSummary(d.data);
+        setPagination({
+          page: d.data.page,
+          pageSize: d.data.pageSize,
+          total: d.data.total,
+          totalPages: d.data.totalPages,
+        });
+      })
+      .catch(() => {});
+  }, [pageSize, setPagination]);
 
-  const {
-    toggleSelect,
-    selectAll,
-    clearSelection,
-    isAllSelected,
-    isSelected,
-  } = useBatchSelection(plans.map((d) => d.id));
+  useEffect(() => { fetchData(search, page); }, [page]); // eslint-disable-line
 
-  const fetchProjects = useCallback(async () => {
-    try {
-      const res = await fetch("/api/projects?pageSize=200");
-      const json = await res.json();
-      if (res.ok) setProjects(json.data);
-      const leadsRes = await fetch("/api/project-leads?pageSize=200");
-      if (leadsRes.ok) {
-        const lj = await leadsRes.json();
-        setProjectLeads((lj.data || []).filter((l: { currentStatus: string }) => l.currentStatus !== "放弃"));
-      }
-    } catch (err) {
-      console.error("获取项目列表失败:", err);
-    }
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => { setPage(1); fetchData(value, 1); }, 300);
+  };
+
+  useEffect(() => {
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
-  const fetchPlans = useCallback(async () => {
-    setLoading(true);
+  // WBS 开关确认
+  async function confirmToggle() {
+    if (!toggleProject || !summary) return;
+    setToggling(true);
+    const project = summary.projects.find(p => p.projectSourceId === toggleProject);
+    if (!project) { setToggling(false); return; }
+    const newValue = !project.useWbs;
     try {
-      const params = new URLSearchParams();
-      if (search) params.set("search", search);
-      if (filterProject) params.set("projectSourceId", filterProject);
-      if (filterPlanType) params.set("planType", filterPlanType);
-      if (filterStatus) params.set("status", filterStatus);
-      params.set("page", page.toString());
-      params.set("pageSize", pageSize.toString());
-
-      const res = await fetch(`/api/projects/plans?${params}`);
-      const json = await res.json();
-      if (res.ok) {
-        setPlans(json.data);
-        setPagination(json.pagination);
-      }
-    } catch (err) {
-      console.error("获取项目计划列表失败:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [search, filterProject, filterPlanType, filterStatus, page, pageSize]);
-
-  useEffect(() => {
-    fetchProjects();
-    fetch("/api/settings/users").then(res => res.json()).then(json => setUsers(json.data || []));
-  }, [fetchProjects]);
-
-  useEffect(() => {
-    fetchPlans();
-  }, [fetchPlans]);
-
-  const handleOpenCreate = () => {
-    setEditingPlan(null);
-    setForm(emptyForm);
-    setFormError("");
-    setShowModal(true);
-  };
-
-  const handleOpenEdit = (plan: ProjectPlan) => {
-    setEditingPlan(plan);
-    setForm({
-      projectSourceId: plan.projectSourceId,
-      planType: plan.planType,
-      planContent: plan.planContent,
-      startDate: plan.startDate ? plan.startDate.split("T")[0] : "",
-      endDate: plan.endDate ? plan.endDate.split("T")[0] : "",
-      responsibleId: plan.responsibleId || "",
-      actualProgress: String(plan.actualProgress),
-      status: plan.status,
-    });
-    setFormError("");
-    setShowModal(true);
-  };
-
-  const handleSubmit = async () => {
-    if (!form.projectSourceId) {
-      setFormError("请选择项目");
-      return;
-    }
-    if (!form.planType) {
-      setFormError("请选择计划类型");
-      return;
-    }
-    if (!form.planContent.trim()) {
-      setFormError("计划内容不能为空");
-      return;
-    }
-    if (!form.startDate) {
-      setFormError("请选择开始日期");
-      return;
-    }
-    if (!form.endDate) {
-      setFormError("请选择结束日期");
-      return;
-    }
-
-    setSaving(true);
-    setFormError("");
-
-    try {
-      const url = editingPlan
-        ? `/api/projects/plans/${editingPlan.id}`
-        : "/api/projects/plans";
-      const method = editingPlan ? "PUT" : "POST";
-
-      const body: Record<string, unknown> = { ...form };
-      if (!editingPlan) {
-        delete body.actualProgress;
-      }
-
-      const res = await fetch(url, {
-        method,
+      await fetch(`/api/projects/${project.id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ useWbs: newValue }),
       });
-
-      const json = await res.json();
-
-      if (res.ok) {
-        setShowModal(false);
-        fetchPlans();
-      } else {
-        setFormError(json.error || "操作失败");
-      }
-    } catch {
-      setFormError("网络错误，请重试");
+      setToggleProject(null);
+      fetchData(search, page);
     } finally {
-      setSaving(false);
+      setToggling(false);
     }
-  };
+  }
 
-  const handleViewDetail = async (plan: ProjectPlan) => {
-    try {
-      const res = await fetch(`/api/projects/plans/${plan.id}`);
-      const json = await res.json();
-      if (res.ok) {
-        setDetailPlan(json.data);
-      }
-    } catch {
-      setDetailPlan(plan);
-    }
-  };
+  // 行内编辑保存
+  async function saveField(projectId: string, projectSourceId: string, field: string, value: unknown) {
+    await fetch(`/api/projects/${projectId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [field]: value }),
+    });
+    fetchData(search, page);
+  }
 
-  const handleDelete = async () => {
-    if (!deleteConfirm) return;
-    setDeleting(true);
-    try {
-      const res = await fetch(`/api/projects/plans/${deleteConfirm.id}`, { method: "DELETE" });
-      if (res.ok) {
-        setDeleteConfirm(null);
-        fetchPlans();
-      } else {
-        const json = await res.json();
-        alert(json.error || "删除失败");
-        setDeleteConfirm(null);
-      }
-    } catch {
-      alert("网络错误");
-      setDeleteConfirm(null);
-    } finally {
-      setDeleting(false);
-    }
-  };
+  if (!summary) return <div style={{ padding: 24 }}>加载中...</div>;
 
-  const updateForm = (field: keyof PlanFormData, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (formError) setFormError("");
-  };
+  const riskEmoji: Record<string, string> = { low: "🟢", medium: "🟡", high: "🔴" };
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return "-";
-    const d = new Date(dateStr);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  };
-
-  const stats = {
-    total: pagination?.total ?? 0,
-    inProgress: plans.filter((p) => p.status === "进行中").length,
-    completed: plans.filter((p) => p.status === "已完成").length,
+  const inputStyle: React.CSSProperties = {
+    padding: "4px 6px", border: "1px solid #D0D5DD", borderRadius: 4, fontSize: 12, textAlign: "center",
+    background: "#fff", outline: "none",
   };
 
   return (
-    <>
-      <div className="page-header">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1>项目计划</h1>
-            <p>管理项目计划，跟踪里程碑、设计与采购进度</p>
-          </div>
-          <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
-            <Plus className="w-4 h-4" />
-            新建计划
-          </button>
-        </div>
+    <div style={{ background: "#F0F1F3", minHeight: "100vh", padding: 24 }}>
+      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>项目 WBS 计划与进度</h2>
+
+      {/* 4 张统计卡片 */}
+      <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
+        <StatCard label="项目总数" value={summary.totalProjects} color="#44403C" />
+        <StatCard label="🚀 提前" value={summary.aheadProjects} color="#7DA88E" />
+        <StatCard label="✅ 正常" value={summary.normalProjects} color="#57534E" />
+        <StatCard label="⚠️ 延误" value={summary.delayedProjects} color="#C47676" />
       </div>
 
-      <div className="grid grid-cols-3 gap-5 mb-6">
-        <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-[#1C1917]" />
-          </div>
-          <div>
-            <p className="text-[13px] text-[#78716C]">计划总数</p>
-            <p className="text-[24px] font-bold text-[#1C1917] leading-tight">{stats.total}</p>
-          </div>
-        </div>
-        <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#78716C]/10 flex items-center justify-center">
-            <Play className="w-5 h-5 text-[#78716C]" />
-          </div>
-          <div>
-            <p className="text-[13px] text-[#78716C]">进行中</p>
-            <p className="text-[24px] font-bold text-[#78716C] leading-tight">{stats.inProgress}</p>
-          </div>
-        </div>
-        <div className="bento-card-static flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-[#78716C]/10 flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-[#78716C]" />
-          </div>
-          <div>
-            <p className="text-[13px] text-[#78716C]">已完成</p>
-            <p className="text-[24px] font-bold text-[#78716C] leading-tight">{stats.completed}</p>
-          </div>
-        </div>
+      {/* 搜索框 */}
+      <div style={{ marginBottom: 16 }}>
+        <input
+          type="text"
+          placeholder="搜索项目编号 / 项目名称 / 甲方名称…"
+          value={search}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          style={{
+            width: "100%", maxWidth: 360, padding: "8px 12px", fontSize: 13,
+            border: "1px solid #D0D5DD", borderRadius: 0, outline: "none",
+            color: "#44403C", background: "#fff",
+          }}
+          onFocus={(e) => { e.target.style.borderColor = "#4A6FA5"; }}
+          onBlur={(e) => { e.target.style.borderColor = "#D0D5DD"; }}
+        />
       </div>
 
-      <div className="bento-card-static">
-        <div className="filter-bar">
-          <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
-            <input
-              type="text"
-              className="ios-input pl-10"
-              placeholder="搜索计划内容..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
+      {/* 项目列表 */}
+      <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #DFE3E8" }}>
+        <div style={{ display: "flex", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid #DFE3E8" }}>
+          <span style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>项目列表</span>
+          <span style={{ fontSize: 13, color: "#8C95A3" }}>共 {summary.total} 个项目</span>
+        </div>
+
+        {/* 表头 */}
+        <div style={{
+          display: "flex", padding: "10px 16px", borderBottom: "1px solid #DFE3E8",
+          fontSize: 12, fontWeight: 500, color: "#8C95A3", background: "#FAFBFC",
+        }}>
+          <span style={{ width: 100 }}>项目编号</span>
+          <span style={{ width: 180 }}>项目名称</span>
+          <span style={{ width: 140 }}>甲方</span>
+          <span style={{ width: 140 }}>设计阶段</span>
+          <span style={{ width: 160, textAlign: "center" }}>进度</span>
+          <span style={{ width: 200, textAlign: "center" }}>实际时间</span>
+          <span style={{ width: 80, textAlign: "center" }}>状态</span>
+          <span style={{ width: 50, textAlign: "center" }}>风险</span>
+          <span style={{ width: 60, textAlign: "center" }}>WBS</span>
+        </div>
+
+        {/* 行 */}
+        {summary.projects?.map((p) => {
+          const ev = editValues[p.projectSourceId] || {};
+          return (
+            <div
+              key={p.projectSourceId}
+              style={{
+                display: "flex", alignItems: "center", padding: "10px 16px",
+                borderBottom: "1px solid #F5F5F4",
+                background: p.isDelayed ? "#FFF5F5" : "transparent",
               }}
-            />
-          </div>
+            >
+              {/* 项目编号 */}
+              <span style={{ width: 100, fontSize: 13, color: "#57534E" }}>
+                {p.projectCode || p.sourceRefId || "-"}
+              </span>
 
-          <select
-            className="ios-select w-[180px]"
-            value={filterProject}
-            onChange={(e) => {
-              setFilterProject(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">全部项目</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.projectSourceId}>
-                {p.projectSourceId} - {p.name}
-              </option>
-            ))}
-          </select>
+              {/* 项目名称 — WBS ON 可点击跳转 */}
+              {p.useWbs ? (
+                <Link href={`/projects/plans/${p.projectSourceId}`} style={{
+                  width: 180, fontWeight: 500, fontSize: 13, color: "#1C1917",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  textDecoration: "none",
+                }}>
+                  {p.name}
+                </Link>
+              ) : (
+                <span style={{
+                  width: 180, fontWeight: 500, fontSize: 13, color: "#1C1917",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {p.name}
+                </span>
+              )}
 
-          <select
-            className="ios-select w-[130px]"
-            value={filterPlanType}
-            onChange={(e) => {
-              setFilterPlanType(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">全部类型</option>
-            <option value="里程碑">里程碑</option>
-            <option value="设计">设计</option>
-            <option value="采购">采购</option>
-          </select>
+              {/* 甲方 */}
+              <span style={{
+                width: 140, fontSize: 13, color: "#57534E",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                lineHeight: "1.4",
+                wordBreak: "break-all",
+              }} title={p.customerName || ""}>
+                {p.customerName || "-"}
+              </span>
 
-          <select
-            className="ios-select w-[130px]"
-            value={filterStatus}
-            onChange={(e) => {
-              setFilterStatus(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">全部状态</option>
-            <option value="未开始">未开始</option>
-            <option value="进行中">进行中</option>
-            <option value="已完成">已完成</option>
-            <option value="已取消">已取消</option>
-          </select>
+              {/* 设计阶段 */}
+              <span style={{ width: 180, display: "flex", gap: 4, flexWrap: "wrap" }}>
+                {(p.designPhasesList || []).map((phase) => (
+                  <span key={phase} style={{
+                    padding: "2px 8px", fontSize: 11, borderRadius: 4,
+                    background: "#EBF0F7", color: "#4A6FA5", whiteSpace: "nowrap",
+                  }}>
+                    {phase}
+                  </span>
+                ))}
+              </span>
 
-          <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 条计划
-          </div>
-        </div>
+              {/* 进度 */}
+              <span style={{ width: 160, textAlign: "center", fontSize: 13 }}>
+                {p.useWbs ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    <span style={{
+                      width: 100, height: 8, background: "#E8ECF1", borderRadius: 4,
+                      display: "inline-block", overflow: "hidden",
+                    }}>
+                      <span style={{
+                        display: "block", height: "100%",
+                        width: `${p.overallProgress ?? 0}%`,
+                        background: p.isDelayed ? "#C47676" : "#7DA88E",
+                        borderRadius: 3,
+                      }} />
+                    </span>
+                    <span style={{ fontSize: 12, color: "#555" }}>{p.overallProgress ?? 0}%</span>
+                  </span>
+                ) : (
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <input
+                      type="number" min={0} max={100}
+                      value={ev.overallProgress ?? p.overallProgress ?? 0}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        const v = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+                        setEditValues(prev => ({ ...prev, [p.projectSourceId]: { ...prev[p.projectSourceId], overallProgress: v } }));
+                      }}
+                      onBlur={() => {
+                        const v = ev.overallProgress ?? p.overallProgress ?? 0;
+                        if (v !== p.overallProgress) saveField(p.id, p.projectSourceId, "overallProgress", v);
+                      }}
+                      style={{ ...inputStyle, width: 55 }}
+                    />
+                    <span style={{ fontSize: 12, color: "#555" }}>%</span>
+                  </div>
+                )}
+              </span>
 
-        {loading ? (
-          <div className="empty-state">
-            <div className="w-10 h-10 border-2 border-[#1C1917] border-t-transparent rounded-full animate-spin" />
-            <p>加载中...</p>
-          </div>
-        ) : plans.length === 0 ? (
-          <div className="empty-state">
-            <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
-              <Calendar className="w-8 h-8 text-[#78716C]" />
+              {/* 实际时间 */}
+              <span style={{ width: 200, textAlign: "center", fontSize: 12, color: "#57534E" }}>
+                {p.useWbs ? (
+                  <span>
+                    {p.actualStartDate || p.actualEndDate
+                      ? `${p.actualStartDate ? p.actualStartDate.slice(0, 10) : "—"} ~ ${p.actualEndDate ? p.actualEndDate.slice(0, 10) : "—"}`
+                      : "-"}
+                  </span>
+                ) : (
+                  <div style={{ display: "flex", gap: 2, alignItems: "center", justifyContent: "center" }}
+                    onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="date"
+                      value={ev.actualStartDate ?? (p.actualStartDate?.slice(0, 10) || "")}
+                      onChange={(e) => {
+                        setEditValues(prev => ({ ...prev, [p.projectSourceId]: { ...prev[p.projectSourceId], actualStartDate: e.target.value } }));
+                      }}
+                      onBlur={() => {
+                        const v = ev.actualStartDate ?? (p.actualStartDate?.slice(0, 10) || "");
+                        saveField(p.id, p.projectSourceId, "actualStartDate", v || null);
+                      }}
+                      style={{ ...inputStyle, width: 90, fontSize: 11 }}
+                    />
+                    <span style={{ color: "#8C95A3", fontSize: 11 }}>~</span>
+                    <input
+                      type="date"
+                      value={ev.actualEndDate ?? (p.actualEndDate?.slice(0, 10) || "")}
+                      onChange={(e) => {
+                        setEditValues(prev => ({ ...prev, [p.projectSourceId]: { ...prev[p.projectSourceId], actualEndDate: e.target.value } }));
+                      }}
+                      onBlur={() => {
+                        const v = ev.actualEndDate ?? (p.actualEndDate?.slice(0, 10) || "");
+                        saveField(p.id, p.projectSourceId, "actualEndDate", v || null);
+                      }}
+                      style={{ ...inputStyle, width: 90, fontSize: 11 }}
+                    />
+                  </div>
+                )}
+              </span>
+
+              {/* 状态 */}
+              <span style={{ width: 80, textAlign: "center" }}>
+                {p.useWbs ? (
+                  (() => {
+                    const isComplete = (p.overallProgress ?? 0) >= 100;
+                    let statusText: string;
+                    let badgeStyle: React.CSSProperties;
+                    if (isComplete) {
+                      statusText = "已完成";
+                      badgeStyle = { color: "#5A7A9A", border: "1px solid #C0D0E0", background: "#F5F8FB" };
+                    } else if (p.delayedCount > 0) {
+                      statusText = "延误";
+                      badgeStyle = { color: "#C47676", border: "1px solid #E8C8C8", background: "#FDF6F6" };
+                    } else {
+                      statusText = "正常";
+                      badgeStyle = { color: "#5A8A6A", border: "1px solid #B8D4C0", background: "#F6FAF7" };
+                    }
+                    return (
+                      <span style={{
+                        ...badgeStyle, padding: "3px 8px", fontSize: 11, borderRadius: 4, display: "inline-block",
+                      }}>
+                        {statusText}
+                      </span>
+                    );
+                  })()
+                ) : (
+                  <select
+                    value={ev.status ?? p.status ?? "执行"}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      setEditValues(prev => ({ ...prev, [p.projectSourceId]: { ...prev[p.projectSourceId], status: e.target.value } }));
+                      saveField(p.id, p.projectSourceId, "status", e.target.value);
+                    }}
+                    style={{ ...inputStyle, padding: "3px 4px" }}
+                  >
+                    <option value="执行">执行</option>
+                    <option value="暂停">暂停</option>
+                    <option value="关闭">关闭</option>
+                  </select>
+                )}
+              </span>
+
+              {/* 风险 */}
+              <span style={{ width: 50, textAlign: "center" }}>
+                {p.useWbs ? (
+                  <span style={{ fontSize: 16 }}>{riskEmoji[p.riskLevel] || "🟢"}</span>
+                ) : (
+                  <select
+                    value={ev.riskLevel ?? p.riskLevel ?? "low"}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      setEditValues(prev => ({ ...prev, [p.projectSourceId]: { ...prev[p.projectSourceId], riskLevel: e.target.value as "low" | "medium" | "high" } }));
+                      saveField(p.id, p.projectSourceId, "riskLevel", e.target.value);
+                    }}
+                    style={{ ...inputStyle, padding: "3px 2px", fontSize: 11 }}
+                  >
+                    <option value="low">🟢低</option>
+                    <option value="medium">🟡中</option>
+                    <option value="high">🔴高</option>
+                  </select>
+                )}
+              </span>
+
+              {/* WBS 开关 */}
+              <span style={{ width: 60, textAlign: "center" }}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setToggleProject(p.projectSourceId); }}
+                  style={{
+                    width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
+                    background: p.useWbs ? "#4A6FA5" : "#D0D5DD",
+                    position: "relative", transition: "background 0.2s",
+                  }}
+                >
+                  <span style={{
+                    position: "absolute", top: 2, width: 18, height: 18, borderRadius: "50%",
+                    background: "#fff", transition: "left 0.2s",
+                    left: p.useWbs ? 20 : 2,
+                  }} />
+                </button>
+              </span>
             </div>
-            <p>{search || filterProject || filterPlanType || filterStatus ? "没有匹配的项目计划" : "暂无计划，点击右上角新建"}</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="ios-table">
-              <thead>
-                <tr>
-                  {isAdminUser && (
-                    <th className="w-10">
-                      <input
-                        type="checkbox"
-                        className="ios-checkbox"
-                        checked={isAllSelected}
-                        onChange={() => isAllSelected ? clearSelection() : selectAll()}
-                      />
-                    </th>
-                  )}
-                  <th>项目源ID</th>
-                  <th>项目名称</th>
-                  <th>计划类型</th>
-                  <th>计划内容</th>
-                  <th>开始日期</th>
-                  <th>结束日期</th>
-                  <th>负责人</th>
-                  <th>进度</th>
-                  <th>状态</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {plans.map((plan) => {
-                  const sc = statusConfig[plan.status] || statusConfig["未开始"];
-                  const tc = planTypeConfig[plan.planType] || "ios-badge-gray";
-                  return (
-                    <tr key={plan.id} className={isSelected(plan.id) ? "bg-[#1C1917]/5" : ""}>
-                      {isAdminUser && (
-                        <td className="w-10">
-                          <input
-                            type="checkbox"
-                            className="ios-checkbox"
-                            checked={isSelected(plan.id)}
-                            onChange={() => toggleSelect(plan.id)}
-                          />
-                        </td>
-                      )}
-                      <td>
-                        <span className="font-mono text-[13px] font-semibold text-[#1C1917]">
-                          {plan.projectSourceId}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="font-semibold">{plan.project?.name || "-"}</span>
-                      </td>
-                      <td>
-                        <span className={`ios-badge ${tc}`}>{plan.planType}</span>
-                      </td>
-                      <td>
-                        <span className="text-[13px]">
-                          {plan.planContent.length > 50
-                            ? plan.planContent.slice(0, 50) + "..."
-                            : plan.planContent}
-                        </span>
-                      </td>
-                      <td className="text-[#78716C]">{formatDate(plan.startDate)}</td>
-                      <td className="text-[#78716C]">{formatDate(plan.endDate)}</td>
-                      <td>{plan.responsiblePerson?.realName || "-"}</td>
-                      <td>
-                        <div className="flex items-center gap-2 min-w-[80px]">
-                          <div className="flex-1 h-2 rounded-full bg-[#F5F5F4] overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${progressColor(plan.actualProgress)}`}
-                              style={{ width: `${Math.min(100, Math.max(0, plan.actualProgress))}%` }}
-                            />
-                          </div>
-                          <span className="text-[12px] text-[#78716C] w-8 text-right">{plan.actualProgress}%</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`ios-badge ${sc.color}`}>{sc.label}</span>
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-1">
-                          <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(plan)}>
-                            <Eye className="w-3.5 h-3.5" />
-                            详情
-                          </button>
-                          {canEditFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
-                            <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(plan)}>
-                              <Pencil className="w-3.5 h-3.5" />
-                              编辑
-                            </button>
-                          )}
-                          {canDeleteFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
-                            <button
-                              className="ios-btn ios-btn-ghost ios-btn-sm text-[#78716C]!"
-                              onClick={() => setDeleteConfirm(plan)}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          );
+        })}
 
-            <PaginationBar pagination={pagination} onPageChange={setPage} onPageSizeChange={setPageSize} />
+        {(!summary.projects || summary.projects.length === 0) && (
+          <div style={{ padding: 32, textAlign: "center", color: "#A8A29E" }}>
+            {search ? "未找到匹配的项目" : "暂无项目数据"}
           </div>
         )}
       </div>
 
-      {isAdminUser && (
-        <BatchDeleteBar
-          businessType="project_plan"
-          selectedIds={plans.filter((d) => isSelected(d.id)).map((d) => d.id)}
-          onDeleteSuccess={fetchPlans}
-          onClear={clearSelection}
-        />
+      {/* 分页 */}
+      {summary.total > 0 && (
+        <div style={{ padding: "12px 16px", borderTop: "1px solid #DFE3E8" }}>
+          <PaginationBar
+            pagination={pagination}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
+        </div>
       )}
 
-      <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title={editingPlan ? "编辑项目计划" : "新建项目计划"}
-        maxWidth="640px"
-      >
-        <div className="space-y-4">
-          {formError && (
-            <div className="p-3 rounded-xl bg-[#78716C]/8 text-[#78716C] text-[13px] font-medium">
-              {formError}
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <ProjectPicker
-                projectLeads={projectLeads}
-                value={form.projectSourceId}
-                onChange={(id) => updateForm("projectSourceId", id)}
-                label="项目"
-                placeholder="请选择项目"
-                required
-                showCustomer={false}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                计划类型 <span className="text-[#78716C]">*</span>
-              </label>
-              <select
-                className="ios-select"
-                value={form.planType}
-                onChange={(e) => updateForm("planType", e.target.value)}
-              >
-                <option value="">请选择类型</option>
-                <option value="里程碑">里程碑</option>
-                <option value="设计">设计</option>
-                <option value="采购">采购</option>
-              </select>
-            </div>
-
-            <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                计划内容 <span className="text-[#78716C]">*</span>
-              </label>
-              <textarea
-                className="ios-input min-h-[80px] resize-y"
-                placeholder="请输入计划内容"
-                value={form.planContent}
-                onChange={(e) => updateForm("planContent", e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                开始日期 <span className="text-[#78716C]">*</span>
-              </label>
-              <div className="relative">
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
-                <input
-                  type="date"
-                  className="ios-input pl-10"
-                  value={form.startDate}
-                  onChange={(e) => updateForm("startDate", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                结束日期 <span className="text-[#78716C]">*</span>
-              </label>
-              <div className="relative">
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
-                <input
-                  type="date"
-                  className="ios-input pl-10"
-                  value={form.endDate}
-                  onChange={(e) => updateForm("endDate", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">负责人</label>
-              <select
-                className="ios-select"
-                value={form.responsibleId}
-                onChange={(e) => updateForm("responsibleId", e.target.value)}
-              >
-                <option value="">请选择负责人</option>
-                {users.map(u => <option key={u.id} value={u.id}>{u.realName}</option>)}
-              </select>
-            </div>
-
-            {editingPlan && (
-              <div>
-                <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">进度 (%)</label>
-                <input
-                  type="number"
-                  className="ios-input"
-                  min="0"
-                  max="100"
-                  placeholder="0-100"
-                  value={form.actualProgress}
-                  onChange={(e) => updateForm("actualProgress", e.target.value)}
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">状态</label>
-              <select
-                className="ios-select"
-                value={form.status}
-                onChange={(e) => updateForm("status", e.target.value)}
-              >
-                <option value="未开始">未开始</option>
-                <option value="进行中">进行中</option>
-                <option value="已完成">已完成</option>
-                <option value="已取消">已取消</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F5F5F4] mt-2">
-            <button className="ios-btn ios-btn-secondary" onClick={() => setShowModal(false)}>取消</button>
-            <button className="ios-btn ios-btn-primary" onClick={handleSubmit} disabled={saving}>
-              {saving ? "保存中..." : editingPlan ? "保存修改" : "创建计划"}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={!!detailPlan}
-        onClose={() => setDetailPlan(null)}
-        title="项目计划详情"
-        maxWidth="680px"
-      >
-        {detailPlan && (
-          <div className="space-y-5">
-            <div className="flex items-center gap-3 pb-4 border-b border-[#F5F5F4]">
-              <div className="w-12 h-12 rounded-2xl bg-[#1C1917]/10 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-[#1C1917]" />
-              </div>
-              <div>
-                <p className="text-[17px] font-bold text-[#1C1917]">{detailPlan.project?.name || "-"}</p>
-                <p className="text-[13px] text-[#1C1917] font-mono font-semibold">{detailPlan.projectSourceId}</p>
-              </div>
-              <div className="ml-auto flex items-center gap-2">
-                <span className={`ios-badge ${planTypeConfig[detailPlan.planType] || "ios-badge-gray"}`}>
-                  {detailPlan.planType}
-                </span>
-                <span className={`ios-badge ${statusConfig[detailPlan.status]?.color || "ios-badge-gray"}`}>
-                  {detailPlan.status}
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-[12px] text-[#78716C] mb-1">计划内容</p>
-              <p className="text-[14px] text-[#1C1917] leading-relaxed">{detailPlan.planContent}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">开始日期</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailPlan.startDate)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">结束日期</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailPlan.endDate)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">负责人</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{detailPlan.responsiblePerson?.realName || "-"}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">版本</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">v{detailPlan.version}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">创建时间</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailPlan.createdAt)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">更新时间</p>
-                <p className="text-[14px] font-semibold text-[#1C1917]">{formatDate(detailPlan.updatedAt)}</p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#FAFAF9]">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[12px] text-[#78716C]">实际进度</p>
-                <p className="text-[14px] font-bold text-[#1C1917]">{detailPlan.actualProgress}%</p>
-              </div>
-              <div className="h-3 rounded-full bg-[#E7E5E4] overflow-hidden">
-                <div
-                  className={`h-full rounded-full ${progressColor(detailPlan.actualProgress)}`}
-                  style={{ width: `${Math.min(100, Math.max(0, detailPlan.actualProgress))}%` }}
-                />
+      {/* WBS 切换确认弹窗 */}
+      {toggleProject && (() => {
+        const project = summary.projects.find(p => p.projectSourceId === toggleProject);
+        const newValue = project ? !project.useWbs : true;
+        return (
+          <div style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)",
+            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100,
+          }}>
+            <div style={{ background: "#fff", padding: 24, minWidth: 380, maxWidth: 480 }}>
+              <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 600 }}>切换 WBS 模式</h3>
+              <p style={{ fontSize: 14, color: "#57534E", marginBottom: 8 }}>
+                {newValue
+                  ? "开启 WBS 后，将通过 WBS 节点管理项目进度。之前手动填写的进度/时间/状态/风险数据将被清除。"
+                  : "关闭 WBS 后，可在列表中直接编辑进度、实际时间、状态和风险。已有的 WBS 节点数据将被隐藏（重新开启后可恢复）。"}
+              </p>
+              <p style={{ fontSize: 13, color: "#8C95A3", marginBottom: 20 }}>
+                项目：{project?.name || ""}
+              </p>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
+                <button
+                  onClick={() => setToggleProject(null)}
+                  disabled={toggling}
+                  style={{
+                    padding: "8px 20px", borderRadius: 0, border: "1px solid #D6D3D1",
+                    background: "#fff", cursor: "pointer", fontSize: 14,
+                  }}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={confirmToggle}
+                  disabled={toggling}
+                  style={{
+                    padding: "8px 20px", borderRadius: 0, border: "none",
+                    background: "#4A6FA5", color: "#fff", cursor: "pointer", fontWeight: 500, fontSize: 14,
+                  }}
+                >
+                  {toggling ? "切换中..." : "确认"}
+                </button>
               </div>
             </div>
           </div>
-        )}
-      </Modal>
+        );
+      })()}
+    </div>
+  );
+}
 
-      <Modal
-        isOpen={!!deleteConfirm}
-        onClose={() => setDeleteConfirm(null)}
-        title="确认删除"
-        maxWidth="400px"
-      >
-        <div className="text-center">
-          <div className="w-14 h-14 rounded-full bg-[#78716C]/10 flex items-center justify-center mx-auto mb-4">
-            <Trash2 className="w-7 h-7 text-[#78716C]" />
-          </div>
-          <p className="text-[15px] text-[#1C1917] mb-1">
-            确定要删除计划 <span className="font-semibold">{deleteConfirm?.projectSourceId}</span> 吗？
-          </p>
-          <p className="text-[13px] text-[#78716C] mb-6">此操作不可撤销</p>
-          <div className="flex justify-center gap-3">
-            <button className="ios-btn ios-btn-secondary" onClick={() => setDeleteConfirm(null)}>取消</button>
-            <button className="ios-btn ios-btn-danger" onClick={handleDelete} disabled={deleting}>
-              {deleting ? "删除中..." : "确认删除"}
-            </button>
-          </div>
-        </div>
-      </Modal>
-    </>
+function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div style={{ flex: 1, background: "#fff", borderRadius: 0, border: "1px solid #DFE3E8", padding: "16px 20px" }}>
+      <div style={{ fontSize: 13, color: "#78716C", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 28, fontWeight: 700, color }}>{value}</div>
+    </div>
   );
 }

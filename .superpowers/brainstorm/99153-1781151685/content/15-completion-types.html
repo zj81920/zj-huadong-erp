@@ -1,0 +1,56 @@
+<h2>补充：完成的三种情况</h2>
+<p class="subtitle">同样是 100%，含金量不同</p>
+
+<div class="section">
+  <h3>完成状态的细分</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+    <div style="background:#e8f5e9;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">🎉</div>
+      <strong>提前完成</strong>
+      <p style="font-size:12px;margin:4px 0;color:#666">progress=100<br>且 today &lt; planEndDate<br><strong style="color:#2e7d32">在计划结束日之前完成</strong></p>
+    </div>
+    <div style="background:#f3e5f5;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">🏁</div>
+      <strong>按期完成</strong>
+      <p style="font-size:12px;margin:4px 0;color:#666">progress=100<br>且 today ≈ planEndDate<br><strong style="color:#6a1b9a">刚好在计划节点完成</strong></p>
+    </div>
+    <div style="background:#fff3e0;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">⚠️</div>
+      <strong>超期完成</strong>
+      <p style="font-size:12px;margin:4px 0;color:#666">progress=100<br>且 today > planEndDate<br><strong style="color:#c62828">晚了但还是完成了</strong></p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>更新后的完整状态（5档）</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:#f5f5f5"><th style="padding:8px;border:1px solid #ddd">状态</th><th style="padding:8px;border:1px solid #ddd">条件</th><th style="padding:8px;border:1px solid #ddd">信号</th></tr></thead>
+    <tbody>
+      <tr style="background:#e8f5e9"><td style="padding:8px;border:1px solid #ddd">🚀 提前</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">进行中 & progress ≥ planPct</td><td style="padding:8px;border:1px solid #ddd;text-align:center">积极</td></tr>
+      <tr style="background:#e8f5e9"><td style="padding:8px;border:1px solid #ddd">🎉 提前完成</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">progress=100 & today < planEndDate</td><td style="padding:8px;border:1px solid #ddd;text-align:center">积极</td></tr>
+      <tr style="background:#e8f5e9"><td style="padding:8px;border:1px solid #ddd">✅ 正常</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">未开始且未到计划日 / 进行中 & progress ≈ planPct</td><td style="padding:8px;border:1px solid #ddd;text-align:center">中性</td></tr>
+      <tr style="background:#f3e5f5"><td style="padding:8px;border:1px solid #ddd">🏁 按期完成</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">progress=100 & today ≈ planEndDate</td><td style="padding:8px;border:1px solid #ddd;text-align:center">中性</td></tr>
+      <tr style="background:#fff3e0"><td style="padding:8px;border:1px solid #ddd">⚠️ 延误</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">进行中 & progress < planPct</td><td style="padding:8px;border:1px solid #ddd;text-align:center">警告</td></tr>
+      <tr style="background:#fff3e0"><td style="padding:8px;border:1px solid #ddd">⚠️ 超期完成</td><td style="padding:8px;border:1px solid #ddd;font-size:12px">progress=100 & today > planEndDate</td><td style="padding:8px;border:1px solid #ddd;text-align:center">警告</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>报表中也体现积极信号</h3>
+  <div style="background:#e8f5e9;padding:12px;border-radius:6px;font-size:13px">
+    <strong>本周亮点 ✨</strong>
+    <p style="margin:4px 0">🎉 设备布置图 <strong>提前 5 天完成</strong>（工艺装置区·工艺）</p>
+    <p style="margin:4px 0">🎉 基础平面图 <strong>提前 3 天完成</strong>（公用工程·结构）</p>
+  </div>
+  <div style="margin-top:8px;background:#fff3e0;padding:12px;border-radius:6px;font-size:13px">
+    <strong>本周预警 ⚠️</strong>
+    <p style="margin:4px 0">⚠️ PID图绘制 <strong>延误约30天</strong>（工艺装置区·工艺）</p>
+    <p style="margin:4px 0">⚠️ 电缆敷设图 <strong>超期5天完成</strong>（公用工程·电气）</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>这样积极信号和风险都体现了吗？</h3>
+</div>

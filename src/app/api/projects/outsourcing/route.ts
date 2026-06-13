@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       amount,
       acceptanceStatus,
       approvalStatus,
+      wbsItems,
     } = body;
 
     if (!projectSourceId) {
@@ -94,13 +95,54 @@ export async function POST(request: NextRequest) {
     if (!resolvedTargetName) {
       return NextResponse.json({ error: "外包对象名称不能为空" }, { status: 400 });
     }
-    if (!taskDescription || !taskDescription.trim()) {
+    // 根据 wbsItems 自动计算汇总值
+    let computedDescription = taskDescription?.trim() || "";
+    let computedAmount = amount !== undefined && amount !== null ? parseFloat(amount) : 0;
+    let computedDeadline = deliveryDeadline ? new Date(deliveryDeadline) : null;
+
+    if (Array.isArray(wbsItems) && wbsItems.length > 0) {
+      const wbsNodeIds = wbsItems.map((item: Record<string, unknown>) => item.wbsNodeId as string);
+      const wbsNodes = await prisma.projectWbsNode.findMany({
+        where: { id: { in: wbsNodeIds } },
+        select: { id: true, name: true, planEndDate: true },
+      });
+      const nodeMap = new Map(wbsNodes.map((n) => [n.id, n]));
+
+      // 任务描述：WBS 任务名拼接
+      if (!computedDescription) {
+        computedDescription = wbsItems
+          .map((item: Record<string, unknown>) => nodeMap.get(item.wbsNodeId as string)?.name || "")
+          .filter(Boolean)
+          .join(" / ");
+      }
+
+      // 金额：汇总 subtotal
+      if (!amount && amount !== 0) {
+        computedAmount = wbsItems.reduce((sum: number, item: Record<string, unknown>) => {
+          const wl = parseFloat(String(item.workload)) || 0;
+          const up = parseFloat(String(item.unitPrice)) || 0;
+          return sum + wl * up;
+        }, 0);
+      }
+
+      // 截止日：取最早 planEndDate
+      if (!deliveryDeadline && wbsNodes.length > 0) {
+        const dates = wbsNodes
+          .map((n) => n.planEndDate)
+          .filter((d): d is Date => d !== null);
+        if (dates.length > 0) {
+          computedDeadline = new Date(Math.min(...dates.map((d) => d.getTime())));
+        }
+      }
+    }
+
+    if (!computedDescription) {
       return NextResponse.json({ error: "任务描述不能为空" }, { status: 400 });
     }
-    if (!deliveryDeadline) {
+    if (!computedDeadline) {
       return NextResponse.json({ error: "交付截止日期不能为空" }, { status: 400 });
     }
-    if (amount === undefined || amount === null) {
+    if (computedAmount === 0 && (!wbsItems || wbsItems.length === 0)) {
       return NextResponse.json({ error: "金额不能为空" }, { status: 400 });
     }
 
@@ -120,10 +162,10 @@ export async function POST(request: NextRequest) {
         targetName: resolvedTargetName,
         supplierId: supplierId || null,
         contractId: contractId || null,
-        taskDescription: taskDescription.trim(),
+        taskDescription: computedDescription,
         workload: workload?.trim() || null,
-        deliveryDeadline: new Date(deliveryDeadline),
-        amount: parseFloat(amount),
+        deliveryDeadline: computedDeadline,
+        amount: computedAmount,
         acceptanceStatus: acceptanceStatus || "未验收",
         approvalStatus: approvalStatus || "草稿",
         approvalInstanceId: body.approvalInstanceId || null,

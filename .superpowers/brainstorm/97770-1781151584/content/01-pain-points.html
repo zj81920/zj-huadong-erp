@@ -1,0 +1,55 @@
+<h2>当前 WBS 计划系统 — 痛点梳理</h2>
+<p class="subtitle">让我们一起识别哪些地方最需要简化</p>
+
+<div class="section">
+  <h3>当前系统复杂度一览</h3>
+  <div class="cards">
+    <div class="card" data-choice="pain-manual" onclick="toggleSelect(this)">
+      <div class="card-body">
+        <h3>🔧 人为操作过多</h3>
+        <p>每个 L4 任务需要手动填写进度%、实际开始/结束日期。进度条、状态全依赖人工逐条更新，项目经理想知道整体状况得一个个点开看。</p>
+      </div>
+    </div>
+    <div class="card" data-choice="pain-logic" onclick="toggleSelect(this)">
+      <div class="card-body">
+        <h3>🧮 判断逻辑复杂</h3>
+        <p>judgeTaskStatus 有 5 种状态 + 5% 容忍度 + delayDays 反推公式 + 级联汇总。前端算一遍、后端算一遍，数据流绕来绕去不容易理解。</p>
+      </div>
+    </div>
+    <div class="card" data-choice="pain-gantt" onclick="toggleSelect(this)">
+      <div class="card-body">
+        <h3>📊 横道图不直观</h3>
+        <p>实际横道按时间跨度显示而非工作量比例，不能直观对比计划 vs 实际进度。状态颜色逻辑需要同时理解进度% 和日期偏差。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>第一个问题：你期望 AI 介入到什么程度？</h3>
+  <p class="subtitle">这决定了我们简化方案的出发点</p>
+
+  <div class="options">
+    <div class="option" data-choice="ai-level-a" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>AI 辅助判断</h3>
+        <p>保留人工更新进度，但 AI 自动从任务日志中分析语义、辅助判断状态。比如日志写"主体结构已完成80%"，AI 自动建议进度 80%。人做最终确认。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="ai-level-b" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>AI 自动评估</h3>
+        <p>不再需要手动填进度%。用户只需写任务日志（做了什么），AI 自动估算进度、判断状态、更新横道图。人只需要写日志，其余全自动。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="ai-level-c" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>AI 全流程管理</h3>
+        <p>从任务拆解→排期→进度追踪→预警→报告，全链路 AI 驱动。创建项目时 AI 自动生成 WBS 结构，执行中自动追踪，完成后自动汇总。</p>
+      </div>
+    </div>
+  </div>
+</div>

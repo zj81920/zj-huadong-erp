@@ -1,0 +1,87 @@
+<h2>仪表盘 — 紧凑版</h2>
+<p class="subtitle">减少空白，增加信息密度</p>
+
+<div class="section">
+  <h3>调整：项目名列限宽 + 新增「任务/阶段」列</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="padding:0;font-size:12px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:#fafbfc;font-size:11px;text-transform:uppercase;color:#8c95a3">
+            <th style="padding:8px;text-align:left;border-bottom:1px solid #e0e0e0;width:100px">项目编号</th>
+            <th style="padding:8px;text-align:left;border-bottom:1px solid #e0e0e0;width:200px">项目名称</th>
+            <th style="padding:8px;text-align:left;border-bottom:1px solid #e0e0e0;width:100px">甲方</th>
+            <th style="padding:8px;text-align:center;border-bottom:1px solid #e0e0e0;width:80px">任务/阶段</th>
+            <th style="padding:8px;text-align:center;border-bottom:1px solid #e0e0e0;width:110px">进度</th>
+            <th style="padding:8px;text-align:center;border-bottom:1px solid #e0e0e0;width:70px">状态</th>
+            <th style="padding:8px;text-align:center;border-bottom:1px solid #e0e0e0;width:40px">风险</th>
+            <th style="padding:8px;text-align:center;border-bottom:1px solid #e0e0e0;width:60px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f5f5f4">
+            <td style="padding:10px 8px;color:#57534e">HDP-001</td>
+            <td style="padding:10px 8px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="某石化乙烯项目">某石化乙烯项目</td>
+            <td style="padding:10px 8px;color:#57534e">中石化</td>
+            <td style="padding:10px 8px;text-align:center;color:#57534e">24任务 / 3阶段</td>
+            <td style="padding:10px 8px;text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <div style="width:50px;height:6px;background:#e8ecf1;border-radius:3px;overflow:hidden">
+                  <div style="width:65%;height:100%;background:#7da88e;border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px">65%</span>
+              </div>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="background:#f6faf7;color:#5a8a6a;border:1px solid #b8d4c0;padding:2px 6px;border-radius:4px;font-size:11px">🚀 提前</span>
+            </td>
+            <td style="padding:10px 8px;text-align:center">🟢</td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="color:#78716c;font-size:12px;cursor:pointer">详情 →</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid #f5f5f4;background:#fffbfb">
+            <td style="padding:10px 8px;color:#57534e">HDP-005</td>
+            <td style="padding:10px 8px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="某炼化一体化项目">某炼化一体化项目</td>
+            <td style="padding:10px 8px;color:#57534e">中石油</td>
+            <td style="padding:10px 8px;text-align:center;color:#57534e">18任务 / 4阶段</td>
+            <td style="padding:10px 8px;text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <div style="width:50px;height:6px;background:#e8ecf1;border-radius:3px;overflow:hidden">
+                  <div style="width:30%;height:100%;background:#c47676;border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px">30%</span>
+              </div>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="background:#fdf6f6;color:#c47676;border:1px solid #e8c8c8;padding:2px 6px;border-radius:4px;font-size:11px">⚠️ 延误</span>
+              <div style="font-size:10px;color:#c47676;margin-top:1px">3项延误</div>
+            </td>
+            <td style="padding:10px 8px;text-align:center">🔴</td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="color:#78716c;font-size:12px;cursor:pointer">详情 →</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>变化说明</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div style="background:#e8f5e9;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px;color:#2e7d32">项目名限宽 200px</h4>
+      <p style="margin:0;font-size:13px">不再 flex:1 占满空白，过长文本省略号 + hover 提示</p>
+    </div>
+    <div style="background:#e3f2fd;padding:12px;border-radius:6px">
+      <h4 style="margin:0 0 4px;color:#1565c0">新增「任务/阶段」列</h4>
+      <p style="margin:0;font-size:13px">显示 "24任务 / 3阶段"，快速了解项目规模</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>这样紧凑多了吗？</h3>
+</div>

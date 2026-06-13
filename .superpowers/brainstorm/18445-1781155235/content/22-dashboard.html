@@ -1,0 +1,156 @@
+<h2>WBS 仪表盘列表页 UI 优化</h2>
+<p class="subtitle">体现提前完成的积极信号 + 更清晰的健康度</p>
+
+<div class="section">
+  <h3>统计卡片（新增「提前」和「风险」维度）</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="padding:12px">
+      <div style="display:flex;gap:12px">
+        <div style="flex:1;background:#fff;padding:14px;border:1px solid #e0e0e0;border-radius:6px">
+          <div style="font-size:12px;color:#888">项目总数</div>
+          <div style="font-size:24px;font-weight:bold;color:#44403C">24</div>
+        </div>
+        <div style="flex:1;background:#e8f5e9;padding:14px;border:1px solid #c8e6c9;border-radius:6px">
+          <div style="font-size:12px;color:#2e7d32">🚀 提前</div>
+          <div style="font-size:24px;font-weight:bold;color:#2e7d32">5</div>
+        </div>
+        <div style="flex:1;background:#f5f5f5;padding:14px;border:1px solid #e0e0e0;border-radius:6px">
+          <div style="font-size:12px;color:#666">✅ 正常</div>
+          <div style="font-size:24px;font-weight:bold;color:#44403C">15</div>
+        </div>
+        <div style="flex:1;background:#fff3e0;padding:14px;border:1px solid #ffe0b2;border-radius:6px">
+          <div style="font-size:12px;color:#ef6c00">⚠️ 延误</div>
+          <div style="font-size:24px;font-weight:bold;color:#ef6c00">4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>项目列表行（增强信息）</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="padding:0;font-size:12px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:#fafbfc;font-size:11px;text-transform:uppercase;color:#8c95a3">
+            <th style="padding:8px;text-align:left;border-bottom:1px solid #e0e0e0;width:100px">项目编号</th>
+            <th style="padding:8px;text-align:left;border-bottom:1px solid #e0e0e0">项目名称</th>
+            <th style="padding:8px;text-align:left;border-bottom:1px solid #e0e0e0;width:100px">甲方</th>
+            <th style="padding:8px;text-align:center;border-bottom:1px solid #e0e0e0;width:110px">进度</th>
+            <th style="padding:8px;text-align:center;border-bottom:1px solid #e0e0e0;width:80px">状态</th>
+            <th style="padding:8px;text-align:center;border-bottom:1px solid #e0e0e0;width:50px">风险</th>
+            <th style="padding:8px;text-align:center;border-bottom:1px solid #e0e0e0;width:60px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f5f5f4">
+            <td style="padding:10px 8px;color:#57534e">HDP-2026-001</td>
+            <td style="padding:10px 8px;font-weight:500">某石化乙烯项目</td>
+            <td style="padding:10px 8px;color:#57534e">中石化</td>
+            <td style="padding:10px 8px;text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <div style="width:50px;height:6px;background:#e8ecf1;border-radius:3px;overflow:hidden">
+                  <div style="width:65%;height:100%;background:#7da88e;border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px">65%</span>
+              </div>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="background:#f6faf7;color:#5a8a6a;border:1px solid #b8d4c0;padding:2px 8px;border-radius:4px;font-size:11px">🚀 提前</span>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2e7d32"></span>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="color:#78716c;font-size:12px;cursor:pointer">详情 →</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid #f5f5f4;background:#fffbfb">
+            <td style="padding:10px 8px;color:#57534e">HDP-2026-005</td>
+            <td style="padding:10px 8px;font-weight:500">某炼化一体化项目</td>
+            <td style="padding:10px 8px;color:#57534e">中石油</td>
+            <td style="padding:10px 8px;text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <div style="width:50px;height:6px;background:#e8ecf1;border-radius:3px;overflow:hidden">
+                  <div style="width:30%;height:100%;background:#c47676;border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px">30%</span>
+              </div>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="background:#fdf6f6;color:#c47676;border:1px solid #e8c8c8;padding:2px 8px;border-radius:4px;font-size:11px">⚠️ 延误</span>
+              <div style="font-size:10px;color:#c47676;margin-top:2px">3个延误任务</div>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef6c00"></span>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="color:#78716c;font-size:12px;cursor:pointer">详情 →</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid #f5f5f4">
+            <td style="padding:10px 8px;color:#57534e">HDP-2026-008</td>
+            <td style="padding:10px 8px;font-weight:500">某储运基地项目</td>
+            <td style="padding:10px 8px;color:#57534e">中海油</td>
+            <td style="padding:10px 8px;text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <div style="width:50px;height:6px;background:#e8ecf1;border-radius:3px;overflow:hidden">
+                  <div style="width:100%;height:100%;background:#5a7a9a;border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px">100%</span>
+              </div>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="background:#f5f8fb;color:#5a7a9a;border:1px solid #c0d0e0;padding:2px 8px;border-radius:4px;font-size:11px">🏁 已完成</span>
+              <div style="font-size:10px;color:#5a8a6a;margin-top:2px">2项提前完成</div>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2e7d32"></span>
+            </td>
+            <td style="padding:10px 8px;text-align:center">
+              <span style="color:#78716c;font-size:12px;cursor:pointer">详情 →</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>与现状对比</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:#f5f5f5"><th style="padding:8px;text-align:left;border:1px solid #ddd">项目</th><th style="padding:8px;text-align:left;border:1px solid #ddd">现状</th><th style="padding:8px;text-align:left;border:1px solid #ddd;background:#e8f5e9">优化后</th></tr></thead>
+    <tbody>
+      <tr><td style="padding:8px;border:1px solid #ddd">统计卡片</td><td style="padding:8px;border:1px solid #ddd">总数/按期/延误 (3张)</td><td style="padding:8px;border:1px solid #ddd;background:#e8f5e9"><strong>总数/提前/正常/延误 (4张)</strong></td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">状态 badge</td><td style="padding:8px;border:1px solid #ddd">正常/延误/已完成</td><td style="padding:8px;border:1px solid #ddd;background:#e8f5e9"><strong>🚀提前/✅正常/⚠️延误/🏁已完成</strong> + 子信息</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">风险等级</td><td style="padding:8px;border:1px solid #ddd">无</td><td style="padding:8px;border:1px solid #ddd;background:#e8f5e9"><strong>🟢/🟡/🔴 圆点</strong>，一目了然</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">延误项目</td><td style="padding:8px;border:1px solid #ddd">普通背景</td><td style="padding:8px;border:1px solid #ddd;background:#e8f5e9"><strong>浅红背景</strong>突出显示</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">子信息</td><td style="padding:8px;border:1px solid #ddd">无</td><td style="padding:8px;border:1px solid #ddd;background:#e8f5e9">延误任务数 / 提前完成数</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>风险等级定义</h3>
+  <div style="display:flex;gap:12px">
+    <div style="flex:1;background:#e8f5e9;padding:10px;border-radius:6px;text-align:center">
+      <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#2e7d32"></span>
+      <p style="margin:4px 0 0;font-size:12px"><strong>低风险</strong><br>0个延误任务</p>
+    </div>
+    <div style="flex:1;background:#fff3e0;padding:10px;border-radius:6px;text-align:center">
+      <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ef6c00"></span>
+      <p style="margin:4px 0 0;font-size:12px"><strong>中风险</strong><br>1-2个延误任务</p>
+    </div>
+    <div style="flex:1;background:#ffebee;padding:10px;border-radius:6px;text-align:center">
+      <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#c62828"></span>
+      <p style="margin:4px 0 0;font-size:12px"><strong>高风险</strong><br>3个及以上延误</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>仪表盘设计可以吗？</h3>
+  <p class="subtitle">确认后更新 Spec 文档</p>
+</div>

@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const { canReadAll, userId } = await checkReadPermission("business")
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
-    const industryType = searchParams.get("industryType") || "";
+    const ownershipType = searchParams.get("ownershipType") || "";
     const customerGrade = searchParams.get("customerGrade") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "20");
@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    if (industryType) {
-      where.industryType = industryType;
+    if (ownershipType) {
+      where.ownershipType = ownershipType;
     }
 
     if (customerGrade) {
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const currentUser = await getCurrentUser();
-    const { name, address, contactPerson, phone, email, maintainer, industryType, customerGrade } = body;
+    const { name, address, contactPerson, phone, email, maintainer, ownershipType, customerGrade } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: "客户名称不能为空" }, { status: 400 });
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         phone: phone?.trim() || null,
         email: email?.trim() || null,
         maintainer: maintainer?.trim() || null,
-        industryType: industryType || null,
+        ownershipType: ownershipType || null,
         customerGrade: customerGrade || "C",
         lastModifiedBy: currentUser?.realName || null,
         createdById: currentUser?.id || null,

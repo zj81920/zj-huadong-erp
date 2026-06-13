@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
 import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
+import { syncProjectToDS } from "@/lib/project-sync";
 
 export async function GET(
   _request: NextRequest,
@@ -12,14 +13,13 @@ export async function GET(
     const project = await prisma.project.findUnique({
       where: { id },
       include: {
-        customer: { select: { id: true, name: true, industryType: true, contactPerson: true, phone: true } },
+        customer: { select: { id: true, name: true, ownershipType: true, contactPerson: true, phone: true } },
         projectLead: { select: { projectSourceId: true, projectName: true, currentStatus: true } },
         designManager: { select: { id: true, realName: true } },
         supervisorLeader: { select: { id: true, realName: true } },
         _count: {
           select: {
             plans: true,
-            progressRecords: true,
             designTasks: true,
             outsourcingTasks: true,
             purchaseRequests: true,
@@ -62,7 +62,7 @@ export async function PUT(
       projectCode,
       name,
       customerId,
-      type,
+      projectContent,
       address,
       projectCategory,
       source,
@@ -71,6 +71,12 @@ export async function PUT(
       supervisorLeaderId,
       startDate,
       plannedEndDate,
+      designPhases,
+      useWbs,
+      overallProgress,
+      riskLevel,
+      actualStartDate,
+      actualEndDate,
       actualCloseDate,
     } = body;
 
@@ -109,7 +115,7 @@ export async function PUT(
     if (projectCode !== undefined) updateData.projectCode = projectCode.trim();
     if (name !== undefined) updateData.name = name.trim();
     if (customerId !== undefined) updateData.customerId = customerId;
-    if (type !== undefined) updateData.type = type?.trim() || null;
+    if (projectContent !== undefined) updateData.projectContent = projectContent?.trim() || null;
     if (address !== undefined) updateData.address = address?.trim() || null;
     if (projectCategory !== undefined) updateData.projectCategory = projectCategory?.trim() || null;
     if (source !== undefined) updateData.source = source;
@@ -119,6 +125,10 @@ export async function PUT(
     if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
     if (plannedEndDate !== undefined) updateData.plannedEndDate = plannedEndDate ? new Date(plannedEndDate) : null;
     if (actualCloseDate !== undefined) updateData.actualCloseDate = actualCloseDate ? new Date(actualCloseDate) : null;
+    if (designPhases !== undefined) updateData.designPhases = designPhases;
+    if (useWbs !== undefined) updateData.useWbs = useWbs;
+    if (overallProgress !== undefined) updateData.overallProgress = overallProgress;
+    if (riskLevel !== undefined) updateData.riskLevel = riskLevel;
 
     const currentUser = await getCurrentUser();
     updateData.lastModifiedBy = currentUser?.realName || null;
@@ -127,12 +137,91 @@ export async function PUT(
       where: { id },
       data: updateData,
       include: {
-        customer: { select: { id: true, name: true, industryType: true } },
+        customer: { select: { id: true, name: true, ownershipType: true } },
         projectLead: { select: { projectSourceId: true, projectName: true, currentStatus: true } },
         designManager: { select: { id: true, realName: true } },
         supervisorLeader: { select: { id: true, realName: true } },
       },
     });
+
+    // 项目名称变更时，同步回关联的线索
+    if (name !== undefined && name.trim() !== existing.name) {
+      const lead = await prisma.projectLead.findUnique({
+        where: { projectSourceId: existing.projectSourceId },
+      });
+      if (lead) {
+        await prisma.projectLead.update({
+          where: { id: lead.id },
+          data: { projectName: name.trim() },
+        });
+      }
+    }
+
+    // 如果 designPhases 有变化，同步一级WBS节点（只增删差异，保留已有子树）
+    if (designPhases !== undefined) {
+      try {
+        const projectSourceId = project.projectSourceId;
+        const newPhases: string[] = JSON.parse(designPhases);
+
+        // 获取现有的一级节点
+        const existingL1Nodes = await prisma.projectWbsNode.findMany({
+          where: { projectSourceId, level: 1 },
+          orderBy: { sortOrder: "asc" },
+        });
+        const existingNames = existingL1Nodes.map((n) => n.name);
+
+        // 1. 删除旧数组中有但新数组中没有的阶段（级联删除所有子节点）
+        const toDelete = existingL1Nodes.filter((n) => !newPhases.includes(n.name));
+        for (const node of toDelete) {
+          // Schema 已加 onDelete: Cascade，直接删除父节点即可级联
+          await prisma.projectWbsNode.delete({ where: { id: node.id } });
+        }
+
+        // 2. 新增新数组中有但旧数组中没有的阶段
+        const toAdd = newPhases.filter((name) => !existingNames.includes(name));
+        const maxSort = existingL1Nodes.length > 0
+          ? Math.max(...existingL1Nodes.map((n) => n.sortOrder))
+          : -1;
+        if (toAdd.length > 0) {
+          await prisma.projectWbsNode.createMany({
+            data: toAdd.map((phaseName, index) => ({
+              projectSourceId,
+              level: 1,
+              name: phaseName,
+              sortOrder: maxSort + 1 + index,
+            })),
+          });
+        }
+      } catch {
+        // WBS同步失败不影响项目更新
+      }
+    }
+
+    // 同步到 DS 系统（异步，不阻塞响应）- 检查同步开关
+    try {
+      const dsSetting = await prisma.systemSetting.findUnique({
+        where: { key: "ds_sync_disabled" },
+      });
+      if (dsSetting?.value !== "true") {
+        syncProjectToDS({
+          id: project.id,
+          projectCode: project.projectCode,
+          name: project.name,
+          projectContent: project.projectContent,
+          status: project.status,
+          dsProjectCode: project.dsProjectCode,
+          customerId: project.customerId,
+          address: project.address,
+          designManagerId: project.designManagerId,
+          supervisorLeaderId: project.supervisorLeaderId,
+          designPhases: project.designPhases,
+        }).catch((err) => {
+          console.error("[project-sync] 更新同步失败:", err);
+        });
+      }
+    } catch {
+      // 设置查询失败不阻塞
+    }
 
     return NextResponse.json({ data: project });
   } catch (error) {
@@ -156,7 +245,7 @@ export async function DELETE(
         _count: {
           select: {
             plans: true,
-            progressRecords: true,
+            wbsNodes: true,
             designTasks: true,
             outsourcingTasks: true,
             purchaseRequests: true,
@@ -180,6 +269,22 @@ export async function DELETE(
 
     if ((existing.status === "执行" || existing.status === "关闭") && !isAdmin(adminUser)) {
       return NextResponse.json({ error: "执行中或已关闭的项目不能删除" }, { status: 400 });
+    }
+
+    // 检查 DS 端是否还存在该项目（有 dsProjectCode 的项目需先在 DS 删除）
+    if (existing.dsProjectCode) {
+      try {
+        const { dsProjectExists } = await import("@/lib/ds-client");
+        const existsInDS = await dsProjectExists(existing.dsProjectCode);
+        if (existsInDS) {
+          return NextResponse.json(
+            { error: "该项目的归档数据仍在设计审查系统中，请先在设计审查系统中删除该项目后再操作" },
+            { status: 400 }
+          );
+        }
+      } catch {
+        // DS 查询失败不阻塞删除
+      }
     }
 
     if (existing._count.purchaseRequests > 0 && !isAdmin(adminUser)) {
@@ -207,7 +312,6 @@ export async function DELETE(
       const psid = existing.projectSourceId;
 
       if (existing._count.plans > 0) await tx.projectPlan.deleteMany({ where: { projectSourceId: psid } });
-      if (existing._count.progressRecords > 0) await tx.projectProgress.deleteMany({ where: { projectSourceId: psid } });
       if (existing._count.designTasks > 0) await tx.designTask.deleteMany({ where: { projectSourceId: psid } });
       if (existing._count.outsourcingTasks > 0) await tx.outsourcingTask.deleteMany({ where: { projectSourceId: psid } });
       if (existing._count.purchaseRequests > 0) await tx.purchaseRequest.deleteMany({ where: { projectSourceId: psid } });
@@ -220,6 +324,7 @@ export async function DELETE(
       if (existing._count.invoices > 0) await tx.invoice.deleteMany({ where: { projectSourceId: psid } });
       if (existing._count.incomeContracts > 0) await tx.incomeContract.deleteMany({ where: { projectSourceId: psid } });
       if (existing._count.expenseContracts > 0) await tx.expenseContract.deleteMany({ where: { projectSourceId: psid } });
+      if (existing._count.wbsNodes > 0) await tx.projectWbsNode.deleteMany({ where: { projectSourceId: psid } });
 
       if (psid) {
         const linkedLead = await tx.projectLead.findUnique({

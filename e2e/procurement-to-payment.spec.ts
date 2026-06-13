@@ -89,7 +89,7 @@ test.describe("采购到付款全流程测试", () => {
     const cust = await apiPost(page, "/api/customers", {
       name: `测试客户-PW-${ts}`,
       shortName: "测试客户",
-      industryType: "化工",
+      ownershipType: "民营",
       customerType: "企业",
       contactPerson: "张三",
       contactPhone: "13800138000",
@@ -113,7 +113,7 @@ test.describe("采购到付款全流程测试", () => {
       location: "安徽省合肥市",
       contactPerson: "王工",
       contactPhone: "13900139000",
-      projectNature: ["EP"],
+      projectNature: "EP",
       implementationEntity: "华东工程",
       currentStatus: "已中标",
     });

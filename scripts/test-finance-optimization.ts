@@ -546,7 +546,7 @@ async function testBondPaymentModal() {
           location: "合肥",
           contactPerson: "李工",
           contactPhone: "13800138001",
-          projectNature: ["EP"],
+          projectNature: "EP",
           implementationEntity: "公司本部",
           currentStatus: "已中标",
           bondAmount: 50000,

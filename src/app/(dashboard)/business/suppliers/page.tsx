@@ -19,7 +19,6 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Modal from "@/components/Modal";
-import { deleteUploadedFile } from "@/lib/upload-helpers";
 import { useAuth } from "@/contexts/AuthContext";
 import { DetailPageLayout } from "@/components/DetailPageLayout";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
@@ -43,7 +42,7 @@ interface Supplier {
   bankName: string | null;
   bankAccount: string | null;
   remark: string | null;
-  attachmentUrl: string | null;
+  attachmentUrls: string[];
   approvalStatus: string;
   approvalInstanceId?: string | null;
   createdAt: string;
@@ -63,7 +62,7 @@ interface SupplierFormData {
   bankName: string;
   bankAccount: string;
   remark: string;
-  attachmentUrl: string;
+  attachmentUrls: string[];
 }
 
 const emptyForm: SupplierFormData = {
@@ -77,7 +76,7 @@ const emptyForm: SupplierFormData = {
   bankName: "",
   bankAccount: "",
   remark: "",
-  attachmentUrl: "",
+  attachmentUrls: [],
 };
 
 const supplierTypeColorMap: Record<string, string> = {
@@ -147,7 +146,7 @@ export default function SuppliersPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadFileName, setUploadFileName] = useState("");
+  const [uploadFileNames, setUploadFileNames] = useState<string[]>([]);
 
   const fetchSuppliers = useCallback(async () => {
     setLoading(true);
@@ -182,7 +181,7 @@ export default function SuppliersPage() {
     setEditingSupplier(null);
     setForm(emptyForm);
     setFormError("");
-    setUploadFileName("");
+    setUploadFileNames([]);
     setShowModal(true);
   };
 
@@ -199,9 +198,9 @@ export default function SuppliersPage() {
       bankName: supplier.bankName || "",
       bankAccount: supplier.bankAccount || "",
       remark: supplier.remark || "",
-      attachmentUrl: supplier.attachmentUrl || "",
+      attachmentUrls: supplier.attachmentUrls || [],
     });
-    setUploadFileName(supplier.attachmentUrl ? supplier.attachmentUrl.split("/").pop() || "" : "");
+    setUploadFileNames((supplier.attachmentUrls || []).map((url: string) => decodeURIComponent(url.split("/").pop() || "")));
     setFormError("");
     setShowModal(true);
   };
@@ -209,6 +208,30 @@ export default function SuppliersPage() {
   const handleSubmit = async () => {
     if (!form.name.trim()) {
       setFormError("供应商名称不能为空");
+      return;
+    }
+    if (!form.supplierType) {
+      setFormError("请选择供应商性质");
+      return;
+    }
+    if (!form.contactPerson.trim()) {
+      setFormError("联系人不能为空");
+      return;
+    }
+    if (!form.phone.trim()) {
+      setFormError("电话不能为空");
+      return;
+    }
+    if (!form.bankName.trim()) {
+      setFormError("开户行信息不能为空");
+      return;
+    }
+    if (!form.bankAccount.trim()) {
+      setFormError("开户行账号不能为空");
+      return;
+    }
+    if (!form.address.trim()) {
+      setFormError("地址不能为空");
       return;
     }
 
@@ -327,6 +350,7 @@ export default function SuppliersPage() {
         body: JSON.stringify({
           supplierId: changeSupplier.id,
           ...changeForm,
+          attachmentUrls: undefined,
         }),
       });
       const json = await res.json();
@@ -401,8 +425,8 @@ export default function SuppliersPage() {
 
       const json = await res.json();
       if (res.ok) {
-        setForm((prev) => ({ ...prev, attachmentUrl: json.url }));
-        setUploadFileName(file.name);
+        setForm((prev) => ({ ...prev, attachmentUrls: [...prev.attachmentUrls, json.url] }));
+        setUploadFileNames((prev) => [...prev, file.name]);
       } else {
         setFormError(json.error || "上传失败");
       }
@@ -662,7 +686,7 @@ export default function SuppliersPage() {
                                   bankName: supplier.bankName || "",
                                   bankAccount: supplier.bankAccount || "",
                                   remark: supplier.remark || "",
-                                  attachmentUrl: supplier.attachmentUrl || "",
+                                  attachmentUrls: supplier.attachmentUrls || [],
                                 });
                                 setChangeError("");
                                 setChangeFormOpen(true);
@@ -728,7 +752,7 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">供应商性质</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">供应商性质 <span className="text-[#78716C]">*</span></label>
               <select
                 className="ios-select"
                 value={form.supplierType}
@@ -756,7 +780,7 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系人</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系人 <span className="text-[#78716C]">*</span></label>
               <div className="relative">
                 <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                 <input
@@ -770,7 +794,7 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">电话</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">电话 <span className="text-[#78716C]">*</span></label>
               <div className="relative">
                 <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                 <input
@@ -798,7 +822,7 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行信息</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行信息 <span className="text-[#78716C]">*</span></label>
               <input
                 type="text"
                 className="ios-input"
@@ -809,7 +833,7 @@ export default function SuppliersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行账号</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">开户行账号 <span className="text-[#78716C]">*</span></label>
               <input
                 type="text"
                 className="ios-input"
@@ -820,7 +844,7 @@ export default function SuppliersPage() {
             </div>
 
             <div className="col-span-2">
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">地址</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">地址 <span className="text-[#78716C]">*</span></label>
               <div className="relative">
                 <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-[#78716C]" />
                 <input
@@ -853,25 +877,28 @@ export default function SuppliersPage() {
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip,.rar"
                   onChange={handleFileUpload}
                 />
-                {form.attachmentUrl ? (
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0]">
-                    <FileCheck className="w-4 h-4 text-[#22C55E] flex-shrink-0" />
-                    <span className="flex-1 text-[13px] text-[#1C1917] truncate">
-                      {uploadFileName || "已上传文件"}
-                    </span>
-                    <button
-                      type="button"
-                      className="text-[#78716C] hover:text-[#78716C]"
-                      onClick={async () => {
-                        await deleteUploadedFile(form.attachmentUrl);
-                        setForm((prev) => ({ ...prev, attachmentUrl: "" }));
-                        setUploadFileName("");
-                      }}
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                {form.attachmentUrls.length > 0 && (
+                  <div className="space-y-1.5">
+                    {form.attachmentUrls.map((url, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0]">
+                        <FileCheck className="w-4 h-4 text-[#22C55E] flex-shrink-0" />
+                        <span className="flex-1 text-[13px] text-[#1C1917] truncate">
+                          {uploadFileNames[idx] || decodeURIComponent(url.split("/").pop() || "")}
+                        </span>
+                        <button
+                          type="button"
+                          className="text-[#78716C] hover:text-[#78716C]"
+                          onClick={() => {
+                            setForm((prev) => ({ ...prev, attachmentUrls: prev.attachmentUrls.filter((_, i) => i !== idx) }));
+                            setUploadFileNames((prev) => prev.filter((_, i) => i !== idx));
+                          }}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ) : null}
+                )}
                 <button
                   type="button"
                   className="ios-btn ios-btn-secondary w-full"
@@ -879,10 +906,10 @@ export default function SuppliersPage() {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="w-4 h-4" />
-                  {uploading ? "上传中..." : form.attachmentUrl ? "重新上传" : "选择文件上传"}
+                  {uploading ? "上传中..." : "选择文件上传"}
                 </button>
                 <p className="text-[12px] text-[#78716C]">
-                  支持 PDF、Word、Excel、图片、压缩包，最大 10MB
+                  支持 PDF、Word、Excel、图片、压缩包，最大 10MB，可上传多个文件
                 </p>
               </div>
             </div>

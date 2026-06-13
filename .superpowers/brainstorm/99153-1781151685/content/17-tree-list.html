@@ -1,0 +1,141 @@
+<h2>UI 设计 — 树形列表</h2>
+<p class="subtitle">列简化 + 状态直观 + 操作精简</p>
+
+<div class="section">
+  <h3>列设计（精简到 5 列）</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="padding:0;font-size:12px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:#f5f5f5;font-size:11px">
+            <th style="padding:8px;text-align:left;border-bottom:2px solid #ddd;width:35%">节点名称</th>
+            <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;width:12%">状态</th>
+            <th style="padding:8px;text-align:left;border-bottom:2px solid #ddd;width:25%">进度</th>
+            <th style="padding:8px;text-align:left;border-bottom:2px solid #ddd;width:13%">责任人</th>
+            <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;width:15%">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee">
+              <span style="background:#1565c0;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;margin-right:4px">阶段</span>
+              <strong>▶ 施工图设计</strong>
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center"><span style="color:#2e7d32">✅ 正常</span></td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee">
+              <div style="display:flex;align-items:center;gap:4px">
+                <div style="flex:1;background:#e0e0e0;height:8px;border-radius:4px">
+                  <div style="width:45%;height:100%;background:#7da88e;border-radius:4px"></div>
+                </div>
+                <span style="font-size:11px;color:#666">45%</span>
+              </div>
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee">-</td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">
+              <span style="font-size:10px;color:#999">+添加</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px 6px 24px;border-bottom:1px solid #eee">
+              <span style="background:#2e7d32;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;margin-right:4px">子项</span>
+              工艺装置区
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center"><span style="color:#c62828">⚠️ 延误</span></td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee">
+              <div style="display:flex;align-items:center;gap:4px">
+                <div style="flex:1;background:#e0e0e0;height:8px;border-radius:4px">
+                  <div style="width:35%;height:100%;background:#c47676;border-radius:4px"></div>
+                </div>
+                <span style="font-size:11px;color:#666">35%</span>
+              </div>
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee">-</td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">
+              <span style="font-size:10px;color:#999">+添加</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px 6px 40px;border-bottom:1px solid #eee">
+              <span style="background:#ef6c00;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;margin-right:4px">专业</span>
+              工艺
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center"><span style="color:#2e7d32">🚀 提前</span></td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee">
+              <div style="display:flex;align-items:center;gap:4px">
+                <div style="flex:1;background:#e0e0e0;height:8px;border-radius:4px">
+                  <div style="width:65%;height:100%;background:#7da88e;border-radius:4px"></div>
+                </div>
+                <span style="font-size:11px;color:#666">65%</span>
+              </div>
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee">-</td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">
+              <span style="background:#1565c0;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;cursor:pointer">🤖 生成任务</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px 6px 56px;border-bottom:1px solid #eee">
+              工艺流程图(PFD)绘制
+              <span style="font-size:10px;color:#999;margin-left:4px">1/15 - 7/15</span>
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center"><span style="color:#2e7d32">🚀 提前</span></td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee">
+              <div style="display:flex;align-items:center;gap:4px">
+                <div style="flex:1;background:#e0e0e0;height:6px;border-radius:3px">
+                  <div style="width:70%;height:100%;background:#7da88e;border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px;color:#666">70%</span>
+              </div>
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:11px">张工</td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">
+              <span style="font-size:10px;color:#1565c0;cursor:pointer;margin:0 2px">进度</span>
+              <span style="font-size:10px;color:#1565c0;cursor:pointer;margin:0 2px">日志</span>
+              <span style="font-size:10px;color:#c62828;cursor:pointer;margin:0 2px">删除</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px 6px 56px;border-bottom:1px solid #eee">
+              管道仪表流程图(PID)绘制
+              <span style="font-size:10px;color:#999;margin-left:4px">1/15 - 8/15</span>
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center"><span style="color:#c62828">⚠️ 延误</span></td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee">
+              <div style="display:flex;align-items:center;gap:4px">
+                <div style="flex:1;background:#e0e0e0;height:6px;border-radius:3px">
+                  <div style="width:30%;height:100%;background:#c47676;border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px;color:#666">30%</span>
+              </div>
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:11px">李工</td>
+            <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">
+              <span style="font-size:10px;color:#1565c0;cursor:pointer;margin:0 2px">进度</span>
+              <span style="font-size:10px;color:#1565c0;cursor:pointer;margin:0 2px">日志</span>
+              <span style="font-size:10px;color:#c62828;cursor:pointer;margin:0 2px">删除</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>与现状对比</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:#f5f5f5"><th style="padding:8px;text-align:left;border:1px solid #ddd">项目</th><th style="padding:8px;text-align:left;border:1px solid #ddd">现状</th><th style="padding:8px;text-align:left;border:1px solid #ddd;background:#e8f5e9">新设计</th></tr></thead>
+    <tbody>
+      <tr><td style="padding:8px;border:1px solid #ddd">进度条</td><td style="padding:8px;border:1px solid #ddd">双条（计划灰+实际绿/红）+ 两个%</td><td style="padding:8px;border:1px solid #ddd;background:#e8f5e9"><strong>单条</strong>：progress% 一条，颜色反映状态</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">状态列</td><td style="padding:8px;border:1px solid #ddd">AIStatusBadge (ontrack/delayed/wait/done)</td><td style="padding:8px;border:1px solid #ddd;background:#e8f5e9"><strong>文字+emoji</strong>：🚀提前/✅正常/⚠️延误/🎉提前完成/🏁按期完成</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">L4操作</td><td style="padding:8px;border:1px solid #ddd">编辑/进度/日志/删除(4个)</td><td style="padding:8px;border:1px solid #ddd;background:#e8f5e9"><strong>进度/日志/删除(3个)</strong>，编辑并入进度弹窗</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">L3操作</td><td style="padding:8px;border:1px solid #ddd">+添加/编辑/删除</td><td style="padding:8px;border:1px solid #ddd;background:#e8f5e9">+添加 / <strong>🤖生成任务</strong> / 编辑 / 删除</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd">日期显示</td><td style="padding:8px;border:1px solid #ddd">planStart-planEnd</td><td style="padding:8px;border:1px solid #ddd;background:#e8f5e9"><strong>仅 planStart-planEnd</strong>，L4 任务名旁小字显示</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>树形列表设计可以吗？</h3>
+  <p class="subtitle">确认后进入进度弹窗设计</p>
+</div>

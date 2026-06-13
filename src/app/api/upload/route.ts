@@ -3,7 +3,7 @@ import { writeFileSync, mkdirSync, rmSync, mkdtempSync } from "fs";
 import path from "path";
 import os from "os";
 import { indexFile } from "@/lib/file-index/index-engine";
-import { isOSSConfigured, uploadToOSS } from "@/lib/oss";
+import { isOSSConfigured, uploadToOSS, getSignedUrl } from "@/lib/oss";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
@@ -112,8 +112,12 @@ export async function POST(request: NextRequest) {
       try { rmSync(tmpDir, { recursive: true }); } catch {}
     }
 
+    const signedUrl = fileKey ? getSignedUrl(fileKey, 7 * 24 * 3600) : fileUrl;
+
     return NextResponse.json({
       url: fileUrl,
+      key: fileKey,
+      signedUrl,
       filename: originalName,
     });
   } catch (error) {
