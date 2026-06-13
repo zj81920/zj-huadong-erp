@@ -545,7 +545,7 @@ export default function ProjectLeadsPage() {
                             <Eye className="w-3.5 h-3.5" />
                             详情
                           </button>
-                          {!isEstablished && (
+                          {(!isEstablished || isAdminUser) && (
                             <>
                               {canEditFrontend(hasFlow, rolePerms, "", user?.id ?? "", null, isAdminUser) && (
                                 <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleOpenEdit(lead)}>
@@ -638,11 +638,15 @@ export default function ProjectLeadsPage() {
               </label>
               <input
                 type="text"
-                className="ios-input"
+                className={`ios-input ${editingLead?.currentStatus === "已立项" ? "cursor-not-allowed bg-[#F5F5F4] text-[#A8A29E]" : ""}`}
                 placeholder="请输入项目名称"
                 value={form.projectName}
                 onChange={(e) => updateForm("projectName", e.target.value)}
+                disabled={editingLead?.currentStatus === "已立项"}
               />
+              {editingLead?.currentStatus === "已立项" && (
+                <p className="mt-1 text-[11px] text-[#A8A29E]">项目名称由关联项目同步，如需修改请编辑项目立项</p>
+              )}
             </div>
 
             <div>
