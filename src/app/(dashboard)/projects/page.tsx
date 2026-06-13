@@ -696,17 +696,15 @@ export default function ProjectsPage() {
             <table className="ios-table" style={{ minWidth: 1400, width: '100%' }}>
               <colgroup>
                 <col style={{ width: 110 }} />
-                <col style={{ width: 100 }} />
                 <col style={{ width: 'auto' }} />
                 <col style={{ width: 120 }} />
                 <col style={{ width: 70 }} />
-                <col style={{ width: 70 }} />
-                <col style={{ width: 80 }} />
+                <col style={{ width: 100 }} />
                 <col style={{ width: 80 }} />
                 <col style={{ width: 80 }} />
                 <col style={{ width: 120 }} />
-                <col style={{ width: 100 }} />
-                <col style={{ width: 100 }} />
+                <col style={{ width: 70 }} />
+                <col style={{ width: 70 }} />
                 <col style={{ width: 170 }} />
               </colgroup>
               <thead>
@@ -721,12 +719,10 @@ export default function ProjectsPage() {
                       />
                     </th>
                   )}
-                  <th>项目源ID</th>
                   <th>项目编号</th>
                   <th>项目名称</th>
                   <th>客户</th>
-                  <th>类别</th>
-                  <th>来源</th>
+                  <th>类别/来源</th>
                   <th>设计经理</th>
                   <th>主管领导</th>
                   <th>状态</th>
@@ -751,25 +747,16 @@ export default function ProjectsPage() {
                         </td>
                       )}
                       <td className="whitespace-nowrap">
-                        <span className="font-mono text-[13px] font-semibold text-[#1C1917]">
-                          {project.projectSourceId}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap">
                         <span className="font-mono text-[13px]">{project.projectCode}</span>
                       </td>
                       <td className="whitespace-nowrap">
                         <span className="font-semibold">{project.name}</span>
                       </td>
                       <td className="whitespace-nowrap">{project.customer.name}</td>
-                      <td className="whitespace-nowrap">
-                        {project.projectCategory ? (
-                          <span className={`ios-badge text-[11px] ${categoryBadgeColor(project.projectCategory)}`}>{project.projectCategory}</span>
-                        ) : (
-                          <span className="text-[#78716C]">-</span>
-                        )}
+                      {/* 合并 类别/来源 */}
+                      <td className="whitespace-nowrap px-3 py-2 text-[13px] text-[#57534E]">
+                        {[project.projectCategory, project.source].filter(Boolean).join(" / ") || "-"}
                       </td>
-                      <td className="whitespace-nowrap text-[13px] text-[#78716C]">{project.source}</td>
                       <td className="whitespace-nowrap">
                         {project.designManager ? (
                           <span className="text-[13px]">{project.designManager.realName}</span>
@@ -796,8 +783,18 @@ export default function ProjectsPage() {
                           <option value="关闭">关闭</option>
                         </select>
                       </td>
-                      <td className="whitespace-nowrap text-[#78716C]">{formatDate(project.startDate)}</td>
-                      <td className="whitespace-nowrap text-[#78716C]">{formatDate(project.plannedEndDate)}</td>
+                      {/* 项目启动时间 */}
+                      <td className="whitespace-nowrap px-3 py-2 text-[13px] text-[#57534E]">
+                        {project.startDate
+                          ? new Date(project.startDate).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })
+                          : "-"}
+                      </td>
+                      {/* 计划结束时间 */}
+                      <td className="whitespace-nowrap px-3 py-2 text-[13px] text-[#57534E]">
+                        {project.plannedEndDate
+                          ? new Date(project.plannedEndDate).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })
+                          : "-"}
+                      </td>
                       <td className="whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(project)}>
