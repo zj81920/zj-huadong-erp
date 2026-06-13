@@ -7,9 +7,9 @@ import Modal from "./Modal";
 export interface SupplierItem {
   id: string;
   name: string;
-  supplierType: string | null;
-  contactPerson: string | null;
-  phone: string | null;
+  supplierType?: string | null;
+  contactPerson?: string | null;
+  phone?: string | null;
   bankName?: string | null;
   bankAccount?: string | null;
   approvalStatus?: string | null;

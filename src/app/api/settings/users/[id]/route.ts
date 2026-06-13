@@ -52,13 +52,45 @@ export async function PUT(
         userRoles: {
           include: {
             role: {
-              select: { id: true, code: true, name: true },
               include: { department: { select: { name: true } } },
             },
           },
         },
       },
     });
+
+    // 同步到 DS 系统（异步，不阻塞）
+    if (user.email) {
+      try {
+        // 检查同步开关
+        const setting = await prisma.systemSetting.findUnique({
+          where: { key: "ds_sync_disabled" },
+        });
+        if (setting?.value !== "true") {
+          const { dsUpdateUser } = await import("@/lib/ds-client");
+
+          // 提取 OSS key
+          let signatureImage: string | null = null;
+          if (user.signatureUrl) {
+            if (user.signatureUrl.startsWith("http")) {
+              signatureImage = new URL(user.signatureUrl).pathname.replace(/^\//, "");
+            } else {
+              signatureImage = user.signatureUrl;
+            }
+          }
+
+          dsUpdateUser(user.email, {
+            name: user.realName,
+            email: user.email,
+            signatureImage,
+          }).catch((err: Error) => {
+            console.error("[user-sync] DS 更新用户失败:", err.message);
+          });
+        }
+      } catch (err) {
+        console.error("[user-sync] DS 同步异常:", err);
+      }
+    }
 
     return NextResponse.json({ data: user });
   } catch (error) {
@@ -80,6 +112,20 @@ export async function DELETE(
 
     if (existing.username === "admin") {
       return NextResponse.json({ error: "系统管理员账号不可删除" }, { status: 403 });
+    }
+
+    // 先同步删除 DS 用户
+    if (existing.email) {
+      const { dsDeleteUser } = await import("@/lib/ds-client");
+      try {
+        await dsDeleteUser(existing.email);
+      } catch (err) {
+        console.error("[user-sync] DS 删除用户失败:", err);
+        return NextResponse.json(
+          { error: "DS 系统删除用户失败，已取消操作" },
+          { status: 500 }
+        );
+      }
     }
 
     await prisma.userRole.deleteMany({ where: { userId: id } });

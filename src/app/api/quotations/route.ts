@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       prisma.quotation.findMany({
         where,
         include: {
-          customer: { select: { id: true, name: true, industryType: true } },
+          customer: { select: { id: true, name: true, ownershipType: true } },
           projectLead: { select: { id: true, projectSourceId: true, projectName: true } },
         },
         orderBy: { createdAt: "desc" },
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         createdById: currentUser?.id || null,
       },
       include: {
-        customer: { select: { id: true, name: true, industryType: true } },
+        customer: { select: { id: true, name: true, ownershipType: true } },
         projectLead: { select: { id: true, projectSourceId: true, projectName: true } },
       },
     });

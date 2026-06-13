@@ -70,7 +70,7 @@ function ChartRenderer({ chart }: { chart: ChartConfig }) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey={chart.xField || "name"} tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip formatter={(v: number) => `¥${v.toLocaleString()}`} />
+            <Tooltip formatter={(v: any) => v != null ? `¥${Number(v).toLocaleString()}` : ""} />
             {hasMultipleBars ? (
               chart.bars!.map((b) => (
                 <Bar key={b.dataKey} dataKey={b.dataKey} fill={b.fill} name={b.name} />
@@ -104,7 +104,7 @@ function ChartRenderer({ chart }: { chart: ChartConfig }) {
                 <Cell key={i} fill={colors[i % colors.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(v: number) => `¥${v.toLocaleString()}`} />
+          <Tooltip formatter={(v: any) => v != null ? `¥${Number(v).toLocaleString()}` : ""} />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -120,7 +120,7 @@ function ChartRenderer({ chart }: { chart: ChartConfig }) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey={chart.xField || "name"} tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip formatter={(v: number) => `¥${v.toLocaleString()}`} />
+            <Tooltip formatter={(v: any) => v != null ? `¥${Number(v).toLocaleString()}` : ""} />
             {chart.lines?.map((line) => (
               <Line
                 key={line.dataKey}

@@ -95,7 +95,7 @@ test.describe("多经营主体业务场景验证", () => {
     // 创建客户（共享）
     const cust = await apiPost(request, "/api/customers", {
       name: `${tag}测试客户-${ts}`,
-      industryType: "化工",
+      ownershipType: "民营",
       contactPerson: "张三",
       phone: "13800138000",
       address: "合肥市高新区测试路100号",
@@ -174,7 +174,7 @@ test.describe("多经营主体业务场景验证", () => {
       location: "安徽省合肥市",
       contactPerson: "王工",
       contactPhone: "13700137000",
-      projectNature: ["EPC"],
+      projectNature: "EPcm",
       implementationEntity: "总公司签约",
       currentStatus: "已中标",
     });
@@ -280,7 +280,7 @@ test.describe("多经营主体业务场景验证", () => {
       location: "安徽省芜湖市",
       contactPerson: "赵工",
       contactPhone: "13600136000",
-      projectNature: ["设计"],
+      projectNature: "设计",
       implementationEntity: "分公司签约",
       currentStatus: "已中标",
     });
@@ -367,7 +367,7 @@ test.describe("多经营主体业务场景验证", () => {
       location: "安徽省合肥市",
       contactPerson: "孙工",
       contactPhone: "13500135000",
-      projectNature: ["采购"],
+      projectNature: "采购",
       implementationEntity: "分公司",
       currentStatus: "已中标",
     });
@@ -486,7 +486,7 @@ test.describe("多经营主体业务场景验证", () => {
       location: "安徽省合肥市",
       contactPerson: "周工",
       contactPhone: "13400134000",
-      projectNature: ["咨询"],
+      projectNature: "咨询",
       implementationEntity: "挂靠公司",
       currentStatus: "已中标",
     });

@@ -72,7 +72,7 @@ test.describe("WBS 计划模块全链路测试", () => {
 
     const cust = await apiPost(request, "/api/customers", {
       name: `WBS测试客户-${ts}`,
-      industryType: "化工",
+      ownershipType: "民营",
       contactPerson: "张三",
       phone: "13800138000",
       address: "测试路100号",
@@ -86,7 +86,7 @@ test.describe("WBS 计划模块全链路测试", () => {
       location: "安徽省合肥市",
       contactPerson: "王工",
       contactPhone: "13900139000",
-      projectNature: ["EP"],
+      projectNature: "EP",
       implementationEntity: "华东工程",
       currentStatus: "已中标",
     });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
 import { cleanupBusinessApprovalRecords } from "@/lib/approval-cleanup";
+import { syncProjectToDS } from "@/lib/project-sync";
 
 export async function GET(
   _request: NextRequest,
@@ -12,7 +13,7 @@ export async function GET(
     const project = await prisma.project.findUnique({
       where: { id },
       include: {
-        customer: { select: { id: true, name: true, industryType: true, contactPerson: true, phone: true } },
+        customer: { select: { id: true, name: true, ownershipType: true, contactPerson: true, phone: true } },
         projectLead: { select: { projectSourceId: true, projectName: true, currentStatus: true } },
         designManager: { select: { id: true, realName: true } },
         supervisorLeader: { select: { id: true, realName: true } },
@@ -76,6 +77,7 @@ export async function PUT(
       riskLevel,
       actualStartDate,
       actualEndDate,
+      actualCloseDate,
     } = body;
 
     if (projectCode !== undefined && !projectCode.trim()) {
@@ -124,6 +126,9 @@ export async function PUT(
     if (plannedEndDate !== undefined) updateData.plannedEndDate = plannedEndDate ? new Date(plannedEndDate) : null;
     if (actualCloseDate !== undefined) updateData.actualCloseDate = actualCloseDate ? new Date(actualCloseDate) : null;
     if (designPhases !== undefined) updateData.designPhases = designPhases;
+    if (useWbs !== undefined) updateData.useWbs = useWbs;
+    if (overallProgress !== undefined) updateData.overallProgress = overallProgress;
+    if (riskLevel !== undefined) updateData.riskLevel = riskLevel;
 
     const currentUser = await getCurrentUser();
     updateData.lastModifiedBy = currentUser?.realName || null;
@@ -132,7 +137,7 @@ export async function PUT(
       where: { id },
       data: updateData,
       include: {
-        customer: { select: { id: true, name: true, industryType: true } },
+        customer: { select: { id: true, name: true, ownershipType: true } },
         projectLead: { select: { projectSourceId: true, projectName: true, currentStatus: true } },
         designManager: { select: { id: true, realName: true } },
         supervisorLeader: { select: { id: true, realName: true } },
@@ -177,6 +182,32 @@ export async function PUT(
       } catch {
         // WBS同步失败不影响项目更新
       }
+    }
+
+    // 同步到 DS 系统（异步，不阻塞响应）- 检查同步开关
+    try {
+      const dsSetting = await prisma.systemSetting.findUnique({
+        where: { key: "ds_sync_disabled" },
+      });
+      if (dsSetting?.value !== "true") {
+        syncProjectToDS({
+          id: project.id,
+          projectCode: project.projectCode,
+          name: project.name,
+          projectContent: project.projectContent,
+          status: project.status,
+          dsProjectCode: project.dsProjectCode,
+          customerId: project.customerId,
+          address: project.address,
+          designManagerId: project.designManagerId,
+          supervisorLeaderId: project.supervisorLeaderId,
+          designPhases: project.designPhases,
+        }).catch((err) => {
+          console.error("[project-sync] 更新同步失败:", err);
+        });
+      }
+    } catch {
+      // 设置查询失败不阻塞
     }
 
     return NextResponse.json({ data: project });
@@ -225,6 +256,22 @@ export async function DELETE(
 
     if ((existing.status === "执行" || existing.status === "关闭") && !isAdmin(adminUser)) {
       return NextResponse.json({ error: "执行中或已关闭的项目不能删除" }, { status: 400 });
+    }
+
+    // 检查 DS 端是否还存在该项目（有 dsProjectCode 的项目需先在 DS 删除）
+    if (existing.dsProjectCode) {
+      try {
+        const { dsProjectExists } = await import("@/lib/ds-client");
+        const existsInDS = await dsProjectExists(existing.dsProjectCode);
+        if (existsInDS) {
+          return NextResponse.json(
+            { error: "该项目的归档数据仍在设计审查系统中，请先在设计审查系统中删除该项目后再操作" },
+            { status: 400 }
+          );
+        }
+      } catch {
+        // DS 查询失败不阻塞删除
+      }
     }
 
     if (existing._count.purchaseRequests > 0 && !isAdmin(adminUser)) {

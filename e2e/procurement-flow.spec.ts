@@ -45,7 +45,7 @@ test.describe("采购到付款全流程", () => {
     console.log("✅ API 登录成功");
 
     const cust = await apiPost(request, "/api/customers", {
-      name: `测试客户-PW-${ts}`, shortName: "测试客户", industryType: "化工", customerType: "企业",
+      name: `测试客户-PW-${ts}`, shortName: "测试客户", ownershipType: "民营", customerType: "企业",
       contactPerson: "张三", contactPhone: "13800138000", province: "安徽省", city: "合肥市",
       district: "蜀山区", address: "测试路100号", unifiedSocialCode: `91340100MA8${ts}`,
       legalRepresentative: "李四", registeredCapital: "1000", status: "当前有效", isActive: true,
@@ -55,7 +55,7 @@ test.describe("采购到付款全流程", () => {
 
     const lead = await apiPost(request, "/api/project-leads", {
       customerId: ids.customerId, projectName: "PW流程测试项目", location: "安徽省合肥市",
-      contactPerson: "王工", contactPhone: "13900139000", projectNature: ["EP"],
+      contactPerson: "王工", contactPhone: "13900139000", projectNature: "EP",
       implementationEntity: "华东工程", currentStatus: "已中标",
     });
     ids.projectSourceId = lead.data.projectSourceId;

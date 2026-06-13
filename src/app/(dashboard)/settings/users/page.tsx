@@ -290,8 +290,8 @@ export default function UsersSettingsPage() {
 
       const json = await res.json();
       if (res.ok) {
-        setForm((prev) => ({ ...prev, signatureUrl: json.url }));
-        setSignaturePreview(json.url);
+        setForm((prev) => ({ ...prev, signatureUrl: json.key || json.url }));
+        setSignaturePreview(json.signedUrl || json.url);
       } else {
         setFormError(json.error || "上传失败");
       }

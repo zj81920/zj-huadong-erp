@@ -230,7 +230,7 @@ test.describe("场景一：新项目完整生命周期 (API-first)", () => {
     // 3. 创建客户
     const custRes = await apiPost("/api/customers", {
       name: `${tag}-华安公司`,
-      industryType: "石化",
+      ownershipType: "国有",
       contactPerson: "王经理",
       phone: "13800138001",
       customerGrade: "A",
@@ -272,7 +272,7 @@ test.describe("场景一：新项目完整生命周期 (API-first)", () => {
       location: "合肥市高新区",
       contactPerson: "李四",
       contactPhone: "13800138002",
-      projectNature: ["方案设计"],
+      projectNature: "设计",
       implementationEntity: orgId,
     });
     expect(leadRes.data?.projectSourceId).toBeTruthy();

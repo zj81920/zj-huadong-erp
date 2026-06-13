@@ -37,7 +37,7 @@ export const MODULE_REGISTRY: Record<ImportModule, ModuleImportConfig> = {
       { field: "phone", label: "联系电话", type: "string", required: false },
       { field: "email", label: "邮箱", type: "string", required: false },
       { field: "address", label: "地址", type: "string", required: false },
-      { field: "industryType", label: "行业类型", type: "string", required: false },
+      { field: "ownershipType", label: "客户属性", type: "string", required: false },
       { field: "customerGrade", label: "客户等级", type: "string", required: false, defaultValue: "C" },
     ],
     aiPromptContext: "客户基础信息，包含客户名称、联系人、联系方式等",

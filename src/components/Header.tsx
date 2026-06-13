@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, LogOut, User, KeyRound, PenLine } from "lucide-react";
+import { Bell, LogOut, User, KeyRound, PenLine, FileText } from "lucide-react";
 
 interface Notification {
   id: string;
@@ -106,6 +106,29 @@ export default function Header() {
       </Link>
       <div className="flex-1" />
       <div className="flex items-center gap-2">
+        {/* 设计审查归档系统入口 */}
+        <a
+          href={process.env.NEXT_PUBLIC_DS_URL || "http://47.96.128.88:3000/"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium border transition-colors"
+          style={{
+            background: "rgba(96, 165, 250, 0.15)",
+            borderColor: "rgba(96, 165, 250, 0.3)",
+            color: "rgba(255,255,255,0.9)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(96, 165, 250, 0.25)";
+            e.currentTarget.style.borderColor = "rgba(96, 165, 250, 0.5)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(96, 165, 250, 0.15)";
+            e.currentTarget.style.borderColor = "rgba(96, 165, 250, 0.3)";
+          }}
+        >
+          <FileText className="w-4 h-4" />
+          设计审查归档
+        </a>
         {/* 通知铃铛 */}
         <div ref={notifRef} className="relative">
           <button

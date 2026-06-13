@@ -9,7 +9,7 @@ export interface CustomerImportRow {
   phone?: string;
   email?: string;
   address?: string;
-  industryType?: string;
+  ownershipType?: string;
   customerGrade?: string;
 }
 
@@ -41,7 +41,7 @@ export async function writeCustomers(
           phone: row.phone || "",
           email: row.email || "",
           address: row.address || "",
-          industryType: row.industryType || "",
+          ownershipType: row.ownershipType || "",
           customerGrade: row.customerGrade || "C",
         },
       });

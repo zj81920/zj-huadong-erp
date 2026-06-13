@@ -354,7 +354,7 @@ export default function WbsDashboardPage() {
                     value={ev.riskLevel ?? p.riskLevel ?? "low"}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {
-                      setEditValues(prev => ({ ...prev, [p.projectSourceId]: { ...prev[p.projectSourceId], riskLevel: e.target.value } }));
+                      setEditValues(prev => ({ ...prev, [p.projectSourceId]: { ...prev[p.projectSourceId], riskLevel: e.target.value as "low" | "medium" | "high" } }));
                       saveField(p.id, p.projectSourceId, "riskLevel", e.target.value);
                     }}
                     style={{ ...inputStyle, padding: "3px 2px", fontSize: 11 }}

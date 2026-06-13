@@ -76,7 +76,7 @@ export async function getDepartments(request: APIRequestContext) {
 
 /**
  * 创建客户。
- * 必填: name；可选: contactPerson, contactPhone, industryType 等
+ * 必填: name；可选: contactPerson, contactPhone, ownershipType 等
  */
 export async function createCustomer(
   request: APIRequestContext,
@@ -84,7 +84,7 @@ export async function createCustomer(
     name: string;
     contactPerson?: string;
     contactPhone?: string;
-    industryType?: string;
+    ownershipType?: string;
     customerGrade?: string;
   }
 ) {
@@ -93,7 +93,7 @@ export async function createCustomer(
       name: data.name,
       contactPerson: data.contactPerson || null,
       phone: data.contactPhone || null,
-      industryType: data.industryType || null,
+      ownershipType: data.ownershipType || null,
       customerGrade: data.customerGrade || null,
     },
     headers: { "Content-Type": "application/json" },

@@ -13,7 +13,7 @@ export async function GET(
     const quotation = await prisma.quotation.findUnique({
       where: { id },
       include: {
-        customer: { select: { id: true, name: true, industryType: true } },
+        customer: { select: { id: true, name: true, ownershipType: true } },
         projectLead: { select: { id: true, projectSourceId: true, projectName: true } },
       },
     });
@@ -66,7 +66,7 @@ export async function PUT(
       where: { id },
       data: updateData,
       include: {
-        customer: { select: { id: true, name: true, industryType: true } },
+        customer: { select: { id: true, name: true, ownershipType: true } },
         projectLead: { select: { id: true, projectSourceId: true, projectName: true } },
       },
     });

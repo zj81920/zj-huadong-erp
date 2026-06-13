@@ -152,7 +152,7 @@ test.describe("全链路手工测试 - A/B/C 三大业务方向", () => {
       const cust = await apiPost(request, "/api/customers", {
         name: `全链路测试客户-${ts}`,
         shortName: "测试客户",
-        industryType: "化工",
+        ownershipType: "民营",
         customerType: "企业",
         contactPerson: "张三",
         contactPhone: "13800138000",
@@ -226,7 +226,7 @@ test.describe("全链路手工测试 - A/B/C 三大业务方向", () => {
         location: "安徽省合肥市",
         contactPerson: "王工",
         contactPhone: "13900139000",
-        projectNature: ["EP"],
+        projectNature: "EP",
         implementationEntity: "华东工程",
         currentStatus: "已中标",
       });
@@ -357,7 +357,7 @@ test.describe("全链路手工测试 - A/B/C 三大业务方向", () => {
         location: "安徽省合肥市",
         contactPerson: "李工",
         contactPhone: "13900139001",
-        projectNature: ["EPC"],
+        projectNature: "EPcm",
         implementationEntity: "华东工程",
         currentStatus: "跟踪中",
       });
@@ -722,7 +722,7 @@ test.describe("全链路手工测试 - A/B/C 三大业务方向", () => {
       const custB = await apiPost(request, "/api/customers", {
         name: `B方向客户-${ts}`,
         shortName: "B客户",
-        industryType: "化工",
+        ownershipType: "民营",
         customerType: "企业",
         contactPerson: "王五",
         contactPhone: "13600136000",
@@ -745,7 +745,7 @@ test.describe("全链路手工测试 - A/B/C 三大业务方向", () => {
         location: "江苏省南京市",
         contactPerson: "刘工",
         contactPhone: "13800138001",
-        projectNature: ["EP"],
+        projectNature: "EP",
         implementationEntity: "华东工程",
         currentStatus: "已中标",
       });
