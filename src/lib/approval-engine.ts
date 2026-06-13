@@ -958,9 +958,6 @@ async function updateBusinessStatus(
               bankName: change.bankName,
               bankAccount: change.bankAccount,
               remark: change.remark,
-              ...(change.attachmentUrl !== undefined && change.attachmentUrl !== null
-                ? { attachmentUrl: change.attachmentUrl }
-                : {}),
             },
           });
         }
