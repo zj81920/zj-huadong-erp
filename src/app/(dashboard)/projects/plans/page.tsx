@@ -164,8 +164,8 @@ export default function WbsDashboardPage() {
         }}>
           <span style={{ width: 100 }}>项目编号</span>
           <span style={{ width: 180 }}>项目名称</span>
-          <span style={{ width: 100 }}>甲方</span>
-          <span style={{ width: 180 }}>设计阶段</span>
+          <span style={{ width: 140 }}>甲方</span>
+          <span style={{ width: 140 }}>设计阶段</span>
           <span style={{ width: 160, textAlign: "center" }}>进度</span>
           <span style={{ width: 200, textAlign: "center" }}>实际时间</span>
           <span style={{ width: 80, textAlign: "center" }}>状态</span>
@@ -209,7 +209,16 @@ export default function WbsDashboardPage() {
               )}
 
               {/* 甲方 */}
-              <span style={{ width: 100, fontSize: 13, color: "#57534E" }}>
+              <span style={{
+                width: 140, fontSize: 13, color: "#57534E",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                lineHeight: "1.4",
+                wordBreak: "break-all",
+              }} title={p.customerName || ""}>
                 {p.customerName || "-"}
               </span>
 
