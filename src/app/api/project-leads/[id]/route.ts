@@ -102,15 +102,25 @@ export async function PUT(
 
     const updateData: Record<string, unknown> = {};
     const currentUser = await getCurrentUser();
+
+    // 已立项线索的编辑保护
+    const isEstablished = existing.currentStatus === "已立项";
+    if (isEstablished) {
+      if (!isAdmin(currentUser)) {
+        return NextResponse.json({ error: "已立项的线索不可编辑" }, { status: 403 });
+      }
+      // 管理员可编辑其他字段，但状态和项目名称由系统管理，不允许修改
+    }
+
     updateData.lastModifiedBy = currentUser?.realName || null;
-    if (projectName !== undefined) updateData.projectName = projectName.trim();
+    if (projectName !== undefined && !isEstablished) updateData.projectName = projectName.trim();
     if (location !== undefined) updateData.location = location?.trim() || null;
     if (contactPerson !== undefined) updateData.contactPerson = contactPerson?.trim() || null;
     if (contactPhone !== undefined) updateData.contactPhone = contactPhone?.trim() || null;
     if (contactEmail !== undefined) updateData.contactEmail = contactEmail?.trim() || null;
     if (projectNature !== undefined) updateData.projectNature = projectNature?.trim() || null;
     if (implementationEntity !== undefined) updateData.implementationEntity = implementationEntity.trim();
-    if (currentStatus !== undefined) updateData.currentStatus = currentStatus;
+    if (currentStatus !== undefined && !isEstablished) updateData.currentStatus = currentStatus;
     if (followUpRecords !== undefined) updateData.followUpRecords = followUpRecords;
     if (competitorInfo !== undefined) updateData.competitorInfo = competitorInfo;
     if (tenderFiles !== undefined) updateData.tenderFiles = tenderFiles;
