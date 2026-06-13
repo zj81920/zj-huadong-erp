@@ -33,7 +33,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
     const currentUser = await getCurrentUser();
-    const { name, supplierType, status, contactPerson, phone, email, address, bankName, bankAccount, remark, attachmentUrl } = body;
+    const { name, supplierType, status, contactPerson, phone, email, address, bankName, bankAccount, remark, attachmentUrls } = body;
 
     const existing = await prisma.supplier.findUnique({ where: { id } });
     if (!existing || !existing.isActive) {
@@ -71,7 +71,7 @@ export async function PUT(
         ...(bankName !== undefined && { bankName: bankName?.trim() || null }),
         ...(bankAccount !== undefined && { bankAccount: bankAccount?.trim() || null }),
         ...(remark !== undefined && { remark: remark?.trim() || null }),
-        ...(attachmentUrl !== undefined && { attachmentUrl: attachmentUrl?.trim() || null }),
+        ...(attachmentUrls !== undefined && { attachmentUrls: Array.isArray(attachmentUrls) ? attachmentUrls : (typeof attachmentUrls === "string" ? [attachmentUrls] : []) }),
         ...(existing.approvalStatus === "已驳回" && { approvalStatus: "草稿" }),
         lastModifiedBy: currentUser?.realName || null,
       },
