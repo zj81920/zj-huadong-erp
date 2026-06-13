@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   ArrowLeft, Pencil, Briefcase, Plus,
   Users, Phone, Mail, MapPin, FileText,
@@ -112,6 +113,8 @@ export default function ProjectLeadDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+  const { user } = useAuth();
+  const isAdminUser = user?.username === "admin" || user?.roles?.some((r: any) => r.code === "admin") || false;
 
   const [lead, setLead] = useState<LeadData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -223,7 +226,7 @@ export default function ProjectLeadDetailPage() {
               </div>
               <span className={`ios-badge ml-2 ${sc.color}`}>{sc.label}</span>
             </div>
-            {!isEstablished && (
+            {(!isEstablished || isAdminUser) && (
               <div className="flex items-center gap-0.5 bg-[#FAFAF9] rounded-lg p-0.5 mt-2">
                 <button
                   className={`px-3 py-1 rounded-md text-[12px] font-medium transition-all ${lead.leadMode !== "商务报价" ? "bg-white text-[#1C1917] shadow-sm" : "text-[#78716C]"}`}
@@ -265,7 +268,7 @@ export default function ProjectLeadDetailPage() {
             <FileText className="w-4 h-4 text-[#1C1917]" />
           </div>
           <h2 className="text-[15px] font-bold text-[#1C1917]">基本信息</h2>
-          {!isEstablished && (
+          {(!isEstablished || isAdminUser) && (
             <button className="ios-btn ios-btn-ghost ios-btn-sm ml-auto" onClick={handleOpenLeadEdit}>
               <Pencil className="w-3.5 h-3.5" />编辑
             </button>
@@ -284,9 +287,9 @@ export default function ProjectLeadDetailPage() {
       </div>
 
       {lead.leadMode !== "商务报价" ? (
-        <BiddingSection lead={lead} onRefresh={fetchLead} readOnly={isEstablished} />
+        <BiddingSection lead={lead} onRefresh={fetchLead} readOnly={isEstablished && !isAdminUser} />
       ) : (
-        <QuotationSection lead={lead} onRefresh={fetchLead} readOnly={isEstablished} />
+        <QuotationSection lead={lead} onRefresh={fetchLead} readOnly={isEstablished && !isAdminUser} />
       )}
 
       <Modal isOpen={showLeadEditModal} onClose={() => setShowLeadEditModal(false)} title="编辑项目线索" maxWidth="640px">
@@ -305,7 +308,8 @@ export default function ProjectLeadDetailPage() {
             </div>
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">项目名称 <span className="text-[#78716C]">*</span></label>
-              <input type="text" className="ios-input" value={leadForm.projectName} onChange={(e) => setLeadForm((p) => ({ ...p, projectName: e.target.value }))} />
+              <input type="text" className={`ios-input ${isEstablished ? "cursor-not-allowed bg-[#F5F5F4] text-[#A8A29E]" : ""}`} value={leadForm.projectName} onChange={(e) => setLeadForm((p) => ({ ...p, projectName: e.target.value }))} disabled={isEstablished} />
+              {isEstablished && <p className="mt-1 text-[11px] text-[#A8A29E]">项目名称由关联项目同步，如需修改请编辑项目立项</p>}
             </div>
             <div><label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">项目地点</label><input type="text" className="ios-input" value={leadForm.location} onChange={(e) => setLeadForm((p) => ({ ...p, location: e.target.value }))} /></div>
             <div><label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">项目联系人</label><input type="text" className="ios-input" placeholder="请输入联系人" value={leadForm.contactPerson} onChange={(e) => setLeadForm((p) => ({ ...p, contactPerson: e.target.value }))} /></div>
