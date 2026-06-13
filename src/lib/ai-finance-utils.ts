@@ -68,18 +68,18 @@ export function isValidChartConfig(config: unknown): config is ChartConfig {
   if (typeof c.title !== 'string' || !c.title) return false;
   if (!Array.isArray(c.data) || c.data.length === 0) return false;
   if (c.type === 'bar') {
-    const bar = c as BarChartConfig;
+    const bar = c as unknown as BarChartConfig;
     if (typeof bar.xField !== 'string') return false;
     const hasYField = typeof bar.yField === 'string' || Array.isArray(bar.bars);
     if (!hasYField) return false;
   }
   if (c.type === 'pie') {
-    const pie = c as PieChartConfig;
+    const pie = c as unknown as PieChartConfig;
     if (typeof pie.nameField !== 'string') return false;
     if (typeof pie.valueField !== 'string') return false;
   }
   if (c.type === 'line') {
-    const line = c as LineChartConfig;
+    const line = c as unknown as LineChartConfig;
     if (typeof line.xField !== 'string') return false;
     if (!Array.isArray(line.lines) || line.lines.length === 0) return false;
   }
