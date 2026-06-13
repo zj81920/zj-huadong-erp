@@ -189,14 +189,14 @@ async function testA() {
 
   // A1
   sub("A1: 客户+供应商");
-  const cust = await prisma.customer.create({ data: { name: `测试客户${testSuffix}`, contactPerson: "张三", phone: "13800138000", address: "测试路100号", industryType: "化工", isActive: true } });
+  const cust = await prisma.customer.create({ data: { name: `测试客户${testSuffix}`, contactPerson: "张三", phone: "13800138000", address: "测试路100号", ownershipType: "民营", isActive: true } });
   shared.customerId = cust.id; ok(`客户: ${cust.name}`);
   const supp = await prisma.supplier.create({ data: { name: `测试供应商${testSuffix}`, supplierType: "企业", contactPerson: "赵六", phone: "13700137000", address: "测试路200号", approvalStatus: "草稿" } });
   shared.supplierId = supp.id; ok(`供应商: ${supp.name}`);
 
   // A2
   sub("A2: 项目线索");
-  const lead = await prisma.projectLead.create({ data: { customerId: cust.id, projectSourceId: `src_a_${testSuffix}`, projectName: `A测试项目${testSuffix}`, location: "合肥", contactPerson: "王工", contactPhone: "13900139000", projectNature: ["EP"], implementationEntity: "公司本部", currentStatus: "已中标" } });
+  const lead = await prisma.projectLead.create({ data: { customerId: cust.id, projectSourceId: `src_a_${testSuffix}`, projectName: `A测试项目${testSuffix}`, location: "合肥", contactPerson: "王工", contactPhone: "13900139000", projectNature: "EP", implementationEntity: "公司本部", currentStatus: "已中标" } });
   shared.projectSourceId = lead.projectSourceId; ok(`线索: ${lead.projectSourceId}`);
 
   // A3a 商务报价

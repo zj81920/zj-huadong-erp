@@ -25,11 +25,13 @@ import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
 import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { OWNERSHIP_TYPE_OPTIONS } from "@/lib/constants/customer";
+import { PROJECT_CATEGORY_OPTIONS } from "@/lib/constants/project";
 
 interface Customer {
   id: string;
   name: string;
-  industryType: string | null;
+  ownershipType: string | null;
 }
 
 interface ProjectLead {
@@ -41,7 +43,7 @@ interface ProjectLead {
   contactPerson: string | null;
   contactPhone: string | null;
   contactEmail: string | null;
-  projectNature: string[];
+  projectNature: string | null;
   implementationEntity: string;
   currentStatus: string;
   leadMode: string;
@@ -62,7 +64,7 @@ interface LeadFormData {
   contactPerson: string;
   contactPhone: string;
   contactEmail: string;
-  projectNature: string[];
+  projectNature: string;
   implementationEntity: string;
 }
 
@@ -73,18 +75,9 @@ const emptyForm: LeadFormData = {
   contactPerson: "",
   contactPhone: "",
   contactEmail: "",
-  projectNature: [],
+  projectNature: "",
   implementationEntity: "",
 };
-
-const projectNatureOptions = [
-  "方案设计",
-  "初步设计",
-  "详细设计",
-  "EPC",
-  "框架协议",
-  "咨询",
-];
 
 const statusConfig: Record<string, { color: string; label: string }> = {
   "跟踪中": { color: "ios-badge-gray", label: "跟踪中" },
@@ -137,7 +130,7 @@ export default function ProjectLeadsPage() {
     phone: "",
     email: "",
     maintainer: "",
-    industryType: "",
+    ownershipType: "",
     customerGrade: "C",
   });
   const [customerSaving, setCustomerSaving] = useState(false);
@@ -215,7 +208,7 @@ export default function ProjectLeadsPage() {
       contactPerson: lead.contactPerson || "",
       contactPhone: lead.contactPhone || "",
       contactEmail: lead.contactEmail || "",
-      projectNature: lead.projectNature || [],
+      projectNature: lead.projectNature || "",
       implementationEntity: lead.implementationEntity || "",
     });
     setFormError("");
@@ -231,7 +224,7 @@ export default function ProjectLeadsPage() {
       setFormError("项目名称不能为空");
       return;
     }
-    if (!form.projectNature || form.projectNature.length === 0) {
+    if (!form.projectNature) {
       setFormError("请选择项目性质");
       return;
     }
@@ -298,7 +291,7 @@ export default function ProjectLeadsPage() {
           phone: "",
           email: "",
           maintainer: "",
-          industryType: "",
+          ownershipType: "",
           customerGrade: "C",
         });
       } else {
@@ -524,12 +517,12 @@ export default function ProjectLeadsPage() {
                         <span className="font-semibold">{lead.projectName}</span>
                       </td>
                       <td className="whitespace-nowrap">{lead.customer.name}</td>
-                      <td>
-                        <div className="flex flex-wrap gap-1 whitespace-nowrap">
-                          {(lead.projectNature || []).map((n: string) => (
-                            <span key={n} className="ios-badge text-[11px] ios-badge-blue">{n}</span>
-                          ))}
-                        </div>
+                      <td className="whitespace-nowrap">
+                        {lead.projectNature ? (
+                          <span className="ios-badge text-[11px] ios-badge-blue">{lead.projectNature}</span>
+                        ) : (
+                          <span className="text-[#78716C]">-</span>
+                        )}
                       </td>
                       <td className="whitespace-nowrap text-[13px]">{lead.implementationEntity || "-"}</td>
                       <td className="whitespace-nowrap">
@@ -623,7 +616,7 @@ export default function ProjectLeadsPage() {
               >
                 <option value="">请选择客户</option>
                 {customers.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}{c.industryType ? ` (${c.industryType})` : ""}</option>
+                  <option key={c.id} value={c.id}>{c.name}{c.ownershipType ? ` (${c.ownershipType})` : ""}</option>
                 ))}
               </select>
               <button
@@ -712,31 +705,16 @@ export default function ProjectLeadsPage() {
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
                 项目性质 <span className="text-[#78716C]">*</span>
               </label>
-              <div className="flex flex-wrap gap-2 p-2.5 border border-[#E7E5E4] rounded-xl bg-white min-h-[42px]">
-                {projectNatureOptions.map((opt) => {
-                  const selected = form.projectNature.includes(opt);
-                  return (
-                    <button
-                      key={opt}
-                      type="button"
-                      className={`px-2.5 py-1 rounded-lg text-[12px] font-medium transition-all ${
-                        selected
-                          ? "bg-[#1C1917] text-white"
-                          : "bg-[#FAFAF9] text-[#78716C] hover:bg-[#E8E8ED]"
-                      }`}
-                      onClick={() => {
-                        const updated = selected
-                          ? form.projectNature.filter((v) => v !== opt)
-                          : [...form.projectNature, opt];
-                        setForm((prev) => ({ ...prev, projectNature: updated }));
-                        if (formError) setFormError("");
-                      }}
-                    >
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
+              <select
+                className="ios-select"
+                value={form.projectNature}
+                onChange={(e) => updateForm("projectNature", e.target.value)}
+              >
+                <option value="">请选择项目性质</option>
+                {PROJECT_CATEGORY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -819,15 +797,16 @@ export default function ProjectLeadsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">行业类型</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户属性</label>
               <select
                 className="ios-select"
-                value={customerForm.industryType}
-                onChange={(e) => setCustomerForm((prev) => ({ ...prev, industryType: e.target.value }))}
+                value={customerForm.ownershipType}
+                onChange={(e) => setCustomerForm((prev) => ({ ...prev, ownershipType: e.target.value }))}
               >
                 <option value="">请选择</option>
-                <option value="石化">石化</option>
-                <option value="医药">医药</option>
+                {OWNERSHIP_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
 

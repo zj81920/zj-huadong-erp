@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       prisma.projectLead.findMany({
         where,
         include: {
-          customer: { select: { id: true, name: true, industryType: true } },
+          customer: { select: { id: true, name: true, ownershipType: true } },
           project: { select: { id: true, projectCode: true, name: true, status: true, projectCategory: true } },
         },
         orderBy: { createdAt: "desc" },
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     if (!projectName || !projectName.trim()) {
       return NextResponse.json({ error: "项目名称不能为空" }, { status: 400 });
     }
-    if (!projectNature || !Array.isArray(projectNature) || projectNature.length === 0) {
+    if (!projectNature || typeof projectNature !== "string" || !projectNature.trim()) {
       return NextResponse.json({ error: "请选择项目性质" }, { status: 400 });
     }
     if (!implementationEntity || !implementationEntity.trim()) {
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         contactPerson: contactPerson?.trim() || null,
         contactPhone: contactPhone?.trim() || null,
         contactEmail: contactEmail?.trim() || null,
-        projectNature: projectNature || [],
+        projectNature: projectNature?.trim() || null,
         implementationEntity: implementationEntity.trim(),
         currentStatus: currentStatus || "跟踪中",
         followUpRecords: followUpRecords || [],
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         createdById: currentUser?.id || null,
       },
       include: {
-        customer: { select: { id: true, name: true, industryType: true } },
+        customer: { select: { id: true, name: true, ownershipType: true } },
       },
     });
 

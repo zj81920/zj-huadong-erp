@@ -12,7 +12,7 @@ export async function GET(
     const lead = await prisma.projectLead.findUnique({
       where: { id },
       include: {
-        customer: { select: { id: true, name: true, industryType: true, contactPerson: true, phone: true } },
+        customer: { select: { id: true, name: true, ownershipType: true, contactPerson: true, phone: true } },
         biddings: true,
         quotations: true,
       },
@@ -93,7 +93,7 @@ export async function PUT(
     if (projectName !== undefined && !projectName.trim()) {
       return NextResponse.json({ error: "项目名称不能为空" }, { status: 400 });
     }
-    if (projectNature !== undefined && (!Array.isArray(projectNature) || projectNature.length === 0)) {
+    if (projectNature !== undefined && (typeof projectNature !== "string" || !projectNature.trim())) {
       return NextResponse.json({ error: "请选择项目性质" }, { status: 400 });
     }
     if (implementationEntity !== undefined && !implementationEntity.trim()) {
@@ -108,7 +108,7 @@ export async function PUT(
     if (contactPerson !== undefined) updateData.contactPerson = contactPerson?.trim() || null;
     if (contactPhone !== undefined) updateData.contactPhone = contactPhone?.trim() || null;
     if (contactEmail !== undefined) updateData.contactEmail = contactEmail?.trim() || null;
-    if (projectNature !== undefined) updateData.projectNature = projectNature;
+    if (projectNature !== undefined) updateData.projectNature = projectNature?.trim() || null;
     if (implementationEntity !== undefined) updateData.implementationEntity = implementationEntity.trim();
     if (currentStatus !== undefined) updateData.currentStatus = currentStatus;
     if (followUpRecords !== undefined) updateData.followUpRecords = followUpRecords;
@@ -153,7 +153,7 @@ export async function PUT(
       where: { id },
       data: updateData,
       include: {
-        customer: { select: { id: true, name: true, industryType: true } },
+        customer: { select: { id: true, name: true, ownershipType: true } },
       },
     });
 

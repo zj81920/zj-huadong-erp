@@ -10,11 +10,13 @@ import Modal from "@/components/Modal";
 import BiddingSection from "./BiddingSection";
 import QuotationSection from "./QuotationSection";
 import { formatDate } from "./utils";
+import { OWNERSHIP_TYPE_OPTIONS, ownershipTypeColorMap } from "@/lib/constants/customer";
+import { PROJECT_CATEGORY_OPTIONS } from "@/lib/constants/project";
 
 export interface Customer {
   id: string;
   name: string;
-  industryType: string | null;
+  ownershipType: string | null;
   contactPerson?: string | null;
   phone?: string | null;
 }
@@ -63,7 +65,7 @@ export interface LeadData {
   contactPerson: string | null;
   contactPhone: string | null;
   contactEmail: string | null;
-  projectNature: string[];
+  projectNature: string | null;
   implementationEntity: string;
   infoSource: string | null;
   currentStatus: string;
@@ -102,18 +104,9 @@ interface LeadFormData {
   contactPerson: string;
   contactPhone: string;
   contactEmail: string;
-  projectNature: string[];
+  projectNature: string;
   implementationEntity: string;
 }
-
-const projectNatureOptions = [
-  "方案设计",
-  "初步设计",
-  "详细设计",
-  "EPC",
-  "框架协议",
-  "咨询",
-];
 
 export default function ProjectLeadDetailPage() {
   const params = useParams();
@@ -124,7 +117,7 @@ export default function ProjectLeadDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showLeadEditModal, setShowLeadEditModal] = useState(false);
   const [leadForm, setLeadForm] = useState<LeadFormData>({
-    customerId: "", projectName: "", location: "", contactPerson: "", contactPhone: "", contactEmail: "", projectNature: [], implementationEntity: "",
+    customerId: "", projectName: "", location: "", contactPerson: "", contactPhone: "", contactEmail: "", projectNature: "", implementationEntity: "",
   });
   const [leadSaving, setLeadSaving] = useState(false);
   const [leadError, setLeadError] = useState("");
@@ -132,7 +125,7 @@ export default function ProjectLeadDetailPage() {
   const [bankAccounts, setBankAccounts] = useState<{ id: string; accountName: string }[]>([]);
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
-  const [customerForm, setCustomerForm] = useState({ name: "", address: "", contactPerson: "", phone: "", email: "", maintainer: "", industryType: "", customerGrade: "C" });
+  const [customerForm, setCustomerForm] = useState({ name: "", address: "", contactPerson: "", phone: "", email: "", maintainer: "", ownershipType: "", customerGrade: "C" });
   const [customerSaving, setCustomerSaving] = useState(false);
   const [customerError, setCustomerError] = useState("");
 
@@ -158,7 +151,7 @@ export default function ProjectLeadDetailPage() {
       contactPerson: lead.contactPerson || "",
       contactPhone: lead.contactPhone || "",
       contactEmail: lead.contactEmail || "",
-      projectNature: lead.projectNature || [],
+      projectNature: lead.projectNature || "",
       implementationEntity: lead.implementationEntity || "",
     });
     setLeadError("");
@@ -178,7 +171,7 @@ export default function ProjectLeadDetailPage() {
     if (!lead) return;
     if (!leadForm.customerId) { setLeadError("请选择客户"); return; }
     if (!leadForm.projectName.trim()) { setLeadError("项目名称不能为空"); return; }
-    if (!leadForm.projectNature || leadForm.projectNature.length === 0) { setLeadError("请选择项目性质"); return; }
+    if (!leadForm.projectNature) { setLeadError("请选择项目性质"); return; }
     if (!leadForm.implementationEntity.trim()) { setLeadError("请选择实施主体"); return; }
     setLeadSaving(true); setLeadError("");
     try {
@@ -201,7 +194,7 @@ export default function ProjectLeadDetailPage() {
         if (custJson.data) setCustomers(custJson.data);
         setLeadForm((p) => ({ ...p, customerId: json.data.id }));
         setShowCustomerModal(false);
-        setCustomerForm({ name: "", address: "", contactPerson: "", phone: "", email: "", maintainer: "", industryType: "", customerGrade: "C" });
+        setCustomerForm({ name: "", address: "", contactPerson: "", phone: "", email: "", maintainer: "", ownershipType: "", customerGrade: "C" });
       } else { setCustomerError(json.error || "创建失败"); }
     } catch { setCustomerError("网络错误"); } finally { setCustomerSaving(false); }
   };
@@ -279,12 +272,12 @@ export default function ProjectLeadDetailPage() {
           )}
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bento-card-static"><p className="text-[12px] text-[#78716C] mb-1">客户</p><p className="text-[15px] font-semibold text-[#1C1917]">{lead.customer.name}</p>{lead.customer.industryType && <span className={`ios-badge text-[10px] mt-1 ${lead.customer.industryType === "石化" ? "ios-badge-orange" : "ios-badge-green"}`}>{lead.customer.industryType}</span>}</div>
+          <div className="bento-card-static"><p className="text-[12px] text-[#78716C] mb-1">客户</p><p className="text-[15px] font-semibold text-[#1C1917]">{lead.customer.name}</p>{lead.customer.ownershipType && <span className={`ios-badge text-[10px] mt-1 ${ownershipTypeColorMap[lead.customer.ownershipType as keyof typeof ownershipTypeColorMap] || "ios-badge-gray"}`}>{lead.customer.ownershipType}</span>}</div>
           <div className="bento-card-static"><p className="text-[12px] text-[#78716C] mb-1">项目地点</p><p className="text-[15px] font-semibold text-[#1C1917]">{lead.location || "-"}</p></div>
           <div className="bento-card-static"><p className="text-[12px] text-[#78716C] mb-1">项目联系人</p><p className="text-[15px] font-semibold text-[#1C1917]">{lead.contactPerson || "-"}</p></div>
           <div className="bento-card-static"><p className="text-[12px] text-[#78716C] mb-1">联系电话</p><p className="text-[15px] font-semibold text-[#1C1917]">{lead.contactPhone || "-"}</p></div>
           <div className="bento-card-static"><p className="text-[12px] text-[#78716C] mb-1">联系邮箱</p><p className="text-[15px] font-semibold text-[#1C1917]">{lead.contactEmail || "-"}</p></div>
-          <div className="bento-card-static"><p className="text-[12px] text-[#78716C] mb-1">项目性质</p><div className="flex flex-wrap gap-1 mt-1">{(lead.projectNature || []).map((n: string) => <span key={n} className="ios-badge text-[10px] ios-badge-blue">{n}</span>)}</div></div>
+          <div className="bento-card-static"><p className="text-[12px] text-[#78716C] mb-1">项目性质</p><p className="text-[15px] font-semibold text-[#1C1917]">{lead.projectNature || "-"}</p></div>
           <div className="bento-card-static"><p className="text-[12px] text-[#78716C] mb-1">实施主体</p><p className="text-[15px] font-semibold text-[#1C1917]">{lead.implementationEntity || "-"}</p></div>
           <div className="bento-card-static"><p className="text-[12px] text-[#78716C] mb-1">创建时间</p><p className="text-[15px] font-semibold text-[#1C1917]">{formatDate(lead.createdAt)}</p></div>
         </div>
@@ -304,7 +297,7 @@ export default function ProjectLeadDetailPage() {
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户 <span className="text-[#78716C]">*</span></label>
               <select className="ios-select" value={leadForm.customerId} onChange={(e) => { setLeadForm((p) => ({ ...p, customerId: e.target.value })); if (leadError) setLeadError(""); }}>
                 <option value="">请选择客户</option>
-                {customers.map((c) => <option key={c.id} value={c.id}>{c.name}{c.industryType ? ` (${c.industryType})` : ""}</option>)}
+                {customers.map((c) => <option key={c.id} value={c.id}>{c.name}{c.ownershipType ? ` (${c.ownershipType})` : ""}</option>)}
               </select>
               <button type="button" className="ios-btn ios-btn-ghost ios-btn-sm text-[#1C1917] mt-1" onClick={() => { setCustomerError(""); setShowCustomerModal(true); }}>
                 <Plus className="w-3.5 h-3.5" />新增客户
@@ -320,29 +313,10 @@ export default function ProjectLeadDetailPage() {
             <div><label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系邮箱</label><input type="email" className="ios-input" placeholder="请输入联系邮箱" value={leadForm.contactEmail} onChange={(e) => setLeadForm((p) => ({ ...p, contactEmail: e.target.value }))} /></div>
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">项目性质 <span className="text-[#78716C]">*</span></label>
-              <div className="flex flex-wrap gap-2 p-2.5 border border-[#E7E5E4] rounded-xl bg-white min-h-[42px]">
-                {projectNatureOptions.map((opt) => {
-                  const selected = leadForm.projectNature.includes(opt);
-                  return (
-                    <button
-                      key={opt}
-                      type="button"
-                      className={`px-2.5 py-1 rounded-lg text-[12px] font-medium transition-all ${
-                        selected ? "bg-[#1C1917] text-white" : "bg-[#FAFAF9] text-[#78716C] hover:bg-[#E8E8ED]"
-                      }`}
-                      onClick={() => {
-                        const updated = selected
-                          ? leadForm.projectNature.filter((v) => v !== opt)
-                          : [...leadForm.projectNature, opt];
-                        setLeadForm((p) => ({ ...p, projectNature: updated }));
-                        if (leadError) setLeadError("");
-                      }}
-                    >
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
+              <select className="ios-select" value={leadForm.projectNature} onChange={(e) => { setLeadForm((p) => ({ ...p, projectNature: e.target.value })); if (leadError) setLeadError(""); }}>
+                <option value="">请选择项目性质</option>
+                {PROJECT_CATEGORY_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              </select>
             </div>
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">实施主体 <span className="text-[#78716C]">*</span></label>
@@ -368,8 +342,10 @@ export default function ProjectLeadDetailPage() {
               <input type="text" className="ios-input" placeholder="请输入客户名称" value={customerForm.name} onChange={(e) => { setCustomerForm((p) => ({ ...p, name: e.target.value })); if (customerError) setCustomerError(""); }} />
             </div>
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">行业类型</label>
-              <select className="ios-select" value={customerForm.industryType} onChange={(e) => setCustomerForm((p) => ({ ...p, industryType: e.target.value }))}><option value="">请选择</option><option value="石化">石化</option><option value="医药">医药</option></select>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户属性</label>
+              <select className="ios-select" value={customerForm.ownershipType} onChange={(e) => setCustomerForm((p) => ({ ...p, ownershipType: e.target.value }))}><option value="">请选择</option>{OWNERSHIP_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}</select>
             </div>
             <div>
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户等级</label>
