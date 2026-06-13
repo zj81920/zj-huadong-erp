@@ -17,6 +17,9 @@ import {
   Users as UsersIcon,
   Calendar,
   UserCircle,
+  User,
+  Mail,
+  Phone,
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
@@ -25,11 +28,13 @@ import { usePagination } from "@/hooks/usePagination";
 import PaginationBar from "@/components/PaginationBar";
 import { getRowStatusClass } from "@/lib/status-colors";
 import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { OWNERSHIP_TYPE_OPTIONS } from "@/lib/constants/customer";
+import { PROJECT_CATEGORY_OPTIONS } from "@/lib/constants/project";
 
 interface Customer {
   id: string;
   name: string;
-  industryType: string | null;
+  ownershipType: string | null;
 }
 
 interface User {
@@ -100,9 +105,10 @@ interface ProjectFormData {
   plannedEndDate: string;
   actualCloseDate: string;
   projectLeadId: string;
-  location: string;
-  estimatedInvestment: string;
-  infoSource: string;
+  contactPerson: string;
+  contactPhone: string;
+  contactEmail: string;
+  implementationEntity: string;
 }
 
 const emptyForm: ProjectFormData = {
@@ -121,9 +127,10 @@ const emptyForm: ProjectFormData = {
   plannedEndDate: "",
   actualCloseDate: "",
   projectLeadId: "",
-  location: "",
-  estimatedInvestment: "",
-  infoSource: "",
+  contactPerson: "",
+  contactPhone: "",
+  contactEmail: "",
+  implementationEntity: "",
 };
 
 const statusConfig: Record<string, { color: string; label: string }> = {
@@ -167,6 +174,7 @@ export default function ProjectsPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [projectLeads, setProjectLeads] = useState<ProjectLeadItem[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<{ id: string; accountName: string }[]>([]);
 
   const [designPhases, setDesignPhases] = useState<string[]>([]);
   const [detailProject, setDetailProject] = useState<Project | null>(null);
@@ -188,7 +196,7 @@ export default function ProjectsPage() {
     name: "",
     contactPerson: "",
     phone: "",
-    industryType: "",
+    ownershipType: "",
     customerGrade: "C",
   });
   const [customerSaving, setCustomerSaving] = useState(false);
@@ -221,6 +229,19 @@ export default function ProjectsPage() {
     } catch {}
   }, []);
 
+  const fetchBankAccounts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/bank-accounts?isActive=true&pageSize=200");
+      const json = await res.json();
+      if (res.ok) {
+        const companyAccounts = (json.data || []).filter(
+          (a: { accountType: string }) => a.accountType === "公司账户"
+        );
+        setBankAccounts(companyAccounts.map((a: { id: string; accountName: string }) => ({ id: a.id, accountName: a.accountName })));
+      }
+    } catch {}
+  }, []);
+
   const fetchProjects = useCallback(async () => {
     setLoading(true);
     try {
@@ -248,7 +269,8 @@ export default function ProjectsPage() {
     fetchCustomers();
     fetchUsers();
     fetchProjectLeads();
-  }, [fetchCustomers, fetchUsers, fetchProjectLeads]);
+    fetchBankAccounts();
+  }, [fetchCustomers, fetchUsers, fetchProjectLeads, fetchBankAccounts]);
 
   useEffect(() => {
     fetchProjects();
@@ -269,7 +291,7 @@ export default function ProjectsPage() {
       projectCode: project.projectCode,
       name: project.name,
       customerId: project.customerId,
-      projectContent: "",
+      projectContent: project.projectContent || "",
       address: project.address || "",
       projectCategory: project.projectCategory || "",
       source: project.source,
@@ -280,9 +302,10 @@ export default function ProjectsPage() {
       plannedEndDate: project.plannedEndDate ? project.plannedEndDate.split("T")[0] : "",
       actualCloseDate: project.actualCloseDate ? project.actualCloseDate.split("T")[0] : "",
       projectLeadId: "",
-      location: "",
-      estimatedInvestment: "",
-      infoSource: "",
+      contactPerson: "",
+      contactPhone: "",
+      contactEmail: "",
+      implementationEntity: "",
     });
     setFormError("");
     // 初始化设计阶段
@@ -306,6 +329,34 @@ export default function ProjectsPage() {
     }
     if (!form.customerId) {
       setFormError("请选择客户");
+      return;
+    }
+    if (!form.projectContent.trim()) {
+      setFormError("项目内容描述不能为空");
+      return;
+    }
+    if (!form.address.trim()) {
+      setFormError("地址不能为空");
+      return;
+    }
+    if (!form.projectCategory) {
+      setFormError("请选择类别");
+      return;
+    }
+    if (designPhases.length === 0) {
+      setFormError("请选择设计阶段");
+      return;
+    }
+    if (!form.status) {
+      setFormError("请选择状态");
+      return;
+    }
+    if (!form.designManagerId) {
+      setFormError("请选择设计经理");
+      return;
+    }
+    if (!form.supervisorLeaderId) {
+      setFormError("请选择主管领导");
       return;
     }
 
@@ -338,9 +389,10 @@ export default function ProjectsPage() {
       if (form.source === "项目线索") {
         body.projectSourceId = form.projectSourceId;
       } else if (form.source === "直接委托") {
-        body.location = form.location || null;
-        body.estimatedInvestment = form.estimatedInvestment || null;
-        body.infoSource = form.infoSource || null;
+        body.contactPerson = form.contactPerson || null;
+        body.contactPhone = form.contactPhone || null;
+        body.contactEmail = form.contactEmail || null;
+        body.implementationEntity = form.implementationEntity || null;
       }
 
       const res = await fetch(url, {
@@ -390,7 +442,7 @@ export default function ProjectsPage() {
           name: "",
           contactPerson: "",
           phone: "",
-          industryType: "",
+          ownershipType: "",
           customerGrade: "C",
         });
       } else {
@@ -474,9 +526,10 @@ export default function ProjectsPage() {
         next.name = "";
         next.customerId = "";
         next.projectLeadId = "";
-        next.location = "";
-        next.estimatedInvestment = "";
-        next.infoSource = "";
+        next.contactPerson = "";
+        next.contactPhone = "";
+        next.contactEmail = "";
+        next.implementationEntity = "";
       }
       return next;
     });
@@ -603,9 +656,9 @@ export default function ProjectsPage() {
             }}
           >
             <option value="">全部类别</option>
-            <option value="设计">设计</option>
-            <option value="EP">EP</option>
-            <option value="EPcm">EPcm</option>
+            {PROJECT_CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
 
           <select
@@ -918,7 +971,7 @@ export default function ProjectsPage() {
               >
                 <option value="">请选择客户</option>
                 {customers.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}{c.industryType ? ` (${c.industryType})` : ""}</option>
+                  <option key={c.id} value={c.id}>{c.name}{c.ownershipType ? ` (${c.ownershipType})` : ""}</option>
                 ))}
               </select>
               <button
@@ -936,7 +989,7 @@ export default function ProjectsPage() {
 
             <div className="col-span-2">
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                项目内容描述
+                项目内容描述 <span className="text-[#DC2626]">*</span>
               </label>
               <textarea
                 className="ios-input"
@@ -949,7 +1002,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">地址</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">地址 <span className="text-[#DC2626]">*</span></label>
               <div className="relative">
                 <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                 <input
@@ -965,59 +1018,78 @@ export default function ProjectsPage() {
             {!editingProject && form.source === "直接委托" && (
               <>
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">项目地点</label>
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">项目联系人</label>
                   <div className="relative">
-                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
                     <input
                       type="text"
                       className="ios-input pl-10"
-                      placeholder="项目所在地点（同步到线索）"
-                      value={form.location}
-                      onChange={(e) => updateForm("location", e.target.value)}
+                      placeholder="请输入项目联系人"
+                      value={form.contactPerson}
+                      onChange={(e) => updateForm("contactPerson", e.target.value)}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">预计投资额（元）</label>
-                  <input
-                    type="number"
-                    className="ios-input"
-                    placeholder="预计投资金额（同步到线索）"
-                    value={form.estimatedInvestment}
-                    onChange={(e) => updateForm("estimatedInvestment", e.target.value)}
-                  />
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系电话</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                    <input
+                      type="text"
+                      className="ios-input pl-10"
+                      placeholder="请输入联系电话"
+                      value={form.contactPhone}
+                      onChange={(e) => updateForm("contactPhone", e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">信息来源</label>
-                  <input
-                    type="text"
-                    className="ios-input"
-                    placeholder="如：客户直接委托（同步到线索）"
-                    value={form.infoSource}
-                    onChange={(e) => updateForm("infoSource", e.target.value)}
-                  />
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">联系邮箱</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#78716C]" />
+                    <input
+                      type="email"
+                      className="ios-input pl-10"
+                      placeholder="请输入联系邮箱"
+                      value={form.contactEmail}
+                      onChange={(e) => updateForm("contactEmail", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">实施主体</label>
+                  <select
+                    className="ios-select"
+                    value={form.implementationEntity}
+                    onChange={(e) => updateForm("implementationEntity", e.target.value)}
+                  >
+                    <option value="">请选择实施主体</option>
+                    {bankAccounts.map((a) => (
+                      <option key={a.id} value={a.accountName}>{a.accountName}</option>
+                    ))}
+                  </select>
                 </div>
               </>
             )}
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">类别</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">类别 <span className="text-[#DC2626]">*</span></label>
               <select
                 className="ios-select"
                 value={form.projectCategory}
                 onChange={(e) => updateForm("projectCategory", e.target.value)}
               >
                 <option value="">请选择类别</option>
-                <option value="设计">设计</option>
-                <option value="EP">EP</option>
-                <option value="EPcm">EPcm</option>
+                {PROJECT_CATEGORY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
 
             {/* 设计阶段多选 */}
             <div className="col-span-2">
               <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">
-                设计阶段（可多选）
+                设计阶段（可多选） <span className="text-[#DC2626]">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {(["方案设计", "初步设计", "详细设计", "竣工图设计"] as string[])
@@ -1062,7 +1134,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">状态</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">状态 <span className="text-[#DC2626]">*</span></label>
               <select
                 className="ios-select"
                 value={form.status}
@@ -1075,7 +1147,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">设计经理</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">设计经理 <span className="text-[#DC2626]">*</span></label>
               <select
                 className="ios-select"
                 value={form.designManagerId}
@@ -1089,7 +1161,7 @@ export default function ProjectsPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">主管领导</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">主管领导 <span className="text-[#DC2626]">*</span></label>
               <select
                 className="ios-select"
                 value={form.supervisorLeaderId}
@@ -1335,15 +1407,16 @@ export default function ProjectsPage() {
           </div>
 
           <div>
-            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">行业类型</label>
+            <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户属性</label>
             <select
               className="ios-select"
-              value={customerForm.industryType}
-              onChange={(e) => setCustomerForm((prev) => ({ ...prev, industryType: e.target.value }))}
+              value={customerForm.ownershipType}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, ownershipType: e.target.value }))}
             >
-              <option value="">请选择行业类型</option>
-              <option value="石化">石化</option>
-              <option value="医药">医药</option>
+              <option value="">请选择</option>
+              {OWNERSHIP_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
 
