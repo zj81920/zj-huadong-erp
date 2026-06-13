@@ -20,6 +20,7 @@ import PaginationBar from "@/components/PaginationBar";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { BatchDeleteBar } from "@/components/BatchDeleteBar";
 import { getUserModulePerms, canDeleteFrontend, canEditFrontend } from "@/lib/types/permissions";
+import { OWNERSHIP_TYPE_OPTIONS, ownershipTypeColorMap } from "@/lib/constants/customer";
 
 interface Customer {
   id: string;
@@ -29,7 +30,7 @@ interface Customer {
   phone: string | null;
   email: string | null;
   maintainer: string | null;
-  industryType: string | null;
+  ownershipType: string | null;
   customerGrade: string | null;
   createdAt: string;
   updatedAt: string;
@@ -44,7 +45,7 @@ interface CustomerFormData {
   phone: string;
   email: string;
   maintainer: string;
-  industryType: string;
+  ownershipType: string;
   customerGrade: string;
 }
 
@@ -55,7 +56,7 @@ const emptyForm: CustomerFormData = {
   phone: "",
   email: "",
   maintainer: "",
-  industryType: "",
+  ownershipType: "",
   customerGrade: "C",
 };
 
@@ -63,11 +64,6 @@ const gradeColorMap: Record<string, string> = {
   A: "ios-badge-green",
   B: "ios-badge-blue",
   C: "ios-badge-gray",
-};
-
-const industryLabelMap: Record<string, string> = {
- 石化: "ios-badge-orange",
-  医药: "ios-badge-green",
 };
 
 export default function CustomersPage() {
@@ -81,7 +77,7 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [filterIndustry, setFilterIndustry] = useState("");
+  const [filterOwnership, setFilterOwnership] = useState("");
   const [filterGrade, setFilterGrade] = useState("");
 
   const [showModal, setShowModal] = useState(false);
@@ -102,7 +98,7 @@ export default function CustomersPage() {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      if (filterIndustry) params.set("industryType", filterIndustry);
+      if (filterOwnership) params.set("ownershipType", filterOwnership);
       if (filterGrade) params.set("customerGrade", filterGrade);
       params.set("page", page.toString());
       params.set("pageSize", pageSize.toString());
@@ -119,7 +115,7 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, filterIndustry, filterGrade, page, pageSize]);
+  }, [search, filterOwnership, filterGrade, page, pageSize]);
 
   useEffect(() => {
     fetchCustomers();
@@ -141,7 +137,7 @@ export default function CustomersPage() {
       phone: customer.phone || "",
       email: customer.email || "",
       maintainer: customer.maintainer || "",
-      industryType: customer.industryType || "",
+      ownershipType: customer.ownershipType || "",
       customerGrade: customer.customerGrade || "C",
     });
     setFormError("");
@@ -151,6 +147,14 @@ export default function CustomersPage() {
   const handleSubmit = async () => {
     if (!form.name.trim()) {
       setFormError("客户名称不能为空");
+      return;
+    }
+    if (!form.ownershipType) {
+      setFormError("请选择客户属性");
+      return;
+    }
+    if (!form.customerGrade) {
+      setFormError("请选择客户等级");
       return;
     }
 
@@ -225,7 +229,7 @@ export default function CustomersPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1>客户管理</h1>
-            <p>管理客户信息，包括石化、医药行业客户档案</p>
+            <p>管理客户信息，按客户属性分类管理</p>
           </div>
           <button className="ios-btn ios-btn-primary" onClick={handleOpenCreate}>
             <Plus className="w-4 h-4" />
@@ -252,15 +256,16 @@ export default function CustomersPage() {
 
           <select
             className="ios-select w-[140px]"
-            value={filterIndustry}
+            value={filterOwnership}
             onChange={(e) => {
-              setFilterIndustry(e.target.value);
+                setFilterOwnership(e.target.value);
               setPage(1);
             }}
           >
-            <option value="">全部行业</option>
-            <option value="石化">石化</option>
-            <option value="医药">医药</option>
+            <option value="">全部属性</option>
+            {OWNERSHIP_TYPE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
 
           <select
@@ -292,7 +297,7 @@ export default function CustomersPage() {
             <div className="w-16 h-16 rounded-full bg-[#FAFAF9] flex items-center justify-center">
               <Users className="w-8 h-8 text-[#78716C]" />
             </div>
-            <p>{search || filterIndustry || filterGrade ? "没有匹配的客户记录" : "暂无客户，点击右上角新增"}</p>
+            <p>{search || filterOwnership || filterGrade ? "没有匹配的客户记录" : "暂无客户，点击右上角新增"}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -301,7 +306,7 @@ export default function CustomersPage() {
                 <tr>
                   {rolePerms.delete && <th className="w-10"><input type="checkbox" className="ios-checkbox" checked={isAllSelected} onChange={() => isAllSelected ? clearSelection() : selectAll()} /></th>}
                   <th>客户名称</th>
-                  <th>行业类型</th>
+                  <th>客户属性</th>
                   <th>客户等级</th>
                   <th>联系人</th>
                   <th>电话</th>
@@ -323,9 +328,9 @@ export default function CustomersPage() {
                       </div>
                     </td>
                     <td>
-                      {customer.industryType ? (
-                        <span className={`ios-badge ${industryLabelMap[customer.industryType] || "ios-badge-gray"}`}>
-                          {customer.industryType}
+                      {customer.ownershipType ? (
+                        <span className={`ios-badge ${ownershipTypeColorMap[customer.ownershipType as keyof typeof ownershipTypeColorMap] || "ios-badge-gray"}`}>
+                          {customer.ownershipType}
                         </span>
                       ) : (
                         <span className="text-[#78716C]">-</span>
@@ -423,20 +428,21 @@ export default function CustomersPage() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">行业类型</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户属性 <span className="text-[#78716C]">*</span></label>
               <select
                 className="ios-select"
-                value={form.industryType}
-                onChange={(e) => updateForm("industryType", e.target.value)}
+                value={form.ownershipType}
+                onChange={(e) => updateForm("ownershipType", e.target.value)}
               >
                 <option value="">请选择</option>
-                <option value="石化">石化</option>
-                <option value="医药">医药</option>
+                {OWNERSHIP_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户等级</label>
+              <label className="block text-[13px] font-semibold text-[#1C1917] mb-1.5">客户等级 <span className="text-[#78716C]">*</span></label>
               <select
                 className="ios-select"
                 value={form.customerGrade}
@@ -580,8 +586,8 @@ export default function CustomersPage() {
                 <p className="text-[14px] font-semibold">{detailCustomer.name}</p>
               </div>
               <div className="p-3 rounded-xl bg-[#FAFAF9]">
-                <p className="text-[12px] text-[#78716C] mb-1">行业类型</p>
-                <p className="text-[14px] font-semibold">{detailCustomer.industryType || "-"}</p>
+                <p className="text-[12px] text-[#78716C] mb-1">客户属性</p>
+                <p className="text-[14px] font-semibold">{detailCustomer.ownershipType || "-"}</p>
               </div>
               <div className="p-3 rounded-xl bg-[#FAFAF9]">
                 <p className="text-[12px] text-[#78716C] mb-1">客户等级</p>
