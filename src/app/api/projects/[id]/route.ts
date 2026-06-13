@@ -144,6 +144,19 @@ export async function PUT(
       },
     });
 
+    // 项目名称变更时，同步回关联的线索
+    if (name !== undefined && name.trim() !== existing.name) {
+      const lead = await prisma.projectLead.findUnique({
+        where: { projectSourceId: existing.projectSourceId },
+      });
+      if (lead) {
+        await prisma.projectLead.update({
+          where: { id: lead.id },
+          data: { projectName: name.trim() },
+        });
+      }
+    }
+
     // 如果 designPhases 有变化，同步一级WBS节点（只增删差异，保留已有子树）
     if (designPhases !== undefined) {
       try {
