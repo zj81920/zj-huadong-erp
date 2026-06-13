@@ -214,7 +214,7 @@ model ProjectLead {
   contactPerson        String?   @map("contact_person")
   contactPhone         String?   @map("contact_phone")
   contactEmail         String?   @map("contact_email")
-  projectNature        Json      @default("[]") @map("project_nature")
+  projectNature        String?   @map("project_nature")
   implementationEntity String    @map("implementation_entity")
   currentStatus        String    @default("跟踪中") @map("current_status")
   leadMode             String    @default("投标") @map("lead_mode")
