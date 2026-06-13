@@ -113,7 +113,7 @@ model Customer {
   phone         String?
   email         String?
   maintainer    String?
-  industryType  String?  @map("industry_type")
+  ownershipType String?  @map("ownership_type")
   customerGrade String?  @default("C") @map("customer_grade")
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
