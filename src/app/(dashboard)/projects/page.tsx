@@ -20,6 +20,7 @@ import {
   User,
   Mail,
   Phone,
+  Settings,
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
@@ -201,6 +202,35 @@ export default function ProjectsPage() {
   });
   const [customerSaving, setCustomerSaving] = useState(false);
   const [customerError, setCustomerError] = useState("");
+
+  // 可自定义显示列
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const allColumns = [
+    { key: "projectCode", label: "项目编号" },
+    { key: "name", label: "项目名称" },
+    { key: "customer", label: "客户" },
+    { key: "categorySource", label: "类别/来源" },
+    { key: "designManager", label: "设计经理" },
+    { key: "supervisorLeader", label: "主管领导" },
+    { key: "status", label: "状态" },
+    { key: "startDate", label: "启动时间" },
+    { key: "plannedEndDate", label: "计划结束" },
+  ] as const;
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("project-list-columns");
+      if (saved) { try { return JSON.parse(saved); } catch {} }
+    }
+    return allColumns.map((c) => c.key);
+  });
+  const isColVisible = (key: string) => visibleColumns.includes(key);
+  const toggleColumn = (col: string) => {
+    const next = visibleColumns.includes(col)
+      ? visibleColumns.filter((c) => c !== col)
+      : [...visibleColumns, col];
+    setVisibleColumns(next);
+    localStorage.setItem("project-list-columns", JSON.stringify(next));
+  };
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -674,8 +704,36 @@ export default function ProjectsPage() {
             <option value="直接委托">直接委托</option>
           </select>
 
-          <div className="ml-auto text-[13px] text-[#78716C]">
-            共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 个项目
+          <div className="ml-auto flex items-center gap-3">
+            {/* 列设置按钮 */}
+            <div className="relative">
+              <button
+                className="flex items-center gap-1 rounded-lg border border-[#E7E5E4] px-3 py-1.5 text-[13px] text-[#57534E] hover:bg-[#F5F5F4]"
+                onClick={() => setShowColumnSettings(!showColumnSettings)}
+              >
+                <Settings className="w-3.5 h-3.5" />
+                列设置
+              </button>
+              {showColumnSettings && (
+                <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-[#E7E5E4] bg-white p-2 shadow-lg">
+                  <div className="mb-1 px-2 py-1 text-[11px] font-semibold uppercase text-[#A8A29E]">显示列</div>
+                  {allColumns.map((col) => (
+                    <label key={col.key} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] hover:bg-[#F5F5F4]">
+                      <input
+                        type="checkbox"
+                        checked={visibleColumns.includes(col.key)}
+                        onChange={() => toggleColumn(col.key)}
+                        className="h-3.5 w-3.5 accent-[#292524]"
+                      />
+                      {col.label}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="text-[13px] text-[#78716C]">
+              共 <span className="font-semibold text-[#1C1917]">{pagination?.total ?? 0}</span> 个项目
+            </div>
           </div>
         </div>
 
@@ -695,16 +753,16 @@ export default function ProjectsPage() {
           <div className="overflow-x-auto">
             <table className="ios-table" style={{ minWidth: 1400, width: '100%' }}>
               <colgroup>
-                <col style={{ width: 110 }} />
-                <col style={{ width: 'auto' }} />
-                <col style={{ width: 120 }} />
-                <col style={{ width: 70 }} />
-                <col style={{ width: 100 }} />
-                <col style={{ width: 80 }} />
-                <col style={{ width: 80 }} />
-                <col style={{ width: 120 }} />
-                <col style={{ width: 70 }} />
-                <col style={{ width: 70 }} />
+                {isAdminUser && <col style={{ width: 50 }} />}
+                {isColVisible("projectCode") && <col style={{ width: 110 }} />}
+                {isColVisible("name") && <col style={{ width: 'auto' }} />}
+                {isColVisible("customer") && <col style={{ width: 120 }} />}
+                {isColVisible("categorySource") && <col style={{ width: 100 }} />}
+                {isColVisible("designManager") && <col style={{ width: 80 }} />}
+                {isColVisible("supervisorLeader") && <col style={{ width: 80 }} />}
+                {isColVisible("status") && <col style={{ width: 120 }} />}
+                {isColVisible("startDate") && <col style={{ width: 70 }} />}
+                {isColVisible("plannedEndDate") && <col style={{ width: 70 }} />}
                 <col style={{ width: 170 }} />
               </colgroup>
               <thead>
@@ -719,15 +777,15 @@ export default function ProjectsPage() {
                       />
                     </th>
                   )}
-                  <th>项目编号</th>
-                  <th>项目名称</th>
-                  <th>客户</th>
-                  <th>类别/来源</th>
-                  <th>设计经理</th>
-                  <th>主管领导</th>
-                  <th>状态</th>
-                  <th>项目启动时间</th>
-                  <th>计划结束时间</th>
+                  {isColVisible("projectCode") && <th>项目编号</th>}
+                  {isColVisible("name") && <th>项目名称</th>}
+                  {isColVisible("customer") && <th>客户</th>}
+                  {isColVisible("categorySource") && <th>类别/来源</th>}
+                  {isColVisible("designManager") && <th>设计经理</th>}
+                  {isColVisible("supervisorLeader") && <th>主管领导</th>}
+                  {isColVisible("status") && <th>状态</th>}
+                  {isColVisible("startDate") && <th>项目启动时间</th>}
+                  {isColVisible("plannedEndDate") && <th>计划结束时间</th>}
                   <th>操作</th>
                 </tr>
               </thead>
@@ -745,17 +803,26 @@ export default function ProjectsPage() {
                           />
                         </td>
                       )}
+                      {isColVisible("projectCode") && (
                       <td className="whitespace-nowrap">
                         <span className="font-mono text-[13px]">{project.projectCode}</span>
                       </td>
+                      )}
+                      {isColVisible("name") && (
                       <td className="whitespace-nowrap">
                         <span className="font-semibold">{project.name}</span>
                       </td>
+                      )}
+                      {isColVisible("customer") && (
                       <td className="whitespace-nowrap">{project.customer.name}</td>
+                      )}
                       {/* 合并 类别/来源 */}
+                      {isColVisible("categorySource") && (
                       <td className="whitespace-nowrap px-3 py-2 text-[13px] text-[#57534E]">
                         {[project.projectCategory, project.source].filter(Boolean).join(" / ") || "-"}
                       </td>
+                      )}
+                      {isColVisible("designManager") && (
                       <td className="whitespace-nowrap">
                         {project.designManager ? (
                           <span className="text-[13px]">{project.designManager.realName}</span>
@@ -763,6 +830,8 @@ export default function ProjectsPage() {
                           <span className="text-[#78716C]">-</span>
                         )}
                       </td>
+                      )}
+                      {isColVisible("supervisorLeader") && (
                       <td className="whitespace-nowrap">
                         {project.supervisorLeader ? (
                           <span className="text-[13px]">{project.supervisorLeader.realName}</span>
@@ -770,6 +839,8 @@ export default function ProjectsPage() {
                           <span className="text-[#78716C]">-</span>
                         )}
                       </td>
+                      )}
+                      {isColVisible("status") && (
                       <td className="whitespace-nowrap">
                         <select
                           className="ios-select text-[12px] py-1 px-2 w-auto min-w-[80px]"
@@ -782,18 +853,23 @@ export default function ProjectsPage() {
                           <option value="关闭">关闭</option>
                         </select>
                       </td>
+                      )}
                       {/* 项目启动时间 */}
+                      {isColVisible("startDate") && (
                       <td className="whitespace-nowrap px-3 py-2 text-[13px] text-[#57534E]">
                         {project.startDate
                           ? new Date(project.startDate).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })
                           : "-"}
                       </td>
+                      )}
                       {/* 计划结束时间 */}
+                      {isColVisible("plannedEndDate") && (
                       <td className="whitespace-nowrap px-3 py-2 text-[13px] text-[#57534E]">
                         {project.plannedEndDate
                           ? new Date(project.plannedEndDate).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })
                           : "-"}
                       </td>
+                      )}
                       <td className="whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <button className="ios-btn ios-btn-ghost ios-btn-sm" onClick={() => handleViewDetail(project)}>
