@@ -137,7 +137,7 @@ model Supplier {
   bankName           String?  @map("bank_name")
   bankAccount        String?  @map("bank_account")
   remark             String?
-  attachmentUrl      String?  @map("attachment_url")
+  attachmentUrls     Json     @default("[]") @map("attachment_urls")
   approvalStatus     String   @default("草稿") @map("approval_status")
   approvalInstanceId String?  @map("approval_instance_id")
   isActive           Boolean  @default(true) @map("is_active")
@@ -187,7 +187,7 @@ model Customer {
   phone          String?
   email          String?
   maintainer     String?
-  industryType   String?  @map("industry_type")
+  ownershipType  String?  @map("ownership_type")
   customerGrade  String?  @default("C") @map("customer_grade")
   isActive       Boolean  @default(true) @map("is_active")
   createdAt      DateTime @default(now()) @map("created_at")
@@ -323,6 +323,7 @@ model Project {
   useWbs             Boolean   @default(true) @map("use_wbs")
   overallProgress    Int       @default(0) @map("overall_progress")
   riskLevel          String    @default("low") @map("risk_level")
+  dsProjectCode      String?   @unique @map("ds_project_code")
 
   customer            Customer             @relation(fields: [customerId], references: [id])
   projectLead         ProjectLead          @relation(fields: [projectSourceId], references: [projectSourceId])
