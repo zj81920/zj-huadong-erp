@@ -729,7 +729,6 @@ export default function ProjectsPage() {
                   <th>项目启动时间</th>
                   <th>计划结束时间</th>
                   <th>操作</th>
-                  <th>最后修改</th>
                 </tr>
               </thead>
               <tbody>
@@ -816,13 +815,16 @@ export default function ProjectsPage() {
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           )}
+                          {/* 最后修改信息 tooltip */}
+                          <span
+                            className="ml-1 cursor-help text-[#A8A29E]"
+                            title={project.lastModifiedBy
+                              ? `${project.lastModifiedBy} / ${formatDate(project.updatedAt)}`
+                              : "无修改记录"}
+                          >
+                            &#9432;
+                          </span>
                         </div>
-                      </td>
-                      <td className="text-[#78716C] text-[12px] whitespace-nowrap">
-                        {project.lastModifiedBy && (
-                          <span>{project.lastModifiedBy}</span>
-                        )}
-                        <span className="block text-[11px]">{formatDate(project.updatedAt)}</span>
                       </td>
                     </tr>
                   );
